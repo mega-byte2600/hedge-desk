@@ -5,7 +5,9 @@ from hedge_desk.data import (
     SourceBatchResult,
     SourceBatchStatus,
     build_batch_manifest,
+    validate_serialized_batch_manifest,
 )
+from hedge_desk.demo import json_value
 
 
 HASH_A = "a" * 64
@@ -44,6 +46,18 @@ class DataBatchTests(unittest.TestCase):
         manifest = build_batch_manifest("batch", ("a",), (result,), HASH_A)
         self.assertIs(manifest.status, BatchStatus.REJECTED)
         self.assertIn("SOURCE_ARTIFACT_HASH_INVALID", manifest.reason_codes)
+
+    def test_serialized_manifest_is_independently_rebuilt(self) -> None:
+        result = SourceBatchResult("a", SourceBatchStatus.PASS, HASH_A)
+        manifest = json_value(
+            build_batch_manifest("batch", ("a",), (result,), HASH_B)
+        )
+        self.assertEqual(validate_serialized_batch_manifest(manifest), ())
+        manifest["source_results"][0]["artifact_sha256"] = "f" * 64
+        self.assertIn(
+            "BATCH_MANIFEST_HASH_MISMATCH",
+            validate_serialized_batch_manifest(manifest),
+        )
 
 
 if __name__ == "__main__":

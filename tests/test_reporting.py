@@ -88,6 +88,12 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn("DATA_BATCH_NOT_READY", validate_report(report).reason_codes)
 
+    def test_rehashed_report_cannot_hide_source_batch_tampering(self) -> None:
+        report = build_morning_report(NOW)
+        report["data_batch"]["source_results"][0]["artifact_sha256"] = "f" * 64
+        report = finalize_report(report)
+        self.assertIn("DATA_BATCH_NOT_READY", validate_report(report).reason_codes)
+
     def test_human_markdown_leads_with_actual_zero_money_status(self) -> None:
         markdown = render_morning_markdown(build_morning_report(NOW))
         self.assertIn("Real money P&L: $0", markdown)

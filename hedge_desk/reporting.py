@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from typing import Any, Dict, Mapping, Tuple
 from hedge_desk.audit import validate_audit_evaluation
+from hedge_desk.data import validate_serialized_batch_manifest
 
 
 PROHIBITED_PERFORMANCE_CLAIMS = (
@@ -102,11 +103,15 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
     ):
         reasons.append("AUDIT_CHAIN_INVALID")
     batch = report.get("data_batch", {})
+    batch_validation_reasons = (
+        validate_serialized_batch_manifest(batch) if isinstance(batch, dict) else ()
+    )
     if (
         not isinstance(batch, dict)
         or batch.get("status") != "READY_FOR_RESEARCH"
         or not isinstance(batch.get("manifest_sha256"), str)
         or len(batch.get("manifest_sha256", "")) != 64
+        or batch_validation_reasons
     ):
         reasons.append("DATA_BATCH_NOT_READY")
     stat = report.get("stat_evaluation", {})
