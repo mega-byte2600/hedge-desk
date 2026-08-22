@@ -328,6 +328,8 @@ COMPLIANCE_WAR_GAMES: Tuple[ComplianceWarGame, ...] = (
     ComplianceWarGame("live-environment-request", "LIVE_ENVIRONMENT"),
     ComplianceWarGame("compliance-artifact-tamper", "HASH_TAMPER"),
     ComplianceWarGame("agent-compliance-pass-override", "PASS_OVERRIDE"),
+    ComplianceWarGame("options-disclosure-missing", "MISSING_ODD"),
+    ComplianceWarGame("options-disclosure-after-candidate", "LATE_ODD"),
 )
 
 
@@ -340,15 +342,25 @@ PREMIUM_TIMING_WAR_GAMES: Tuple[PremiumTimingWarGame, ...] = (
 )
 
 
-def _reference_account(options_approved: bool = True) -> Account:
+def _reference_account(
+    options_approved: bool = True,
+    disclosure_present: bool = True,
+    disclosure_late: bool = False,
+) -> Account:
     return Account(
         "paper-individual-001",
         AccountType.INDIVIDUAL,
         Decimal("100000"),
         Decimal("50000"),
         options_approved=options_approved,
-        options_disclosure_version="synthetic-odd-fixture-v1",
-        options_disclosure_acknowledged_at=FIXTURE_AS_OF - timedelta(days=1),
+        options_disclosure_version=(
+            "synthetic-odd-fixture-v1" if disclosure_present else None
+        ),
+        options_disclosure_acknowledged_at=(
+            FIXTURE_AS_OF + timedelta(microseconds=1)
+            if disclosure_late
+            else (FIXTURE_AS_OF - timedelta(days=1) if disclosure_present else None)
+        ),
         broker_options_policy_version="synthetic-broker-policy-v1",
     )
 
@@ -604,8 +616,12 @@ def run_compliance_war_games() -> Tuple[Dict[str, Any], ...]:
     plan = build_reference_plan()
     results = []
     for scenario in COMPLIANCE_WAR_GAMES:
+        account = _reference_account(
+            disclosure_present=scenario.attack != "MISSING_ODD",
+            disclosure_late=scenario.attack == "LATE_ODD",
+        )
         decision = evaluate_compliance_policy(
-            account=_reference_account(),
+            account=account,
             candidate=_reference_candidate(plan),
             evaluated_at=FIXTURE_AS_OF,
             environment="live" if scenario.attack == "LIVE_ENVIRONMENT" else "paper",

@@ -13,7 +13,7 @@ no demonstrated real-money profit.
   JSON war games plus JSON/Markdown morning reports.
 - Morning reports are publication-gated, hashed, explicitly PAPER /
   HYPOTHETICAL, and report real-money P&L and real trades as zero.
-- The declared synthetic suite contains 44 strategy, timing, execution, compliance, and lifecycle
+- The declared synthetic suite contains 46 strategy, timing, execution, compliance, and lifecycle
   war games plus five combined-MVP capital-path stresses.
 
 Run the evidence directly:

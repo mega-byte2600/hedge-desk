@@ -21,8 +21,8 @@ class PremiumWarGameTests(unittest.TestCase):
     def test_all_declared_scenarios_are_reported(self) -> None:
         report = build_war_game_report()
         self.assertTrue(report["all_declared_scenarios_included"])
-        self.assertEqual(report["summary"]["total_scenario_count"], 44)
-        self.assertEqual(report["summary"]["no_trade_control_count"], 20)
+        self.assertEqual(report["summary"]["total_scenario_count"], 46)
+        self.assertEqual(report["summary"]["no_trade_control_count"], 22)
         premium = report["summary"]["premium_fixed_trade"]
         self.assertEqual(premium["profitable_scenarios"], 1)
         self.assertEqual(premium["losing_scenarios"], 4)
@@ -31,7 +31,7 @@ class PremiumWarGameTests(unittest.TestCase):
             premium["descriptive_metrics"]["inference_status"],
             "INSUFFICIENT_SYNTHETIC_SAMPLE",
         )
-        self.assertEqual(report["fixture_manifest"]["scenario_count"], 44)
+        self.assertEqual(report["fixture_manifest"]["scenario_count"], 46)
         self.assertEqual(len(report["fixture_manifest"]["fixture_sha256"]), 64)
         self.assertEqual(len(report["war_game_report_sha256"]), 64)
         summary = report["summary"]
@@ -50,7 +50,7 @@ class PremiumWarGameTests(unittest.TestCase):
 
     def test_fixture_manifest_is_reproducible(self) -> None:
         self.assertEqual(build_war_game_manifest(), build_war_game_manifest())
-        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 44)
+        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 46)
 
     def test_reference_scenario_pnls_are_exact(self) -> None:
         results = {result.scenario_id: result for result in run_premium_war_games()}
@@ -173,6 +173,14 @@ class PremiumWarGameTests(unittest.TestCase):
         self.assertIn(
             "COMPLIANCE_STATUS_INCONSISTENT",
             results["agent-compliance-pass-override"]["reason_codes"],
+        )
+        self.assertIn(
+            "OPTIONS_DISCLOSURE_ACKNOWLEDGEMENT_REQUIRED",
+            results["options-disclosure-missing"]["reason_codes"],
+        )
+        self.assertIn(
+            "OPTIONS_DISCLOSURE_ACKNOWLEDGED_AFTER_CANDIDATE",
+            results["options-disclosure-after-candidate"]["reason_codes"],
         )
 
     def test_premium_timing_ladder_hits_exact_exit_boundary(self) -> None:
