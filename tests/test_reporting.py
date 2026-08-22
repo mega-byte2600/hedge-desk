@@ -85,6 +85,15 @@ class ReportingTests(unittest.TestCase):
             validate_report(report).reason_codes,
         )
 
+    def test_rehashed_outer_report_cannot_hide_tampered_stress_metrics(self) -> None:
+        report = build_morning_report(NOW)
+        report["portfolio_stress"]["descriptive_metrics"]["maximum_drawdown"] = "0"
+        report = finalize_report(report)
+        self.assertIn(
+            "PORTFOLIO_STRESS_DISCLOSURE_INVALID",
+            validate_report(report).reason_codes,
+        )
+
     def test_run_comparison_is_deterministic_and_never_claims_real_profit(self) -> None:
         previous = build_morning_report(NOW)
         current = build_morning_report(NOW)

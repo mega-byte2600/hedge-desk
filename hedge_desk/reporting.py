@@ -88,6 +88,18 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
     ):
         reasons.append("WAR_GAME_MANIFEST_INVALID")
     portfolio_stress = report.get("portfolio_stress", {})
+    stress_hash_valid = False
+    if isinstance(portfolio_stress, dict):
+        stress_payload = {
+            key: value
+            for key, value in portfolio_stress.items()
+            if key != "stress_report_sha256"
+        }
+        stress_hash_valid = portfolio_stress.get("stress_report_sha256") == sha256(
+            json.dumps(
+                stress_payload, sort_keys=True, separators=(",", ":")
+            ).encode()
+        ).hexdigest()
     if (
         not isinstance(portfolio_stress, dict)
         or portfolio_stress.get("report_type")
@@ -99,6 +111,9 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
         or portfolio_stress.get("real_money_pnl") != "0"
         or not isinstance(portfolio_stress.get("fixture_sha256"), str)
         or len(portfolio_stress.get("fixture_sha256", "")) != 64
+        or not isinstance(portfolio_stress.get("stress_report_sha256"), str)
+        or len(portfolio_stress.get("stress_report_sha256", "")) != 64
+        or not stress_hash_valid
     ):
         reasons.append("PORTFOLIO_STRESS_DISCLOSURE_INVALID")
     serialized = json.dumps(report, sort_keys=True).lower()

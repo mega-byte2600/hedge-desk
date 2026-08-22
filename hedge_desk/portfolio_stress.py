@@ -8,6 +8,7 @@ from typing import Any, Dict, Tuple
 
 from hedge_desk.demo import json_value
 from hedge_desk.metrics import evaluate_pnl_series
+from hedge_desk.backoffice import CircuitBreakerResult, evaluate_drawdown_circuit_breaker
 
 
 PORTFOLIO_STRESS_VERSION = "combined-mvp-capital-path-1.0.0"
@@ -117,7 +118,7 @@ def build_portfolio_stress_report(
             }
         )
     metrics = evaluate_pnl_series(tuple(sequence_pnls))
-    return {
+    report = {
         "report_type": "synthetic_hypothetical_portfolio_stress",
         "version": PORTFOLIO_STRESS_VERSION,
         "source": "synthetic_fixture",
@@ -131,3 +132,25 @@ def build_portfolio_stress_report(
         "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE",
         "real_money_pnl": "0",
     }
+    report["stress_report_sha256"] = sha256(
+        json.dumps(report, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return report
+
+
+def build_stress_circuit_breaker(report: Dict[str, Any]) -> CircuitBreakerResult:
+    """Bridge a verified stress artifact into the deterministic Back Office gate."""
+    payload = {key: value for key, value in report.items() if key != "stress_report_sha256"}
+    expected_hash = sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    if report.get("stress_report_sha256") != expected_hash:
+        raise ValueError("portfolio stress report integrity check failed")
+    current_drawdown = Decimal(report["descriptive_metrics"]["maximum_drawdown"])
+    maximum_drawdown = (
+        Decimal(report["starting_capital"])
+        * Decimal(report["maximum_drawdown_fraction"])
+    )
+    return evaluate_drawdown_circuit_breaker(
+        current_drawdown, maximum_drawdown, expected_hash
+    )

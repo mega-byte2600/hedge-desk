@@ -1,7 +1,10 @@
 from decimal import Decimal
 import unittest
 
-from hedge_desk.portfolio_stress import build_portfolio_stress_report
+from hedge_desk.portfolio_stress import (
+    build_portfolio_stress_report,
+    build_stress_circuit_breaker,
+)
 
 
 class PortfolioStressTests(unittest.TestCase):
@@ -10,6 +13,7 @@ class PortfolioStressTests(unittest.TestCase):
         self.assertEqual(report["scenario_count"], 5)
         self.assertEqual(report["real_money_pnl"], "0")
         self.assertEqual(len(report["fixture_sha256"]), 64)
+        self.assertEqual(len(report["stress_report_sha256"]), 64)
         first = report["scenarios"][0]
         self.assertEqual(first["combined_net_pnl"], "98.40")
         self.assertEqual(first["ending_capital"], "100098.40")
@@ -30,6 +34,17 @@ class PortfolioStressTests(unittest.TestCase):
             build_portfolio_stress_report(Decimal("0"))
         with self.assertRaises(ValueError):
             build_portfolio_stress_report(maximum_drawdown_fraction=Decimal("1"))
+
+    def test_stress_artifact_drives_back_office_circuit_breaker(self) -> None:
+        report = build_portfolio_stress_report()
+        breaker = build_stress_circuit_breaker(report)
+        self.assertTrue(breaker.new_risk_frozen)
+        self.assertEqual(
+            breaker.reason_codes, ("PORTFOLIO_DRAWDOWN_CIRCUIT_BREAKER",)
+        )
+        report["descriptive_metrics"]["maximum_drawdown"] = "0"
+        with self.assertRaisesRegex(ValueError, "integrity"):
+            build_stress_circuit_breaker(report)
 
 
 if __name__ == "__main__":
