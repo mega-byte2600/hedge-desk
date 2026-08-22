@@ -53,6 +53,17 @@ class PaperWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(PermissionError, "integrity check failed"):
             execute_paper_open(changed_plan, FIXTURE_AS_OF)
 
+    def test_changed_portfolio_snapshot_invalidates_plan(self) -> None:
+        plan = build_reference_plan()
+        approved = approve_paper_trade(plan, "captain", FIXTURE_AS_OF)
+        changed_compliance = replace(
+            approved.compliance_decision,
+            portfolio_snapshot_sha256="f" * 64,
+        )
+        changed_plan = replace(approved, compliance_decision=changed_compliance)
+        with self.assertRaisesRegex(PermissionError, "integrity check failed"):
+            execute_paper_open(changed_plan, FIXTURE_AS_OF)
+
     def test_human_cannot_override_machine_rejection(self) -> None:
         plan = build_reference_plan()
         rejected_decision = replace(
