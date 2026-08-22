@@ -62,6 +62,7 @@ python -m hedge_desk.cli
 python -m hedge_desk.cli --approve --human-id captain
 python -m hedge_desk.cli --projects
 python -m hedge_desk.cli --overnight-report
+python -m hedge_desk.cli --war-games
 python -m unittest discover -s tests -v
 ```
 

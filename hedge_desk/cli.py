@@ -6,10 +6,16 @@ import json
 from hedge_desk.demo import run_reference_demo
 from hedge_desk.overnight import current_morning_report
 from hedge_desk.projects import MVP_PROJECTS
+from hedge_desk.wargames import build_war_game_report
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--war-games",
+        action="store_true",
+        help="run every declared synthetic premium-spread stress scenario",
+    )
     parser.add_argument(
         "--overnight-report",
         action="store_true",
@@ -36,6 +42,9 @@ def main() -> None:
         return
     if args.overnight_report:
         print(json.dumps(current_morning_report(), indent=2))
+        return
+    if args.war_games:
+        print(json.dumps(build_war_game_report(), indent=2))
         return
     if args.approve and not args.human_id.strip():
         parser.error("--human-id is required with --approve")

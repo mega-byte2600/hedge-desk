@@ -16,6 +16,7 @@ from hedge_desk.evaluation import (
 from hedge_desk.paper import HumanAuthorizationStatus, MachineRiskStatus
 from hedge_desk.backoffice import BackOfficeStatus
 from hedge_desk.projects import MVP_PROJECTS, ProjectStatus, validate_project_registry
+from hedge_desk.wargames import build_war_game_report
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -152,6 +153,7 @@ def build_morning_report(generated_at: datetime) -> Dict[str, Any]:
             "Architecture-only projects correctly return NO_TRADE.",
         ],
         "projects": json_value(evaluations),
+        "war_games": build_war_game_report(),
     }
 
 

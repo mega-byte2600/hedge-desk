@@ -27,12 +27,16 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Produce paper-only morning evaluation
         run: python -m hedge_desk.cli --overnight-report > morning-report.json
+      - name: Produce complete synthetic war games
+        run: python -m hedge_desk.cli --war-games > war-games.json
       - name: Validate report safety boundary
         run: |
           python -c 'import json; d=json.load(open("morning-report.json")); assert d["complete"] is True; assert d["environment"] == "paper"; assert d["live_orders_enabled"] is False; assert d["summary"]["projects_evaluated"] == 5'
       - uses: actions/upload-artifact@v4
         with:
           name: paper-morning-evaluation-${{ github.run_id }}
-          path: morning-report.json
+          path: |
+            morning-report.json
+            war-games.json
           retention-days: 30
           if-no-files-found: error
