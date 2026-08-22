@@ -289,8 +289,16 @@ def run_dividend_war_games() -> Tuple[Dict[str, str], ...]:
 
 def build_war_game_report() -> Dict[str, Any]:
     results = run_premium_war_games()
+    earnings = run_earnings_war_games()
+    arbitrage = run_arbitrage_war_games()
+    dividend = run_dividend_war_games()
     pnls = tuple(result.net_pnl for result in results)
     wins = sum(result.profitable for result in results)
+    no_trade_controls = (
+        sum(item["best_hindsight_arm"] == "NO_TRADE" for item in earnings)
+        + sum(item["disposition"] == "NO_TRADE" for item in arbitrage)
+        + sum(item["best_hindsight_arm"] == "NO_TRADE" for item in dividend)
+    )
     return {
         "report_type": "synthetic_hypothetical_war_games",
         "version": WAR_GAME_VERSION,
@@ -298,17 +306,28 @@ def build_war_game_report() -> Dict[str, Any]:
         "source": "synthetic_fixture",
         "all_declared_scenarios_included": True,
         "summary": {
-            "scenario_count": len(results),
-            "profitable_scenarios": wins,
-            "losing_scenarios": len(results) - wins,
-            "mean_pnl": str(sum(pnls, Decimal("0")) / Decimal(len(pnls))),
-            "worst_pnl": str(min(pnls)),
-            "best_pnl": str(max(pnls)),
+            "total_scenario_count": (
+                len(results) + len(earnings) + len(arbitrage) + len(dividend)
+            ),
+            "scenario_count_by_mvp": {
+                "overnight-premium-desk": len(results),
+                "earnings-event-desk": len(earnings),
+                "arbitrage-observer": len(arbitrage),
+                "dividend-opportunity-desk": len(dividend),
+            },
+            "no_trade_control_count": no_trade_controls,
+            "premium_fixed_trade": {
+                "profitable_scenarios": wins,
+                "losing_scenarios": len(results) - wins,
+                "mean_pnl": str(sum(pnls, Decimal("0")) / Decimal(len(pnls))),
+                "worst_pnl": str(min(pnls)),
+                "best_pnl": str(max(pnls)),
+            },
         },
         "premium": json_value(results),
-        "earnings": run_earnings_war_games(),
-        "arbitrage": run_arbitrage_war_games(),
-        "dividend": run_dividend_war_games(),
+        "earnings": earnings,
+        "arbitrage": arbitrage,
+        "dividend": dividend,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",

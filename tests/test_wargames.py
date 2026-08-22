@@ -14,9 +14,11 @@ class PremiumWarGameTests(unittest.TestCase):
     def test_all_declared_scenarios_are_reported(self) -> None:
         report = build_war_game_report()
         self.assertTrue(report["all_declared_scenarios_included"])
-        self.assertEqual(report["summary"]["scenario_count"], 5)
-        self.assertEqual(report["summary"]["profitable_scenarios"], 1)
-        self.assertEqual(report["summary"]["losing_scenarios"], 4)
+        self.assertEqual(report["summary"]["total_scenario_count"], 17)
+        self.assertEqual(report["summary"]["no_trade_control_count"], 7)
+        premium = report["summary"]["premium_fixed_trade"]
+        self.assertEqual(premium["profitable_scenarios"], 1)
+        self.assertEqual(premium["losing_scenarios"], 4)
 
     def test_reference_scenario_pnls_are_exact(self) -> None:
         results = {result.scenario_id: result for result in run_premium_war_games()}
