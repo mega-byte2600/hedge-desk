@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, Tuple
 
-from hedge_desk.demo import FIXTURE_AS_OF
+from hedge_desk.demo import FIXTURE_AS_OF, build_reference_plan
 
 
 class ReplayEventKind(str, Enum):
@@ -92,14 +92,26 @@ def reference_replay() -> Tuple[ReplayEvent, ...]:
 
 
 def reference_pending_replay() -> Tuple[ReplayEvent, ...]:
+    plan = build_reference_plan()
+    artifact_ids = (
+        "synthetic-option-chain-v1",
+        "synthetic-option-chain-v1",
+        plan.event_calendar_gate.calendar_sha256,
+        plan.spread.spread_id,
+        plan.risk_decision.risk_input_sha256,
+        plan.compliance_decision.circuit_breaker_sha256,
+        plan.plan_hash,
+    )
     return tuple(
         ReplayEvent(
             kind,
             FIXTURE_AS_OF + timedelta(seconds=offset),
             FIXTURE_AS_OF + timedelta(seconds=offset),
-            f"reference-{kind.value.lower()}",
+            artifact_id,
         )
-        for kind, offset in zip(PENDING_ORDER, range(len(PENDING_ORDER)))
+        for kind, offset, artifact_id in zip(
+            PENDING_ORDER, range(len(PENDING_ORDER)), artifact_ids
+        )
     )
 
 

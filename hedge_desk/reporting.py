@@ -55,6 +55,38 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
         events = replay.get("events", [])
         if not events or events[-1].get("kind") != "HUMAN_PENDING":
             reasons.append("REPLAY_STATE_MISMATCH")
+        else:
+            premium_projects = [
+                project
+                for project in report.get("projects", [])
+                if project.get("project_id") == "overnight-premium-desk"
+            ]
+            if len(premium_projects) != 1:
+                reasons.append("REPLAY_ARTIFACT_LINEAGE_MISMATCH")
+            else:
+                layers = {
+                    layer["layer"]: layer for layer in premium_projects[0]["layers"]
+                }
+                event_by_kind = {event["kind"]: event for event in events}
+                expected = (
+                    (
+                        "VALIDATION_COMPLETE",
+                        layers["OBSERVED"]["artifact_refs"][1],
+                    ),
+                    (
+                        "RISK_COMPLETE",
+                        layers["DETERMINISTIC_RISK"]["metrics"]["risk_input_artifact"],
+                    ),
+                    (
+                        "HUMAN_PENDING",
+                        layers["HUMAN"]["artifact_refs"][0],
+                    ),
+                )
+                if any(
+                    event_by_kind.get(kind, {}).get("artifact_id") != artifact_id
+                    for kind, artifact_id in expected
+                ):
+                    reasons.append("REPLAY_ARTIFACT_LINEAGE_MISMATCH")
     audit = report.get("audit_chain", {})
     if not isinstance(audit, dict) or audit.get("valid") is not True:
         reasons.append("AUDIT_CHAIN_INVALID")

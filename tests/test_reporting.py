@@ -49,6 +49,15 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn("REPLAY_STATE_MISMATCH", validate_report(report).reason_codes)
 
+    def test_replay_artifacts_must_match_candidate_control_artifacts(self) -> None:
+        report = build_morning_report(NOW)
+        report["chronological_replay"]["events"][4]["artifact_id"] = "wrong-risk"
+        report = finalize_report(report)
+        self.assertIn(
+            "REPLAY_ARTIFACT_LINEAGE_MISMATCH",
+            validate_report(report).reason_codes,
+        )
+
     def test_missing_war_game_manifest_is_blocked(self) -> None:
         report = build_morning_report(NOW)
         report["war_games"].pop("fixture_manifest")
