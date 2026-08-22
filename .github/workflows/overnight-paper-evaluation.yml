@@ -19,8 +19,8 @@ jobs:
     env:
       HEDGE_DESK_CODE_COMMIT: ${{ github.sha }}
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1d3 # v6.3.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
           cache: pip
@@ -52,7 +52,7 @@ jobs:
       - name: Validate report safety boundary
         run: |
           python -c 'import json, os; from pathlib import Path; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); s=json.load(open("control-summary.json")); w=json.load(open("war-games.json")); r=json.load(open("run-receipt.json")); b=json.load(open("bundle-manifest.json")); a=json.load(open("audit-journal-verification.json")); h=json.load(open("operational-health.json")); m=Path("morning-report.md").read_text(); assert d["summary"]["projects_evaluated"] == 6; assert validate_report(d).publishable; assert d["code_commit"] == os.environ["GITHUB_SHA"]; assert d["report_sha256"] in m; assert s["report_sha256"] == d["report_sha256"]; assert s["real_trades_executed"] == 0; assert s["real_money_pnl"] == "0"; assert s["paper_back_office_reconciliation"] == "pass"; assert s["paper_reconciliation_live_release_eligible"] is False; assert s["live_transition_authorized"] is False; assert d["war_games"] == w; assert r["status"] == "COMPLETE"; assert r["report_sha256"] == d["report_sha256"]; assert a["valid"] is True; assert a["event_count"] == 7; assert h["status"] == "HEALTHY_PAPER"; assert h["live_authorized"] is False; assert len(b["bundle_sha256"]) == 64; assert len(b["files"]) == 9'
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: paper-morning-evaluation-${{ github.run_id }}
           path: |
