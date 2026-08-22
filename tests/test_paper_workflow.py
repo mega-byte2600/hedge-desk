@@ -5,6 +5,7 @@ import unittest
 
 from hedge_desk.demo import FIXTURE_AS_OF, build_reference_plan, run_reference_demo
 from hedge_desk.domain import DecisionStatus
+from hedge_desk.backoffice import BackOfficeStatus
 from hedge_desk.paper import (
     HumanAuthorization,
     HumanAuthorizationStatus,
@@ -63,6 +64,7 @@ class PaperWorkflowTests(unittest.TestCase):
             plan.plan_id,
             plan.spread,
             rejected_decision,
+            plan.compliance_decision,
             plan.created_at,
             plan.approval_expires_at,
             plan.execution_quote_max_age_seconds,
@@ -70,6 +72,25 @@ class PaperWorkflowTests(unittest.TestCase):
         self.assertIs(rejected_plan.machine_risk_status, MachineRiskStatus.REJECT)
         with self.assertRaisesRegex(PermissionError, "cannot override"):
             approve_paper_trade(rejected_plan, "captain", FIXTURE_AS_OF)
+
+    def test_human_cannot_override_back_office_block(self) -> None:
+        plan = build_reference_plan()
+        blocked_compliance = replace(
+            plan.compliance_decision,
+            status=BackOfficeStatus.BLOCK,
+            reason_codes=("FINRA_SEC_REVIEW_REQUIRED",),
+        )
+        blocked_plan = create_paper_trade_plan(
+            plan.plan_id,
+            plan.spread,
+            plan.risk_decision,
+            blocked_compliance,
+            plan.created_at,
+            plan.approval_expires_at,
+            plan.execution_quote_max_age_seconds,
+        )
+        with self.assertRaisesRegex(PermissionError, "Back Office compliance block"):
+            approve_paper_trade(blocked_plan, "captain", FIXTURE_AS_OF)
 
     def test_expired_human_approval_cannot_execute(self) -> None:
         plan = build_reference_plan()

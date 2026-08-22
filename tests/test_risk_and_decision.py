@@ -71,7 +71,7 @@ class RiskAndDecisionTests(unittest.TestCase):
             NOW,
             RiskPolicy(maximum_risk_of_ruin=Decimal("0.04")),
         )
-        self.assertEqual(decision.status, DecisionStatus.APPROVED_FOR_PAPER)
+        self.assertEqual(decision.status, DecisionStatus.RISK_PASS)
         self.assertEqual(decision.reason_codes, ())
 
     def test_decision_is_deterministic(self) -> None:
@@ -83,4 +83,3 @@ class RiskAndDecisionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

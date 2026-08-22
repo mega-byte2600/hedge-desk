@@ -31,11 +31,10 @@ def evaluate_candidate(
         status=(
             DecisionStatus.BLOCKED
             if reason_codes
-            else DecisionStatus.APPROVED_FOR_PAPER
+            else DecisionStatus.RISK_PASS
         ),
         reason_codes=reason_codes,
         risk_of_ruin_before=Decimal("0"),
         risk_of_ruin_after=ruin_after,
         evaluated_at=evaluated_at,
     )
-

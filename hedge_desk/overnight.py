@@ -14,6 +14,7 @@ from hedge_desk.evaluation import (
     ProjectEvaluation,
 )
 from hedge_desk.paper import HumanAuthorizationStatus, MachineRiskStatus
+from hedge_desk.backoffice import BackOfficeStatus
 from hedge_desk.projects import MVP_PROJECTS, ProjectStatus, validate_project_registry
 
 
@@ -90,6 +91,14 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         },
         (plan.plan_hash,),
     )
+    compliance_pass = plan.compliance_decision.status is BackOfficeStatus.PASS
+    compliance = LayerEvaluation(
+        EvaluationLayer.DETERMINISTIC_COMPLIANCE,
+        EvaluationStatus.PASS if compliance_pass else EvaluationStatus.BLOCKED,
+        plan.compliance_decision.reason_codes,
+        {"policy_version": plan.compliance_decision.policy_version},
+        (plan.plan_hash,),
+    )
     human_pending = plan.authorization.status is HumanAuthorizationStatus.PENDING
     human = LayerEvaluation(
         EvaluationLayer.HUMAN,
@@ -101,8 +110,10 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
     premium = ProjectEvaluation(
         MVP_PROJECTS[0].project_id,
         FIXTURE_AS_OF,
-        Disposition.HUMAN_REVIEW if data_gate.admissible and risk_pass else Disposition.NO_TRADE,
-        (observed, stat, big, risk, human),
+        Disposition.HUMAN_REVIEW
+        if data_gate.admissible and risk_pass and compliance_pass
+        else Disposition.NO_TRADE,
+        (observed, stat, big, risk, compliance, human),
     )
     inactive = tuple(
         _inactive_project(project.project_id, FIXTURE_AS_OF)

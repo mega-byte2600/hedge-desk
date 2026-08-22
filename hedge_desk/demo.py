@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Any, Dict
 
 from hedge_desk.core.decision import evaluate_candidate
+from hedge_desk.backoffice import evaluate_paper_compliance
 from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
 from hedge_desk.options import (
     OptionQuote,
@@ -108,10 +109,12 @@ def build_reference_plan() -> Any:
         invalidation="Reject outside the frozen fixture and validated inputs.",
     )
     decision = evaluate_candidate(account, candidate, FIXTURE_AS_OF)
+    compliance_decision = evaluate_paper_compliance(account, candidate, FIXTURE_AS_OF)
     return create_paper_trade_plan(
         plan_id=FIXTURE_ID,
         spread=spread,
         risk_decision=decision,
+        compliance_decision=compliance_decision,
         created_at=FIXTURE_AS_OF,
         approval_expires_at=FIXTURE_AS_OF + timedelta(minutes=15),
     )

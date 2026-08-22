@@ -7,6 +7,7 @@ from enum import Enum
 from hashlib import sha256
 from typing import Optional, Tuple
 
+from hedge_desk.backoffice import BackOfficeDecision, BackOfficeStatus
 from hedge_desk.domain import Decision, DecisionStatus
 from hedge_desk.options import VerticalSpreadCalculation
 
@@ -35,6 +36,7 @@ class PaperTradePlan:
     plan_id: str
     spread: VerticalSpreadCalculation
     risk_decision: Decision
+    compliance_decision: BackOfficeDecision
     machine_risk_status: MachineRiskStatus
     reason_codes: Tuple[str, ...]
     authorization: HumanAuthorization
@@ -69,6 +71,7 @@ def _calculate_plan_hash(
     plan_id: str,
     spread: VerticalSpreadCalculation,
     risk_decision: Decision,
+    compliance_decision: BackOfficeDecision,
     created_at: datetime,
     approval_expires_at: datetime,
     execution_quote_max_age_seconds: int,
@@ -100,6 +103,13 @@ def _calculate_plan_hash(
             str(risk_decision.risk_of_ruin_before),
             str(risk_decision.risk_of_ruin_after),
             risk_decision.evaluated_at.isoformat(),
+            compliance_decision.candidate_id,
+            compliance_decision.account_id,
+            compliance_decision.status.value,
+            ",".join(compliance_decision.reason_codes),
+            compliance_decision.policy_version,
+            compliance_decision.evaluated_at.isoformat(),
+            compliance_decision.environment,
             created_at.isoformat(),
             approval_expires_at.isoformat(),
             str(execution_quote_max_age_seconds),
@@ -113,6 +123,7 @@ def _assert_plan_integrity(plan: PaperTradePlan) -> None:
         plan.plan_id,
         plan.spread,
         plan.risk_decision,
+        plan.compliance_decision,
         plan.created_at,
         plan.approval_expires_at,
         plan.execution_quote_max_age_seconds,
@@ -125,6 +136,7 @@ def create_paper_trade_plan(
     plan_id: str,
     spread: VerticalSpreadCalculation,
     risk_decision: Decision,
+    compliance_decision: BackOfficeDecision,
     created_at: datetime,
     approval_expires_at: datetime,
     execution_quote_max_age_seconds: int = 120,
@@ -137,16 +149,23 @@ def create_paper_trade_plan(
         raise ValueError("approval expiry must follow plan creation")
     if execution_quote_max_age_seconds <= 0:
         raise ValueError("execution quote age limit must be positive")
+    if compliance_decision.environment != "paper":
+        raise ValueError("only paper Back Office decisions are accepted")
+    if compliance_decision.candidate_id != risk_decision.candidate_id:
+        raise ValueError("risk and compliance candidate identities must match")
+    if compliance_decision.account_id != risk_decision.account_id:
+        raise ValueError("risk and compliance account identities must match")
 
     machine_status = (
         MachineRiskStatus.PASS
-        if risk_decision.status is DecisionStatus.APPROVED_FOR_PAPER
+        if risk_decision.status is DecisionStatus.RISK_PASS
         else MachineRiskStatus.REJECT
     )
     plan_hash = _calculate_plan_hash(
         plan_id,
         spread,
         risk_decision,
+        compliance_decision,
         created_at,
         approval_expires_at,
         execution_quote_max_age_seconds,
@@ -155,8 +174,11 @@ def create_paper_trade_plan(
         plan_id=plan_id,
         spread=spread,
         risk_decision=risk_decision,
+        compliance_decision=compliance_decision,
         machine_risk_status=machine_status,
-        reason_codes=risk_decision.reason_codes,
+        reason_codes=tuple(
+            sorted(set(risk_decision.reason_codes + compliance_decision.reason_codes))
+        ),
         authorization=HumanAuthorization(HumanAuthorizationStatus.PENDING),
         created_at=created_at,
         approval_expires_at=approval_expires_at,
@@ -177,6 +199,8 @@ def approve_paper_trade(
         raise ValueError("authorization timestamp must be timezone-aware")
     if plan.machine_risk_status is not MachineRiskStatus.PASS:
         raise PermissionError("human cannot override a machine risk rejection")
+    if plan.compliance_decision.status is not BackOfficeStatus.PASS:
+        raise PermissionError("human cannot override a Back Office compliance block")
     if decided_at > plan.approval_expires_at:
         raise PermissionError("paper-trade approval window has expired")
     if plan.authorization.status is not HumanAuthorizationStatus.PENDING:
@@ -199,6 +223,8 @@ def execute_paper_open(plan: PaperTradePlan, opened_at: datetime) -> PaperOpen:
         raise ValueError("paper-open timestamp must be timezone-aware")
     if plan.authorization.status is not HumanAuthorizationStatus.APPROVED:
         raise PermissionError("paper execution requires human authorization")
+    if plan.compliance_decision.status is not BackOfficeStatus.PASS:
+        raise PermissionError("paper execution requires Back Office compliance pass")
     if plan.authorization.plan_hash != plan.plan_hash:
         raise PermissionError("authorization is not bound to this plan")
     if opened_at > plan.approval_expires_at:

@@ -1,0 +1,53 @@
+from datetime import datetime, timezone
+from decimal import Decimal
+import unittest
+
+from hedge_desk.backoffice import BackOfficeStatus, evaluate_paper_compliance
+from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
+
+
+NOW = datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc)
+
+
+def candidate(product: ProductType) -> TradeCandidate:
+    return TradeCandidate(
+        "candidate-1", "TEST", product, 1, Decimal("1"), Decimal("100"),
+        Decimal("25"), Decimal("0.9"), NOW, Decimal("10000000"),
+        "Synthetic paper thesis.", "Synthetic invalidation.",
+    )
+
+
+class BackOfficeTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.account = Account(
+            "paper-1", AccountType.INDIVIDUAL, Decimal("100000"),
+            Decimal("50000"), options_approved=True,
+        )
+
+    def test_defined_risk_option_with_approval_passes_paper_policy(self) -> None:
+        result = evaluate_paper_compliance(
+            self.account, candidate(ProductType.DEFINED_RISK_OPTION), NOW
+        )
+        self.assertIs(result.status, BackOfficeStatus.PASS)
+        self.assertEqual(result.environment, "paper")
+
+    def test_front_office_equity_proposal_cannot_enter_premium_workflow(self) -> None:
+        result = evaluate_paper_compliance(
+            self.account, candidate(ProductType.EQUITY), NOW
+        )
+        self.assertIs(result.status, BackOfficeStatus.BLOCK)
+        self.assertIn("PREMIUM_MVP_DEFINED_RISK_OPTIONS_ONLY", result.reason_codes)
+
+    def test_missing_options_approval_blocks(self) -> None:
+        account = Account(
+            "paper-2", AccountType.INDIVIDUAL, Decimal("100000"),
+            Decimal("50000"), options_approved=False,
+        )
+        result = evaluate_paper_compliance(
+            account, candidate(ProductType.DEFINED_RISK_OPTION), NOW
+        )
+        self.assertIn("OPTIONS_APPROVAL_REQUIRED", result.reason_codes)
+
+
+if __name__ == "__main__":
+    unittest.main()

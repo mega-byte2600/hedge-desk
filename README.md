@@ -70,10 +70,13 @@ simulates a named human approval and paper-only open/close against a frozen
 synthetic fixture; it does not connect to a broker or market-data vendor.
 
 The overnight report evaluates every registered MVP through separately labeled
-`OBSERVED`, `STAT`, `BIG`, `DETERMINISTIC_RISK`, and `HUMAN` layers. Until real
+`OBSERVED`, `STAT`, `BIG`, `DETERMINISTIC_RISK`,
+`DETERMINISTIC_COMPLIANCE`, and `HUMAN` layers. Until real
 licensed adapters exist, it truthfully runs synthetic fixtures and returns
 `NO_TRADE` for architecture-only projects. GitHub Actions runs this paper-only
-evaluation on weekdays and retains its JSON report for 30 days.
+evaluation every 15 minutes, 24/7, and retains its JSON report for 30 days.
+GitHub scheduling is best-effort; delayed runs do not constitute a production
+uptime guarantee.
 
 ## Safety boundary
 

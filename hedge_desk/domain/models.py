@@ -22,7 +22,7 @@ class ProductType(str, Enum):
 
 
 class DecisionStatus(str, Enum):
-    APPROVED_FOR_PAPER = "approved_for_paper"
+    RISK_PASS = "risk_pass"
     BLOCKED = "blocked"
 
 
@@ -92,4 +92,3 @@ class Decision:
 def utc_now() -> datetime:
     """Return a timezone-aware timestamp; callers inject clocks in tests."""
     return datetime.now(timezone.utc)
-
