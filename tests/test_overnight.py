@@ -1,7 +1,12 @@
 from datetime import datetime, timezone
 import unittest
 
-from hedge_desk.evaluation import Disposition, EvaluationLayer, EvaluationStatus
+from hedge_desk.evaluation import (
+    Disposition,
+    EvaluationLayer,
+    EvaluationStatus,
+    LayerEvaluation,
+)
 from hedge_desk.overnight import build_morning_report, evaluate_reference_projects
 
 
@@ -9,6 +14,22 @@ NOW = datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc)
 
 
 class OvernightEvaluationTests(unittest.TestCase):
+    def test_blocked_layers_require_canonical_reason_codes(self) -> None:
+        with self.assertRaisesRegex(ValueError, "require reason codes"):
+            LayerEvaluation(
+                EvaluationLayer.DETERMINISTIC_RISK,
+                EvaluationStatus.BLOCKED,
+                (),
+                {},
+            )
+        with self.assertRaisesRegex(ValueError, "unique and sorted"):
+            LayerEvaluation(
+                EvaluationLayer.DETERMINISTIC_RISK,
+                EvaluationStatus.BLOCKED,
+                ("Z_REASON", "A_REASON", "A_REASON"),
+                {},
+            )
+
     def test_every_project_has_complete_distinct_layers(self) -> None:
         evaluations = evaluate_reference_projects()
         self.assertEqual(len(evaluations), 6)
@@ -83,6 +104,7 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertEqual(
             risk_layer.metrics["strategic_allocation_trade_authorized"], "false"
         )
+        self.assertEqual(risk_layer.reason_codes, ())
         self.assertEqual(
             len(evaluations[0].layers[4].metrics["regulatory_traceability_sha256"]),
             64,

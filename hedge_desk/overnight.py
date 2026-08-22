@@ -711,7 +711,7 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
     risk = LayerEvaluation(
         EvaluationLayer.DETERMINISTIC_RISK,
         EvaluationStatus.PASS if risk_pass else EvaluationStatus.BLOCKED,
-        plan.reason_codes,
+        tuple(sorted(set(plan.reason_codes + strategic_allocation.reason_codes))),
         {
             "risk_artifact": plan.plan_hash,
             "risk_input_artifact": plan.risk_decision.risk_input_sha256,

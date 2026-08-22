@@ -36,6 +36,12 @@ class LayerEvaluation:
     metrics: Mapping[str, str]
     artifact_refs: Tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        if self.status is EvaluationStatus.BLOCKED and not self.reason_codes:
+            raise ValueError("blocked evaluation layers require reason codes")
+        if self.reason_codes != tuple(sorted(set(self.reason_codes))):
+            raise ValueError("evaluation reason codes must be unique and sorted")
+
 
 @dataclass(frozen=True)
 class ProjectEvaluation:
