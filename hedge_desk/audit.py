@@ -6,7 +6,7 @@ from datetime import datetime
 from hashlib import sha256
 from typing import Any, Dict, Optional, Tuple
 
-from hedge_desk.replay import reference_replay
+from hedge_desk.replay import reference_pending_replay
 
 
 AUDIT_VERSION = "audit-chain-1.0.0"
@@ -122,7 +122,7 @@ def verify_audit_chain(chain: Tuple[AuditEvent, ...]) -> Tuple[str, ...]:
 
 def build_reference_audit() -> Tuple[AuditEvent, ...]:
     chain: Tuple[AuditEvent, ...] = ()
-    for event in reference_replay():
+    for event in reference_pending_replay():
         chain = append_audit_event(
             chain,
             "reference-overnight-run",

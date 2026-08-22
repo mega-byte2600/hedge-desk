@@ -43,6 +43,12 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn("REPLAY_LINEAGE_INVALID", validate_report(report).reason_codes)
 
+    def test_zero_trade_report_cannot_claim_executed_replay(self) -> None:
+        report = build_morning_report(NOW)
+        report["chronological_replay"]["events"][-1]["kind"] = "EXIT"
+        report = finalize_report(report)
+        self.assertIn("REPLAY_STATE_MISMATCH", validate_report(report).reason_codes)
+
     def test_missing_war_game_manifest_is_blocked(self) -> None:
         report = build_morning_report(NOW)
         report["war_games"].pop("fixture_manifest")

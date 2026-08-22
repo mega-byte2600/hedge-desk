@@ -51,6 +51,10 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
     replay = report.get("chronological_replay", {})
     if not isinstance(replay, dict) or replay.get("valid") is not True:
         reasons.append("REPLAY_LINEAGE_INVALID")
+    elif report.get("real_trades_executed") == 0:
+        events = replay.get("events", [])
+        if not events or events[-1].get("kind") != "HUMAN_PENDING":
+            reasons.append("REPLAY_STATE_MISMATCH")
     audit = report.get("audit_chain", {})
     if not isinstance(audit, dict) or audit.get("valid") is not True:
         reasons.append("AUDIT_CHAIN_INVALID")

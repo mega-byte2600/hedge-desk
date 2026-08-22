@@ -7,7 +7,7 @@ from hedge_desk.audit import build_reference_audit, verify_audit_chain
 class AuditChainTests(unittest.TestCase):
     def test_reference_chain_is_complete_and_valid(self) -> None:
         chain = build_reference_audit()
-        self.assertEqual(len(chain), 9)
+        self.assertEqual(len(chain), 7)
         self.assertEqual(verify_audit_chain(chain), ())
 
     def test_mutated_event_is_detected(self) -> None:

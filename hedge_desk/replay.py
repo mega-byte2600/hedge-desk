@@ -15,12 +15,26 @@ class ReplayEventKind(str, Enum):
     CANDIDATE_CREATED = "CANDIDATE_CREATED"
     RISK_COMPLETE = "RISK_COMPLETE"
     COMPLIANCE_COMPLETE = "COMPLIANCE_COMPLETE"
+    HUMAN_PENDING = "HUMAN_PENDING"
     HUMAN_APPROVED = "HUMAN_APPROVED"
     PAPER_FILL = "PAPER_FILL"
     EXIT = "EXIT"
 
 
-REQUIRED_ORDER = tuple(ReplayEventKind)
+PENDING_ORDER = (
+    ReplayEventKind.SOURCE_PUBLISHED,
+    ReplayEventKind.SYSTEM_RECEIVED,
+    ReplayEventKind.VALIDATION_COMPLETE,
+    ReplayEventKind.CANDIDATE_CREATED,
+    ReplayEventKind.RISK_COMPLETE,
+    ReplayEventKind.COMPLIANCE_COMPLETE,
+    ReplayEventKind.HUMAN_PENDING,
+)
+EXECUTED_ORDER = PENDING_ORDER[:-1] + (
+    ReplayEventKind.HUMAN_APPROVED,
+    ReplayEventKind.PAPER_FILL,
+    ReplayEventKind.EXIT,
+)
 
 
 @dataclass(frozen=True)
@@ -41,7 +55,7 @@ def validate_replay(events: Tuple[ReplayEvent, ...]) -> ReplayValidation:
     """Require a complete, ordered, timezone-aware paper decision timeline."""
     reasons = []
     kinds = tuple(event.kind for event in events)
-    if kinds != REQUIRED_ORDER:
+    if kinds not in (PENDING_ORDER, EXECUTED_ORDER):
         reasons.append("REPLAY_STAGE_ORDER_INVALID")
     if len(set(kinds)) != len(kinds):
         reasons.append("DUPLICATE_REPLAY_STAGE")
@@ -73,12 +87,25 @@ def reference_replay() -> Tuple[ReplayEvent, ...]:
             FIXTURE_AS_OF + timedelta(seconds=offset),
             f"reference-{kind.value.lower()}",
         )
-        for kind, offset in zip(REQUIRED_ORDER, offsets)
+        for kind, offset in zip(EXECUTED_ORDER, offsets)
+    )
+
+
+def reference_pending_replay() -> Tuple[ReplayEvent, ...]:
+    return tuple(
+        ReplayEvent(
+            kind,
+            FIXTURE_AS_OF + timedelta(seconds=offset),
+            FIXTURE_AS_OF + timedelta(seconds=offset),
+            f"reference-{kind.value.lower()}",
+        )
+        for kind, offset in zip(PENDING_ORDER, range(len(PENDING_ORDER)))
     )
 
 
 def build_replay_evaluation() -> Dict[str, Any]:
-    validation = validate_replay(reference_replay())
+    events = reference_pending_replay()
+    validation = validate_replay(events)
     return {
         "environment": "paper",
         "valid": validation.valid,
@@ -90,6 +117,6 @@ def build_replay_evaluation() -> Dict[str, Any]:
                 "received_time": event.received_time.isoformat(),
                 "artifact_id": event.artifact_id,
             }
-            for event in reference_replay()
+            for event in events
         ],
     }

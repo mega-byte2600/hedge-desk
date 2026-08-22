@@ -5,6 +5,7 @@ import unittest
 from hedge_desk.replay import (
     ReplayEventKind,
     reference_replay,
+    reference_pending_replay,
     validate_replay,
 )
 
@@ -12,6 +13,9 @@ from hedge_desk.replay import (
 class ReplayTests(unittest.TestCase):
     def test_complete_reference_replay_passes(self) -> None:
         self.assertTrue(validate_replay(reference_replay()).valid)
+        pending = reference_pending_replay()
+        self.assertTrue(validate_replay(pending).valid)
+        self.assertEqual(pending[-1].kind, ReplayEventKind.HUMAN_PENDING)
 
     def test_fill_before_human_approval_fails(self) -> None:
         events = list(reference_replay())
