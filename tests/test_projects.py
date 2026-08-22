@@ -26,6 +26,9 @@ class ProjectRegistryTests(unittest.TestCase):
     def test_earnings_mvp_has_working_point_in_time_foundation(self) -> None:
         self.assertEqual(MVP_PROJECTS[1].status, ProjectStatus.WORKING_FOUNDATION)
 
+    def test_arbitrage_mvp_has_working_executable_edge_foundation(self) -> None:
+        self.assertEqual(MVP_PROJECTS[2].status, ProjectStatus.WORKING_FOUNDATION)
+
 
 if __name__ == "__main__":
     unittest.main()

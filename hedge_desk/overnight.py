@@ -1,6 +1,6 @@
 """Deterministic paper-only overnight evaluation and morning report."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 import os
 from typing import Any, Dict, Tuple
@@ -31,6 +31,7 @@ from hedge_desk.earnings import (
     EarningsRelease,
     evaluate_earnings_surprise,
 )
+from hedge_desk.arbitrage import ArbitrageLeg, LegSide, evaluate_arbitrage_package
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -168,6 +169,59 @@ def _earnings_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
     )
 
 
+def _arbitrage_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
+    settlement = date(2026, 9, 18)
+    legs = (
+        ArbitrageLeg("buy-a", LegSide.BUY, Decimal("1.9"), Decimal("2.0"), 5, evaluated_at, settlement, "1" * 64),
+        ArbitrageLeg("sell-b", LegSide.SELL, Decimal("1.5"), Decimal("1.6"), 5, evaluated_at, settlement, "2" * 64),
+        ArbitrageLeg("sell-c", LegSide.SELL, Decimal("1.2"), Decimal("1.3"), 5, evaluated_at, settlement, "3" * 64),
+        ArbitrageLeg("buy-d", LegSide.BUY, Decimal("0.7"), Decimal("0.8"), 5, evaluated_at, settlement, "4" * 64),
+    )
+    result = evaluate_arbitrage_package(
+        legs, 1, 100, Decimal("100"), Decimal("5"), Decimal("5"),
+        Decimal("5"), Decimal("20"),
+    )
+    layers = (
+        LayerEvaluation(
+            EvaluationLayer.OBSERVED,
+            EvaluationStatus.PASS if result.admissible else EvaluationStatus.BLOCKED,
+            result.reason_codes,
+            {
+                "source": "synthetic_fixture",
+                "executable_entry_cashflow": str(result.executable_entry_cashflow),
+                "net_edge": str(result.net_edge),
+            },
+            tuple(leg.source_artifact_sha256 for leg in legs),
+        ),
+        LayerEvaluation(
+            EvaluationLayer.STAT, EvaluationStatus.NOT_REQUIRED,
+            ("SYNTHETIC_IDENTITY_CHECK_ONLY",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.BIG, EvaluationStatus.PASS, (),
+            {
+                "disposition": result.disposition,
+                "trade_authorized": str(result.trade_authorized).lower(),
+            },
+        ),
+        LayerEvaluation(
+            EvaluationLayer.DETERMINISTIC_RISK, EvaluationStatus.BLOCKED,
+            ("AUTHORITATIVE_RISK_INPUT_ABSENT",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.DETERMINISTIC_COMPLIANCE, EvaluationStatus.NOT_REQUIRED,
+            ("RESEARCH_ONLY_NO_TRADE",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.HUMAN, EvaluationStatus.NOT_REQUIRED,
+            ("RESEARCH_ONLY_NO_TRADE",), {},
+        ),
+    )
+    return ProjectEvaluation(
+        "arbitrage-observer", evaluated_at, Disposition.NO_TRADE, layers
+    )
+
+
 def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
     """Evaluate every registered project without inventing unbuilt strategies."""
     validate_project_registry()
@@ -247,7 +301,11 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         if project.status is ProjectStatus.ARCHITECTURE_ONLY
     )
     return (
-        (premium, _earnings_evaluation(FIXTURE_AS_OF))
+        (
+            premium,
+            _earnings_evaluation(FIXTURE_AS_OF),
+            _arbitrage_evaluation(FIXTURE_AS_OF),
+        )
         + inactive
         + (_model_lab_evaluation(FIXTURE_AS_OF),)
     )

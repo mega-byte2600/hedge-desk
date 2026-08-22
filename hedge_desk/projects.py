@@ -38,7 +38,7 @@ MVP_PROJECTS: Tuple[MvpProject, ...] = (
         3,
         "arbitrage-observer",
         "European Index Box/Parity Observer",
-        ProjectStatus.ARCHITECTURE_ONLY,
+        ProjectStatus.WORKING_FOUNDATION,
         "Observe executable parity and box dislocations after all costs.",
     ),
     MvpProject(

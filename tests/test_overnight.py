@@ -43,6 +43,10 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertEqual(
             earnings.layers[2].metrics["directional_trade_authorized"], "false"
         )
+        arbitrage = evaluations[2]
+        self.assertEqual(arbitrage.project_id, "arbitrage-observer")
+        self.assertEqual(arbitrage.layers[2].metrics["trade_authorized"], "false")
+        self.assertEqual(arbitrage.layers[3].status, EvaluationStatus.BLOCKED)
 
     def test_morning_report_is_explicitly_paper_and_reconciles(self) -> None:
         report = build_morning_report(NOW)
