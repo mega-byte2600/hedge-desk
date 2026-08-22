@@ -3,8 +3,9 @@
 import argparse
 import json
 from pathlib import Path
+from datetime import datetime
 
-from hedge_desk.demo import run_reference_demo
+from hedge_desk.demo import json_value, run_reference_demo
 from hedge_desk.overnight import current_morning_report
 from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.wargames import build_war_game_report
@@ -13,6 +14,7 @@ from hedge_desk.artifacts import (
     build_artifact_bundle_manifest,
     verify_artifact_bundle_manifest,
 )
+from hedge_desk.scheduler import ScheduledRunRequest, execute_scheduled_run
 
 
 def main() -> None:
@@ -30,7 +32,7 @@ def main() -> None:
     parser.add_argument(
         "--overnight-report",
         action="store_true",
-        help="run all four paper evaluations and emit the morning JSON report",
+        help="run all five paper evaluations and emit the morning JSON report",
     )
     parser.add_argument(
         "--projects",
@@ -62,6 +64,15 @@ def main() -> None:
         metavar="FILE",
         help="verify an artifact bundle manifest against files beside it",
     )
+    parser.add_argument(
+        "--scheduled-receipt",
+        action="store_true",
+        help="emit a scheduler receipt bound to --report-input",
+    )
+    parser.add_argument(
+        "--idempotency-key",
+        help="stable run identity required with --scheduled-receipt",
+    )
     args = parser.parse_args()
     if args.verify_bundle_manifest:
         manifest_path = Path(args.verify_bundle_manifest)
@@ -70,6 +81,20 @@ def main() -> None:
         print(json.dumps({"valid": not reasons, "reason_codes": list(reasons)}, indent=2))
         if reasons:
             raise SystemExit(1)
+        return
+    if args.scheduled_receipt:
+        if not args.report_input or not args.idempotency_key:
+            parser.error(
+                "--scheduled-receipt requires --report-input and --idempotency-key"
+            )
+        report = json.loads(Path(args.report_input).read_text(encoding="utf-8"))
+        scheduled_for = datetime.fromisoformat(report["generated_at"])
+        receipts = execute_scheduled_run(
+            ScheduledRunRequest(args.idempotency_key, scheduled_for),
+            (),
+            lambda _: report,
+        )
+        print(json.dumps(json_value(receipts[-1]), indent=2))
         return
     if args.bundle_manifest:
         manifest = build_artifact_bundle_manifest(

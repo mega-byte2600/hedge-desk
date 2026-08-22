@@ -32,6 +32,25 @@ class CliTests(unittest.TestCase):
             )
         self.assertIn(report["report_sha256"], result.stdout)
 
+    def test_scheduler_receipt_is_bound_to_exact_report_hash(self) -> None:
+        report = build_morning_report(
+            datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc)
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "morning.json"
+            path.write_text(json.dumps(report), encoding="utf-8")
+            result = subprocess.run(
+                [
+                    sys.executable, "-m", "hedge_desk.cli",
+                    "--scheduled-receipt", "--idempotency-key", "test-run",
+                    "--report-input", str(path),
+                ],
+                check=True, capture_output=True, text=True,
+            )
+        receipt = json.loads(result.stdout)
+        self.assertEqual(receipt["status"], "COMPLETE")
+        self.assertEqual(receipt["report_sha256"], report["report_sha256"])
+
 
 if __name__ == "__main__":
     unittest.main()
