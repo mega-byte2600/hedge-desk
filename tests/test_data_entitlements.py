@@ -93,6 +93,35 @@ class DataEntitlementTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "schema invalid"):
             parse_data_stack_manifest(invalid)
 
+    def test_manifest_rejects_nonfinite_money_and_nonstring_identity(self) -> None:
+        import json
+        from pathlib import Path
+
+        base = json.loads(
+            (Path(__file__).parents[1] / "examples" / "data-stack.synthetic.json")
+            .read_text(encoding="utf-8")
+        )
+        for field, value, reason in (
+            ("monthly_budget", "NaN", "must be finite"),
+            ("monthly_cost", "Infinity", "must be finite"),
+            ("source_id", 7, "identities must be strings"),
+        ):
+            payload = json.loads(json.dumps(base))
+            if field == "monthly_budget":
+                payload[field] = value
+            else:
+                payload["subscriptions"][0][field] = value
+            with self.assertRaisesRegex(ValueError, reason):
+                parse_data_stack_manifest(payload)
+
+    def test_direct_nonfinite_decimal_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "finite Decimal"):
+            evaluate_options_data_stack((subscription(),), Decimal("NaN"))
+        with self.assertRaisesRegex(ValueError, "finite Decimals"):
+            evaluate_options_data_stack(
+                (subscription(monthly_cost=Decimal("Infinity")),), Decimal("100")
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

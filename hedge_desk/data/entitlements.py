@@ -41,6 +41,8 @@ def evaluate_options_data_stack(
     monthly_budget: Decimal,
 ) -> DataReadinessResult:
     """Require executable historical evidence within budget and fail closed."""
+    if not isinstance(monthly_budget, Decimal) or not monthly_budget.is_finite():
+        raise ValueError("monthly budget must be a finite Decimal")
     if monthly_budget < 0:
         raise ValueError("monthly budget cannot be negative")
     if not subscriptions:
@@ -49,8 +51,18 @@ def evaluate_options_data_stack(
             ("DATA_SOURCE_ABSENT",),
         )
     identities = [item.source_id for item in subscriptions]
-    if any(not item for item in identities) or len(identities) != len(set(identities)):
+    if (
+        any(not isinstance(item, str) or not item for item in identities)
+        or len(identities) != len(set(identities))
+    ):
         raise ValueError("subscription source identities must be unique and nonempty")
+    if any(not isinstance(item.entitlement_id, str) for item in subscriptions):
+        raise ValueError("subscription entitlement identities must be strings")
+    if any(
+        not isinstance(item.monthly_cost, Decimal) or not item.monthly_cost.is_finite()
+        for item in subscriptions
+    ):
+        raise ValueError("subscription costs must be finite Decimals")
     reasons = []
     total = sum((item.monthly_cost for item in subscriptions), Decimal("0"))
     if any(item.monthly_cost < 0 for item in subscriptions):
@@ -130,9 +142,19 @@ def parse_data_stack_manifest(payload: Dict[str, Any]) -> Tuple[Decimal, Tuple[D
             raise ValueError("subscription capabilities must be boolean")
         if type(row["historical_years"]) is not int or row["historical_years"] < 0:
             raise ValueError("subscription historical years must be a nonnegative integer")
+        if not isinstance(row["source_id"], str) or not isinstance(
+            row["entitlement_id"], str
+        ):
+            raise ValueError("subscription identities must be strings")
+        try:
+            monthly_cost = Decimal(row["monthly_cost"])
+        except ArithmeticError as exc:
+            raise ValueError("subscription cost decimal invalid") from exc
+        if not monthly_cost.is_finite():
+            raise ValueError("subscription cost decimal must be finite")
         subscriptions.append(
             DataSubscription(
-                row["source_id"], Decimal(row["monthly_cost"]), row["entitlement_id"],
+                row["source_id"], monthly_cost, row["entitlement_id"],
                 row["historical_nbbo_quotes"], row["expired_option_contracts"],
                 row["option_chain_snapshots"], row["corporate_actions"],
                 row["point_in_time_timestamps"], row["trades"],
@@ -141,4 +163,10 @@ def parse_data_stack_manifest(payload: Dict[str, Any]) -> Tuple[Decimal, Tuple[D
                 row["redistribution_allowed"],
             )
         )
-    return Decimal(payload["monthly_budget"]), tuple(subscriptions)
+    try:
+        budget = Decimal(payload["monthly_budget"])
+    except ArithmeticError as exc:
+        raise ValueError("monthly budget decimal invalid") from exc
+    if not budget.is_finite():
+        raise ValueError("monthly budget decimal must be finite")
+    return budget, tuple(subscriptions)
