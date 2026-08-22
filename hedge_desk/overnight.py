@@ -34,7 +34,11 @@ from hedge_desk.reporting import finalize_report
 from hedge_desk.audit import build_audit_evaluation
 from hedge_desk.stat_evaluation import build_stat_evaluation
 from hedge_desk.portfolio_stress import build_portfolio_stress_report
-from hedge_desk.models import build_synthetic_reference_quorum
+from hedge_desk.models import (
+    ModelTeam,
+    build_synthetic_reference_quorum,
+    build_synthetic_training_gate,
+)
 from hedge_desk.earnings import (
     EarningsConsensus,
     EarningsEventInput,
@@ -118,6 +122,8 @@ def _reference_batch() -> Any:
 
 def _model_lab_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
     quorum = build_synthetic_reference_quorum(evaluated_at)
+    quant_training = build_synthetic_training_gate(ModelTeam.QUANT)
+    ai_training = build_synthetic_training_gate(ModelTeam.AI)
     layers = (
         LayerEvaluation(
             EvaluationLayer.OBSERVED, EvaluationStatus.PASS, (),
@@ -133,6 +139,13 @@ def _model_lab_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                 "disposition": quorum.disposition,
                 "label": quorum.label.value,
                 "authoritative_risk_input": str(quorum.authoritative_risk_input).lower(),
+                "quant_training_manifest_admissible": str(
+                    quant_training.admissible
+                ).lower(),
+                "ai_training_manifest_admissible": str(
+                    ai_training.admissible
+                ).lower(),
+                "training_trade_authorized": "false",
             },
             quorum.model_artifact_ids,
         ),

@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 211 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 214 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
@@ -34,7 +34,7 @@ python3 -m hedge_desk.cli --morning-markdown
 | Earnings Event Desk | Working point-in-time EPS/revenue surprise universe ranker plus comparison war games | `NO_TRADE`; live estimate vintages, reaction model, validated risk, and strategy pipeline not implemented |
 | Arbitrage Observer | Working synchronized executable-edge universe ranker plus war games | `NO_TRADE`; live scanner, risk, and settlement adapters not implemented |
 | Dividend Opportunity Desk | Working point-in-time ten-year universe ranking plus war games | `NO_TRADE`; live universe adapter and risk pipeline not implemented |
-| Open Quant/AI Model Lab | Working dual-team research quorum plus open-artifact gate | `NO_TRADE`; no authoritative risk input or training pipeline |
+| Open Quant/AI Model Lab | Working dual-team research quorum plus open-artifact and reproducible training-run gates | `NO_TRADE`; no live datasets, training executor, authoritative risk input, or control authority |
 | Weather/War/Logistics Futures Event Desk | Working cost/curve-aware synthetic multi-event universe ranker | `NO_TRADE`; live data, validated risk/margin, registration, and contract adapters not implemented |
 
 ## Implemented control boundaries

@@ -51,6 +51,17 @@ class OvernightEvaluationTests(unittest.TestCase):
         model_lab = evaluations[4]
         self.assertEqual(model_lab.project_id, "open-quant-ai-model-lab")
         self.assertEqual(
+            model_lab.layers[2].metrics["quant_training_manifest_admissible"],
+            "true",
+        )
+        self.assertEqual(
+            model_lab.layers[2].metrics["ai_training_manifest_admissible"],
+            "true",
+        )
+        self.assertEqual(
+            model_lab.layers[2].metrics["training_trade_authorized"], "false"
+        )
+        self.assertEqual(
             model_lab.layers[2].metrics["authoritative_risk_input"], "false"
         )
         self.assertEqual(model_lab.layers[3].status, EvaluationStatus.BLOCKED)
