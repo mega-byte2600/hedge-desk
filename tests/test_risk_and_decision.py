@@ -36,7 +36,10 @@ def make_candidate(**overrides: object) -> TradeCandidate:
     return TradeCandidate(**values)  # type: ignore[arg-type]
 
 
-def risk_inputs(trade: TradeCandidate):
+def risk_inputs(
+    trade: TradeCandidate,
+    risk_of_ruin_after: Decimal = Decimal("0"),
+):
     return build_validated_risk_inputs(
         trade.candidate_id,
         trade.max_loss,
@@ -46,6 +49,9 @@ def risk_inputs(trade: TradeCandidate):
         "a" * 64,
         "b" * 64,
         Decimal("0"),
+        risk_of_ruin_after,
+        "finite-capital-ruin-approximation",
+        "0.1.0-unvalidated",
         "classic-vv-test-validator",
         "1.0.0",
     )
@@ -92,6 +98,26 @@ class RiskAndDecisionTests(unittest.TestCase):
         self.assertEqual(decision.status, DecisionStatus.RISK_PASS)
         self.assertEqual(decision.reason_codes, ())
         self.assertEqual(decision.risk_source_artifact_sha256, "a" * 64)
+
+    def test_decision_consumes_exact_validated_ror_without_recalculation(self) -> None:
+        trade = make_candidate()
+        supplied = Decimal("0.0123456789")
+        decision = evaluate_candidate(
+            self.account, trade, NOW, risk_inputs=risk_inputs(trade, supplied)
+        )
+        self.assertEqual(decision.risk_of_ruin_after, supplied)
+
+    def test_validated_ror_above_policy_limit_blocks(self) -> None:
+        trade = make_candidate()
+        decision = evaluate_candidate(
+            self.account,
+            trade,
+            NOW,
+            RiskPolicy(maximum_risk_of_ruin=Decimal("0.04")),
+            risk_inputs(trade, Decimal("0.0400000001")),
+        )
+        self.assertEqual(decision.status, DecisionStatus.BLOCKED)
+        self.assertIn("RISK_OF_RUIN_LIMIT", decision.reason_codes)
 
     def test_decision_is_deterministic(self) -> None:
         trade = make_candidate()

@@ -17,6 +17,9 @@ class ValidatedRiskInputs:
     source_artifact_sha256: str
     portfolio_snapshot_sha256: str
     risk_of_ruin_before: Decimal
+    risk_of_ruin_after: Decimal
+    risk_model_id: str
+    risk_model_version: str
     validator_id: str
     validator_version: str
     environment: str
@@ -39,6 +42,9 @@ def _payload(
     source_artifact_sha256: str,
     portfolio_snapshot_sha256: str,
     risk_of_ruin_before: Decimal,
+    risk_of_ruin_after: Decimal,
+    risk_model_id: str,
+    risk_model_version: str,
     validator_id: str,
     validator_version: str,
     environment: str,
@@ -52,6 +58,9 @@ def _payload(
         "source_artifact_sha256": source_artifact_sha256,
         "portfolio_snapshot_sha256": portfolio_snapshot_sha256,
         "risk_of_ruin_before": str(risk_of_ruin_before),
+        "risk_of_ruin_after": str(risk_of_ruin_after),
+        "risk_model_id": risk_model_id,
+        "risk_model_version": risk_model_version,
         "validator_id": validator_id,
         "validator_version": validator_version,
         "win_probability": str(win_probability),
@@ -67,11 +76,20 @@ def build_validated_risk_inputs(
     source_artifact_sha256: str,
     portfolio_snapshot_sha256: str,
     risk_of_ruin_before: Decimal,
+    risk_of_ruin_after: Decimal,
+    risk_model_id: str,
+    risk_model_version: str,
     validator_id: str,
     validator_version: str,
     environment: str = "paper",
 ) -> ValidatedRiskInputs:
-    if not candidate_id or not validator_id or not validator_version:
+    if (
+        not candidate_id
+        or not validator_id
+        or not validator_version
+        or not risk_model_id
+        or not risk_model_version
+    ):
         raise ValueError("risk input and validator identities are required")
     if as_of.tzinfo is None:
         raise ValueError("risk input timestamp must be timezone-aware")
@@ -83,13 +101,17 @@ def build_validated_risk_inputs(
         portfolio_snapshot_sha256
     ):
         raise ValueError("validated source and portfolio snapshot hashes are required")
-    if not Decimal("0") <= risk_of_ruin_before <= Decimal("1"):
-        raise ValueError("prior portfolio risk of ruin must be between zero and one")
+    if not (
+        Decimal("0") <= risk_of_ruin_before <= Decimal("1")
+        and Decimal("0") <= risk_of_ruin_after <= Decimal("1")
+    ):
+        raise ValueError("portfolio risk of ruin values must be between zero and one")
     if environment != "paper":
         raise ValueError("only paper risk inputs are accepted")
     payload = _payload(
         candidate_id, maximum_loss, expected_win, win_probability, as_of,
         source_artifact_sha256, portfolio_snapshot_sha256, risk_of_ruin_before,
+        risk_of_ruin_after, risk_model_id, risk_model_version,
         validator_id, validator_version, environment,
     )
     artifact_hash = sha256(
@@ -98,6 +120,7 @@ def build_validated_risk_inputs(
     return ValidatedRiskInputs(
         candidate_id, maximum_loss, expected_win, win_probability, as_of,
         source_artifact_sha256, portfolio_snapshot_sha256, risk_of_ruin_before,
+        risk_of_ruin_after, risk_model_id, risk_model_version,
         validator_id, validator_version, environment,
         artifact_hash,
     )
@@ -113,6 +136,9 @@ def validate_risk_inputs(inputs: ValidatedRiskInputs) -> None:
         inputs.source_artifact_sha256,
         inputs.portfolio_snapshot_sha256,
         inputs.risk_of_ruin_before,
+        inputs.risk_of_ruin_after,
+        inputs.risk_model_id,
+        inputs.risk_model_version,
         inputs.validator_id,
         inputs.validator_version,
         inputs.environment,

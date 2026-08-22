@@ -11,6 +11,10 @@ validation: at least four positive-weight asset classes, no asset class above
 gate requires exact Decimal weights summing to one. It calculates no Risk of
 Ruin, forecasts no return, and authorizes no trade.
 
+The CAPE input is an externally sourced observation, while the thresholds and
+allocation weights are project policy. The artifact hash binds both so a report
+cannot silently relabel policy judgment as a Shiller statistic.
+
 Before production, the policy needs point-in-time, methodology-consistent CAPE
 evidence; tax/liability/liquidity constraints; correlation/regime stress;
 instrument look-through; and independent investment-policy approval. Swensen's

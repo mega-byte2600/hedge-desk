@@ -175,6 +175,9 @@ def build_reference_plan() -> Any:
         handoffs[0].calculation_sha256,
         compliance_decision.portfolio_snapshot_sha256,
         Decimal("0"),
+        Decimal("0"),
+        "finite-capital-ruin-approximation",
+        "0.1.0-unvalidated",
         "classic-vv-fixture-validator",
         "1.0.0",
     )

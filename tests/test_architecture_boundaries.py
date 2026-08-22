@@ -17,7 +17,6 @@ class ArchitectureBoundaryTests(unittest.TestCase):
     def test_risk_of_ruin_calculation_is_confined_to_conventional_boundary(self) -> None:
         allowed = {
             PACKAGE_ROOT / "risk" / "ruin.py",
-            PACKAGE_ROOT / "core" / "decision.py",
         }
         offenders = []
         for path in python_sources():
@@ -36,6 +35,12 @@ class ArchitectureBoundaryTests(unittest.TestCase):
                     if name == "estimate_risk_of_ruin" and path not in allowed:
                         offenders.append(str(path.relative_to(REPOSITORY_ROOT)))
         self.assertEqual(offenders, [])
+
+    def test_agentic_decision_runtime_does_not_import_ror_calculator(self) -> None:
+        decision_source = (PACKAGE_ROOT / "core" / "decision.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("estimate_risk_of_ruin", decision_source)
 
     def test_validated_risk_inputs_cannot_be_constructed_by_agent_modules(self) -> None:
         allowed = {

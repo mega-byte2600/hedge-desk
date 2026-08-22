@@ -1,16 +1,12 @@
 """Combine independent eligibility and economic-risk gates."""
 
 from datetime import datetime
-from decimal import Decimal
 from typing import Optional
 
 from hedge_desk.compliance.account_gate import account_gate
 from hedge_desk.domain import Account, Decision, DecisionStatus, TradeCandidate
 from hedge_desk.risk.ruin import (
-    RISK_MODEL_ID,
-    RISK_MODEL_VERSION,
     RiskPolicy,
-    estimate_risk_of_ruin,
     risk_gate,
 )
 from hedge_desk.risk.inputs import ValidatedRiskInputs, validate_risk_inputs
@@ -38,15 +34,17 @@ def evaluate_candidate(
     if risk_inputs.as_of > evaluated_at:
         raise ValueError("risk inputs cannot be from the future")
     reasons = account_gate(account, candidate)
-    reasons.extend(risk_gate(account, candidate, evaluated_at, policy))
+    reasons.extend(
+        risk_gate(
+            account,
+            candidate,
+            evaluated_at,
+            policy,
+            risk_inputs.risk_of_ruin_after,
+        )
+    )
     reason_codes = tuple(sorted(set(reasons)))
 
-    ruin_after = estimate_risk_of_ruin(
-        account.equity,
-        candidate.max_loss,
-        candidate.win_probability,
-        candidate.expected_win,
-    )
     return Decision(
         candidate_id=candidate.candidate_id,
         account_id=account.account_id,
@@ -57,10 +55,10 @@ def evaluate_candidate(
         ),
         reason_codes=reason_codes,
         risk_of_ruin_before=risk_inputs.risk_of_ruin_before,
-        risk_of_ruin_after=ruin_after,
+        risk_of_ruin_after=risk_inputs.risk_of_ruin_after,
         evaluated_at=evaluated_at,
-        risk_model_id=RISK_MODEL_ID,
-        risk_model_version=RISK_MODEL_VERSION,
+        risk_model_id=risk_inputs.risk_model_id,
+        risk_model_version=risk_inputs.risk_model_version,
         risk_input_sha256=risk_inputs.artifact_sha256,
         risk_source_artifact_sha256=risk_inputs.source_artifact_sha256,
         portfolio_snapshot_sha256=risk_inputs.portfolio_snapshot_sha256,

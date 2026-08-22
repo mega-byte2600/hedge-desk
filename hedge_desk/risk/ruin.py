@@ -65,8 +65,9 @@ def risk_gate(
     candidate: TradeCandidate,
     evaluated_at: datetime,
     policy: RiskPolicy,
+    validated_risk_of_ruin_after: Decimal,
 ) -> List[str]:
-    """Return hard risk blockers for a proposed paper trade."""
+    """Return hard blockers while consuming, never calculating, authoritative RoR."""
     reasons: List[str] = []
     age_seconds = (evaluated_at - candidate.quote_timestamp).total_seconds()
 
@@ -81,13 +82,7 @@ def risk_gate(
     if candidate.max_loss / account.equity > policy.maximum_single_trade_loss_fraction:
         reasons.append("SINGLE_TRADE_LOSS_LIMIT")
 
-    ruin_after = estimate_risk_of_ruin(
-        account.equity,
-        candidate.max_loss,
-        candidate.win_probability,
-        candidate.expected_win,
-    )
-    if ruin_after > policy.maximum_risk_of_ruin:
+    if validated_risk_of_ruin_after > policy.maximum_risk_of_ruin:
         reasons.append("RISK_OF_RUIN_LIMIT")
 
     return sorted(set(reasons))
