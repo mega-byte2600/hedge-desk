@@ -13,6 +13,7 @@ from hedge_desk.wargames import (
     run_model_governance_war_games,
     run_compliance_war_games,
     run_premium_timing_war_games,
+    run_candidate_pipeline_war_games,
     run_premium_war_games,
 )
 
@@ -21,8 +22,8 @@ class PremiumWarGameTests(unittest.TestCase):
     def test_all_declared_scenarios_are_reported(self) -> None:
         report = build_war_game_report()
         self.assertTrue(report["all_declared_scenarios_included"])
-        self.assertEqual(report["summary"]["total_scenario_count"], 46)
-        self.assertEqual(report["summary"]["no_trade_control_count"], 22)
+        self.assertEqual(report["summary"]["total_scenario_count"], 50)
+        self.assertEqual(report["summary"]["no_trade_control_count"], 26)
         premium = report["summary"]["premium_fixed_trade"]
         self.assertEqual(premium["profitable_scenarios"], 1)
         self.assertEqual(premium["losing_scenarios"], 4)
@@ -31,7 +32,7 @@ class PremiumWarGameTests(unittest.TestCase):
             premium["descriptive_metrics"]["inference_status"],
             "INSUFFICIENT_SYNTHETIC_SAMPLE",
         )
-        self.assertEqual(report["fixture_manifest"]["scenario_count"], 46)
+        self.assertEqual(report["fixture_manifest"]["scenario_count"], 50)
         self.assertEqual(len(report["fixture_manifest"]["fixture_sha256"]), 64)
         self.assertEqual(len(report["war_game_report_sha256"]), 64)
         summary = report["summary"]
@@ -50,7 +51,7 @@ class PremiumWarGameTests(unittest.TestCase):
 
     def test_fixture_manifest_is_reproducible(self) -> None:
         self.assertEqual(build_war_game_manifest(), build_war_game_manifest())
-        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 46)
+        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 50)
 
     def test_reference_scenario_pnls_are_exact(self) -> None:
         results = {result.scenario_id: result for result in run_premium_war_games()}
@@ -202,6 +203,29 @@ class PremiumWarGameTests(unittest.TestCase):
         self.assertEqual(
             results["timing-expiration"]["lifecycle_action"],
             "EXPIRATION_RECONCILIATION_REQUIRED",
+        )
+
+    def test_candidate_pipeline_attacks_never_reach_back_office(self) -> None:
+        results = {
+            item["scenario_id"]: item
+            for item in run_candidate_pipeline_war_games()
+        }
+        self.assertTrue(all(not item["trade_authorized"] for item in results.values()))
+        self.assertIn(
+            "VALIDATED_RISK_INPUT_REQUIRED",
+            results["candidate-awaits-validated-risk"]["reason_codes"],
+        )
+        self.assertIn(
+            "NO_ADMISSIBLE_CANDIDATE",
+            results["candidate-thin-market"]["reason_codes"],
+        )
+        self.assertIn(
+            "HANDOFF_HASH_MISMATCH",
+            results["candidate-handoff-economics-tamper"]["reason_codes"],
+        )
+        self.assertIn(
+            "UNTRUSTED_TRADE_AUTHORIZATION",
+            results["candidate-front-office-authorization"]["reason_codes"],
         )
 
 

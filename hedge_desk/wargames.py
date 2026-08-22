@@ -7,7 +7,12 @@ from hashlib import sha256
 import json
 from typing import Any, Dict, Tuple
 
-from hedge_desk.demo import FIXTURE_AS_OF, build_reference_plan, json_value
+from hedge_desk.demo import (
+    FIXTURE_AS_OF,
+    build_reference_option_snapshot,
+    build_reference_plan,
+    json_value,
+)
 from hedge_desk.paper import (
     approve_paper_trade,
     close_paper_trade,
@@ -35,6 +40,11 @@ from hedge_desk.backoffice import (
     validate_compliance_policy_artifact,
 )
 from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
+from hedge_desk.options import (
+    build_candidate_control_handoffs,
+    scan_vertical_credit_spreads,
+    validate_candidate_control_handoff,
+)
 
 
 WAR_GAME_VERSION = "premium-spread-war-games-1.0.0"
@@ -157,6 +167,12 @@ class PremiumTimingWarGame:
     scenario_id: str
     days_before_expiration: int
     executable_exit_debit_per_share: Decimal
+
+
+@dataclass(frozen=True)
+class CandidatePipelineWarGame:
+    scenario_id: str
+    attack: str
 
 
 PREMIUM_WAR_GAMES: Tuple[PremiumWarGame, ...] = (
@@ -339,6 +355,14 @@ PREMIUM_TIMING_WAR_GAMES: Tuple[PremiumTimingWarGame, ...] = (
     PremiumTimingWarGame("timing-planned-exit-7-dte", 7, Decimal("0.40")),
     PremiumTimingWarGame("timing-adverse-1-dte", 1, Decimal("4.80")),
     PremiumTimingWarGame("timing-expiration", 0, Decimal("5.00")),
+)
+
+
+CANDIDATE_PIPELINE_WAR_GAMES: Tuple[CandidatePipelineWarGame, ...] = (
+    CandidatePipelineWarGame("candidate-awaits-validated-risk", "MISSING_RISK"),
+    CandidatePipelineWarGame("candidate-thin-market", "THIN_MARKET"),
+    CandidatePipelineWarGame("candidate-handoff-economics-tamper", "TAMPER"),
+    CandidatePipelineWarGame("candidate-front-office-authorization", "AUTHORIZE"),
 )
 
 
@@ -689,6 +713,42 @@ def run_premium_timing_war_games() -> Tuple[Dict[str, Any], ...]:
     return tuple(results)
 
 
+def run_candidate_pipeline_war_games() -> Tuple[Dict[str, Any], ...]:
+    base_snapshot = build_reference_option_snapshot()
+    results = []
+    for scenario in CANDIDATE_PIPELINE_WAR_GAMES:
+        snapshot = base_snapshot
+        if scenario.attack == "THIN_MARKET":
+            thin_quotes = tuple(
+                replace(quote, volume=0) for quote in snapshot.option_quotes
+            )
+            snapshot = replace(snapshot, option_quotes=thin_quotes)
+        scan = scan_vertical_credit_spreads(snapshot, FIXTURE_AS_OF)
+        handoffs = build_candidate_control_handoffs(scan)
+        reasons = []
+        if not handoffs:
+            reasons.append("NO_ADMISSIBLE_CANDIDATE")
+        else:
+            handoff = handoffs[0]
+            if scenario.attack == "TAMPER":
+                handoff = replace(handoff, maximum_win="999999")
+            elif scenario.attack == "AUTHORIZE":
+                handoff = replace(handoff, trade_authorized=True)
+            reasons.extend(validate_candidate_control_handoff(handoff))
+            if scenario.attack == "MISSING_RISK":
+                reasons.append("VALIDATED_RISK_INPUT_REQUIRED")
+        results.append(
+            {
+                "scenario_id": scenario.scenario_id,
+                "disposition": "NO_TRADE",
+                "scan_disposition": scan.disposition,
+                "reason_codes": sorted(set(reasons)),
+                "trade_authorized": False,
+            }
+        )
+    return tuple(results)
+
+
 def build_war_game_manifest() -> Dict[str, Any]:
     """Content-address every declared scenario input using canonical JSON."""
     fixtures = {
@@ -702,6 +762,7 @@ def build_war_game_manifest() -> Dict[str, Any]:
         "model_governance": json_value(MODEL_GOVERNANCE_WAR_GAMES),
         "compliance_controls": json_value(COMPLIANCE_WAR_GAMES),
         "premium_timing": json_value(PREMIUM_TIMING_WAR_GAMES),
+        "candidate_pipeline": json_value(CANDIDATE_PIPELINE_WAR_GAMES),
     }
     scenario_ids = [
         scenario["scenario_id"]
@@ -737,6 +798,7 @@ def build_war_game_report() -> Dict[str, Any]:
     model_governance = run_model_governance_war_games()
     compliance_controls = run_compliance_war_games()
     premium_timing = run_premium_timing_war_games()
+    candidate_pipeline = run_candidate_pipeline_war_games()
     pnls = tuple(result.net_pnl for result in results)
     wins = sum(result.profitable for result in results)
     premium_metrics = evaluate_pnl_series(pnls)
@@ -779,6 +841,7 @@ def build_war_game_report() -> Dict[str, Any]:
         + sum(item["disposition"] == "NO_TRADE" for item in futures_events)
         + sum(item["disposition"] == "NO_TRADE" for item in model_governance)
         + sum(item["disposition"] == "NO_TRADE" for item in compliance_controls)
+        + sum(item["disposition"] == "NO_TRADE" for item in candidate_pipeline)
     )
     report = {
         "report_type": "synthetic_hypothetical_war_games",
@@ -796,6 +859,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 + len(model_governance)
                 + len(compliance_controls)
                 + len(premium_timing)
+                + len(candidate_pipeline)
             ),
             "scenario_count_by_mvp": {
                 "overnight-premium-desk": len(results),
@@ -808,6 +872,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 "open-quant-ai-model-lab": len(model_governance),
                 "compliance-controls": len(compliance_controls),
                 "premium-timing-controls": len(premium_timing),
+                "candidate-pipeline-controls": len(candidate_pipeline),
             },
             "no_trade_control_count": no_trade_controls,
             "premium_fixed_trade": {
@@ -844,6 +909,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "model_governance": model_governance,
         "compliance_controls": compliance_controls,
         "premium_timing": premium_timing,
+        "candidate_pipeline": candidate_pipeline,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",
