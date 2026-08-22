@@ -34,6 +34,13 @@ def evaluate_pnl_series(
     """Describe a declared P&L sequence without treating it as an IID sample."""
     if not pnls:
         raise ValueError("at least one P&L observation is required")
+    if any(not isinstance(value, Decimal) or not value.is_finite() for value in pnls):
+        raise ValueError("P&L observations must be finite Decimals")
+    if (
+        not isinstance(expected_shortfall_confidence, Decimal)
+        or not expected_shortfall_confidence.is_finite()
+    ):
+        raise ValueError("expected shortfall confidence must be a finite Decimal")
     if not Decimal("0") < expected_shortfall_confidence < Decimal("1"):
         raise ValueError("expected shortfall confidence must be between zero and one")
 

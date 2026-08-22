@@ -85,6 +85,13 @@ def build_portfolio_stress_report(
     starting_capital: Decimal = Decimal("100000"),
     maximum_drawdown_fraction: Decimal = Decimal("0.05"),
 ) -> Dict[str, Any]:
+    if (
+        not isinstance(starting_capital, Decimal)
+        or not starting_capital.is_finite()
+        or not isinstance(maximum_drawdown_fraction, Decimal)
+        or not maximum_drawdown_fraction.is_finite()
+    ):
+        raise ValueError("portfolio stress policy values must be finite Decimals")
     if starting_capital <= 0:
         raise ValueError("starting capital must be positive")
     if not Decimal("0") < maximum_drawdown_fraction < Decimal("1"):

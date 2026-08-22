@@ -35,6 +35,8 @@ class PortfolioStressTests(unittest.TestCase):
             build_portfolio_stress_report(Decimal("0"))
         with self.assertRaises(ValueError):
             build_portfolio_stress_report(maximum_drawdown_fraction=Decimal("1"))
+        with self.assertRaisesRegex(ValueError, "finite"):
+            build_portfolio_stress_report(starting_capital=Decimal("Infinity"))
 
     def test_stress_artifact_drives_back_office_circuit_breaker(self) -> None:
         report = build_portfolio_stress_report()

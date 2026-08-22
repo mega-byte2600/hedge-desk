@@ -26,6 +26,9 @@ class DescriptiveMetricsTests(unittest.TestCase):
             evaluate_pnl_series(())
         with self.assertRaises(ValueError):
             evaluate_pnl_series((Decimal("1"),), Decimal("1"))
+        for value in (Decimal("NaN"), Decimal("Infinity")):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "finite"):
+                evaluate_pnl_series((value,))
 
 
 if __name__ == "__main__":

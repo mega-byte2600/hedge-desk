@@ -5,6 +5,8 @@ import unittest
 
 from hedge_desk.backoffice import (
     BackOfficeStatus,
+    PortfolioPolicy,
+    PositionExposure,
     evaluate_compliance_policy,
     evaluate_drawdown_circuit_breaker,
     evaluate_paper_compliance,
@@ -25,6 +27,16 @@ def candidate(product: ProductType) -> TradeCandidate:
 
 
 class BackOfficeTests(unittest.TestCase):
+    def test_nonfinite_portfolio_controls_are_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            PortfolioPolicy(maximum_aggregate_loss_fraction=Decimal("NaN"))
+        with self.assertRaises(ValueError):
+            PositionExposure("position-1", "TEST", Decimal("Infinity"))
+        with self.assertRaisesRegex(ValueError, "finite"):
+            evaluate_drawdown_circuit_breaker(
+                Decimal("Infinity"), Decimal("1"), "a" * 64
+            )
+
     def setUp(self) -> None:
         self.account = Account(
             "paper-1", AccountType.INDIVIDUAL, Decimal("100000"),

@@ -19,7 +19,13 @@ class PositionExposure:
     maximum_loss: Decimal
 
     def __post_init__(self) -> None:
-        if not self.position_id or not self.symbol or self.maximum_loss < 0:
+        if (
+            not self.position_id
+            or not self.symbol
+            or not isinstance(self.maximum_loss, Decimal)
+            or not self.maximum_loss.is_finite()
+            or self.maximum_loss < 0
+        ):
             raise ValueError("position identity, symbol, and nonnegative loss are required")
 
 
@@ -28,6 +34,21 @@ class PortfolioPolicy:
     maximum_aggregate_loss_fraction: Decimal = Decimal("0.05")
     maximum_symbol_loss_fraction: Decimal = Decimal("0.02")
     maximum_open_positions: int = 10
+
+    def __post_init__(self) -> None:
+        fractions = (
+            self.maximum_aggregate_loss_fraction,
+            self.maximum_symbol_loss_fraction,
+        )
+        if any(
+            not isinstance(value, Decimal) or not value.is_finite()
+            for value in fractions
+        ):
+            raise ValueError("portfolio policy fractions must be finite Decimals")
+        if any(not Decimal("0") < value <= Decimal("1") for value in fractions):
+            raise ValueError("portfolio policy fractions must be in (0, 1]")
+        if type(self.maximum_open_positions) is not int or self.maximum_open_positions <= 0:
+            raise ValueError("maximum open positions must be a positive integer")
 
 
 @dataclass(frozen=True)
@@ -51,6 +72,13 @@ def evaluate_drawdown_circuit_breaker(
     source_report_sha256: str,
 ) -> CircuitBreakerResult:
     """Create a deterministic Back Office new-risk state from validated inputs."""
+    if (
+        not isinstance(current_drawdown, Decimal)
+        or not current_drawdown.is_finite()
+        or not isinstance(maximum_drawdown, Decimal)
+        or not maximum_drawdown.is_finite()
+    ):
+        raise ValueError("drawdown inputs must be finite Decimals")
     if current_drawdown < 0 or maximum_drawdown <= 0:
         raise ValueError("drawdown inputs must be nonnegative with a positive limit")
     try:
