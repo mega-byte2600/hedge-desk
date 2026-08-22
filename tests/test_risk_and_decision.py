@@ -154,6 +154,20 @@ class RiskAndDecisionTests(unittest.TestCase):
                 risk_inputs(trade),
             )
 
+    def test_malformed_risk_policy_cannot_be_constructed(self) -> None:
+        invalid_cases = (
+            {"maximum_risk_of_ruin": Decimal("NaN")},
+            {"maximum_risk_of_ruin": Decimal("1.01")},
+            {"maximum_quote_age_seconds": -1},
+            {"maximum_single_trade_loss_fraction": Decimal("0")},
+            {"required_risk_model_id": ""},
+            {"permitted_validator_ids": ()},
+            {"permitted_validator_ids": ("same", "same")},
+        )
+        for values in invalid_cases:
+            with self.subTest(values=values), self.assertRaises(ValueError):
+                RiskPolicy(**values)
+
 
 if __name__ == "__main__":
     unittest.main()

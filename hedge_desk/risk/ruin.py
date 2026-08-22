@@ -26,6 +26,39 @@ class RiskPolicy:
         "classic-vv-test-validator",
     )
 
+    def __post_init__(self) -> None:
+        decimal_limits = (
+            self.maximum_risk_of_ruin,
+            self.minimum_daily_dollar_volume,
+            self.maximum_single_trade_loss_fraction,
+        )
+        if any(
+            not isinstance(value, Decimal) or not value.is_finite()
+            for value in decimal_limits
+        ):
+            raise ValueError("risk policy decimal limits must be finite Decimals")
+        if not Decimal("0") <= self.maximum_risk_of_ruin <= Decimal("1"):
+            raise ValueError("maximum risk of ruin must be between zero and one")
+        if self.minimum_daily_dollar_volume < 0:
+            raise ValueError("minimum liquidity cannot be negative")
+        if not Decimal("0") < self.maximum_single_trade_loss_fraction <= Decimal("1"):
+            raise ValueError("single-trade loss fraction must be in (0, 1]")
+        if (
+            type(self.maximum_quote_age_seconds) is not int
+            or self.maximum_quote_age_seconds < 0
+            or type(self.assumed_loss_sequence) is not int
+            or self.assumed_loss_sequence <= 0
+        ):
+            raise ValueError("risk policy integer limits invalid")
+        if not self.required_risk_model_id or not self.required_risk_model_version:
+            raise ValueError("required risk model identity is missing")
+        if (
+            not self.permitted_validator_ids
+            or any(not isinstance(value, str) or not value for value in self.permitted_validator_ids)
+            or len(self.permitted_validator_ids) != len(set(self.permitted_validator_ids))
+        ):
+            raise ValueError("risk validator allowlist invalid")
+
 
 def estimate_risk_of_ruin(
     account_equity: Decimal,
