@@ -54,6 +54,14 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
     audit = report.get("audit_chain", {})
     if not isinstance(audit, dict) or audit.get("valid") is not True:
         reasons.append("AUDIT_CHAIN_INVALID")
+    batch = report.get("data_batch", {})
+    if (
+        not isinstance(batch, dict)
+        or batch.get("status") != "READY_FOR_RESEARCH"
+        or not isinstance(batch.get("manifest_sha256"), str)
+        or len(batch.get("manifest_sha256", "")) != 64
+    ):
+        reasons.append("DATA_BATCH_NOT_READY")
     war_games = report.get("war_games", {})
     if (
         not isinstance(war_games, dict)

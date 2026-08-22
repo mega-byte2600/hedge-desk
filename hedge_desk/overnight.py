@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Tuple
 
 from hedge_desk.data import DataArtifact, validate_data_artifact
+from hedge_desk.data import SourceBatchResult, SourceBatchStatus, build_batch_manifest
 from hedge_desk.data.contracts import sha256_text
 from hedge_desk.demo import FIXTURE_AS_OF, FIXTURE_ID, build_reference_plan, json_value
 from hedge_desk.evaluation import (
@@ -36,6 +37,22 @@ def _reference_artifact() -> DataArtifact:
         payload_sha256=sha256_text("TEST-95-90-PUT-CREDIT|2026-07-28T20:00:00Z"),
         synthetic=True,
         redistribution_allowed=True,
+    )
+
+
+def _reference_batch() -> Any:
+    artifact = _reference_artifact()
+    return build_batch_manifest(
+        "synthetic-reference-batch-v1",
+        (artifact.source_id,),
+        (
+            SourceBatchResult(
+                artifact.source_id,
+                SourceBatchStatus.PASS,
+                artifact.payload_sha256,
+            ),
+        ),
+        sha256_text("paper-source-policy-1.0.0"),
     )
 
 
@@ -158,6 +175,7 @@ def build_morning_report(generated_at: datetime) -> Dict[str, Any]:
             "Architecture-only projects correctly return NO_TRADE.",
         ],
         "projects": json_value(evaluations),
+        "data_batch": json_value(_reference_batch()),
         "war_games": build_war_game_report(),
         "chronological_replay": build_replay_evaluation(),
         "audit_chain": build_audit_evaluation(),
