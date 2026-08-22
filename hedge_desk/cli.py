@@ -14,7 +14,11 @@ from hedge_desk.artifacts import (
     build_artifact_bundle_manifest,
     verify_artifact_bundle_manifest,
 )
-from hedge_desk.scheduler import ScheduledRunRequest, execute_scheduled_run
+from hedge_desk.scheduler import (
+    ScheduledRunRequest,
+    execute_scheduled_run,
+    validate_serialized_scheduled_run_receipt,
+)
 from hedge_desk.data import validate_local_observation
 from hedge_desk.options import (
     build_candidate_control_handoffs,
@@ -106,10 +110,27 @@ def main() -> None:
         help="emit a scheduler receipt bound to --report-input",
     )
     parser.add_argument(
+        "--verify-scheduled-receipt",
+        metavar="FILE",
+        help="independently verify a serialized scheduler receipt",
+    )
+    parser.add_argument(
         "--idempotency-key",
         help="stable run identity required with --scheduled-receipt",
     )
     args = parser.parse_args()
+    if args.verify_scheduled_receipt:
+        try:
+            receipt = json.loads(
+                Path(args.verify_scheduled_receipt).read_text(encoding="utf-8")
+            )
+            reasons = validate_serialized_scheduled_run_receipt(receipt)
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            reasons = ("SCHEDULER_RECEIPT_SCHEMA_INVALID",)
+        print(json.dumps({"valid": not reasons, "reason_codes": list(reasons)}, indent=2))
+        if reasons:
+            raise SystemExit(1)
+        return
     if args.validate_data_envelope:
         if not args.payload or not args.decision_cutoff:
             parser.error(

@@ -1,11 +1,15 @@
+from dataclasses import replace
 from datetime import datetime, timezone
 import unittest
 
 from hedge_desk.overnight import build_morning_report
+from hedge_desk.demo import json_value
 from hedge_desk.scheduler import (
     ScheduledRunRequest,
     ScheduledRunStatus,
     execute_scheduled_run,
+    validate_scheduled_run_receipt,
+    validate_serialized_scheduled_run_receipt,
 )
 
 
@@ -19,6 +23,11 @@ class SchedulerTests(unittest.TestCase):
         )
         self.assertIs(receipts[-1].status, ScheduledRunStatus.COMPLETE)
         self.assertEqual(len(receipts[-1].report_sha256 or ""), 64)
+        self.assertEqual(validate_scheduled_run_receipt(receipts[-1]), ())
+        self.assertEqual(
+            validate_serialized_scheduled_run_receipt(json_value(receipts[-1])), ()
+        )
+        self.assertEqual(len(receipts[-1].receipt_sha256), 64)
 
     def test_duplicate_delivery_is_suppressed(self) -> None:
         request = ScheduledRunRequest("run-1", NOW)
@@ -73,6 +82,24 @@ class SchedulerTests(unittest.TestCase):
         self.assertIs(receipts[-1].status, ScheduledRunStatus.FAILED_CLOSED)
         self.assertEqual(receipts[-1].reason_codes, ("INVALID_RECOVERY_REQUEST",))
         self.assertIsNone(receipts[-1].report_sha256)
+
+    def test_receipt_status_and_report_tampering_is_detected(self) -> None:
+        receipt = execute_scheduled_run(
+            ScheduledRunRequest("run-1", NOW), (), build_morning_report
+        )[-1]
+        tampered = replace(receipt, report_sha256="f" * 64)
+        self.assertIn(
+            "SCHEDULER_RECEIPT_HASH_MISMATCH",
+            validate_scheduled_run_receipt(tampered),
+        )
+        invalid_state = replace(
+            receipt,
+            status=ScheduledRunStatus.FAILED_CLOSED,
+        )
+        self.assertIn(
+            "SCHEDULER_NONCOMPLETE_REPORT_HASH_PRESENT",
+            validate_scheduled_run_receipt(invalid_state),
+        )
 
 
 if __name__ == "__main__":

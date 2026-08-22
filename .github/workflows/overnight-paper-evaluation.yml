@@ -35,6 +35,8 @@ jobs:
         run: python -m hedge_desk.cli --morning-markdown --report-input morning-report.json > morning-report.md
       - name: Produce scheduler run receipt
         run: python -m hedge_desk.cli --scheduled-receipt --idempotency-key "github-${{ github.run_id }}" --report-input morning-report.json > run-receipt.json
+      - name: Verify scheduler run receipt
+        run: python -m hedge_desk.cli --verify-scheduled-receipt run-receipt.json
       - name: Build content-addressed artifact bundle
         run: python -m hedge_desk.cli --bundle-manifest morning-report.json morning-report.md run-receipt.json war-games.json > bundle-manifest.json
       - name: Verify artifact bundle from disk

@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+from hashlib import sha256
+import json
 from typing import Callable, Mapping, Optional, Tuple
 
 from hedge_desk.reporting import validate_report
@@ -32,8 +34,93 @@ class ScheduledRunReceipt:
     status: ScheduledRunStatus
     reason_codes: Tuple[str, ...]
     report_sha256: Optional[str]
+    receipt_sha256: str
     scheduler_version: str = SCHEDULER_VERSION
     recovery_of: Optional[str] = None
+
+
+def _make_receipt(
+    request: ScheduledRunRequest,
+    status: ScheduledRunStatus,
+    reason_codes: Tuple[str, ...],
+    report_sha256: Optional[str],
+) -> ScheduledRunReceipt:
+    ordered_reasons = tuple(sorted(set(reason_codes)))
+    payload = {
+        "idempotency_key": request.idempotency_key,
+        "scheduled_for": request.scheduled_for.isoformat(),
+        "status": status.value,
+        "reason_codes": list(ordered_reasons),
+        "report_sha256": report_sha256,
+        "scheduler_version": SCHEDULER_VERSION,
+        "recovery_of": request.recovery_of,
+    }
+    receipt_hash = sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return ScheduledRunReceipt(
+        request.idempotency_key,
+        request.scheduled_for,
+        status,
+        ordered_reasons,
+        report_sha256,
+        receipt_hash,
+        recovery_of=request.recovery_of,
+    )
+
+
+def validate_scheduled_run_receipt(receipt: ScheduledRunReceipt) -> Tuple[str, ...]:
+    expected = _make_receipt(
+        ScheduledRunRequest(
+            receipt.idempotency_key,
+            receipt.scheduled_for,
+            recovery_of=receipt.recovery_of,
+        ),
+        receipt.status,
+        receipt.reason_codes,
+        receipt.report_sha256,
+    )
+    reasons = []
+    if receipt.scheduler_version != SCHEDULER_VERSION:
+        reasons.append("SCHEDULER_VERSION_INVALID")
+    if receipt.reason_codes != tuple(sorted(set(receipt.reason_codes))):
+        reasons.append("SCHEDULER_REASON_CODES_NONCANONICAL")
+    if receipt.receipt_sha256 != expected.receipt_sha256:
+        reasons.append("SCHEDULER_RECEIPT_HASH_MISMATCH")
+    if receipt.status is ScheduledRunStatus.COMPLETE:
+        if receipt.reason_codes or not receipt.report_sha256:
+            reasons.append("SCHEDULER_COMPLETE_STATE_INVALID")
+    elif receipt.report_sha256 is not None:
+        reasons.append("SCHEDULER_NONCOMPLETE_REPORT_HASH_PRESENT")
+    return tuple(sorted(reasons))
+
+
+def validate_serialized_scheduled_run_receipt(
+    value: Mapping[str, object],
+) -> Tuple[str, ...]:
+    expected_fields = {
+        "idempotency_key", "scheduled_for", "status", "reason_codes",
+        "report_sha256", "receipt_sha256", "scheduler_version", "recovery_of",
+    }
+    if set(value) != expected_fields:
+        return ("SCHEDULER_RECEIPT_SCHEMA_INVALID",)
+    try:
+        raw_reasons = value["reason_codes"]
+        if not isinstance(raw_reasons, list):
+            raise ValueError("reason schema")
+        receipt = ScheduledRunReceipt(
+            str(value["idempotency_key"]),
+            datetime.fromisoformat(str(value["scheduled_for"])),
+            ScheduledRunStatus(str(value["status"])),
+            tuple(str(item) for item in raw_reasons),
+            None if value["report_sha256"] is None else str(value["report_sha256"]),
+            str(value["receipt_sha256"]),
+            str(value["scheduler_version"]),
+            None if value["recovery_of"] is None else str(value["recovery_of"]),
+        )
+    except (TypeError, ValueError):
+        return ("SCHEDULER_RECEIPT_SCHEMA_INVALID",)
+    return validate_scheduled_run_receipt(receipt)
 
 
 def execute_scheduled_run(
@@ -55,13 +142,11 @@ def execute_scheduled_run(
         for receipt in prior_receipts
     ):
         return prior_receipts + (
-            ScheduledRunReceipt(
-                request.idempotency_key,
-                request.scheduled_for,
+            _make_receipt(
+                request,
                 ScheduledRunStatus.DUPLICATE_SUPPRESSED,
                 ("DUPLICATE_RUN_SUPPRESSED",),
                 None,
-                recovery_of=request.recovery_of,
             ),
         )
 
@@ -79,25 +164,21 @@ def execute_scheduled_run(
         )
         if not valid_recovery:
             return prior_receipts + (
-                ScheduledRunReceipt(
-                    request.idempotency_key,
-                    request.scheduled_for,
+                _make_receipt(
+                    request,
                     ScheduledRunStatus.FAILED_CLOSED,
                     ("INVALID_RECOVERY_REQUEST",),
                     None,
-                    recovery_of=request.recovery_of,
                 ),
             )
 
     if request.environment != "paper":
         return prior_receipts + (
-            ScheduledRunReceipt(
-                request.idempotency_key,
-                request.scheduled_for,
+            _make_receipt(
+                request,
                 ScheduledRunStatus.FAILED_CLOSED,
                 ("PAPER_ONLY_VIOLATION",),
                 None,
-                recovery_of=request.recovery_of,
             ),
         )
 
@@ -106,33 +187,27 @@ def execute_scheduled_run(
         publication = validate_report(report)
         if not publication.publishable:
             return prior_receipts + (
-                ScheduledRunReceipt(
-                    request.idempotency_key,
-                    request.scheduled_for,
+                _make_receipt(
+                    request,
                     ScheduledRunStatus.FAILED_CLOSED,
                     publication.reason_codes,
                     None,
-                    recovery_of=request.recovery_of,
                 ),
             )
         report_hash = report.get("report_sha256")
         if not isinstance(report_hash, str):
             raise ValueError("finalized report hash is missing")
-        receipt = ScheduledRunReceipt(
-            request.idempotency_key,
-            request.scheduled_for,
+        receipt = _make_receipt(
+            request,
             ScheduledRunStatus.COMPLETE,
             (),
             report_hash,
-            recovery_of=request.recovery_of,
         )
     except Exception:
-        receipt = ScheduledRunReceipt(
-            request.idempotency_key,
-            request.scheduled_for,
+        receipt = _make_receipt(
+            request,
             ScheduledRunStatus.FAILED_CLOSED,
             ("EVALUATION_EXCEPTION",),
             None,
-            recovery_of=request.recovery_of,
         )
     return prior_receipts + (receipt,)

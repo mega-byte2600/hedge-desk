@@ -144,6 +144,7 @@ class CliTests(unittest.TestCase):
         receipt = json.loads(result.stdout)
         self.assertEqual(receipt["status"], "COMPLETE")
         self.assertEqual(receipt["report_sha256"], report["report_sha256"])
+        self.assertEqual(len(receipt["receipt_sha256"]), 64)
 
 
 if __name__ == "__main__":
