@@ -19,6 +19,8 @@ class MarketSessionGate:
     admissible: bool
     reason_codes: Tuple[str, ...]
     latest_entry_time: datetime
+    decision_time: datetime
+    calendar_artifact_sha256: str
 
 
 def _valid_hash(value: str) -> bool:
@@ -64,4 +66,10 @@ def evaluate_market_session(
         if decision_time > latest_entry:
             reasons.append("MARKET_ENTRY_WINDOW_CLOSED")
     reason_codes = tuple(sorted(set(reasons)))
-    return MarketSessionGate(not reason_codes, reason_codes, latest_entry)
+    return MarketSessionGate(
+        not reason_codes,
+        reason_codes,
+        latest_entry,
+        decision_time,
+        evidence.calendar_artifact_sha256,
+    )

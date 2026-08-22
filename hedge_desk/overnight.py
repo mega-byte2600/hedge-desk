@@ -14,6 +14,7 @@ from hedge_desk.demo import (
     FIXTURE_OPTION_PAYLOAD_SHA256,
     FIXTURE_OPTION_SOURCE_ID,
     build_reference_option_snapshot,
+    build_reference_market_session_gate,
     build_reference_plan,
     json_value,
 )
@@ -483,7 +484,9 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
     data_gate = validate_data_artifact(artifact, FIXTURE_AS_OF, maximum_age_seconds=0)
     plan = build_reference_plan()
     scan = scan_vertical_credit_spreads(build_reference_option_snapshot(), FIXTURE_AS_OF)
-    handoffs = build_candidate_control_handoffs(scan)
+    handoffs = build_candidate_control_handoffs(
+        scan, build_reference_market_session_gate()
+    )
     observed = LayerEvaluation(
         EvaluationLayer.OBSERVED,
         EvaluationStatus.PASS if data_gate.admissible else EvaluationStatus.BLOCKED,

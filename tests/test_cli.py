@@ -84,6 +84,11 @@ class CliTests(unittest.TestCase):
             self.assertEqual(
                 output["vertical_spread_scan"]["disposition"], "NO_TRADE"
             )
+            self.assertEqual(output["control_handoffs"], [])
+            self.assertEqual(
+                output["handoff_reason_codes"],
+                ["MARKET_SESSION_EVIDENCE_REQUIRED"],
+            )
             self.assertNotIn('"bid": "2.00"', result.stdout)
 
     def test_local_data_intake_cli_validates_without_copying_payload(self) -> None:

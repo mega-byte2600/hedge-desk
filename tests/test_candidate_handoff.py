@@ -1,5 +1,5 @@
 from dataclasses import replace
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 import unittest
 
@@ -8,7 +8,9 @@ from hedge_desk.options import (
     OptionSnapshot,
     OptionType,
     UnderlyingQuote,
+    MarketSessionEvidence,
     build_candidate_control_handoffs,
+    evaluate_market_session,
     scan_vertical_credit_spreads,
     validate_candidate_control_handoff,
 )
@@ -25,6 +27,17 @@ def quote(contract_id, strike, bid, ask):
 
 
 class CandidateHandoffTests(unittest.TestCase):
+    def _session(self):
+        return evaluate_market_session(
+            MarketSessionEvidence(
+                "OPRA", NOW - timedelta(hours=1),
+                NOW + timedelta(hours=1),
+                NOW - timedelta(hours=2), "b" * 64,
+            ),
+            NOW,
+            900,
+        )
+
     def _scan(self, quotes):
         snapshot = OptionSnapshot(
             "hedge-desk-option-snapshot-1.0.0",
@@ -41,12 +54,13 @@ class CandidateHandoffTests(unittest.TestCase):
         handoff = build_candidate_control_handoffs(self._scan((
             quote("P95", "95", "2.00", "2.10"),
             quote("P90", "90", "0.75", "0.80"),
-        )))[0]
+        )), self._session())[0]
         self.assertEqual(handoff.source_artifact_sha256, "a" * 64)
         self.assertEqual(handoff.maximum_win, "118.70")
         self.assertEqual(handoff.maximum_loss, "381.30")
         self.assertEqual(handoff.next_action, "VALIDATED_RISK_INPUT_REQUIRED")
         self.assertFalse(handoff.trade_authorized)
+        self.assertEqual(handoff.market_calendar_sha256, "b" * 64)
         self.assertNotIn("probability", handoff.__dataclass_fields__)
         self.assertNotIn("risk_of_ruin", handoff.__dataclass_fields__)
         self.assertEqual(validate_candidate_control_handoff(handoff), ())
@@ -68,14 +82,42 @@ class CandidateHandoffTests(unittest.TestCase):
             quote("P95", "95", "2.00", "2.10"),
             quote("P90", "90", "0.75", "0.80"),
         )
-        forward = build_candidate_control_handoffs(self._scan(liquid))
-        reverse = build_candidate_control_handoffs(self._scan(tuple(reversed(liquid))))
+        forward = build_candidate_control_handoffs(self._scan(liquid), self._session())
+        reverse = build_candidate_control_handoffs(
+            self._scan(tuple(reversed(liquid))), self._session()
+        )
         self.assertEqual(forward, reverse)
         rejected = self._scan((
             quote("P95", "95", "0.50", "0.60"),
             quote("P90", "90", "0.75", "0.80"),
         ))
-        self.assertEqual(build_candidate_control_handoffs(rejected), ())
+        self.assertEqual(build_candidate_control_handoffs(rejected, self._session()), ())
+
+    def test_blocked_session_withholds_candidate_handoff(self) -> None:
+        scan = self._scan((
+            quote("P95", "95", "2.00", "2.10"),
+            quote("P90", "90", "0.75", "0.80"),
+        ))
+        blocked = evaluate_market_session(
+            MarketSessionEvidence(
+                "OPRA", NOW - timedelta(hours=2), NOW - timedelta(hours=1),
+                NOW - timedelta(hours=3), "b" * 64,
+            ),
+            NOW,
+            900,
+        )
+        self.assertFalse(blocked.admissible)
+        self.assertEqual(build_candidate_control_handoffs(scan, blocked), ())
+
+    def test_calendar_lineage_tamper_invalidates_handoff(self) -> None:
+        handoff = build_candidate_control_handoffs(self._scan((
+            quote("P95", "95", "2.00", "2.10"),
+            quote("P90", "90", "0.75", "0.80"),
+        )), self._session())[0]
+        reasons = validate_candidate_control_handoff(
+            replace(handoff, market_calendar_sha256="c" * 64)
+        )
+        self.assertIn("HANDOFF_HASH_MISMATCH", reasons)
 
 
 if __name__ == "__main__":

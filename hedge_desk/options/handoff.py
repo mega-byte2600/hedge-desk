@@ -6,9 +6,10 @@ from hashlib import sha256
 from typing import Tuple
 
 from .scanner import SpreadScanResult
+from .session import MarketSessionGate
 
 
-CANDIDATE_HANDOFF_SCHEMA_VERSION = "premium-candidate-handoff-1.0.0"
+CANDIDATE_HANDOFF_SCHEMA_VERSION = "premium-candidate-handoff-1.1.0"
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,9 @@ class CandidateControlHandoff:
     maximum_loss: str
     maximum_win: str
     calculation_sha256: str
+    market_calendar_sha256: str
+    decision_time: str
+    latest_entry_time: str
     next_action: str
     trade_authorized: bool
     handoff_sha256: str
@@ -29,8 +33,11 @@ class CandidateControlHandoff:
 
 def build_candidate_control_handoffs(
     scan: SpreadScanResult,
+    session_gate: MarketSessionGate,
 ) -> Tuple[CandidateControlHandoff, ...]:
     """Bind exact economics; omit probability and Risk of Ruin by design."""
+    if not session_gate.admissible:
+        return ()
     handoffs = []
     for evaluation in scan.evaluations:
         if not evaluation.admissible or evaluation.calculation is None:
@@ -60,6 +67,9 @@ def build_candidate_control_handoffs(
             "candidate_id": calculation.spread_id,
             "maximum_loss": str(calculation.maximum_loss),
             "maximum_win": str(calculation.net_credit),
+            "market_calendar_sha256": session_gate.calendar_artifact_sha256,
+            "decision_time": session_gate.decision_time.isoformat(),
+            "latest_entry_time": session_gate.latest_entry_time.isoformat(),
             "next_action": "VALIDATED_RISK_INPUT_REQUIRED",
             "schema_version": CANDIDATE_HANDOFF_SCHEMA_VERSION,
             "source_artifact_sha256": scan.source_artifact_sha256,
@@ -84,6 +94,9 @@ def build_candidate_control_handoffs(
                 str(calculation.maximum_loss),
                 str(calculation.net_credit),
                 calculation_hash,
+                session_gate.calendar_artifact_sha256,
+                session_gate.decision_time.isoformat(),
+                session_gate.latest_entry_time.isoformat(),
                 "VALIDATED_RISK_INPUT_REQUIRED",
                 False,
                 handoff_hash,
@@ -101,6 +114,7 @@ def validate_candidate_control_handoff(
     for field, value in (
         ("SOURCE_ARTIFACT_HASH", handoff.source_artifact_sha256),
         ("CALCULATION_HASH", handoff.calculation_sha256),
+        ("MARKET_CALENDAR_HASH", handoff.market_calendar_sha256),
     ):
         try:
             valid = len(value) == 64 and int(value, 16) >= 0
@@ -117,6 +131,9 @@ def validate_candidate_control_handoff(
         "candidate_id": handoff.candidate_id,
         "maximum_loss": handoff.maximum_loss,
         "maximum_win": handoff.maximum_win,
+        "market_calendar_sha256": handoff.market_calendar_sha256,
+        "decision_time": handoff.decision_time,
+        "latest_entry_time": handoff.latest_entry_time,
         "next_action": handoff.next_action,
         "schema_version": handoff.schema_version,
         "source_artifact_sha256": handoff.source_artifact_sha256,

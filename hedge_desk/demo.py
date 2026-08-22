@@ -18,7 +18,9 @@ from hedge_desk.options import (
     VerticalCreditSpread,
     calculate_vertical_credit_spread,
     OptionSnapshot,
+    MarketSessionEvidence,
     build_candidate_control_handoffs,
+    evaluate_market_session,
     scan_vertical_credit_spreads,
 )
 from hedge_desk.paper import (
@@ -101,6 +103,17 @@ def build_reference_option_snapshot() -> OptionSnapshot:
     )
 
 
+def build_reference_market_session_gate():
+    evidence = MarketSessionEvidence(
+        "OPRA-SYNTHETIC",
+        FIXTURE_AS_OF - timedelta(hours=6, minutes=30),
+        FIXTURE_AS_OF,
+        FIXTURE_AS_OF - timedelta(hours=7),
+        sha256(b"synthetic-market-session-2026-07-28").hexdigest(),
+    )
+    return evaluate_market_session(evidence, FIXTURE_AS_OF, 0)
+
+
 def build_reference_plan() -> Any:
     """Build a human-pending plan entirely from a frozen synthetic fixture.
 
@@ -148,7 +161,9 @@ def build_reference_plan() -> Any:
     )
     compliance_decision = evaluate_paper_compliance(account, candidate, FIXTURE_AS_OF)
     scan = scan_vertical_credit_spreads(snapshot, FIXTURE_AS_OF)
-    handoffs = build_candidate_control_handoffs(scan)
+    handoffs = build_candidate_control_handoffs(
+        scan, build_reference_market_session_gate()
+    )
     if len(handoffs) != 1 or handoffs[0].candidate_id != candidate.candidate_id:
         raise ValueError("reference candidate handoff is incomplete")
     risk_inputs = build_validated_risk_inputs(

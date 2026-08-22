@@ -10,6 +10,7 @@ from typing import Any, Dict, Tuple
 from hedge_desk.demo import (
     FIXTURE_AS_OF,
     build_reference_option_snapshot,
+    build_reference_market_session_gate,
     build_reference_plan,
     json_value,
 )
@@ -724,7 +725,9 @@ def run_candidate_pipeline_war_games() -> Tuple[Dict[str, Any], ...]:
             )
             snapshot = replace(snapshot, option_quotes=thin_quotes)
         scan = scan_vertical_credit_spreads(snapshot, FIXTURE_AS_OF)
-        handoffs = build_candidate_control_handoffs(scan)
+        handoffs = build_candidate_control_handoffs(
+            scan, build_reference_market_session_gate()
+        )
         reasons = []
         if not handoffs:
             reasons.append("NO_ADMISSIBLE_CANDIDATE")

@@ -196,9 +196,10 @@ def main() -> None:
             if args.scan_vertical_spreads:
                 scan = scan_vertical_credit_spreads(snapshot, cutoff)
                 output["vertical_spread_scan"] = json_value(scan)
-                output["control_handoffs"] = json_value(
-                    build_candidate_control_handoffs(scan)
-                )
+                output["control_handoffs"] = []
+                output["handoff_reason_codes"] = [
+                    "MARKET_SESSION_EVIDENCE_REQUIRED"
+                ]
         print(json.dumps(output, indent=2))
         if not result.gate.admissible:
             raise SystemExit(2)
