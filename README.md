@@ -17,10 +17,17 @@ from the Hedge Desk specification.
 2. **Earnings Event Paper Desk:** earnings/guidance surprise and market-response
    research with a defined-risk directional leg, independently calculated hedge,
    and explicit `NO_TRADE` outcome.
+3. **European Index Box/Parity Observer:** paper-only search for theoretical
+   identity dislocations using deterministic executable-side economics.
 
 Together these MVPs build toward a coordinated 24/7 research orchestration. Each
 MVP shares the same deterministic calculation, independent risk, audit, and
 human-authorization controls.
+
+Specialized research agents include an Arbitrage Research Agent and an
+off-exchange-flow research path. An independent Compliance Agent assists a
+deterministic Compliance Policy Engine. Human judgment remains a distinct,
+explicit decision point and cannot override risk or compliance blocks.
 
 The system evaluates every trade candidate through two independent gates:
 

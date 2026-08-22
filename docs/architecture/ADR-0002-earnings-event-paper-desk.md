@@ -16,12 +16,18 @@ of edge into mandatory risk-taking.
 
 ## Trade architecture
 
-Each event may produce two separately justified legs:
+Each event enters a deterministic trade-expression tournament. It may produce
+one alpha expression and, where required, one separately justified hedge:
 
-1. **Directional alpha leg:** a defined-risk bullish or bearish option spread
-   only when validated earnings/guidance surprise, expectations, price response,
-   liquidity, and deterministic scenario economics support it.
-2. **Portfolio hedge leg:** a separately sized sector/index hedge designed to
+1. **Straight equity:** long or short common equity with a deterministic holding
+   window and borrow/locate constraint where applicable.
+2. **Market/sector-neutral equity:** long or short the issuer against a
+   deterministic beta/factor hedge.
+3. **Defined-risk options:** a bullish or bearish vertical only when the net
+   payoff after implied move, volatility crush, spread, slippage, assignment,
+   and liquidity is superior under the locked policy.
+4. **No trade:** mandatory when no expression clears evidence and risk gates.
+5. **Portfolio hedge leg:** a separately sized sector/index hedge designed to
    reduce measured beta, factor, volatility, or gap exposure. It is not assumed
    to make money independently and must not be mislabeled as a second alpha pick.
 
@@ -30,6 +36,21 @@ surprise does not mechanically imply buying a put. The options market may have
 priced a larger move; implied volatility can collapse after the release; guidance,
 quality of earnings, positioning, liquidity, and the initial price response can
 reverse the apparent direction.
+
+### Documented institutional research basis
+
+Public evidence supports testing event-driven and post-earnings effects, not
+copying an undocumented proprietary hedge-fund rule. NBER research documents an
+[earnings announcement premium](https://www.nber.org/papers/w13090) and research
+on [investor inattention and delayed earnings response](https://www.nber.org/papers/w11683).
+Separate research shows that transaction costs materially reduce implementable
+post-earnings-announcement-drift returns. These are hypotheses for point-in-time
+replication, not proof that a current trade will work.
+
+Delayed public holdings disclosures cannot reconstruct a hedge fund's event-time
+signal, hedge, entry, exit, derivative exposure, or intraperiod trading. The desk
+will reproduce documented public methods and compare them under current data and
+costs; it will not claim to copy proprietary hedge-fund trades.
 
 ## Earnings Whispers boundary
 
@@ -137,6 +158,7 @@ Required comparisons:
 - surprise plus guidance;
 - surprise/guidance plus price-volume confirmation;
 - equity versus defined-risk options expression;
+- straight equity versus beta/sector-neutral equity;
 - unhedged versus deterministic sector/index hedge;
 - no-trade threshold variants fixed before final out-of-sample evaluation.
 
