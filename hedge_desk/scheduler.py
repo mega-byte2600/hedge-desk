@@ -22,6 +22,7 @@ class ScheduledRunRequest:
     idempotency_key: str
     scheduled_for: datetime
     environment: str = "paper"
+    recovery_of: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -32,6 +33,7 @@ class ScheduledRunReceipt:
     reason_codes: Tuple[str, ...]
     report_sha256: Optional[str]
     scheduler_version: str = SCHEDULER_VERSION
+    recovery_of: Optional[str] = None
 
 
 def execute_scheduled_run(
@@ -44,6 +46,8 @@ def execute_scheduled_run(
         raise ValueError("scheduled run idempotency key is required")
     if request.scheduled_for.tzinfo is None:
         raise ValueError("scheduled run timestamp must be timezone-aware")
+    if request.recovery_of == request.idempotency_key:
+        raise ValueError("a recovery run requires a distinct idempotency key")
 
     if any(
         receipt.idempotency_key == request.idempotency_key
@@ -57,8 +61,33 @@ def execute_scheduled_run(
                 ScheduledRunStatus.DUPLICATE_SUPPRESSED,
                 ("DUPLICATE_RUN_SUPPRESSED",),
                 None,
+                recovery_of=request.recovery_of,
             ),
         )
+
+    if request.recovery_of is not None:
+        recovery_sources = tuple(
+            receipt
+            for receipt in prior_receipts
+            if receipt.idempotency_key == request.recovery_of
+            and receipt.status is not ScheduledRunStatus.DUPLICATE_SUPPRESSED
+        )
+        valid_recovery = (
+            len(recovery_sources) == 1
+            and recovery_sources[0].status is ScheduledRunStatus.FAILED_CLOSED
+            and recovery_sources[0].scheduled_for == request.scheduled_for
+        )
+        if not valid_recovery:
+            return prior_receipts + (
+                ScheduledRunReceipt(
+                    request.idempotency_key,
+                    request.scheduled_for,
+                    ScheduledRunStatus.FAILED_CLOSED,
+                    ("INVALID_RECOVERY_REQUEST",),
+                    None,
+                    recovery_of=request.recovery_of,
+                ),
+            )
 
     if request.environment != "paper":
         return prior_receipts + (
@@ -68,6 +97,7 @@ def execute_scheduled_run(
                 ScheduledRunStatus.FAILED_CLOSED,
                 ("PAPER_ONLY_VIOLATION",),
                 None,
+                recovery_of=request.recovery_of,
             ),
         )
 
@@ -82,6 +112,7 @@ def execute_scheduled_run(
                     ScheduledRunStatus.FAILED_CLOSED,
                     publication.reason_codes,
                     None,
+                    recovery_of=request.recovery_of,
                 ),
             )
         report_hash = report.get("report_sha256")
@@ -93,6 +124,7 @@ def execute_scheduled_run(
             ScheduledRunStatus.COMPLETE,
             (),
             report_hash,
+            recovery_of=request.recovery_of,
         )
     except Exception:
         receipt = ScheduledRunReceipt(
@@ -101,5 +133,6 @@ def execute_scheduled_run(
             ScheduledRunStatus.FAILED_CLOSED,
             ("EVALUATION_EXCEPTION",),
             None,
+            recovery_of=request.recovery_of,
         )
     return prior_receipts + (receipt,)

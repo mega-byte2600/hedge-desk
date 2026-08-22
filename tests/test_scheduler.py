@@ -53,6 +53,27 @@ class SchedulerTests(unittest.TestCase):
         self.assertEqual(receipts[-1].reason_codes, ("EVALUATION_EXCEPTION",))
         self.assertIsNone(receipts[-1].report_sha256)
 
+    def test_failed_run_can_recover_once_under_new_bound_identity(self) -> None:
+        def broken(_):
+            raise RuntimeError("synthetic interruption")
+
+        receipts = execute_scheduled_run(
+            ScheduledRunRequest("run-1", NOW), (), broken
+        )
+        recovery = ScheduledRunRequest("run-1-recovery-1", NOW, recovery_of="run-1")
+        receipts = execute_scheduled_run(recovery, receipts, build_morning_report)
+        self.assertIs(receipts[-1].status, ScheduledRunStatus.COMPLETE)
+        self.assertEqual(receipts[-1].recovery_of, "run-1")
+        receipts = execute_scheduled_run(recovery, receipts, build_morning_report)
+        self.assertIs(receipts[-1].status, ScheduledRunStatus.DUPLICATE_SUPPRESSED)
+
+    def test_recovery_requires_matching_failed_source_run(self) -> None:
+        recovery = ScheduledRunRequest("recovery-1", NOW, recovery_of="missing")
+        receipts = execute_scheduled_run(recovery, (), build_morning_report)
+        self.assertIs(receipts[-1].status, ScheduledRunStatus.FAILED_CLOSED)
+        self.assertEqual(receipts[-1].reason_codes, ("INVALID_RECOVERY_REQUEST",))
+        self.assertIsNone(receipts[-1].report_sha256)
+
 
 if __name__ == "__main__":
     unittest.main()
