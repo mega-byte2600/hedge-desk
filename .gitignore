@@ -11,7 +11,7 @@ dist/
 build/
 *.egg-info/
 .DS_Store
+/tmp/
 
 # Codex projectless-chat workspaces are not part of the application repository.
 /20??-??-??/
-
