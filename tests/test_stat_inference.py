@@ -31,9 +31,13 @@ class DirectionalInferenceTests(unittest.TestCase):
         self.assertFalse(result.trade_authorized)
 
     def test_threshold_is_inclusive_and_not_a_trade_gate(self) -> None:
-        policy = DirectionalInferencePolicy(alpha=Decimal("0.005"))
-        result = evaluate_directional_hits((True,) * 75 + (False,) * 25, policy)
-        self.assertLessEqual(result.one_sided_exact_p_value, policy.alpha)
+        outcomes = (True,) * 70 + (False,) * 30
+        baseline = evaluate_directional_hits(outcomes)
+        policy = DirectionalInferencePolicy(
+            alpha=baseline.one_sided_exact_p_value or Decimal("0.005")
+        )
+        result = evaluate_directional_hits(outcomes, policy)
+        self.assertEqual(result.one_sided_exact_p_value, policy.alpha)
         self.assertTrue(result.statistically_significant)
         self.assertFalse(result.trade_authorized)
 
