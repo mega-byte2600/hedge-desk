@@ -24,6 +24,7 @@ from hedge_desk.scheduler import (
     execute_scheduled_run,
     validate_serialized_scheduled_run_receipt,
 )
+from hedge_desk.stat_inference import evaluate_directional_hits
 from hedge_desk.data import (
     evaluate_options_data_stack,
     parse_data_stack_manifest,
@@ -40,6 +41,11 @@ from hedge_desk.options import (
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--evaluate-directional-outcomes",
+        metavar="FILE",
+        help="evaluate strict local boolean outcomes at alpha .005 and 95% CI",
+    )
     parser.add_argument(
         "--validate-option-universe-manifest",
         metavar="FILE",
@@ -181,6 +187,25 @@ def main() -> None:
         help="stable run identity required with --scheduled-receipt",
     )
     args = parser.parse_args()
+    if args.evaluate_directional_outcomes:
+        try:
+            payload = json.loads(
+                Path(args.evaluate_directional_outcomes).read_text(encoding="utf-8")
+            )
+            if not isinstance(payload, dict) or set(payload) != {
+                "schema_version", "outcomes"
+            }:
+                raise ValueError("directional outcome schema is invalid")
+            if payload["schema_version"] != "directional-outcomes-1.0.0":
+                raise ValueError("directional outcome schema version is invalid")
+            outcomes = payload["outcomes"]
+            if not isinstance(outcomes, list):
+                raise ValueError("directional outcomes must be a list")
+            result = evaluate_directional_hits(tuple(outcomes))
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+            parser.error(str(exc))
+        print(json.dumps(json_value(result), indent=2))
+        return
     if args.control_summary:
         if not args.report_input:
             parser.error("--control-summary requires --report-input")

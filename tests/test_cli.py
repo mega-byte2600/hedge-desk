@@ -16,6 +16,37 @@ from datetime import datetime, timezone
 
 
 class CliTests(unittest.TestCase):
+    def test_directional_inference_cli_is_strict_and_never_authorizes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "outcomes.json"
+            path.write_text(json.dumps({
+                "schema_version": "directional-outcomes-1.0.0",
+                "outcomes": [True] * 70 + [False] * 30,
+            }), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, "-m", "hedge_desk.cli",
+                 "--evaluate-directional-outcomes", str(path)],
+                capture_output=True, text=True, check=False,
+            )
+            path.write_text(json.dumps({
+                "schema_version": "directional-outcomes-1.0.0",
+                "outcomes": [True] * 100,
+                "agent_override": True,
+            }), encoding="utf-8")
+            rejected = subprocess.run(
+                [sys.executable, "-m", "hedge_desk.cli",
+                 "--evaluate-directional-outcomes", str(path)],
+                capture_output=True, text=True, check=False,
+            )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        output = json.loads(completed.stdout)
+        self.assertEqual(output["alpha"], "0.005")
+        self.assertEqual(output["confidence_level"], "0.95")
+        self.assertTrue(output["statistically_significant"])
+        self.assertFalse(output["trade_authorized"])
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn("schema is invalid", rejected.stderr)
+
     def test_control_summary_cli_requires_and_validates_report(self) -> None:
         report = build_morning_report(datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc))
         with tempfile.TemporaryDirectory() as directory:

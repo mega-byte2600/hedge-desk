@@ -18,3 +18,12 @@ The test suite locks an exact `Binomial(100, 0.5)` tail vector, Wilson interval
 containment, the significance boundary, insufficient-sample withholding, and
 malformed-input rejection. Any method or confidence-level change requires a new
 version and independent V&V vectors.
+
+Local resolved outcomes can be evaluated without copying their source dataset:
+
+```bash
+python -m hedge_desk.cli --evaluate-directional-outcomes outcomes.json
+```
+
+The input is strict JSON with schema version `directional-outcomes-1.0.0` and a
+single `outcomes` array of JSON booleans. Unknown fields are rejected.
