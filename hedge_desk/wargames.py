@@ -431,6 +431,37 @@ def build_war_game_report() -> Dict[str, Any]:
     pnls = tuple(result.net_pnl for result in results)
     wins = sum(result.profitable for result in results)
     premium_metrics = evaluate_pnl_series(pnls)
+    earnings_arm_metrics = {
+        "EQUITY": evaluate_pnl_series(
+            tuple(Decimal(item["equity_net_pnl"]) for item in earnings)
+        ),
+        "DEFINED_RISK_OPTION": evaluate_pnl_series(
+            tuple(Decimal(item["option_net_pnl"]) for item in earnings)
+        ),
+        "HEDGED_EQUITY": evaluate_pnl_series(
+            tuple(Decimal(item["hedged_equity_net_pnl"]) for item in earnings)
+        ),
+        "NO_TRADE": evaluate_pnl_series(
+            tuple(Decimal("0") for _ in earnings)
+        ),
+    }
+    dividend_arm_metrics = {
+        "SHARES": evaluate_pnl_series(
+            tuple(Decimal(item["share_net_pnl"]) for item in dividend)
+        ),
+        "LONG_CALL": evaluate_pnl_series(
+            tuple(Decimal(item["call_net_pnl"]) for item in dividend)
+        ),
+        "NO_TRADE": evaluate_pnl_series(
+            tuple(Decimal("0") for _ in dividend)
+        ),
+    }
+    arbitrage_policy_pnls = tuple(
+        Decimal(item["net_edge"])
+        if item["disposition"] == "NET_EDGE_CANDIDATE"
+        else Decimal("0")
+        for item in arbitrage
+    )
     no_trade_controls = (
         sum(item["best_hindsight_arm"] == "NO_TRADE" for item in earnings)
         + sum(item["disposition"] == "NO_TRADE" for item in arbitrage)
@@ -469,6 +500,11 @@ def build_war_game_report() -> Dict[str, Any]:
                 "sequence_label": "declared_synthetic_stress_order_not_time_series",
                 "statistical_significance_computed": False,
             },
+            "earnings_fixed_arm_metrics": json_value(earnings_arm_metrics),
+            "arbitrage_policy_metrics": json_value(
+                evaluate_pnl_series(arbitrage_policy_pnls)
+            ),
+            "dividend_fixed_arm_metrics": json_value(dividend_arm_metrics),
         },
         "premium": json_value(results),
         "earnings": earnings,

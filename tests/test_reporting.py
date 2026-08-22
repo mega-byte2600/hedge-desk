@@ -72,6 +72,9 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("BIG proposal (agent research)", markdown)
         self.assertIn("finite-capital-ruin-approximation 0.1.0-unvalidated", markdown)
         self.assertIn("Validated risk-input artifact", markdown)
+        self.assertIn("Earnings option-arm synthetic total: $-312.00", markdown)
+        self.assertIn("Arbitrage gated-policy synthetic total: $45", markdown)
+        self.assertIn("Dividend shares-arm synthetic total: $-1083.00", markdown)
 
     def test_unpublishable_report_cannot_be_rendered(self) -> None:
         report = build_morning_report(NOW)

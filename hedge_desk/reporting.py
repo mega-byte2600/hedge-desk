@@ -206,6 +206,9 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
     war_summary = war_games["summary"]
     premium = war_summary["premium_fixed_trade"]
     metrics = premium["descriptive_metrics"]
+    earnings_metrics = war_summary["earnings_fixed_arm_metrics"]
+    arbitrage_metrics = war_summary["arbitrage_policy_metrics"]
+    dividend_metrics = war_summary["dividend_fixed_arm_metrics"]
     portfolio_stress = report["portfolio_stress"]
     stress_metrics = portfolio_stress["descriptive_metrics"]
     projects = report["projects"]
@@ -246,6 +249,12 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
             f"- Premium synthetic total P&L: ${metrics['total_pnl']}",
             f"- Premium synthetic maximum drawdown: ${metrics['maximum_drawdown']}",
             f"- Premium synthetic expected shortfall: ${metrics['expected_shortfall']}",
+            f"- Earnings equity-arm synthetic total: ${earnings_metrics['EQUITY']['total_pnl']}",
+            f"- Earnings option-arm synthetic total: ${earnings_metrics['DEFINED_RISK_OPTION']['total_pnl']}",
+            f"- Earnings hedged-arm synthetic total: ${earnings_metrics['HEDGED_EQUITY']['total_pnl']}",
+            f"- Arbitrage gated-policy synthetic total: ${arbitrage_metrics['total_pnl']}",
+            f"- Dividend shares-arm synthetic total: ${dividend_metrics['SHARES']['total_pnl']}",
+            f"- Dividend call-arm synthetic total: ${dividend_metrics['LONG_CALL']['total_pnl']}",
             f"- Inference status: {metrics['inference_status']}",
             f"- STAT Brier score: {report['stat_evaluation']['brier_score']}",
             f"- STAT inference: {report['stat_evaluation']['inference_status']}",

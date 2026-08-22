@@ -29,6 +29,19 @@ class PremiumWarGameTests(unittest.TestCase):
         )
         self.assertEqual(report["fixture_manifest"]["scenario_count"], 28)
         self.assertEqual(len(report["fixture_manifest"]["fixture_sha256"]), 64)
+        summary = report["summary"]
+        self.assertEqual(
+            summary["earnings_fixed_arm_metrics"]["EQUITY"]["total_pnl"], "-22"
+        )
+        self.assertEqual(
+            summary["earnings_fixed_arm_metrics"]["DEFINED_RISK_OPTION"]["total_pnl"],
+            "-312.00",
+        )
+        self.assertEqual(summary["arbitrage_policy_metrics"]["total_pnl"], "45")
+        self.assertEqual(
+            summary["dividend_fixed_arm_metrics"]["SHARES"]["total_pnl"],
+            "-1083.00",
+        )
 
     def test_fixture_manifest_is_reproducible(self) -> None:
         self.assertEqual(build_war_game_manifest(), build_war_game_manifest())
