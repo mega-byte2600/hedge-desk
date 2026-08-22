@@ -81,6 +81,23 @@ def validate_scheduled_run_receipt(receipt: ScheduledRunReceipt) -> Tuple[str, .
         receipt.report_sha256,
     )
     reasons = []
+    if not receipt.idempotency_key:
+        reasons.append("SCHEDULER_IDEMPOTENCY_KEY_MISSING")
+    if receipt.scheduled_for.tzinfo is None:
+        reasons.append("SCHEDULER_TIMESTAMP_NOT_TIMEZONE_AWARE")
+    if receipt.recovery_of is not None and (
+        not receipt.recovery_of or receipt.recovery_of == receipt.idempotency_key
+    ):
+        reasons.append("SCHEDULER_RECOVERY_IDENTITY_INVALID")
+    try:
+        receipt_hash_valid = (
+            len(receipt.receipt_sha256) == 64
+            and int(receipt.receipt_sha256, 16) > 0
+        )
+    except (TypeError, ValueError):
+        receipt_hash_valid = False
+    if not receipt_hash_valid:
+        reasons.append("SCHEDULER_RECEIPT_HASH_INVALID")
     if receipt.scheduler_version != SCHEDULER_VERSION:
         reasons.append("SCHEDULER_VERSION_INVALID")
     if receipt.reason_codes != tuple(sorted(set(receipt.reason_codes))):
@@ -88,7 +105,15 @@ def validate_scheduled_run_receipt(receipt: ScheduledRunReceipt) -> Tuple[str, .
     if receipt.receipt_sha256 != expected.receipt_sha256:
         reasons.append("SCHEDULER_RECEIPT_HASH_MISMATCH")
     if receipt.status is ScheduledRunStatus.COMPLETE:
-        if receipt.reason_codes or not receipt.report_sha256:
+        try:
+            report_hash_valid = (
+                isinstance(receipt.report_sha256, str)
+                and len(receipt.report_sha256) == 64
+                and int(receipt.report_sha256, 16) > 0
+            )
+        except ValueError:
+            report_hash_valid = False
+        if receipt.reason_codes or not report_hash_valid:
             reasons.append("SCHEDULER_COMPLETE_STATE_INVALID")
     elif receipt.report_sha256 is not None:
         reasons.append("SCHEDULER_NONCOMPLETE_REPORT_HASH_PRESENT")
@@ -135,6 +160,21 @@ def execute_scheduled_run(
         raise ValueError("scheduled run timestamp must be timezone-aware")
     if request.recovery_of == request.idempotency_key:
         raise ValueError("a recovery run requires a distinct idempotency key")
+
+    invalid_prior = tuple(
+        receipt
+        for receipt in prior_receipts
+        if validate_scheduled_run_receipt(receipt)
+    )
+    if invalid_prior:
+        return prior_receipts + (
+            _make_receipt(
+                request,
+                ScheduledRunStatus.FAILED_CLOSED,
+                ("PRIOR_RECEIPT_INVALID",),
+                None,
+            ),
+        )
 
     if any(
         receipt.idempotency_key == request.idempotency_key

@@ -57,6 +57,10 @@ class OperationalHealthTests(unittest.TestCase):
         self.assertIn("PAPER_ONLY_VIOLATION", result.reason_codes)
         self.assertIn("REPORT_RECEIPT_HASH_MISMATCH", result.reason_codes)
         self.assertNotEqual(result.status, "HEALTHY_PAPER")
+        with self.assertRaisesRegex(ValueError, "nonnegative integer"):
+            evaluate_paper_run_health(
+                report, receipt, count, head, NOW, True, COMMIT
+            )
 
 
 if __name__ == "__main__":

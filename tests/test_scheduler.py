@@ -17,6 +17,20 @@ NOW = datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc)
 
 
 class SchedulerTests(unittest.TestCase):
+    def test_forged_prior_receipt_cannot_suppress_or_authorize_run(self) -> None:
+        request = ScheduledRunRequest("run-1", NOW)
+        forged = replace(
+            execute_scheduled_run(request, (), lambda _: build_morning_report(NOW))[-1],
+            receipt_sha256="f" * 64,
+        )
+        result = execute_scheduled_run(
+            ScheduledRunRequest("run-2", NOW),
+            (forged,),
+            lambda _: build_morning_report(NOW),
+        )[-1]
+        self.assertIs(result.status, ScheduledRunStatus.FAILED_CLOSED)
+        self.assertEqual(result.reason_codes, ("PRIOR_RECEIPT_INVALID",))
+
     def test_paper_run_completes_with_report_hash(self) -> None:
         receipts = execute_scheduled_run(
             ScheduledRunRequest("run-1", NOW), (), build_morning_report

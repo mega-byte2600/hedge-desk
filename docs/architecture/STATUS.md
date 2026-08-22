@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 305 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 306 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - A pinned CodeQL Python security-extended scan runs on pushes, pull requests,

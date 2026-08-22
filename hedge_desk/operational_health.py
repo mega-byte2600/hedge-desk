@@ -32,8 +32,12 @@ def evaluate_paper_run_health(
 ) -> PaperRunHealth:
     if evaluated_at.tzinfo is None:
         raise ValueError("health evaluation time must be timezone-aware")
-    if maximum_age_seconds < 0:
-        raise ValueError("maximum age cannot be negative")
+    if type(maximum_age_seconds) is not int or maximum_age_seconds < 0:
+        raise ValueError("maximum age must be a nonnegative integer")
+    if type(journal_event_count) is not int or journal_event_count < 0:
+        raise ValueError("journal event count must be a nonnegative integer")
+    if not isinstance(expected_code_commit, str) or not expected_code_commit:
+        raise ValueError("expected code commit is required")
     reasons = list(validate_serialized_scheduled_run_receipt(receipt))
     if not validate_report(dict(report)).publishable:
         reasons.append("REPORT_NOT_PUBLISHABLE")
