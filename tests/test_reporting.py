@@ -63,6 +63,12 @@ class ReportingTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             render_morning_markdown(report)
 
+    def test_fabricated_stat_inference_is_blocked(self) -> None:
+        report = build_morning_report(NOW)
+        report["stat_evaluation"]["p_value"] = "0.001"
+        report = finalize_report(report)
+        self.assertIn("STAT_DISCLOSURE_INVALID", validate_report(report).reason_codes)
+
 
 if __name__ == "__main__":
     unittest.main()

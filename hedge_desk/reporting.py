@@ -62,6 +62,16 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
         or len(batch.get("manifest_sha256", "")) != 64
     ):
         reasons.append("DATA_BATCH_NOT_READY")
+    stat = report.get("stat_evaluation", {})
+    if (
+        not isinstance(stat, dict)
+        or stat.get("label") != "STAT"
+        or stat.get("source") != "synthetic_fixture"
+        or stat.get("p_value") is not None
+        or stat.get("confidence_interval") is not None
+        or stat.get("inference_status") != "INSUFFICIENT_SAMPLE"
+    ):
+        reasons.append("STAT_DISCLOSURE_INVALID")
     war_games = report.get("war_games", {})
     if (
         not isinstance(war_games, dict)
@@ -131,6 +141,10 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
             f"- Premium synthetic maximum drawdown: ${metrics['maximum_drawdown']}",
             f"- Premium synthetic expected shortfall: ${metrics['expected_shortfall']}",
             f"- Inference status: {metrics['inference_status']}",
+            f"- STAT Brier score: {report['stat_evaluation']['brier_score']}",
+            f"- STAT inference: {report['stat_evaluation']['inference_status']}",
+            f"- STAT p-value: {report['stat_evaluation']['p_value']}",
+            f"- STAT 95% CI: {report['stat_evaluation']['confidence_interval']}",
             "",
             "## Control verification",
             "",
