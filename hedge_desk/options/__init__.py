@@ -50,6 +50,8 @@ from .cadence import (
     CADENCE_GATE_VERSION,
     PremiumCadenceGate,
     evaluate_premium_cadence,
+    serialize_premium_cadence,
+    validate_serialized_premium_cadence,
 )
 
 __all__ = [
@@ -84,4 +86,5 @@ __all__ = [
     "parse_market_session_evidence",
     "OptionUniverseEvaluation", "RankedOptionCandidate", "evaluate_option_universe",
     "CADENCE_GATE_VERSION", "PremiumCadenceGate", "evaluate_premium_cadence",
+    "serialize_premium_cadence", "validate_serialized_premium_cadence",
 ]

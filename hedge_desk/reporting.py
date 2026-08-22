@@ -11,6 +11,7 @@ from hedge_desk.wargames import validate_war_game_report
 from hedge_desk.portfolio_stress import validate_portfolio_stress_report
 from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.backoffice import validate_serialized_paper_reconciliation
+from hedge_desk.options import validate_serialized_premium_cadence
 from hedge_desk.release import validate_serialized_release_readiness
 
 
@@ -111,6 +112,33 @@ def _validate_report_unchecked(report: Mapping[str, Any]) -> PublicationDecision
             reconciliation_bound = False
         if not reconciliation_bound:
             reasons.append("BACK_OFFICE_RECONCILIATION_LINEAGE_MISMATCH")
+    cadence = report.get("premium_cadence", {})
+    cadence_reasons = (
+        validate_serialized_premium_cadence(cadence)
+        if isinstance(cadence, dict)
+        else ("PREMIUM_CADENCE_SCHEMA_INVALID",)
+    )
+    if cadence_reasons:
+        reasons.append("PREMIUM_CADENCE_INVALID")
+    else:
+        try:
+            premium = next(
+                item for item in projects
+                if item["project_id"] == "overnight-premium-desk"
+            )
+            big_layer = next(
+                layer for layer in premium["layers"] if layer["layer"] == "BIG"
+            )
+            cadence_bound = (
+                big_layer["metrics"]["cadence_artifact"]
+                == cadence["artifact_sha256"]
+                and cadence["artifact_sha256"] in big_layer["artifact_refs"]
+                and cadence["trade_authorized"] is False
+            )
+        except (KeyError, StopIteration, TypeError):
+            cadence_bound = False
+        if not cadence_bound:
+            reasons.append("PREMIUM_CADENCE_LINEAGE_MISMATCH")
     replay = report.get("chronological_replay", {})
     replay_validation_reasons = (
         validate_replay_evaluation(replay) if isinstance(replay, dict) else ()
@@ -305,6 +333,7 @@ def build_control_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
         release = report["release_readiness"]
         report_summary = report["summary"]
         reconciliation = report["back_office_reconciliation"]
+        cadence = report["premium_cadence"]
     except (KeyError, TypeError) as exc:
         raise ValueError("morning report control fields invalid") from exc
     return {
@@ -324,6 +353,10 @@ def build_control_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
         "paper_reconciliation_live_release_eligible": reconciliation[
             "live_release_evidence_eligible"
         ],
+        "premium_new_entry_evaluation_allowed": cadence[
+            "new_entry_evaluation_allowed"
+        ],
+        "premium_monitoring_allowed": cadence["monitoring_allowed"],
         "release_status": release["status"],
         "live_transition_authorized": release["live_transition_authorized"],
     }
@@ -414,6 +447,7 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
     portfolio_stress = report["portfolio_stress"]
     release_readiness = report["release_readiness"]
     reconciliation = report["back_office_reconciliation"]
+    cadence = report["premium_cadence"]
     stress_metrics = portfolio_stress["descriptive_metrics"]
     projects = report["projects"]
     premium_project = next(
@@ -485,6 +519,9 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
             f"- Paper Back Office reconciliation: {reconciliation['status']}",
             "- Paper reconciliation live-release eligible: "
             f"{str(reconciliation['live_release_evidence_eligible']).lower()}",
+            "- Premium new-entry evaluation allowed: "
+            f"{str(cadence['new_entry_evaluation_allowed']).lower()}",
+            f"- Premium monitoring allowed: {str(cadence['monitoring_allowed']).lower()}",
             f"- Live release status: {release_readiness['status']}",
             f"- Live transition authorized: {str(release_readiness['live_transition_authorized']).lower()}",
             f"- Unsatisfied live-release requirements: {len(release_readiness['reason_codes'])}",

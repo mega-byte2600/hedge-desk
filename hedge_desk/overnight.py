@@ -86,6 +86,7 @@ from hedge_desk.options import (
     build_candidate_control_handoffs,
     evaluate_option_universe,
     evaluate_premium_cadence,
+    serialize_premium_cadence,
     scan_vertical_credit_spreads,
 )
 from hedge_desk.release import build_reference_release_readiness
@@ -857,6 +858,11 @@ def build_morning_report(
                 0,
                 0,
                 FIXTURE_AS_OF,
+            )
+        ),
+        "premium_cadence": serialize_premium_cadence(
+            evaluate_premium_cadence(
+                FIXTURE_AS_OF, FIXTURE_AS_OF - timedelta(days=30)
             )
         ),
         "stat_evaluation": build_stat_evaluation(),

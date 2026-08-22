@@ -34,6 +34,8 @@ class CliTests(unittest.TestCase):
         self.assertFalse(summary["live_transition_authorized"])
         self.assertEqual(summary["paper_back_office_reconciliation"], "pass")
         self.assertFalse(summary["paper_reconciliation_live_release_eligible"])
+        self.assertTrue(summary["premium_new_entry_evaluation_allowed"])
+        self.assertTrue(summary["premium_monitoring_allowed"])
 
     def test_run_health_cli_verifies_fresh_paper_artifacts(self) -> None:
         now = datetime(2026, 8, 22, 9, 0, tzinfo=timezone.utc)

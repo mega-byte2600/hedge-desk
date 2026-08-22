@@ -1,7 +1,11 @@
 from datetime import datetime, timedelta, timezone
 import unittest
 
-from hedge_desk.options import evaluate_premium_cadence
+from hedge_desk.options import (
+    evaluate_premium_cadence,
+    serialize_premium_cadence,
+    validate_serialized_premium_cadence,
+)
 
 
 NOW = datetime(2026, 8, 22, 12, 0, tzinfo=timezone.utc)
@@ -50,6 +54,17 @@ class OptionCadenceTests(unittest.TestCase):
         self.assertEqual(result.cadence_timezone, "America/New_York")
         with self.assertRaisesRegex(ValueError, "timezone invalid"):
             evaluate_premium_cadence(evaluated, prior, cadence_timezone="Mars/Base")
+
+    def test_serialized_cadence_reconstructs_and_detects_tamper(self) -> None:
+        value = serialize_premium_cadence(
+            evaluate_premium_cadence(NOW, NOW - timedelta(days=30))
+        )
+        self.assertEqual(validate_serialized_premium_cadence(value), ())
+        value["monitoring_allowed"] = False
+        self.assertIn(
+            "PREMIUM_CADENCE_ARTIFACT_INVALID",
+            validate_serialized_premium_cadence(value),
+        )
 
 
 if __name__ == "__main__":

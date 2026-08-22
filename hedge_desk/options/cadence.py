@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from hashlib import sha256
-from typing import Optional, Tuple
+from typing import Any, Dict, Mapping, Optional, Tuple
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
@@ -83,3 +83,40 @@ def evaluate_premium_cadence(
         cadence_timezone,
         allowed, True, reason_codes, artifact_sha256, False,
     )
+
+
+def serialize_premium_cadence(value: PremiumCadenceGate) -> Dict[str, Any]:
+    return {
+        "version": CADENCE_GATE_VERSION,
+        "evaluated_at": value.evaluated_at.isoformat(),
+        "last_new_entry_at": (
+            value.last_new_entry_at.isoformat() if value.last_new_entry_at else None
+        ),
+        "minimum_days_between_entries": value.minimum_days_between_entries,
+        "cadence_timezone": value.cadence_timezone,
+        "new_entry_evaluation_allowed": value.new_entry_evaluation_allowed,
+        "monitoring_allowed": value.monitoring_allowed,
+        "reason_codes": list(value.reason_codes),
+        "artifact_sha256": value.artifact_sha256,
+        "trade_authorized": value.trade_authorized,
+    }
+
+
+def validate_serialized_premium_cadence(
+    value: Mapping[str, Any],
+) -> Tuple[str, ...]:
+    try:
+        if value.get("version") != CADENCE_GATE_VERSION:
+            raise ValueError("version")
+        raw_last = value["last_new_entry_at"]
+        last = None if raw_last is None else datetime.fromisoformat(str(raw_last))
+        rebuilt = evaluate_premium_cadence(
+            datetime.fromisoformat(str(value["evaluated_at"])),
+            last,
+            value["minimum_days_between_entries"],
+            str(value["cadence_timezone"]),
+        )
+        expected = serialize_premium_cadence(rebuilt)
+    except (KeyError, TypeError, ValueError):
+        return ("PREMIUM_CADENCE_SCHEMA_INVALID",)
+    return () if dict(value) == expected else ("PREMIUM_CADENCE_ARTIFACT_INVALID",)

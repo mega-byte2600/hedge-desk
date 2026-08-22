@@ -40,6 +40,8 @@ class ReportingTests(unittest.TestCase):
         self.assertFalse(summary["live_transition_authorized"])
         self.assertEqual(summary["paper_back_office_reconciliation"], "pass")
         self.assertFalse(summary["paper_reconciliation_live_release_eligible"])
+        self.assertTrue(summary["premium_new_entry_evaluation_allowed"])
+        self.assertTrue(summary["premium_monitoring_allowed"])
 
         report["real_money_pnl"] = "1"
         report = finalize_report(report)
@@ -197,9 +199,17 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("Live transition authorized: false", markdown)
         self.assertIn("Paper Back Office reconciliation: pass", markdown)
         self.assertIn("Paper reconciliation live-release eligible: false", markdown)
+        self.assertIn("Premium new-entry evaluation allowed: true", markdown)
+        self.assertIn("Premium monitoring allowed: true", markdown)
         self.assertIn("Earnings option-arm synthetic total: $-312.00", markdown)
         self.assertIn("Arbitrage gated-policy synthetic total: $45", markdown)
         self.assertIn("Dividend shares-arm synthetic total: $-1083.00", markdown)
+
+    def test_rehashed_premium_cadence_tamper_is_blocked(self) -> None:
+        report = build_morning_report(NOW)
+        report["premium_cadence"]["monitoring_allowed"] = False
+        report = finalize_report(report)
+        self.assertIn("PREMIUM_CADENCE_INVALID", validate_report(report).reason_codes)
 
     def test_unpublishable_report_cannot_be_rendered(self) -> None:
         report = build_morning_report(NOW)
