@@ -44,6 +44,7 @@ from hedge_desk.models import (
     ModelTeam,
     build_synthetic_reference_quorum,
     build_synthetic_training_gate,
+    build_synthetic_split_gate,
 )
 from hedge_desk.off_exchange import (
     OtcWeeklyObservation,
@@ -145,6 +146,7 @@ def _model_lab_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
     quorum = build_synthetic_reference_quorum(evaluated_at)
     quant_training = build_synthetic_training_gate(ModelTeam.QUANT)
     ai_training = build_synthetic_training_gate(ModelTeam.AI)
+    split_gate = build_synthetic_split_gate(evaluated_at)
     otc = evaluate_otc_weekly_observation(
         OtcWeeklyObservation(
             "synthetic-finra-week", "TEST", "T1", date(2026, 6, 29),
@@ -183,11 +185,19 @@ def _model_lab_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                     ai_training.admissible
                 ).lower(),
                 "training_trade_authorized": "false",
+                "purged_split_admissible": str(split_gate.admissible).lower(),
+                "purged_split_artifact": split_gate.artifact_sha256,
+                "purged_split_authoritative_risk_input": str(
+                    split_gate.authoritative_risk_input
+                ).lower(),
+                "purged_split_trade_authorized": str(
+                    split_gate.trade_authorized
+                ).lower(),
                 "otc_directional_signal_authorized": str(
                     otc.directional_signal_authorized
                 ).lower(),
             },
-            quorum.model_artifact_ids,
+            quorum.model_artifact_ids + (split_gate.artifact_sha256,),
         ),
         LayerEvaluation(
             EvaluationLayer.DETERMINISTIC_RISK, EvaluationStatus.BLOCKED,

@@ -104,6 +104,14 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertEqual(
             model_lab.layers[2].metrics["training_trade_authorized"], "false"
         )
+        self.assertEqual(model_lab.layers[2].metrics["purged_split_admissible"], "true")
+        self.assertEqual(
+            model_lab.layers[2].metrics["purged_split_authoritative_risk_input"],
+            "false",
+        )
+        self.assertEqual(
+            model_lab.layers[2].metrics["purged_split_trade_authorized"], "false"
+        )
         self.assertEqual(
             model_lab.layers[2].metrics["otc_directional_signal_authorized"],
             "false",

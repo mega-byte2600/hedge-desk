@@ -40,6 +40,8 @@ supplying licensed snapshots.
 5. **Open Quant/AI Model Lab:** independent Quant and AI research teams using
    versioned open code, open-weight models where applicable, explicit licenses,
    immutable hashes, frozen training cutoffs, and reproducible evaluations.
+   Purged walk-forward train/validation/test windows and embargoes are enforced
+   by executable split gates, not model-authored metadata.
    Neither team can create authoritative RoR, clear compliance, or authorize a
    trade.
 6. **Weather/War/Logistics Futures Event Desk:** compare validated physical

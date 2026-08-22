@@ -15,6 +15,13 @@ from .training_run import (
     validate_training_run,
     build_synthetic_training_gate,
 )
+from .splits import (
+    SPLIT_GATE_VERSION,
+    EvaluationSplitGate,
+    EvaluationWindow,
+    evaluate_purged_walk_forward_split,
+    build_synthetic_split_gate,
+)
 
 __all__ = [
     "ModelArtifact", "ModelTeam", "validate_open_model_artifact",
@@ -24,4 +31,7 @@ __all__ = [
     "TRAINING_RUN_SCHEMA_VERSION", "TrainingRunGate", "TrainingRunManifest",
     "validate_training_run",
     "build_synthetic_training_gate",
+    "SPLIT_GATE_VERSION", "EvaluationSplitGate", "EvaluationWindow",
+    "evaluate_purged_walk_forward_split",
+    "build_synthetic_split_gate",
 ]

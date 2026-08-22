@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 259 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 263 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - CI enforces an 80% whole-package branch-coverage floor; the current measured
@@ -73,6 +73,10 @@ python3 -m hedge_desk.cli --morning-markdown
   validated in place and are never copied into the public repository.
 - point-in-time news/RSS evidence gates that treat transport separately from
   license, reject private/stale/duplicate evidence, and grant no trade authority.
+- purged walk-forward Quant/AI evaluation splits with content-addressed,
+  chronological train/validation/test windows, embargo gaps, sample minimums,
+  and point-in-time cutoff enforcement; split admission grants no risk or trade
+  authority.
 - a strict canonical option-snapshot schema with exact decimal prices,
   synchronized source identity, and rejection of unknown/model-added fields.
 - deterministic enumeration of every admissible vertical spread from a
