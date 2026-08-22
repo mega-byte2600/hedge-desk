@@ -1,0 +1,8 @@
+{
+  "schema_version": "hedge-desk-market-session-1.0.0",
+  "venue": "OPRA-SYNTHETIC",
+  "regular_open": "2026-08-21T11:00:00Z",
+  "regular_close": "2026-08-21T13:00:00Z",
+  "received_at": "2026-08-21T10:00:00Z",
+  "calendar_artifact_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+}

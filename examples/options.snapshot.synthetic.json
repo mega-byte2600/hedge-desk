@@ -1,0 +1,39 @@
+{
+  "schema_version": "hedge-desk-option-snapshot-1.0.0",
+  "underlying_quote": {
+    "symbol": "TEST",
+    "bid": "99.99",
+    "ask": "100.01",
+    "quoted_at": "2026-08-21T12:00:00Z"
+  },
+  "option_quotes": [
+    {
+      "contract_id": "TEST260918P00095000",
+      "underlying": "TEST",
+      "option_type": "put",
+      "strike": "95",
+      "expiration": "2026-09-18",
+      "bid": "2.00",
+      "ask": "2.10",
+      "bid_size": 25,
+      "ask_size": 30,
+      "quoted_at": "2026-08-21T12:00:00Z",
+      "open_interest": 1000,
+      "volume": 500
+    },
+    {
+      "contract_id": "TEST260918P00090000",
+      "underlying": "TEST",
+      "option_type": "put",
+      "strike": "90",
+      "expiration": "2026-09-18",
+      "bid": "0.75",
+      "ask": "0.80",
+      "bid_size": 25,
+      "ask_size": 30,
+      "quoted_at": "2026-08-21T12:00:00Z",
+      "open_interest": 1000,
+      "volume": 500
+    }
+  ]
+}

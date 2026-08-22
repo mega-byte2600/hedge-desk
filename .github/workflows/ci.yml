@@ -44,6 +44,11 @@ jobs:
           python -m hedge_desk.cli --validate-data-stack examples/data-stack.synthetic.json > data-readiness.json
           python -c 'import json; d=json.load(open("data-readiness.json")); assert d["ready_for_internal_options_research"] is True; assert d["raw_payload_commit_allowed"] is False; assert d["total_monthly_cost"] == "80"'
 
+      - name: Verify synthetic intake through calendar-bound handoff
+        run: |
+          python -m hedge_desk.cli --validate-data-envelope examples/options.snapshot.synthetic.envelope.json --payload examples/options.snapshot.synthetic.json --validate-option-snapshot --scan-vertical-spreads --market-session-evidence examples/market-session.synthetic.json --minimum-seconds-before-close 900 --decision-cutoff 2026-08-21T12:00:00Z --max-age-seconds 0 > intake-result.json
+          python -c 'import json; d=json.load(open("intake-result.json")); assert d["gate"]["admissible"] is True; assert d["market_session_gate"]["admissible"] is True; assert len(d["control_handoffs"]) == 1; assert d["control_handoffs"][0]["trade_authorized"] is False; assert d["control_handoffs"][0]["next_action"] == "VALIDATED_RISK_INPUT_REQUIRED"'
+
       - name: Verify human-pending default
         run: |
           python -m hedge_desk.cli > pending.json

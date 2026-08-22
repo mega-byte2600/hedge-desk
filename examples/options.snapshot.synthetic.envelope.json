@@ -1,0 +1,12 @@
+{
+  "schema_version": "hedge-desk-observation-1.0.0",
+  "artifact_id": "synthetic-option-snapshot-example-v1",
+  "payload_kind": "option_chain",
+  "source_id": "synthetic-example-source",
+  "license_id": "repository-synthetic-fixture",
+  "source_as_of": "2026-08-21T12:00:00Z",
+  "received_at": "2026-08-21T12:00:00Z",
+  "payload_sha256": "13da04e06bc3048e855cfc425c1c3218325d3ab4a5e4deb92343edc1935ee7ee",
+  "synthetic": true,
+  "redistribution_allowed": true
+}

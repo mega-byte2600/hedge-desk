@@ -68,3 +68,9 @@ best trade, estimate probability, calculate Risk of Ruin, or authorize a trade.
 The CLI withholds all candidate handoffs when market-session evidence is absent
 or blocked. An admitted handoff binds the calendar hash, decision time, and
 latest entry time; it still stops at `VALIDATED_RISK_INPUT_REQUIRED`.
+
+The three checked-in files `examples/options.snapshot.synthetic.json`,
+`examples/options.snapshot.synthetic.envelope.json`, and
+`examples/market-session.synthetic.json` form a complete runnable example. CI
+runs them through intake, schema validation, spread enumeration, session
+validation, and the nonauthorizing handoff on every Python version.
