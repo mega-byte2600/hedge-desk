@@ -26,6 +26,17 @@ class DecisionStatus(str, Enum):
     BLOCKED = "blocked"
 
 
+def _finite_decimal(value: object) -> bool:
+    return isinstance(value, Decimal) and value.is_finite()
+
+
+def _valid_sha256(value: object) -> bool:
+    try:
+        return isinstance(value, str) and len(value) == 64 and int(value, 16) > 0
+    except ValueError:
+        return False
+
+
 @dataclass(frozen=True)
 class Account:
     account_id: str
@@ -39,10 +50,16 @@ class Account:
     broker_options_policy_version: Optional[str] = None
 
     def __post_init__(self) -> None:
+        if not self.account_id:
+            raise ValueError("account identity is required")
+        if not _finite_decimal(self.equity) or not _finite_decimal(self.cash):
+            raise ValueError("account money values must be finite Decimals")
         if self.equity <= 0:
             raise ValueError("account equity must be positive")
         if self.cash < 0:
             raise ValueError("account cash cannot be negative")
+        if type(self.options_approved) is not bool or type(self.futures_approved) is not bool:
+            raise ValueError("account approval flags must be boolean")
         if (
             self.options_disclosure_acknowledged_at is not None
             and self.options_disclosure_acknowledged_at.tzinfo is None
@@ -68,12 +85,25 @@ class TradeCandidate:
     def __post_init__(self) -> None:
         if not self.candidate_id or not self.symbol:
             raise ValueError("candidate identity is required")
-        if self.quantity <= 0 or self.entry_price <= 0:
+        if type(self.quantity) is not int or self.quantity <= 0:
+            raise ValueError("quantity must be a positive integer")
+        decimal_values = (
+            self.entry_price,
+            self.max_loss,
+            self.expected_win,
+            self.win_probability,
+            self.average_daily_dollar_volume,
+        )
+        if any(not _finite_decimal(value) for value in decimal_values):
+            raise ValueError("candidate numeric values must be finite Decimals")
+        if self.entry_price <= 0:
             raise ValueError("quantity and entry price must be positive")
         if self.max_loss < 0 or self.expected_win < 0:
             raise ValueError("loss and win amounts cannot be negative")
         if not Decimal("0") <= self.win_probability <= Decimal("1"):
             raise ValueError("win probability must be between zero and one")
+        if self.average_daily_dollar_volume < 0:
+            raise ValueError("daily dollar volume cannot be negative")
         if self.quote_timestamp.tzinfo is None:
             raise ValueError("quote timestamp must be timezone-aware")
         if not self.thesis.strip() or not self.invalidation.strip():
@@ -100,12 +130,21 @@ class Decision:
             raise ValueError("decision timestamp must be timezone-aware")
         if not self.risk_model_id or not self.risk_model_version:
             raise ValueError("risk model identity and version are required")
-        if len(self.risk_input_sha256) != 64:
+        if not (
+            _finite_decimal(self.risk_of_ruin_before)
+            and _finite_decimal(self.risk_of_ruin_after)
+            and Decimal("0") <= self.risk_of_ruin_before <= Decimal("1")
+            and Decimal("0") <= self.risk_of_ruin_after <= Decimal("1")
+        ):
+            raise ValueError("decision RoR values must be finite and between zero and one")
+        if not _valid_sha256(self.risk_input_sha256):
             raise ValueError("risk input artifact hash is required")
-        if len(self.risk_source_artifact_sha256) != 64:
+        if not _valid_sha256(self.risk_source_artifact_sha256):
             raise ValueError("risk source artifact hash is required")
-        if len(self.portfolio_snapshot_sha256) != 64:
+        if not _valid_sha256(self.portfolio_snapshot_sha256):
             raise ValueError("risk portfolio snapshot hash is required")
+        if self.reason_codes != tuple(sorted(set(self.reason_codes))):
+            raise ValueError("decision reason codes must be unique and sorted")
         if self.status is DecisionStatus.BLOCKED and not self.reason_codes:
             raise ValueError("blocked decisions require reason codes")
 
