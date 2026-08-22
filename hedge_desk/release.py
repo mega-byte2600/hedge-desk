@@ -46,7 +46,7 @@ class ReleaseReadiness:
 
 def _is_hash(value: str) -> bool:
     try:
-        return len(value) == 64 and int(value, 16) >= 0
+        return len(value) == 64 and int(value, 16) > 0
     except ValueError:
         return False
 
@@ -65,7 +65,7 @@ def evaluate_live_release_readiness(
         item = by_id.get(requirement_id)
         if item is None:
             reasons.append("RELEASE_EVIDENCE_MISSING:" + requirement_id)
-        elif not _is_hash(item.evidence_sha256):
+        elif item.satisfied and not _is_hash(item.evidence_sha256):
             reasons.append("RELEASE_EVIDENCE_HASH_INVALID:" + requirement_id)
         elif not item.satisfied:
             reasons.append("RELEASE_REQUIREMENT_UNSATISFIED:" + requirement_id)

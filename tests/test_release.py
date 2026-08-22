@@ -29,6 +29,15 @@ class ReleaseReadinessTests(unittest.TestCase):
         self.assertIs(result.status, ReleaseStatus.READY_FOR_SEPARATE_AUTHORIZATION)
         self.assertFalse(result.live_transition_authorized)
         self.assertFalse(result.human_override_allowed)
+        zero_evidence = tuple(
+            ReleaseEvidence(requirement_id, True, "0" * 64)
+            for requirement_id in REQUIRED_RELEASE_EVIDENCE
+        )
+        zero_result = evaluate_live_release_readiness(zero_evidence)
+        self.assertIs(zero_result.status, ReleaseStatus.BLOCKED)
+        self.assertTrue(
+            all("HASH_INVALID" in reason for reason in zero_result.reason_codes)
+        )
 
     def test_missing_invalid_and_tampered_evidence_fails_closed(self) -> None:
         result = evaluate_live_release_readiness((
