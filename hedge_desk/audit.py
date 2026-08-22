@@ -90,10 +90,27 @@ def append_audit_event(
         or not policy_version
     ):
         raise ValueError("audit identity, stage, and artifact are required")
-    for value in (input_sha256, output_sha256):
+    existing_reasons = verify_audit_chain(chain)
+    if existing_reasons:
+        raise ValueError("cannot append to invalid audit chain")
+    if chain and run_id != chain[-1].run_id:
+        raise ValueError("audit run identity cannot change")
+    if chain and occurred_at < chain[-1].occurred_at:
+        raise ValueError("audit event time cannot move backward")
+    expected_input = chain[-1].output_sha256 if chain else GENESIS_HASH
+    if input_sha256 != expected_input:
+        raise ValueError("audit input must equal prior output")
+    if any(not isinstance(reason, str) or not reason for reason in reason_codes):
+        raise ValueError("audit reason codes must be nonempty strings")
+    for label, value in (("input", input_sha256), ("output", output_sha256)):
         try:
-            valid_hash = len(value) == 64 and int(value, 16) >= 0
-        except ValueError:
+            parsed = int(value, 16)
+            valid_hash = (
+                isinstance(value, str)
+                and len(value) == 64
+                and (parsed > 0 or (label == "input" and not chain and parsed == 0))
+            )
+        except (TypeError, ValueError):
             valid_hash = False
         if not valid_hash:
             raise ValueError("audit input and output hashes must be valid")
@@ -137,6 +154,7 @@ def verify_audit_chain(chain: Tuple[AuditEvent, ...]) -> Tuple[str, ...]:
     reasons = []
     expected_previous = GENESIS_HASH
     expected_input = GENESIS_HASH
+    prior_time = None
     run_ids = {event.run_id for event in chain}
     if len(run_ids) > 1:
         reasons.append("AUDIT_RUN_ID_MISMATCH")
@@ -147,7 +165,37 @@ def verify_audit_chain(chain: Tuple[AuditEvent, ...]) -> Tuple[str, ...]:
             reasons.append("AUDIT_PREVIOUS_HASH_INVALID")
         if event.input_sha256 != expected_input:
             reasons.append("AUDIT_INPUT_LINEAGE_INVALID")
-        if not event.candidate_id or not event.component_version or not event.policy_version:
+        for label, value, allow_zero in (
+            ("INPUT", event.input_sha256, expected_sequence == 1),
+            ("OUTPUT", event.output_sha256, False),
+            ("PREVIOUS", event.previous_hash, expected_sequence == 1),
+            ("EVENT", event.event_hash, False),
+        ):
+            try:
+                parsed = int(value, 16)
+                valid_hash = (
+                    isinstance(value, str)
+                    and len(value) == 64
+                    and (parsed > 0 or (allow_zero and parsed == 0))
+                )
+            except (TypeError, ValueError):
+                valid_hash = False
+            if not valid_hash:
+                reasons.append(f"AUDIT_{label}_HASH_INVALID")
+        if event.occurred_at.tzinfo is None:
+            reasons.append("AUDIT_TIMESTAMP_NOT_TIMEZONE_AWARE")
+        elif prior_time is not None and event.occurred_at < prior_time:
+            reasons.append("AUDIT_TIME_ORDER_INVALID")
+        if event.reason_codes != tuple(sorted(set(event.reason_codes))):
+            reasons.append("AUDIT_REASON_CODES_NONCANONICAL")
+        if (
+            not event.run_id
+            or not event.stage
+            or not event.artifact_id
+            or not event.candidate_id
+            or not event.component_version
+            or not event.policy_version
+        ):
             reasons.append("AUDIT_METADATA_INCOMPLETE")
         expected_hash = _event_hash(
             event.sequence,
@@ -167,6 +215,7 @@ def verify_audit_chain(chain: Tuple[AuditEvent, ...]) -> Tuple[str, ...]:
             reasons.append("AUDIT_EVENT_HASH_INVALID")
         expected_previous = event.event_hash
         expected_input = event.output_sha256
+        prior_time = event.occurred_at if event.occurred_at.tzinfo is not None else prior_time
     return tuple(sorted(set(reasons)))
 
 
