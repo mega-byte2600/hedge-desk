@@ -14,6 +14,8 @@ from hedge_desk.artifacts import (
     build_artifact_bundle_manifest,
     verify_artifact_bundle_manifest,
 )
+from hedge_desk.audit import build_reference_audit
+from hedge_desk.audit_store import initialize_audit_journal, read_audit_journal
 from hedge_desk.scheduler import (
     ScheduledRunRequest,
     execute_scheduled_run,
@@ -35,6 +37,16 @@ from hedge_desk.options import (
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--audit-journal",
+        metavar="FILE",
+        help="create a new fail-closed local JSONL paper audit journal",
+    )
+    parser.add_argument(
+        "--verify-audit-journal",
+        metavar="FILE",
+        help="independently read and verify a local JSONL paper audit journal",
+    )
     parser.add_argument(
         "--validate-data-stack",
         metavar="FILE",
@@ -141,6 +153,27 @@ def main() -> None:
         help="stable run identity required with --scheduled-receipt",
     )
     args = parser.parse_args()
+    if args.verify_audit_journal:
+        try:
+            chain = read_audit_journal(Path(args.verify_audit_journal))
+        except ValueError as exc:
+            print(json.dumps({"valid": False, "reason_codes": [str(exc).split(":", 1)[0]]}, indent=2))
+            raise SystemExit(1)
+        print(json.dumps({
+            "valid": True,
+            "event_count": len(chain),
+            "head_hash": chain[-1].event_hash if chain else "0" * 64,
+            "reason_codes": [],
+        }, indent=2))
+        return
+    if args.audit_journal:
+        result = initialize_audit_journal(
+            Path(args.audit_journal), build_reference_audit()
+        )
+        print(json.dumps(json_value(result), indent=2))
+        if result.status != "INITIALIZED":
+            raise SystemExit(1)
+        return
     if args.validate_data_stack:
         try:
             payload = json.loads(Path(args.validate_data_stack).read_text(encoding="utf-8"))

@@ -11,6 +11,25 @@ from datetime import datetime, timezone
 
 
 class CliTests(unittest.TestCase):
+    def test_audit_journal_cli_creates_once_and_verifies(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "audit.jsonl"
+            created = subprocess.run(
+                [sys.executable, "-m", "hedge_desk.cli", "--audit-journal", str(path)],
+                check=True, capture_output=True, text=True,
+            )
+            self.assertEqual(json.loads(created.stdout)["status"], "INITIALIZED")
+            verified = subprocess.run(
+                [sys.executable, "-m", "hedge_desk.cli", "--verify-audit-journal", str(path)],
+                check=True, capture_output=True, text=True,
+            )
+            self.assertTrue(json.loads(verified.stdout)["valid"])
+            duplicate = subprocess.run(
+                [sys.executable, "-m", "hedge_desk.cli", "--audit-journal", str(path)],
+                capture_output=True, text=True,
+            )
+            self.assertNotEqual(duplicate.returncode, 0)
+
     def test_data_stack_cli_reports_readiness_without_vendor_payload(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "data-stack.json"
