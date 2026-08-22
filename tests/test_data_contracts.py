@@ -16,6 +16,17 @@ def artifact() -> DataArtifact:
 
 
 class DataContractTests(unittest.TestCase):
+    def test_boolean_age_or_entitlement_and_zero_hash_are_rejected(self) -> None:
+        value = artifact()
+        with self.assertRaisesRegex(ValueError, "nonnegative integer"):
+            validate_data_artifact(value, NOW, True)
+        with self.assertRaisesRegex(ValueError, "boolean"):
+            validate_data_artifact(replace(value, synthetic=1), NOW, 120)
+        blocked = validate_data_artifact(
+            replace(value, payload_sha256="0" * 64), NOW, 120
+        )
+        self.assertIn("PAYLOAD_HASH_INVALID", blocked.reason_codes)
+
     def test_complete_point_in_time_artifact_passes(self) -> None:
         self.assertTrue(validate_data_artifact(artifact(), NOW, 0).admissible)
 

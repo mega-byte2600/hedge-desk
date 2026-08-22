@@ -39,7 +39,7 @@ class NewsBatchGate:
 
 def _valid_hash(value: str) -> bool:
     try:
-        return len(value) == 64 and int(value, 16) >= 0
+        return isinstance(value, str) and len(value) == 64 and int(value, 16) > 0
     except ValueError:
         return False
 
@@ -51,8 +51,8 @@ def evaluate_news_batch(
 ) -> NewsBatchGate:
     if decision_time.tzinfo is None:
         raise ValueError("news decision time must be timezone-aware")
-    if maximum_age_seconds < 0:
-        raise ValueError("news maximum age cannot be negative")
+    if type(maximum_age_seconds) is not int or maximum_age_seconds < 0:
+        raise ValueError("news maximum age must be a nonnegative integer")
     if not observations:
         raise ValueError("news batch cannot be empty")
     identities = [item.observation_id for item in observations]
@@ -70,6 +70,11 @@ def evaluate_news_batch(
             reasons.append("NEWS_SOURCE_URL_INVALID")
         if not item.publicly_available:
             reasons.append("NEWS_NOT_PUBLICLY_AVAILABLE")
+        if (
+            type(item.publicly_available) is not bool
+            or type(item.redistribution_allowed) is not bool
+        ):
+            reasons.append("NEWS_ENTITLEMENT_FLAGS_INVALID")
         if not _valid_hash(item.content_sha256):
             reasons.append("NEWS_CONTENT_HASH_INVALID")
         if item.published_at.tzinfo is None or item.received_at.tzinfo is None:

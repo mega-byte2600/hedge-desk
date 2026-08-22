@@ -88,8 +88,8 @@ def validate_local_observation(
     """Hash a local payload and validate its declared point-in-time envelope."""
     if decision_cutoff.tzinfo is None:
         raise ValueError("decision cutoff must be timezone-aware")
-    if maximum_age_seconds < 0:
-        raise ValueError("maximum age cannot be negative")
+    if type(maximum_age_seconds) is not int or maximum_age_seconds < 0:
+        raise ValueError("maximum age must be a nonnegative integer")
     envelope = _load_envelope(envelope_path)
     try:
         payload = payload_path.read_bytes()

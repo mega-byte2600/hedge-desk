@@ -18,6 +18,16 @@ def item():
 
 
 class NewsDataTests(unittest.TestCase):
+    def test_boolean_age_flags_and_zero_hash_fail_closed(self) -> None:
+        with self.assertRaisesRegex(ValueError, "nonnegative integer"):
+            evaluate_news_batch((item(),), NOW, True)
+        result = evaluate_news_batch((replace(
+            item(), publicly_available=1, content_sha256="0" * 64
+        ),), NOW, 300)
+        reasons = result.rejected_observations[0][1]
+        self.assertIn("NEWS_ENTITLEMENT_FLAGS_INVALID", reasons)
+        self.assertIn("NEWS_CONTENT_HASH_INVALID", reasons)
+
     def test_rss_can_admit_hashed_research_evidence_but_not_trade_or_commit(self) -> None:
         result = evaluate_news_batch((item(),), NOW, 120)
         self.assertTrue(result.admissible)

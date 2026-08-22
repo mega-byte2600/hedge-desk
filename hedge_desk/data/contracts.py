@@ -35,6 +35,10 @@ def validate_data_artifact(
     maximum_age_seconds: int,
 ) -> DataGateResult:
     """Validate provenance without interpreting or estimating market values."""
+    if type(maximum_age_seconds) is not int or maximum_age_seconds < 0:
+        raise ValueError("maximum data age must be a nonnegative integer")
+    if type(artifact.synthetic) is not bool or type(artifact.redistribution_allowed) is not bool:
+        raise ValueError("data entitlement flags must be boolean")
     reasons = []
     timestamps = (artifact.source_as_of, artifact.received_at, decision_cutoff)
     if any(timestamp.tzinfo is None for timestamp in timestamps):
@@ -43,11 +47,12 @@ def validate_data_artifact(
         reasons.append("PROVENANCE_MISSING")
     if not artifact.license_id:
         reasons.append("LICENSE_MISSING")
-    if len(artifact.payload_sha256) != 64:
+    if not isinstance(artifact.payload_sha256, str) or len(artifact.payload_sha256) != 64:
         reasons.append("PAYLOAD_HASH_INVALID")
     else:
         try:
-            int(artifact.payload_sha256, 16)
+            if int(artifact.payload_sha256, 16) <= 0:
+                raise ValueError
         except ValueError:
             reasons.append("PAYLOAD_HASH_INVALID")
 
