@@ -63,6 +63,10 @@ class OvernightEvaluationTests(unittest.TestCase):
             evaluations[0].layers[2].metrics["handoff_calculation_artifact"],
         )
         self.assertEqual(len(risk_layer.artifact_refs), 2)
+        self.assertEqual(
+            len(evaluations[0].layers[4].metrics["regulatory_traceability_sha256"]),
+            64,
+        )
         model_lab = evaluations[4]
         self.assertEqual(model_lab.project_id, "open-quant-ai-model-lab")
         self.assertEqual(

@@ -644,8 +644,16 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         EvaluationLayer.DETERMINISTIC_COMPLIANCE,
         EvaluationStatus.PASS if compliance_pass else EvaluationStatus.BLOCKED,
         plan.compliance_decision.reason_codes,
-        {"policy_version": plan.compliance_decision.policy_version},
-        (plan.plan_hash,),
+        {
+            "policy_version": plan.compliance_decision.policy_version,
+            "regulatory_traceability_sha256": (
+                plan.compliance_decision.policy_decision.regulatory_traceability_sha256
+            ),
+        },
+        (
+            plan.plan_hash,
+            plan.compliance_decision.policy_decision.regulatory_traceability_sha256,
+        ),
     )
     human_pending = plan.authorization.status is HumanAuthorizationStatus.PENDING
     human = LayerEvaluation(

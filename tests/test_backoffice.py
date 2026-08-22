@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import unittest
@@ -7,6 +8,7 @@ from hedge_desk.backoffice import (
     evaluate_compliance_policy,
     evaluate_drawdown_circuit_breaker,
     evaluate_paper_compliance,
+    validate_compliance_policy_artifact,
 )
 from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
 
@@ -46,6 +48,14 @@ class BackOfficeTests(unittest.TestCase):
         self.assertEqual(
             result.policy_decision.broker_options_policy_version,
             "synthetic-broker-policy-v1",
+        )
+        self.assertEqual(len(result.policy_decision.regulatory_traceability_sha256), 64)
+        attacked = replace(
+            result.policy_decision, regulatory_traceability_sha256="f" * 64
+        )
+        self.assertIn(
+            "REGULATORY_TRACEABILITY_HASH_MISMATCH",
+            validate_compliance_policy_artifact(attacked),
         )
 
     def test_compliance_policy_is_independent_and_live_fails_closed(self) -> None:

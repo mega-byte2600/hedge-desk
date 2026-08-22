@@ -12,6 +12,7 @@ from hashlib import sha256
 from typing import Tuple
 
 from hedge_desk.compliance.account_gate import account_gate
+from hedge_desk.compliance.traceability import traceability_sha256
 from hedge_desk.domain import Account, ProductType, TradeCandidate
 from .portfolio import (
     CircuitBreakerResult,
@@ -46,6 +47,7 @@ class CompliancePolicyDecision:
     options_disclosure_version: str
     options_disclosure_acknowledged_at: str
     broker_options_policy_version: str
+    regulatory_traceability_sha256: str
     artifact_sha256: str
 
 
@@ -74,6 +76,7 @@ def _compliance_artifact_hash(
     options_disclosure_version: str,
     options_disclosure_acknowledged_at: str,
     broker_options_policy_version: str,
+    regulatory_traceability_hash: str,
 ) -> str:
     payload = "|".join(
         (
@@ -87,6 +90,7 @@ def _compliance_artifact_hash(
             options_disclosure_version,
             options_disclosure_acknowledged_at,
             broker_options_policy_version,
+            regulatory_traceability_hash,
         )
     )
     return sha256(payload.encode("utf-8")).hexdigest()
@@ -118,7 +122,10 @@ def validate_compliance_policy_artifact(
         decision.options_disclosure_version,
         decision.options_disclosure_acknowledged_at,
         decision.broker_options_policy_version,
+        decision.regulatory_traceability_sha256,
     )
+    if decision.regulatory_traceability_sha256 != traceability_sha256():
+        reasons.append("REGULATORY_TRACEABILITY_HASH_MISMATCH")
     if decision.artifact_sha256 != expected_hash:
         reasons.append("COMPLIANCE_ARTIFACT_HASH_MISMATCH")
     return tuple(sorted(reasons))
@@ -155,6 +162,7 @@ def evaluate_compliance_policy(
             else ""
         ),
         account.broker_options_policy_version or "",
+        traceability_sha256(),
     )
     return CompliancePolicyDecision(
         candidate.candidate_id,
@@ -171,6 +179,7 @@ def evaluate_compliance_policy(
             else ""
         ),
         account.broker_options_policy_version or "",
+        traceability_sha256(),
         artifact_sha256,
     )
 
