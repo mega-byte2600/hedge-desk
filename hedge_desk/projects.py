@@ -45,7 +45,7 @@ MVP_PROJECTS: Tuple[MvpProject, ...] = (
         4,
         "dividend-opportunity-desk",
         "Dividend Opportunity Desk",
-        ProjectStatus.ARCHITECTURE_ONLY,
+        ProjectStatus.WORKING_FOUNDATION,
         "Rank sustainable dividend opportunities and compare shares, options, and no trade.",
     ),
     MvpProject(

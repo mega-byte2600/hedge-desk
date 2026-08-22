@@ -47,6 +47,12 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertEqual(arbitrage.project_id, "arbitrage-observer")
         self.assertEqual(arbitrage.layers[2].metrics["trade_authorized"], "false")
         self.assertEqual(arbitrage.layers[3].status, EvaluationStatus.BLOCKED)
+        dividend = evaluations[3]
+        self.assertEqual(dividend.project_id, "dividend-opportunity-desk")
+        self.assertEqual(
+            dividend.layers[2].metrics["long_call_cash_dividend_entitlement"], "0"
+        )
+        self.assertEqual(dividend.layers[2].metrics["trade_authorized"], "false")
 
     def test_morning_report_is_explicitly_paper_and_reconciles(self) -> None:
         report = build_morning_report(NOW)

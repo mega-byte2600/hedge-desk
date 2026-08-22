@@ -18,7 +18,7 @@ from hedge_desk.evaluation import (
 )
 from hedge_desk.paper import HumanAuthorizationStatus, MachineRiskStatus
 from hedge_desk.backoffice import BackOfficeStatus
-from hedge_desk.projects import MVP_PROJECTS, ProjectStatus, validate_project_registry
+from hedge_desk.projects import MVP_PROJECTS, validate_project_registry
 from hedge_desk.wargames import build_war_game_report
 from hedge_desk.replay import build_replay_evaluation
 from hedge_desk.reporting import finalize_report
@@ -32,6 +32,7 @@ from hedge_desk.earnings import (
     evaluate_earnings_surprise,
 )
 from hedge_desk.arbitrage import ArbitrageLeg, LegSide, evaluate_arbitrage_package
+from hedge_desk.dividends import AnnualPayoutObservation, evaluate_dividend_history
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -65,19 +66,6 @@ def _reference_batch() -> Any:
         ),
         sha256_text("paper-source-policy-1.0.0"),
     )
-
-
-def _inactive_project(project_id: str, evaluated_at: datetime) -> ProjectEvaluation:
-    layers = tuple(
-        LayerEvaluation(
-            layer=layer,
-            status=EvaluationStatus.NOT_IMPLEMENTED,
-            reason_codes=("PROJECT_NOT_IMPLEMENTED",),
-            metrics={},
-        )
-        for layer in EvaluationLayer
-    )
-    return ProjectEvaluation(project_id, evaluated_at, Disposition.NO_TRADE, layers)
 
 
 def _model_lab_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
@@ -222,6 +210,64 @@ def _arbitrage_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
     )
 
 
+def _dividend_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
+    history = tuple(
+        AnnualPayoutObservation(
+            2016 + index,
+            Decimal("1") + Decimal(index) / Decimal("10"),
+            Decimal("4"), Decimal("50"), Decimal("100"), Decimal("25"),
+            Decimal("10000"),
+            evaluated_at - timedelta(days=365 * (10 - index)),
+            format(index + 1, "x") * 64,
+        )
+        for index in range(10)
+    )
+    result = evaluate_dividend_history(history, evaluated_at)
+    layers = (
+        LayerEvaluation(
+            EvaluationLayer.OBSERVED,
+            EvaluationStatus.PASS if result.admissible else EvaluationStatus.BLOCKED,
+            result.reason_codes,
+            {
+                "source": "synthetic_fixture",
+                "ten_year_average_dividend_yield": str(result.ten_year_average_dividend_yield),
+                "ten_year_average_payout_ratio": str(result.ten_year_average_payout_ratio),
+                "ten_year_average_net_shareholder_yield": str(result.ten_year_average_net_shareholder_yield),
+                "dividend_cut_count": str(result.dividend_cut_count),
+            },
+            tuple(item.source_artifact_sha256 for item in history),
+        ),
+        LayerEvaluation(
+            EvaluationLayer.STAT, EvaluationStatus.NOT_REQUIRED,
+            ("CROSS_SECTIONAL_OUT_OF_SAMPLE_MODEL_ABSENT",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.BIG, EvaluationStatus.PASS, (),
+            {
+                "long_call_cash_dividend_entitlement": str(
+                    result.long_call_cash_dividend_entitlement
+                ),
+                "trade_authorized": str(result.trade_authorized).lower(),
+            },
+        ),
+        LayerEvaluation(
+            EvaluationLayer.DETERMINISTIC_RISK, EvaluationStatus.BLOCKED,
+            ("AUTHORITATIVE_RISK_INPUT_ABSENT",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.DETERMINISTIC_COMPLIANCE, EvaluationStatus.NOT_REQUIRED,
+            ("RESEARCH_ONLY_NO_TRADE",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.HUMAN, EvaluationStatus.NOT_REQUIRED,
+            ("RESEARCH_ONLY_NO_TRADE",), {},
+        ),
+    )
+    return ProjectEvaluation(
+        "dividend-opportunity-desk", evaluated_at, Disposition.NO_TRADE, layers
+    )
+
+
 def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
     """Evaluate every registered project without inventing unbuilt strategies."""
     validate_project_registry()
@@ -295,18 +341,13 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         else Disposition.NO_TRADE,
         (observed, stat, big, risk, compliance, human),
     )
-    inactive = tuple(
-        _inactive_project(project.project_id, FIXTURE_AS_OF)
-        for project in MVP_PROJECTS[1:]
-        if project.status is ProjectStatus.ARCHITECTURE_ONLY
-    )
     return (
         (
             premium,
             _earnings_evaluation(FIXTURE_AS_OF),
             _arbitrage_evaluation(FIXTURE_AS_OF),
+            _dividend_evaluation(FIXTURE_AS_OF),
         )
-        + inactive
         + (_model_lab_evaluation(FIXTURE_AS_OF),)
     )
 
@@ -344,7 +385,7 @@ def build_morning_report(
         "limitations": [
             "Synthetic fixtures only; no current market opportunity is claimed.",
             "Hypothetical paper output is not investment advice or a performance guarantee.",
-            "Architecture-only projects correctly return NO_TRADE.",
+            "Research-only foundations correctly return NO_TRADE without validated risk inputs.",
         ],
         "projects": json_value(evaluations),
         "data_batch": json_value(_reference_batch()),
