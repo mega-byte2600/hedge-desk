@@ -39,6 +39,10 @@ MVP matrix, war-game coverage, and known production blockers.
    immutable hashes, frozen training cutoffs, and reproducible evaluations.
    Neither team can create authoritative RoR, clear compliance, or authorize a
    trade.
+6. **Weather/War/Logistics Futures Event Desk:** compare validated physical
+   event surprise with what the curve already prices, basis, roll, liquidity,
+   margin, and transaction costs. Physical delivery and live trading are
+   disabled.
 
 Together these MVPs build toward a coordinated 24/7 research orchestration. Each
 MVP shares the same deterministic calculation, independent risk, audit, and

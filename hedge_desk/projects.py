@@ -55,6 +55,13 @@ MVP_PROJECTS: Tuple[MvpProject, ...] = (
         ProjectStatus.WORKING_FOUNDATION,
         "Run independent Quant and AI research teams with reproducible open artifacts.",
     ),
+    MvpProject(
+        6,
+        "event-futures-desk",
+        "Weather/War/Logistics Futures Event Desk",
+        ProjectStatus.WORKING_FOUNDATION,
+        "Compare validated physical-event surprise with curve pricing, basis, roll, and costs.",
+    ),
 )
 
 

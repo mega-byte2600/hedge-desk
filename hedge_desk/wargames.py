@@ -16,6 +16,12 @@ from hedge_desk.paper import (
     execute_paper_open,
 )
 from hedge_desk.metrics import evaluate_pnl_series
+from hedge_desk.futures_events import (
+    FuturesContractSnapshot,
+    FuturesEventInputs,
+    PhysicalEventType,
+    evaluate_futures_event,
+)
 
 
 WAR_GAME_VERSION = "premium-spread-war-games-1.0.0"
@@ -104,6 +110,19 @@ class LifecycleWarGame:
     assignment_notice_received: bool = False
     contract_adjustment_pending: bool = False
     settlement_terms_confirmed: bool = True
+
+
+@dataclass(frozen=True)
+class FuturesEventWarGame:
+    scenario_id: str
+    event_type: PhysicalEventType
+    gross_impact: Decimal
+    curve_priced: Decimal
+    basis_reserve: Decimal
+    roll_cost: Decimal
+    transaction_cost: Decimal
+    physically_deliverable: bool = False
+    received_after_decision: bool = False
 
 
 PREMIUM_WAR_GAMES: Tuple[PremiumWarGame, ...] = (
@@ -227,6 +246,32 @@ LIFECYCLE_WAR_GAMES: Tuple[LifecycleWarGame, ...] = (
     LifecycleWarGame("expiration-reconciliation", expiration_reached=True),
     LifecycleWarGame(
         "unconfirmed-settlement-terms", settlement_terms_confirmed=False
+    ),
+)
+
+
+FUTURES_EVENT_WAR_GAMES: Tuple[FuturesEventWarGame, ...] = (
+    FuturesEventWarGame(
+        "weather-surprise-edge-survives", PhysicalEventType.EXTREME_WEATHER,
+        Decimal("1000"), Decimal("400"), Decimal("100"), Decimal("50"), Decimal("50"),
+    ),
+    FuturesEventWarGame(
+        "weather-event-already-priced", PhysicalEventType.EXTREME_WEATHER,
+        Decimal("1000"), Decimal("800"), Decimal("100"), Decimal("50"), Decimal("50"),
+    ),
+    FuturesEventWarGame(
+        "shipping-basis-erases-edge", PhysicalEventType.SHIPPING_DISRUPTION,
+        Decimal("1000"), Decimal("300"), Decimal("500"), Decimal("100"), Decimal("150"),
+    ),
+    FuturesEventWarGame(
+        "physical-delivery-contract-disabled", PhysicalEventType.SHIPPING_DISRUPTION,
+        Decimal("1000"), Decimal("400"), Decimal("100"), Decimal("50"), Decimal("50"),
+        physically_deliverable=True,
+    ),
+    FuturesEventWarGame(
+        "war-event-evidence-arrives-late", PhysicalEventType.WAR_GEOPOLITICAL,
+        Decimal("1000"), Decimal("400"), Decimal("100"), Decimal("50"), Decimal("50"),
+        received_after_decision=True,
     ),
 )
 
@@ -389,6 +434,42 @@ def run_lifecycle_war_games() -> Tuple[Dict[str, Any], ...]:
     return tuple(results)
 
 
+def run_futures_event_war_games() -> Tuple[Dict[str, Any], ...]:
+    results = []
+    for scenario in FUTURES_EVENT_WAR_GAMES:
+        contract = FuturesContractSnapshot(
+            "SYNTHETIC-FUT", 5000, Decimal("5000"),
+            scenario.physically_deliverable, True, "8" * 64,
+        )
+        received_at = FIXTURE_AS_OF + (
+            timedelta(seconds=1)
+            if scenario.received_after_decision
+            else -timedelta(minutes=1)
+        )
+        event = FuturesEventInputs(
+            scenario.scenario_id, scenario.event_type,
+            FIXTURE_AS_OF - timedelta(minutes=2), received_at,
+            scenario.gross_impact, scenario.curve_priced, scenario.basis_reserve,
+            scenario.roll_cost, scenario.transaction_cost, "9" * 64, "a" * 64,
+        )
+        evaluation = evaluate_futures_event(
+            contract, event, FIXTURE_AS_OF, Decimal("300")
+        )
+        results.append(
+            {
+                "scenario_id": scenario.scenario_id,
+                "event_type": scenario.event_type.value,
+                "residual_edge_per_contract": str(
+                    evaluation.residual_edge_per_contract
+                ),
+                "disposition": evaluation.disposition,
+                "reason_codes": list(evaluation.reason_codes),
+                "trade_authorized": evaluation.trade_authorized,
+            }
+        )
+    return tuple(results)
+
+
 def build_war_game_manifest() -> Dict[str, Any]:
     """Content-address every declared scenario input using canonical JSON."""
     fixtures = {
@@ -398,6 +479,7 @@ def build_war_game_manifest() -> Dict[str, Any]:
         "dividend": json_value(DIVIDEND_WAR_GAMES),
         "execution": json_value(EXECUTION_WAR_GAMES),
         "lifecycle": json_value(LIFECYCLE_WAR_GAMES),
+        "futures_events": json_value(FUTURES_EVENT_WAR_GAMES),
     }
     scenario_ids = [
         scenario["scenario_id"]
@@ -429,6 +511,7 @@ def build_war_game_report() -> Dict[str, Any]:
     dividend = run_dividend_war_games()
     execution = run_execution_war_games()
     lifecycle = run_lifecycle_war_games()
+    futures_events = run_futures_event_war_games()
     pnls = tuple(result.net_pnl for result in results)
     wins = sum(result.profitable for result in results)
     premium_metrics = evaluate_pnl_series(pnls)
@@ -468,6 +551,7 @@ def build_war_game_report() -> Dict[str, Any]:
         + sum(item["disposition"] == "NO_TRADE" for item in arbitrage)
         + sum(item["best_hindsight_arm"] == "NO_TRADE" for item in dividend)
         + sum(item["disposition"] == "NO_TRADE" for item in execution)
+        + sum(item["disposition"] == "NO_TRADE" for item in futures_events)
     )
     report = {
         "report_type": "synthetic_hypothetical_war_games",
@@ -481,6 +565,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 len(results) + len(earnings) + len(arbitrage) + len(dividend)
                 + len(execution)
                 + len(lifecycle)
+                + len(futures_events)
             ),
             "scenario_count_by_mvp": {
                 "overnight-premium-desk": len(results),
@@ -489,6 +574,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 "dividend-opportunity-desk": len(dividend),
                 "execution-controls": len(execution),
                 "lifecycle-controls": len(lifecycle),
+                "event-futures-desk": len(futures_events),
             },
             "no_trade_control_count": no_trade_controls,
             "premium_fixed_trade": {
@@ -513,6 +599,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "dividend": dividend,
         "execution_controls": execution,
         "lifecycle_controls": lifecycle,
+        "futures_events": futures_events,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",

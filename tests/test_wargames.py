@@ -9,6 +9,7 @@ from hedge_desk.wargames import (
     run_earnings_war_games,
     run_execution_war_games,
     run_lifecycle_war_games,
+    run_futures_event_war_games,
     run_premium_war_games,
 )
 
@@ -17,8 +18,8 @@ class PremiumWarGameTests(unittest.TestCase):
     def test_all_declared_scenarios_are_reported(self) -> None:
         report = build_war_game_report()
         self.assertTrue(report["all_declared_scenarios_included"])
-        self.assertEqual(report["summary"]["total_scenario_count"], 28)
-        self.assertEqual(report["summary"]["no_trade_control_count"], 11)
+        self.assertEqual(report["summary"]["total_scenario_count"], 33)
+        self.assertEqual(report["summary"]["no_trade_control_count"], 15)
         premium = report["summary"]["premium_fixed_trade"]
         self.assertEqual(premium["profitable_scenarios"], 1)
         self.assertEqual(premium["losing_scenarios"], 4)
@@ -27,7 +28,7 @@ class PremiumWarGameTests(unittest.TestCase):
             premium["descriptive_metrics"]["inference_status"],
             "INSUFFICIENT_SYNTHETIC_SAMPLE",
         )
-        self.assertEqual(report["fixture_manifest"]["scenario_count"], 28)
+        self.assertEqual(report["fixture_manifest"]["scenario_count"], 33)
         self.assertEqual(len(report["fixture_manifest"]["fixture_sha256"]), 64)
         self.assertEqual(len(report["war_game_report_sha256"]), 64)
         summary = report["summary"]
@@ -46,7 +47,7 @@ class PremiumWarGameTests(unittest.TestCase):
 
     def test_fixture_manifest_is_reproducible(self) -> None:
         self.assertEqual(build_war_game_manifest(), build_war_game_manifest())
-        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 28)
+        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 33)
 
     def test_reference_scenario_pnls_are_exact(self) -> None:
         results = {result.scenario_id: result for result in run_premium_war_games()}
@@ -109,6 +110,23 @@ class PremiumWarGameTests(unittest.TestCase):
         self.assertEqual(
             results["unconfirmed-settlement-terms"]["action"],
             "BLOCK_AND_ESCALATE",
+        )
+
+    def test_futures_events_subtract_curve_basis_roll_and_costs(self) -> None:
+        results = {
+            item["scenario_id"]: item for item in run_futures_event_war_games()
+        }
+        self.assertEqual(
+            results["weather-surprise-edge-survives"]["disposition"],
+            "EVENT_RESEARCH_CANDIDATE",
+        )
+        self.assertTrue(all(not item["trade_authorized"] for item in results.values()))
+        self.assertEqual(
+            results["weather-event-already-priced"]["disposition"], "NO_TRADE"
+        )
+        self.assertIn(
+            "PHYSICAL_DELIVERY_DISABLED",
+            results["physical-delivery-contract-disabled"]["reason_codes"],
         )
 
 

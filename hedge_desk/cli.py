@@ -32,7 +32,7 @@ def main() -> None:
     parser.add_argument(
         "--overnight-report",
         action="store_true",
-        help="run all five paper evaluations and emit the morning JSON report",
+        help="run all six paper evaluations and emit the morning JSON report",
     )
     parser.add_argument(
         "--projects",

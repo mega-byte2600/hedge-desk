@@ -6,14 +6,14 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 132 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 137 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
   JSON war games plus JSON/Markdown morning reports.
 - Morning reports are publication-gated, hashed, explicitly PAPER /
   HYPOTHETICAL, and report real-money P&L and real trades as zero.
-- The declared synthetic suite contains 28 strategy, execution, and lifecycle
+- The declared synthetic suite contains 33 strategy, execution, and lifecycle
   war games plus five combined-MVP capital-path stresses.
 
 Run the evidence directly:
@@ -35,6 +35,7 @@ python3 -m hedge_desk.cli --morning-markdown
 | Arbitrage Observer | Working synchronized executable-edge foundation plus war games | `NO_TRADE`; scanner, risk, and settlement adapters not implemented |
 | Dividend Opportunity Desk | Working point-in-time ten-year payout foundation plus war games | `NO_TRADE`; live universe/ranking and risk pipeline not implemented |
 | Open Quant/AI Model Lab | Working dual-team research quorum plus open-artifact gate | `NO_TRADE`; no authoritative risk input or training pipeline |
+| Weather/War/Logistics Futures Event Desk | Working cost/curve-aware synthetic event foundation | `NO_TRADE`; live data, margin, registration, and contract adapters not implemented |
 
 ## Implemented control boundaries
 

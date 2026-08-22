@@ -11,7 +11,7 @@ NOW = datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc)
 class OvernightEvaluationTests(unittest.TestCase):
     def test_every_project_has_complete_distinct_layers(self) -> None:
         evaluations = evaluate_reference_projects()
-        self.assertEqual(len(evaluations), 5)
+        self.assertEqual(len(evaluations), 6)
         for evaluation in evaluations:
             self.assertEqual(tuple(layer.layer for layer in evaluation.layers), tuple(EvaluationLayer))
 
@@ -31,7 +31,7 @@ class OvernightEvaluationTests(unittest.TestCase):
         risk_layer = evaluations[0].layers[3]
         self.assertEqual(len(risk_layer.metrics["risk_input_artifact"]), 64)
         self.assertEqual(len(risk_layer.artifact_refs), 2)
-        model_lab = evaluations[-1]
+        model_lab = evaluations[4]
         self.assertEqual(model_lab.project_id, "open-quant-ai-model-lab")
         self.assertEqual(
             model_lab.layers[2].metrics["authoritative_risk_input"], "false"
@@ -53,6 +53,10 @@ class OvernightEvaluationTests(unittest.TestCase):
             dividend.layers[2].metrics["long_call_cash_dividend_entitlement"], "0"
         )
         self.assertEqual(dividend.layers[2].metrics["trade_authorized"], "false")
+        futures = evaluations[5]
+        self.assertEqual(futures.project_id, "event-futures-desk")
+        self.assertEqual(futures.layers[2].metrics["trade_authorized"], "false")
+        self.assertEqual(futures.layers[4].status, EvaluationStatus.BLOCKED)
 
     def test_morning_report_is_explicitly_paper_and_reconciles(self) -> None:
         report = build_morning_report(NOW)
@@ -69,7 +73,7 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertEqual(
             report["chronological_replay"]["events"][-1]["kind"], "HUMAN_PENDING"
         )
-        self.assertEqual(report["summary"], {"projects_evaluated": 5, "human_review": 1, "no_trade": 4})
+        self.assertEqual(report["summary"], {"projects_evaluated": 6, "human_review": 1, "no_trade": 5})
         self.assertIn("Synthetic fixtures only", report["limitations"][0])
 
     def test_fixed_clock_produces_identical_report(self) -> None:

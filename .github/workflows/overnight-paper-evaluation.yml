@@ -41,7 +41,7 @@ jobs:
         run: python -m hedge_desk.cli --verify-bundle-manifest bundle-manifest.json
       - name: Validate report safety boundary
         run: |
-          python -c 'import json, os; from pathlib import Path; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); w=json.load(open("war-games.json")); r=json.load(open("run-receipt.json")); b=json.load(open("bundle-manifest.json")); m=Path("morning-report.md").read_text(); assert d["summary"]["projects_evaluated"] == 5; assert validate_report(d).publishable; assert d["code_commit"] == os.environ["GITHUB_SHA"]; assert d["report_sha256"] in m; assert d["war_games"] == w; assert r["status"] == "COMPLETE"; assert r["report_sha256"] == d["report_sha256"]; assert len(b["bundle_sha256"]) == 64; assert len(b["files"]) == 4'
+          python -c 'import json, os; from pathlib import Path; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); w=json.load(open("war-games.json")); r=json.load(open("run-receipt.json")); b=json.load(open("bundle-manifest.json")); m=Path("morning-report.md").read_text(); assert d["summary"]["projects_evaluated"] == 6; assert validate_report(d).publishable; assert d["code_commit"] == os.environ["GITHUB_SHA"]; assert d["report_sha256"] in m; assert d["war_games"] == w; assert r["status"] == "COMPLETE"; assert r["report_sha256"] == d["report_sha256"]; assert len(b["bundle_sha256"]) == 64; assert len(b["files"]) == 4'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: paper-morning-evaluation-${{ github.run_id }}

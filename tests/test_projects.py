@@ -29,6 +29,12 @@ class ProjectRegistryTests(unittest.TestCase):
     def test_arbitrage_mvp_has_working_executable_edge_foundation(self) -> None:
         self.assertEqual(MVP_PROJECTS[2].status, ProjectStatus.WORKING_FOUNDATION)
 
+    def test_sixth_mvp_restores_weather_war_logistics_futures_leg(self) -> None:
+        futures = MVP_PROJECTS[5]
+        self.assertEqual(futures.number, 6)
+        self.assertEqual(futures.project_id, "event-futures-desk")
+        self.assertEqual(futures.status, ProjectStatus.WORKING_FOUNDATION)
+
 
 if __name__ == "__main__":
     unittest.main()

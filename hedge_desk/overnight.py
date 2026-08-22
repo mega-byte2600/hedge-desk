@@ -33,6 +33,12 @@ from hedge_desk.earnings import (
 )
 from hedge_desk.arbitrage import ArbitrageLeg, LegSide, evaluate_arbitrage_package
 from hedge_desk.dividends import AnnualPayoutObservation, evaluate_dividend_history
+from hedge_desk.futures_events import (
+    FuturesContractSnapshot,
+    FuturesEventInputs,
+    PhysicalEventType,
+    evaluate_futures_event,
+)
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -268,6 +274,67 @@ def _dividend_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
     )
 
 
+def _futures_event_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
+    contract = FuturesContractSnapshot(
+        "CASH-SETTLED-SYNTHETIC-FUT", 5000, Decimal("5000"), False, True,
+        "5" * 64,
+    )
+    event = FuturesEventInputs(
+        "synthetic-shipping-disruption",
+        PhysicalEventType.SHIPPING_DISRUPTION,
+        evaluated_at - timedelta(minutes=2),
+        evaluated_at - timedelta(minutes=1),
+        Decimal("1000"), Decimal("400"), Decimal("100"), Decimal("50"),
+        Decimal("50"), "6" * 64, "7" * 64,
+    )
+    result = evaluate_futures_event(
+        contract, event, evaluated_at, Decimal("300")
+    )
+    layers = (
+        LayerEvaluation(
+            EvaluationLayer.OBSERVED,
+            EvaluationStatus.PASS if result.admissible else EvaluationStatus.BLOCKED,
+            result.reason_codes,
+            {
+                "source": "synthetic_fixture",
+                "event_type": event.event_type.value,
+                "residual_edge_per_contract": str(result.residual_edge_per_contract),
+            },
+            (
+                contract.source_artifact_sha256,
+                event.source_artifact_sha256,
+                event.impact_model_artifact_sha256,
+            ),
+        ),
+        LayerEvaluation(
+            EvaluationLayer.STAT, EvaluationStatus.NOT_REQUIRED,
+            ("OUT_OF_SAMPLE_EVENT_MODEL_ABSENT",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.BIG, EvaluationStatus.PASS, (),
+            {
+                "disposition": result.disposition,
+                "trade_authorized": str(result.trade_authorized).lower(),
+            },
+        ),
+        LayerEvaluation(
+            EvaluationLayer.DETERMINISTIC_RISK, EvaluationStatus.BLOCKED,
+            ("FUTURES_RISK_AND_MARGIN_ARTIFACT_ABSENT",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.DETERMINISTIC_COMPLIANCE, EvaluationStatus.BLOCKED,
+            ("FUTURES_PAPER_RESEARCH_ONLY",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.HUMAN, EvaluationStatus.NOT_REQUIRED,
+            ("RESEARCH_ONLY_NO_TRADE",), {},
+        ),
+    )
+    return ProjectEvaluation(
+        "event-futures-desk", evaluated_at, Disposition.NO_TRADE, layers
+    )
+
+
 def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
     """Evaluate every registered project without inventing unbuilt strategies."""
     validate_project_registry()
@@ -348,7 +415,10 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             _arbitrage_evaluation(FIXTURE_AS_OF),
             _dividend_evaluation(FIXTURE_AS_OF),
         )
-        + (_model_lab_evaluation(FIXTURE_AS_OF),)
+        + (
+            _model_lab_evaluation(FIXTURE_AS_OF),
+            _futures_event_evaluation(FIXTURE_AS_OF),
+        )
     )
 
 
