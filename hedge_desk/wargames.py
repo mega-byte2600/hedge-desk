@@ -44,6 +44,7 @@ from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
 from hedge_desk.options import (
     build_candidate_control_handoffs,
     scan_vertical_credit_spreads,
+    evaluate_option_universe,
     validate_candidate_control_handoff,
 )
 
@@ -172,6 +173,12 @@ class PremiumTimingWarGame:
 
 @dataclass(frozen=True)
 class CandidatePipelineWarGame:
+    scenario_id: str
+    attack: str
+
+
+@dataclass(frozen=True)
+class OptionUniverseWarGame:
     scenario_id: str
     attack: str
 
@@ -364,6 +371,13 @@ CANDIDATE_PIPELINE_WAR_GAMES: Tuple[CandidatePipelineWarGame, ...] = (
     CandidatePipelineWarGame("candidate-thin-market", "THIN_MARKET"),
     CandidatePipelineWarGame("candidate-handoff-economics-tamper", "TAMPER"),
     CandidatePipelineWarGame("candidate-front-office-authorization", "AUTHORIZE"),
+)
+
+
+OPTION_UNIVERSE_WAR_GAMES: Tuple[OptionUniverseWarGame, ...] = (
+    OptionUniverseWarGame("underlying-executable-ranking", "RANK"),
+    OptionUniverseWarGame("underlying-thin-market-no-trade", "THIN"),
+    OptionUniverseWarGame("underlying-closed-session-no-trade", "CLOSED"),
 )
 
 
@@ -752,6 +766,52 @@ def run_candidate_pipeline_war_games() -> Tuple[Dict[str, Any], ...]:
     return tuple(results)
 
 
+def run_option_universe_war_games() -> Tuple[Dict[str, Any], ...]:
+    base = build_reference_option_snapshot()
+    results = []
+    for scenario in OPTION_UNIVERSE_WAR_GAMES:
+        gate = build_reference_market_session_gate()
+        snapshots = (base,)
+        if scenario.attack == "RANK":
+            stronger = replace(
+                base,
+                underlying_quote=replace(base.underlying_quote, symbol="STRONG"),
+                option_quotes=tuple(
+                    replace(
+                        quote,
+                        underlying="STRONG",
+                        bid=quote.bid + (Decimal("1") if index == 0 else Decimal("0")),
+                        ask=quote.ask + (Decimal("1") if index == 0 else Decimal("0")),
+                    )
+                    for index, quote in enumerate(base.option_quotes)
+                ),
+                source_artifact_sha256="c" * 64,
+            )
+            snapshots = (base, stronger)
+        elif scenario.attack == "THIN":
+            snapshots = (
+                replace(
+                    base,
+                    option_quotes=tuple(replace(quote, volume=0) for quote in base.option_quotes),
+                ),
+            )
+        elif scenario.attack == "CLOSED":
+            gate = replace(gate, admissible=False, reason_codes=("MARKET_NOT_OPEN",))
+        evaluation = evaluate_option_universe(snapshots, FIXTURE_AS_OF, gate)
+        results.append({
+            "scenario_id": scenario.scenario_id,
+            "disposition": evaluation.disposition,
+            "candidate_count": len(evaluation.candidates),
+            "top_ranked_underlying": (
+                evaluation.candidates[0].symbol if evaluation.candidates else None
+            ),
+            "rejected_underlyings": json_value(evaluation.rejected_underlyings),
+            "probability_inferred": evaluation.probability_inferred,
+            "trade_authorized": evaluation.trade_authorized,
+        })
+    return tuple(results)
+
+
 def build_war_game_manifest() -> Dict[str, Any]:
     """Content-address every declared scenario input using canonical JSON."""
     fixtures = {
@@ -766,6 +826,7 @@ def build_war_game_manifest() -> Dict[str, Any]:
         "compliance_controls": json_value(COMPLIANCE_WAR_GAMES),
         "premium_timing": json_value(PREMIUM_TIMING_WAR_GAMES),
         "candidate_pipeline": json_value(CANDIDATE_PIPELINE_WAR_GAMES),
+        "option_universe": json_value(OPTION_UNIVERSE_WAR_GAMES),
     }
     scenario_ids = [
         scenario["scenario_id"]
@@ -802,6 +863,7 @@ def build_war_game_report() -> Dict[str, Any]:
     compliance_controls = run_compliance_war_games()
     premium_timing = run_premium_timing_war_games()
     candidate_pipeline = run_candidate_pipeline_war_games()
+    option_universe = run_option_universe_war_games()
     pnls = tuple(result.net_pnl for result in results)
     wins = sum(result.profitable for result in results)
     premium_metrics = evaluate_pnl_series(pnls)
@@ -845,6 +907,7 @@ def build_war_game_report() -> Dict[str, Any]:
         + sum(item["disposition"] == "NO_TRADE" for item in model_governance)
         + sum(item["disposition"] == "NO_TRADE" for item in compliance_controls)
         + sum(item["disposition"] == "NO_TRADE" for item in candidate_pipeline)
+        + sum(item["disposition"] == "NO_TRADE" for item in option_universe)
     )
     report = {
         "report_type": "synthetic_hypothetical_war_games",
@@ -863,6 +926,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 + len(compliance_controls)
                 + len(premium_timing)
                 + len(candidate_pipeline)
+                + len(option_universe)
             ),
             "scenario_count_by_mvp": {
                 "overnight-premium-desk": len(results),
@@ -876,6 +940,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 "compliance-controls": len(compliance_controls),
                 "premium-timing-controls": len(premium_timing),
                 "candidate-pipeline-controls": len(candidate_pipeline),
+                "option-universe-controls": len(option_universe),
             },
             "no_trade_control_count": no_trade_controls,
             "premium_fixed_trade": {
@@ -913,6 +978,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "compliance_controls": compliance_controls,
         "premium_timing": premium_timing,
         "candidate_pipeline": candidate_pipeline,
+        "option_universe": option_universe,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",
