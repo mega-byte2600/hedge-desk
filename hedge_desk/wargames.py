@@ -152,6 +152,13 @@ class ComplianceWarGame:
     attack: str
 
 
+@dataclass(frozen=True)
+class PremiumTimingWarGame:
+    scenario_id: str
+    days_before_expiration: int
+    executable_exit_debit_per_share: Decimal
+
+
 PREMIUM_WAR_GAMES: Tuple[PremiumWarGame, ...] = (
     PremiumWarGame(
         "favorable-decay",
@@ -321,6 +328,15 @@ COMPLIANCE_WAR_GAMES: Tuple[ComplianceWarGame, ...] = (
     ComplianceWarGame("live-environment-request", "LIVE_ENVIRONMENT"),
     ComplianceWarGame("compliance-artifact-tamper", "HASH_TAMPER"),
     ComplianceWarGame("agent-compliance-pass-override", "PASS_OVERRIDE"),
+)
+
+
+PREMIUM_TIMING_WAR_GAMES: Tuple[PremiumTimingWarGame, ...] = (
+    PremiumTimingWarGame("timing-21-dte", 21, Decimal("1.00")),
+    PremiumTimingWarGame("timing-8-dte", 8, Decimal("0.60")),
+    PremiumTimingWarGame("timing-planned-exit-7-dte", 7, Decimal("0.40")),
+    PremiumTimingWarGame("timing-adverse-1-dte", 1, Decimal("4.80")),
+    PremiumTimingWarGame("timing-expiration", 0, Decimal("5.00")),
 )
 
 
@@ -614,6 +630,46 @@ def run_compliance_war_games() -> Tuple[Dict[str, Any], ...]:
     return tuple(results)
 
 
+def run_premium_timing_war_games() -> Tuple[Dict[str, Any], ...]:
+    """Evaluate declared executable marks against the immutable exit policy."""
+    plan = build_reference_plan()
+    results = []
+    for scenario in PREMIUM_TIMING_WAR_GAMES:
+        check = evaluate_paper_lifecycle(
+            FIXTURE_AS_OF + timedelta(days=1),
+            planned_exit_reached=(
+                scenario.days_before_expiration
+                <= plan.spread.planned_exit_days_before_expiration
+            ),
+            expiration_reached=scenario.days_before_expiration <= 0,
+            short_leg_in_the_money=False,
+            ex_dividend_before_expiration=False,
+            assignment_notice_received=False,
+            contract_adjustment_pending=False,
+            settlement_terms_confirmed=True,
+        )
+        exit_debit = (
+            scenario.executable_exit_debit_per_share
+            * Decimal(plan.spread.contract_multiplier)
+            * Decimal(plan.spread.quantity)
+        )
+        exit_commission = Decimal("0.65") * Decimal("2")
+        results.append(
+            {
+                "scenario_id": scenario.scenario_id,
+                "days_before_expiration": scenario.days_before_expiration,
+                "executable_exit_debit": str(exit_debit),
+                "exit_commission": str(exit_commission),
+                "net_pnl_if_closed": str(
+                    plan.spread.net_credit - exit_debit - exit_commission
+                ),
+                "lifecycle_action": check.action,
+                "reason_codes": list(check.reason_codes),
+            }
+        )
+    return tuple(results)
+
+
 def build_war_game_manifest() -> Dict[str, Any]:
     """Content-address every declared scenario input using canonical JSON."""
     fixtures = {
@@ -626,6 +682,7 @@ def build_war_game_manifest() -> Dict[str, Any]:
         "futures_events": json_value(FUTURES_EVENT_WAR_GAMES),
         "model_governance": json_value(MODEL_GOVERNANCE_WAR_GAMES),
         "compliance_controls": json_value(COMPLIANCE_WAR_GAMES),
+        "premium_timing": json_value(PREMIUM_TIMING_WAR_GAMES),
     }
     scenario_ids = [
         scenario["scenario_id"]
@@ -660,6 +717,7 @@ def build_war_game_report() -> Dict[str, Any]:
     futures_events = run_futures_event_war_games()
     model_governance = run_model_governance_war_games()
     compliance_controls = run_compliance_war_games()
+    premium_timing = run_premium_timing_war_games()
     pnls = tuple(result.net_pnl for result in results)
     wins = sum(result.profitable for result in results)
     premium_metrics = evaluate_pnl_series(pnls)
@@ -718,6 +776,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 + len(futures_events)
                 + len(model_governance)
                 + len(compliance_controls)
+                + len(premium_timing)
             ),
             "scenario_count_by_mvp": {
                 "overnight-premium-desk": len(results),
@@ -729,6 +788,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 "event-futures-desk": len(futures_events),
                 "open-quant-ai-model-lab": len(model_governance),
                 "compliance-controls": len(compliance_controls),
+                "premium-timing-controls": len(premium_timing),
             },
             "no_trade_control_count": no_trade_controls,
             "premium_fixed_trade": {
@@ -746,6 +806,14 @@ def build_war_game_report() -> Dict[str, Any]:
                 evaluate_pnl_series(arbitrage_policy_pnls)
             ),
             "dividend_fixed_arm_metrics": json_value(dividend_arm_metrics),
+            "premium_timing_metrics": json_value(
+                evaluate_pnl_series(
+                    tuple(
+                        Decimal(item["net_pnl_if_closed"])
+                        for item in premium_timing
+                    )
+                )
+            ),
         },
         "premium": json_value(results),
         "earnings": earnings,
@@ -756,6 +824,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "futures_events": futures_events,
         "model_governance": model_governance,
         "compliance_controls": compliance_controls,
+        "premium_timing": premium_timing,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",
