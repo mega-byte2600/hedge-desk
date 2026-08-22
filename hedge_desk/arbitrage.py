@@ -67,7 +67,7 @@ class ArbitrageUniverseEvaluation:
 
 def _valid_hash(value: str) -> bool:
     try:
-        return len(value) == 64 and int(value, 16) >= 0
+        return isinstance(value, str) and len(value) == 64 and int(value, 16) > 0
     except ValueError:
         return False
 
@@ -87,6 +87,20 @@ def evaluate_arbitrage_package(
         raise ValueError("multi-leg package, quantity, and multiplier are required")
     if len({leg.leg_id for leg in legs}) != len(legs):
         raise ValueError("arbitrage leg identities must be unique")
+    decimal_values = (
+        terminal_present_value,
+        fees,
+        slippage_reserve,
+        financing_cost,
+        minimum_edge_buffer,
+    ) + tuple(value for leg in legs for value in (leg.bid, leg.ask))
+    if any(
+        not isinstance(value, Decimal) or not value.is_finite()
+        for value in decimal_values
+    ):
+        raise ValueError("arbitrage numeric inputs must be finite Decimals")
+    if type(quote_tolerance_seconds) is not int or quote_tolerance_seconds < 0:
+        raise ValueError("arbitrage quote tolerance invalid")
     if any(value < 0 for value in (fees, slippage_reserve, financing_cost, minimum_edge_buffer)):
         raise ValueError("costs and safety buffer cannot be negative")
     reasons = []

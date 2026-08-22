@@ -30,6 +30,15 @@ def event():
 
 
 class FuturesEventTests(unittest.TestCase):
+    def test_nonfinite_event_edge_cannot_rank(self) -> None:
+        with self.assertRaisesRegex(ValueError, "finite"):
+            evaluate_futures_event(
+                contract(),
+                replace(event(), modeled_gross_impact_per_contract=Decimal("Infinity")),
+                NOW,
+                Decimal("10"),
+            )
+
     def test_universe_ranks_residual_edge_and_never_authorizes(self) -> None:
         stronger = replace(
             event(), event_id="shipping-strong",

@@ -24,6 +24,13 @@ def legs():
 
 
 class ArbitrageTests(unittest.TestCase):
+    def test_nonfinite_edge_input_cannot_rank(self) -> None:
+        with self.assertRaisesRegex(ValueError, "finite"):
+            evaluate_arbitrage_package(
+                legs(), 1, 100, Decimal("Infinity"),
+                Decimal("1"), Decimal("1"), Decimal("1"), Decimal("1"),
+            )
+
     def package(self, package_id, terminal_value):
         return ArbitragePackage(
             package_id, legs(), 1, 100, Decimal(terminal_value), Decimal("5"),

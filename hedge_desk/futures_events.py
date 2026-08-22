@@ -74,7 +74,7 @@ class FuturesUniverseEvaluation:
 
 def _valid_hash(value: str) -> bool:
     try:
-        return len(value) == 64 and int(value, 16) >= 0
+        return isinstance(value, str) and len(value) == 64 and int(value, 16) > 0
     except ValueError:
         return False
 
@@ -88,6 +88,22 @@ def evaluate_futures_event(
 ) -> FuturesEventEvaluation:
     if decision_time.tzinfo is None:
         raise ValueError("decision timestamp must be timezone-aware")
+    decimal_values = (
+        contract.initial_margin,
+        event.modeled_gross_impact_per_contract,
+        event.curve_priced_impact_per_contract,
+        event.basis_reserve_per_contract,
+        event.roll_cost_per_contract,
+        event.transaction_cost_per_contract,
+        minimum_edge_buffer,
+    )
+    if any(
+        not isinstance(value, Decimal) or not value.is_finite()
+        for value in decimal_values
+    ):
+        raise ValueError("futures numeric inputs must be finite Decimals")
+    if type(minimum_daily_volume) is not int or minimum_daily_volume < 0:
+        raise ValueError("minimum futures volume must be a nonnegative integer")
     if minimum_edge_buffer < 0:
         raise ValueError("minimum edge buffer cannot be negative")
     reasons = []
