@@ -9,6 +9,8 @@ no demonstrated real-money profit.
 - `python3 -m unittest discover -s tests -v`: 303 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
+- A pinned CodeQL Python security-extended scan runs on pushes, pull requests,
+  and weekly; Dependabot separately monitors actions and Python dependencies.
 - CI enforces an 80% whole-package branch-coverage floor; the current measured
   local baseline is 82%, including subprocess-tested CLI code at zero attribution.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
