@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from math import ceil
 from typing import Any, Mapping, Tuple
 
 from hedge_desk.reporting import validate_report
@@ -40,14 +41,16 @@ def evaluate_paper_run_health(
         generated_at = datetime.fromisoformat(str(report["generated_at"]))
         if generated_at.tzinfo is None:
             raise ValueError
-        age = int((evaluated_at - generated_at).total_seconds())
+        exact_age = (evaluated_at - generated_at).total_seconds()
+        age = ceil(exact_age)
     except (KeyError, TypeError, ValueError):
         generated_at = evaluated_at
         age = 0
+        exact_age = 0
         reasons.append("REPORT_TIME_INVALID")
-    if age < 0:
+    if exact_age < 0:
         reasons.append("REPORT_FROM_FUTURE")
-    elif age > maximum_age_seconds:
+    elif exact_age > maximum_age_seconds:
         reasons.append("LATEST_RUN_STALE")
     if receipt.get("status") != "COMPLETE":
         reasons.append("SCHEDULED_RUN_INCOMPLETE")

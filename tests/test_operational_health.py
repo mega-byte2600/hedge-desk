@@ -29,6 +29,12 @@ class OperationalHealthTests(unittest.TestCase):
         )
         self.assertEqual(result.status, "HEALTHY_PAPER")
         self.assertFalse(result.live_authorized)
+        microsecond_late = evaluate_paper_run_health(
+            report, receipt, count, head,
+            NOW + timedelta(seconds=900, microseconds=1), 900, COMMIT,
+        )
+        self.assertIn("LATEST_RUN_STALE", microsecond_late.reason_codes)
+        self.assertEqual(microsecond_late.report_age_seconds, 901)
 
     def test_stale_commit_or_journal_mismatch_blocks(self) -> None:
         report, receipt, count, head = artifacts()
