@@ -195,6 +195,12 @@ class PremiumCadenceWarGame:
 
 
 @dataclass(frozen=True)
+class PremiumExitAttackWarGame:
+    scenario_id: str
+    attack: str
+
+
+@dataclass(frozen=True)
 class CandidatePipelineWarGame:
     scenario_id: str
     attack: str
@@ -419,6 +425,13 @@ PREMIUM_CADENCE_WAR_GAMES: Tuple[PremiumCadenceWarGame, ...] = (
     PremiumCadenceWarGame("cadence-monthly-window-open", -30),
     PremiumCadenceWarGame("cadence-same-month-blocked", -1),
     PremiumCadenceWarGame("cadence-future-ledger-entry", 1),
+)
+
+
+PREMIUM_EXIT_ATTACK_WAR_GAMES: Tuple[PremiumExitAttackWarGame, ...] = (
+    PremiumExitAttackWarGame("exit-stale-quotes", "STALE"),
+    PremiumExitAttackWarGame("exit-contract-substitution", "CONTRACT_SWAP"),
+    PremiumExitAttackWarGame("exit-unsynchronized-legs", "DESYNC"),
 )
 
 
@@ -914,6 +927,52 @@ def run_premium_cadence_war_games() -> Tuple[Dict[str, Any], ...]:
     return tuple(results)
 
 
+def run_premium_exit_attack_war_games() -> Tuple[Dict[str, Any], ...]:
+    plan = build_reference_plan()
+    snapshot = build_reference_option_snapshot()
+    results = []
+    evaluated_at = FIXTURE_AS_OF + timedelta(days=1)
+    for scenario in PREMIUM_EXIT_ATTACK_WAR_GAMES:
+        short_quote = replace(snapshot.option_quotes[0], quoted_at=evaluated_at)
+        long_quote = replace(snapshot.option_quotes[1], quoted_at=evaluated_at)
+        expected_reason = "EXIT_INPUT_INVALID"
+        if scenario.attack == "STALE":
+            short_quote = replace(
+                short_quote, quoted_at=evaluated_at - timedelta(seconds=121)
+            )
+            long_quote = replace(
+                long_quote, quoted_at=evaluated_at - timedelta(seconds=121)
+            )
+            expected_reason = "EXIT_QUOTE_STALE"
+        elif scenario.attack == "CONTRACT_SWAP":
+            short_quote = replace(short_quote, contract_id="SUBSTITUTED-CONTRACT")
+            expected_reason = "EXIT_CONTRACT_MISMATCH"
+        elif scenario.attack == "DESYNC":
+            long_quote = replace(
+                long_quote, quoted_at=evaluated_at - timedelta(seconds=3)
+            )
+            expected_reason = "EXIT_QUOTE_DESYNCHRONIZED"
+        try:
+            evaluate_premium_exit(
+                plan.spread,
+                short_quote,
+                long_quote,
+                evaluated_at,
+                Decimal("0.65"),
+            )
+        except ValueError:
+            reason_codes = (expected_reason,)
+        else:
+            reason_codes = ("EXIT_ATTACK_NOT_BLOCKED",)
+        results.append({
+            "scenario_id": scenario.scenario_id,
+            "disposition": "NO_TRADE",
+            "reason_codes": list(reason_codes),
+            "trade_authorized": False,
+        })
+    return tuple(results)
+
+
 def run_candidate_pipeline_war_games() -> Tuple[Dict[str, Any], ...]:
     base_snapshot = build_reference_option_snapshot()
     results = []
@@ -1042,6 +1101,7 @@ def build_war_game_manifest() -> Dict[str, Any]:
         "compliance_controls": json_value(COMPLIANCE_WAR_GAMES),
         "premium_timing": json_value(PREMIUM_TIMING_WAR_GAMES),
         "premium_cadence": json_value(PREMIUM_CADENCE_WAR_GAMES),
+        "premium_exit_attacks": json_value(PREMIUM_EXIT_ATTACK_WAR_GAMES),
         "candidate_pipeline": json_value(CANDIDATE_PIPELINE_WAR_GAMES),
         "option_universe": json_value(OPTION_UNIVERSE_WAR_GAMES),
         "strategic_allocation": json_value(STRATEGIC_ALLOCATION_WAR_GAMES),
@@ -1081,6 +1141,7 @@ def build_war_game_report() -> Dict[str, Any]:
     compliance_controls = run_compliance_war_games()
     premium_timing = run_premium_timing_war_games()
     premium_cadence = run_premium_cadence_war_games()
+    premium_exit_attacks = run_premium_exit_attack_war_games()
     candidate_pipeline = run_candidate_pipeline_war_games()
     option_universe = run_option_universe_war_games()
     strategic_allocation = run_strategic_allocation_war_games()
@@ -1130,6 +1191,7 @@ def build_war_game_report() -> Dict[str, Any]:
         + sum(item["disposition"] == "NO_TRADE" for item in option_universe)
         + sum(item["disposition"] == "NO_TRADE" for item in strategic_allocation)
         + sum(item["disposition"] == "NO_TRADE" for item in premium_cadence)
+        + sum(item["disposition"] == "NO_TRADE" for item in premium_exit_attacks)
     )
     report = {
         "report_type": "synthetic_hypothetical_war_games",
@@ -1151,6 +1213,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 + len(option_universe)
                 + len(strategic_allocation)
                 + len(premium_cadence)
+                + len(premium_exit_attacks)
             ),
             "scenario_count_by_mvp": {
                 "overnight-premium-desk": len(results),
@@ -1167,6 +1230,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 "option-universe-controls": len(option_universe),
                 "strategic-allocation-controls": len(strategic_allocation),
                 "premium-cadence-controls": len(premium_cadence),
+                "premium-exit-attack-controls": len(premium_exit_attacks),
             },
             "no_trade_control_count": no_trade_controls,
             "premium_fixed_trade": {
@@ -1207,6 +1271,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "option_universe": option_universe,
         "strategic_allocation": strategic_allocation,
         "premium_cadence": premium_cadence,
+        "premium_exit_attacks": premium_exit_attacks,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",
