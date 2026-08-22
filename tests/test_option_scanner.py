@@ -36,6 +36,12 @@ def snapshot(quotes):
 
 
 class OptionScannerTests(unittest.TestCase):
+    def test_nonfinite_or_boolean_scan_policy_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "finite"):
+            SpreadScanPolicy(commission_per_contract=Decimal("Infinity"))
+        with self.assertRaisesRegex(ValueError, "integers"):
+            SpreadScanPolicy(quantity=True)
+
     def test_executable_put_vertical_reaches_control_pipeline(self) -> None:
         result = scan_vertical_credit_spreads(snapshot((
             quote("P95", "95", "2.00", "2.10"),

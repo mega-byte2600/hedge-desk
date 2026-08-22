@@ -38,13 +38,28 @@ class OptionQuote:
             raise ValueError("quote identity and source are required")
         if self.quoted_at.tzinfo is None:
             raise ValueError("quote timestamp must be timezone-aware")
+        if any(
+            not isinstance(value, Decimal) or not value.is_finite()
+            for value in (self.strike, self.bid, self.ask)
+        ):
+            raise ValueError("option quote values must be finite Decimals")
         if self.strike <= 0 or self.bid < 0 or self.ask <= 0:
             raise ValueError("strike and quote values must be valid")
         if self.ask < self.bid:
             raise ValueError("crossed option quote is prohibited")
-        if self.bid_size <= 0 or self.ask_size <= 0:
+        if (
+            type(self.bid_size) is not int
+            or type(self.ask_size) is not int
+            or self.bid_size <= 0
+            or self.ask_size <= 0
+        ):
             raise ValueError("executable quote sizes must be positive")
-        if self.open_interest < 0 or self.volume < 0:
+        if (
+            type(self.open_interest) is not int
+            or type(self.volume) is not int
+            or self.open_interest < 0
+            or self.volume < 0
+        ):
             raise ValueError("open interest and volume cannot be negative")
 
 
@@ -61,6 +76,11 @@ class UnderlyingQuote:
             raise ValueError("underlying quote identity and source are required")
         if self.quoted_at.tzinfo is None:
             raise ValueError("underlying quote timestamp must be timezone-aware")
+        if any(
+            not isinstance(value, Decimal) or not value.is_finite()
+            for value in (self.bid, self.ask)
+        ):
+            raise ValueError("underlying quote values must be finite Decimals")
         if self.bid <= 0 or self.ask <= 0 or self.ask < self.bid:
             raise ValueError("underlying quote must be positive and non-crossed")
 
@@ -80,15 +100,30 @@ class VerticalCreditSpread:
     maximum_leg_spread_fraction: Decimal = Decimal("0.25")
 
     def __post_init__(self) -> None:
-        if not self.spread_id or self.quantity <= 0:
+        if not self.spread_id or type(self.quantity) is not int or self.quantity <= 0:
             raise ValueError("spread identity and positive quantity are required")
+        if (
+            not isinstance(self.commission_per_contract, Decimal)
+            or not self.commission_per_contract.is_finite()
+            or not isinstance(self.maximum_leg_spread_fraction, Decimal)
+            or not self.maximum_leg_spread_fraction.is_finite()
+        ):
+            raise ValueError("spread policy values must be finite Decimals")
         if self.commission_per_contract < 0:
             raise ValueError("commission cannot be negative")
-        if self.quote_tolerance_seconds < 0:
+        if type(self.quote_tolerance_seconds) is not int or self.quote_tolerance_seconds < 0:
             raise ValueError("quote tolerance cannot be negative")
-        if self.planned_exit_days_before_expiration <= 0:
+        if (
+            type(self.planned_exit_days_before_expiration) is not int
+            or self.planned_exit_days_before_expiration <= 0
+        ):
             raise ValueError("planned exit offset must be positive")
-        if self.minimum_open_interest < 0 or self.minimum_volume < 0:
+        if (
+            type(self.minimum_open_interest) is not int
+            or type(self.minimum_volume) is not int
+            or self.minimum_open_interest < 0
+            or self.minimum_volume < 0
+        ):
             raise ValueError("liquidity thresholds cannot be negative")
         if not Decimal("0") < self.maximum_leg_spread_fraction < Decimal("1"):
             raise ValueError("maximum leg spread fraction must be between zero and one")

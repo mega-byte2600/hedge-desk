@@ -27,6 +27,38 @@ class SpreadScanPolicy:
     maximum_contract_count: int = 500
     maximum_pair_count: int = 20000
 
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.commission_per_contract, Decimal)
+            or not self.commission_per_contract.is_finite()
+            or not isinstance(self.maximum_leg_spread_fraction, Decimal)
+            or not self.maximum_leg_spread_fraction.is_finite()
+        ):
+            raise ValueError("scan policy decimal values must be finite Decimals")
+        integer_values = (
+            self.quantity,
+            self.quote_tolerance_seconds,
+            self.planned_exit_days_before_expiration,
+            self.minimum_open_interest,
+            self.minimum_volume,
+            self.maximum_contract_count,
+            self.maximum_pair_count,
+        )
+        if any(type(value) is not int for value in integer_values):
+            raise ValueError("scan policy integer values must be integers")
+        if (
+            self.quantity <= 0
+            or self.quote_tolerance_seconds < 0
+            or self.planned_exit_days_before_expiration <= 0
+            or self.minimum_open_interest < 0
+            or self.minimum_volume < 0
+            or self.maximum_contract_count <= 0
+            or self.maximum_pair_count <= 0
+            or self.commission_per_contract < 0
+            or not Decimal("0") < self.maximum_leg_spread_fraction < Decimal("1")
+        ):
+            raise ValueError("scan policy values invalid")
+
 
 @dataclass(frozen=True)
 class SpreadPairEvaluation:

@@ -34,6 +34,22 @@ def quote(contract_id: str, strike: str, bid: str, ask: str) -> OptionQuote:
 
 
 class OptionSpreadTests(unittest.TestCase):
+    def test_nonfinite_quote_or_spread_policy_is_rejected(self) -> None:
+        spread = VerticalCreditSpread(
+            "spread-1",
+            self.short,
+            self.long,
+            UnderlyingQuote(
+                "TEST", Decimal("99.99"), Decimal("100.01"), NOW, "fixture"
+            ),
+            1,
+            Decimal("0.65"),
+        )
+        with self.assertRaisesRegex(ValueError, "finite"):
+            replace(spread.short_leg, ask=Decimal("Infinity"))
+        with self.assertRaisesRegex(ValueError, "finite"):
+            replace(spread, commission_per_contract=Decimal("NaN"))
+
     def setUp(self) -> None:
         self.short = quote("short", "95", "2.00", "2.10")
         self.long = quote("long", "90", "0.75", "0.80")
