@@ -16,8 +16,18 @@ def account_gate(account: Account, candidate: TradeCandidate) -> List[str]:
     if product in {
         ProductType.DEFINED_RISK_OPTION,
         ProductType.UNDEFINED_RISK_OPTION,
-    } and not account.options_approved:
-        reasons.append("OPTIONS_APPROVAL_REQUIRED")
+    }:
+        if not account.options_approved:
+            reasons.append("OPTIONS_APPROVAL_REQUIRED")
+        if (
+            not account.options_disclosure_version
+            or account.options_disclosure_acknowledged_at is None
+        ):
+            reasons.append("OPTIONS_DISCLOSURE_ACKNOWLEDGEMENT_REQUIRED")
+        elif account.options_disclosure_acknowledged_at > candidate.quote_timestamp:
+            reasons.append("OPTIONS_DISCLOSURE_ACKNOWLEDGED_AFTER_CANDIDATE")
+        if not account.broker_options_policy_version:
+            reasons.append("BROKER_OPTIONS_POLICY_REQUIRED")
 
     if product is ProductType.FUTURE:
         if not account.futures_approved:
@@ -33,4 +43,3 @@ def account_gate(account: Account, candidate: TradeCandidate) -> List[str]:
         reasons.append("INSUFFICIENT_CASH")
 
     return sorted(set(reasons))
-

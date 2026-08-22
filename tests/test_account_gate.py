@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import unittest
 
@@ -27,6 +27,40 @@ def candidate(product: ProductType) -> TradeCandidate:
 
 
 class AccountGateTests(unittest.TestCase):
+    def test_defined_risk_option_requires_odd_and_broker_policy_evidence(self) -> None:
+        incomplete = Account(
+            "paper-incomplete", AccountType.INDIVIDUAL, Decimal("10000"),
+            Decimal("10000"), options_approved=True,
+        )
+        reasons = account_gate(
+            incomplete, candidate(ProductType.DEFINED_RISK_OPTION)
+        )
+        self.assertIn("OPTIONS_DISCLOSURE_ACKNOWLEDGEMENT_REQUIRED", reasons)
+        self.assertIn("BROKER_OPTIONS_POLICY_REQUIRED", reasons)
+        complete = Account(
+            "paper-complete", AccountType.INDIVIDUAL, Decimal("10000"),
+            Decimal("10000"), options_approved=True,
+            options_disclosure_version="synthetic-odd-v1",
+            options_disclosure_acknowledged_at=NOW - timedelta(days=1),
+            broker_options_policy_version="synthetic-broker-policy-v1",
+        )
+        self.assertEqual(
+            account_gate(complete, candidate(ProductType.DEFINED_RISK_OPTION)), []
+        )
+
+    def test_post_candidate_odd_acknowledgement_fails_point_in_time(self) -> None:
+        account = Account(
+            "paper-late", AccountType.INDIVIDUAL, Decimal("10000"),
+            Decimal("10000"), options_approved=True,
+            options_disclosure_version="synthetic-odd-v1",
+            options_disclosure_acknowledged_at=NOW + timedelta(microseconds=1),
+            broker_options_policy_version="synthetic-broker-policy-v1",
+        )
+        self.assertIn(
+            "OPTIONS_DISCLOSURE_ACKNOWLEDGED_AFTER_CANDIDATE",
+            account_gate(account, candidate(ProductType.DEFINED_RISK_OPTION)),
+        )
+
     def test_undefined_risk_options_are_always_blocked(self) -> None:
         account = Account(
             "paper-1",
@@ -56,4 +90,3 @@ class AccountGateTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

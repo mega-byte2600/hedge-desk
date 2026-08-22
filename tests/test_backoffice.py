@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import unittest
 
@@ -27,6 +27,9 @@ class BackOfficeTests(unittest.TestCase):
         self.account = Account(
             "paper-1", AccountType.INDIVIDUAL, Decimal("100000"),
             Decimal("50000"), options_approved=True,
+            options_disclosure_version="synthetic-odd-v1",
+            options_disclosure_acknowledged_at=NOW - timedelta(days=1),
+            broker_options_policy_version="synthetic-broker-policy-v1",
         )
 
     def test_defined_risk_option_with_approval_passes_paper_policy(self) -> None:
@@ -36,6 +39,14 @@ class BackOfficeTests(unittest.TestCase):
         self.assertIs(result.status, BackOfficeStatus.PASS)
         self.assertEqual(result.environment, "paper")
         self.assertEqual(len(result.policy_decision.artifact_sha256), 64)
+        self.assertEqual(
+            result.policy_decision.options_disclosure_version,
+            "synthetic-odd-v1",
+        )
+        self.assertEqual(
+            result.policy_decision.broker_options_policy_version,
+            "synthetic-broker-policy-v1",
+        )
 
     def test_compliance_policy_is_independent_and_live_fails_closed(self) -> None:
         result = evaluate_compliance_policy(

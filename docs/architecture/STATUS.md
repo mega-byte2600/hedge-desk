@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 160 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 162 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
@@ -46,6 +46,8 @@ python3 -m hedge_desk.cli --morning-markdown
 - point-in-time corporate-event calendars complete through expiration;
 - independently hashed quantitative inputs for the conventional RoR engine;
 - separate versioned deterministic compliance, risk, and Back Office artifacts;
+- paper options-account evidence for broker approval, timestamped disclosure
+  acknowledgement, and broker policy version, all compliance-hash-bound;
 - aggregate/symbol maximum-loss gates and a drawdown circuit breaker;
 - explicit human authorization bound to the exact plan hash;
 - stale/worse/partial/adjusted paper-fill cancellation;

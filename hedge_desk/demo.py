@@ -128,6 +128,9 @@ def build_reference_plan() -> Any:
         equity=Decimal("100000"),
         cash=Decimal("50000"),
         options_approved=True,
+        options_disclosure_version="synthetic-odd-fixture-v1",
+        options_disclosure_acknowledged_at=FIXTURE_AS_OF - timedelta(days=1),
+        broker_options_policy_version="synthetic-broker-policy-v1",
     )
     candidate = TradeCandidate(
         candidate_id=spread.spread_id,

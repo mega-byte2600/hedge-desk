@@ -347,6 +347,9 @@ def _reference_account(options_approved: bool = True) -> Account:
         Decimal("100000"),
         Decimal("50000"),
         options_approved=options_approved,
+        options_disclosure_version="synthetic-odd-fixture-v1",
+        options_disclosure_acknowledged_at=FIXTURE_AS_OF - timedelta(days=1),
+        broker_options_policy_version="synthetic-broker-policy-v1",
     )
 
 

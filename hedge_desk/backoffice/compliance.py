@@ -43,6 +43,9 @@ class CompliancePolicyDecision:
     policy_version: str
     evaluated_at: datetime
     environment: str
+    options_disclosure_version: str
+    options_disclosure_acknowledged_at: str
+    broker_options_policy_version: str
     artifact_sha256: str
 
 
@@ -68,6 +71,9 @@ def _compliance_artifact_hash(
     policy_version: str,
     evaluated_at: datetime,
     environment: str,
+    options_disclosure_version: str,
+    options_disclosure_acknowledged_at: str,
+    broker_options_policy_version: str,
 ) -> str:
     payload = "|".join(
         (
@@ -78,6 +84,9 @@ def _compliance_artifact_hash(
             policy_version,
             evaluated_at.isoformat(),
             environment,
+            options_disclosure_version,
+            options_disclosure_acknowledged_at,
+            broker_options_policy_version,
         )
     )
     return sha256(payload.encode("utf-8")).hexdigest()
@@ -106,6 +115,9 @@ def validate_compliance_policy_artifact(
         decision.policy_version,
         decision.evaluated_at,
         decision.environment,
+        decision.options_disclosure_version,
+        decision.options_disclosure_acknowledged_at,
+        decision.broker_options_policy_version,
     )
     if decision.artifact_sha256 != expected_hash:
         reasons.append("COMPLIANCE_ARTIFACT_HASH_MISMATCH")
@@ -136,6 +148,13 @@ def evaluate_compliance_policy(
         COMPLIANCE_POLICY_VERSION,
         evaluated_at,
         environment,
+        account.options_disclosure_version or "",
+        (
+            account.options_disclosure_acknowledged_at.isoformat()
+            if account.options_disclosure_acknowledged_at is not None
+            else ""
+        ),
+        account.broker_options_policy_version or "",
     )
     return CompliancePolicyDecision(
         candidate.candidate_id,
@@ -145,6 +164,13 @@ def evaluate_compliance_policy(
         COMPLIANCE_POLICY_VERSION,
         evaluated_at,
         environment,
+        account.options_disclosure_version or "",
+        (
+            account.options_disclosure_acknowledged_at.isoformat()
+            if account.options_disclosure_acknowledged_at is not None
+            else ""
+        ),
+        account.broker_options_policy_version or "",
         artifact_sha256,
     )
 

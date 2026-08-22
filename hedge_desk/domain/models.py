@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Tuple
+from typing import Optional, Tuple
 
 
 class AccountType(str, Enum):
@@ -34,12 +34,20 @@ class Account:
     cash: Decimal
     options_approved: bool = False
     futures_approved: bool = False
+    options_disclosure_version: Optional[str] = None
+    options_disclosure_acknowledged_at: Optional[datetime] = None
+    broker_options_policy_version: Optional[str] = None
 
     def __post_init__(self) -> None:
         if self.equity <= 0:
             raise ValueError("account equity must be positive")
         if self.cash < 0:
             raise ValueError("account cash cannot be negative")
+        if (
+            self.options_disclosure_acknowledged_at is not None
+            and self.options_disclosure_acknowledged_at.tzinfo is None
+        ):
+            raise ValueError("options disclosure acknowledgement must be timezone-aware")
 
 
 @dataclass(frozen=True)
