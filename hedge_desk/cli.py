@@ -18,6 +18,7 @@ from hedge_desk.artifacts import (
 from hedge_desk.audit import build_reference_audit
 from hedge_desk.audit_store import initialize_audit_journal, read_audit_journal
 from hedge_desk.operational_health import evaluate_paper_run_health
+from hedge_desk.option_universe_intake import validate_local_option_universe
 from hedge_desk.scheduler import (
     ScheduledRunRequest,
     execute_scheduled_run,
@@ -39,6 +40,11 @@ from hedge_desk.options import (
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--validate-option-universe-manifest",
+        metavar="FILE",
+        help="validate and rank multiple local option snapshots without copying them",
+    )
     parser.add_argument(
         "--verify-run-health",
         metavar="DIRECTORY",
@@ -170,6 +176,15 @@ def main() -> None:
         help="stable run identity required with --scheduled-receipt",
     )
     args = parser.parse_args()
+    if args.validate_option_universe_manifest:
+        try:
+            result = validate_local_option_universe(
+                Path(args.validate_option_universe_manifest)
+            )
+        except ValueError as exc:
+            parser.error(str(exc))
+        print(json.dumps(json_value(result), indent=2))
+        return
     if args.verify_run_health:
         root = Path(args.verify_run_health)
         try:

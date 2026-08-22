@@ -74,3 +74,15 @@ The three checked-in files `examples/options.snapshot.synthetic.json`,
 `examples/market-session.synthetic.json` form a complete runnable example. CI
 runs them through intake, schema validation, spread enumeration, session
 validation, and the nonauthorizing handoff on every Python version.
+
+For multiple underlyings, copy `examples/option-universe.synthetic.json`, add
+one envelope/payload reference per symbol, and run:
+
+```bash
+python3 -m hedge_desk.cli \
+  --validate-option-universe-manifest /absolute/path/option-universe.json
+```
+
+Paths are resolved relative to the manifest. The command validates each local
+payload in place, ranks only derived executable credit-to-defined-loss
+economics, emits no raw quotes, infers no probability, and stops before risk.

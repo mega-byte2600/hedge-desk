@@ -1,0 +1,13 @@
+{
+  "schema_version": "hedge-desk-option-universe-1.0.0",
+  "decision_cutoff": "2026-08-21T12:00:00Z",
+  "maximum_age_seconds": 0,
+  "minimum_seconds_before_close": 900,
+  "market_session_evidence": "market-session.synthetic.json",
+  "snapshots": [
+    {
+      "envelope": "options.snapshot.synthetic.envelope.json",
+      "payload": "options.snapshot.synthetic.json"
+    }
+  ]
+}

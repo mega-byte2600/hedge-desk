@@ -48,6 +48,8 @@ jobs:
         run: |
           python -m hedge_desk.cli --validate-data-envelope examples/options.snapshot.synthetic.envelope.json --payload examples/options.snapshot.synthetic.json --validate-option-snapshot --scan-vertical-spreads --market-session-evidence examples/market-session.synthetic.json --minimum-seconds-before-close 900 --decision-cutoff 2026-08-21T12:00:00Z --max-age-seconds 0 > intake-result.json
           python -c 'import json; d=json.load(open("intake-result.json")); assert d["gate"]["admissible"] is True; assert d["market_session_gate"]["admissible"] is True; assert len(d["control_handoffs"]) == 1; assert d["control_handoffs"][0]["trade_authorized"] is False; assert d["control_handoffs"][0]["next_action"] == "VALIDATED_RISK_INPUT_REQUIRED"'
+          python -m hedge_desk.cli --validate-option-universe-manifest examples/option-universe.synthetic.json > universe-result.json
+          python -c 'import json; d=json.load(open("universe-result.json")); assert d["source_count"] == 1; assert d["raw_payloads_copied"] is False; assert d["evaluation"]["probability_inferred"] is False; assert d["evaluation"]["trade_authorized"] is False; assert d["evaluation"]["candidates"][0]["next_action"] == "VALIDATED_RISK_INPUT_REQUIRED"'
 
       - name: Verify human-pending default
         run: |
