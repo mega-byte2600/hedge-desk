@@ -10,7 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class CiSupplyChainTests(unittest.TestCase):
     def test_every_repository_action_is_pinned_to_a_full_sha(self) -> None:
-        workflows = tuple(sorted((ROOT / ".github" / "workflows").glob("*.yml")))
+        root = ROOT / ".github" / "workflows"
+        workflows = tuple(sorted(tuple(root.glob("*.yml")) + tuple(root.glob("*.yaml"))))
         self.assertTrue(workflows)
         self.assertEqual(validate_github_action_pins(workflows), ())
 
