@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 from datetime import datetime, timezone
+from hashlib import sha256
 
 from hedge_desk.demo import json_value, run_reference_demo
 from hedge_desk.overnight import current_morning_report
@@ -192,19 +193,67 @@ def main() -> None:
             payload = json.loads(
                 Path(args.evaluate_directional_outcomes).read_text(encoding="utf-8")
             )
-            if not isinstance(payload, dict) or set(payload) != {
-                "schema_version", "outcomes"
-            }:
+            expected_fields = {
+                "schema_version", "dataset_sha256", "source_id", "model_id",
+                "model_version", "observations",
+            }
+            if not isinstance(payload, dict) or set(payload) != expected_fields:
                 raise ValueError("directional outcome schema is invalid")
-            if payload["schema_version"] != "directional-outcomes-1.0.0":
+            identities = (
+                payload["source_id"], payload["model_id"], payload["model_version"]
+            )
+            if any(not isinstance(value, str) or not value for value in identities):
+                raise ValueError("directional outcome identities are required")
+            dataset_hash = payload["dataset_sha256"]
+            try:
+                valid_hash = (
+                    isinstance(dataset_hash, str)
+                    and len(dataset_hash) == 64
+                    and int(dataset_hash, 16) > 0
+                )
+            except ValueError:
+                valid_hash = False
+            if not valid_hash:
+                raise ValueError("directional outcome dataset hash is invalid")
+            observations = payload["observations"]
+            if not isinstance(observations, list):
+                raise ValueError("directional observations must be a list")
+            if any(
+                not isinstance(item, dict)
+                or set(item) != {"observation_id", "outcome"}
+                or not isinstance(item["observation_id"], str)
+                or not item["observation_id"]
+                or type(item["outcome"]) is not bool
+                for item in observations
+            ):
+                raise ValueError("directional observation schema is invalid")
+            observation_ids = [item["observation_id"] for item in observations]
+            if len(observation_ids) != len(set(observation_ids)):
+                raise ValueError("directional observation identities must be unique")
+            observed_hash = sha256(
+                json.dumps(
+                    observations, sort_keys=True, separators=(",", ":")
+                ).encode("utf-8")
+            ).hexdigest()
+            if dataset_hash != observed_hash:
+                raise ValueError("directional outcome dataset hash mismatch")
+            if payload["schema_version"] != "directional-outcomes-1.1.0":
                 raise ValueError("directional outcome schema version is invalid")
-            outcomes = payload["outcomes"]
-            if not isinstance(outcomes, list):
-                raise ValueError("directional outcomes must be a list")
-            result = evaluate_directional_hits(tuple(outcomes))
+            result = evaluate_directional_hits(
+                tuple(item["outcome"] for item in observations)
+            )
+            output = {
+                "label": "STAT",
+                "schema_version": payload["schema_version"],
+                "dataset_sha256": dataset_hash,
+                "source_id": payload["source_id"],
+                "model_id": payload["model_id"],
+                "model_version": payload["model_version"],
+                "evaluation": json_value(result),
+            }
         except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
             parser.error(str(exc))
-        print(json.dumps(json_value(result), indent=2))
+        print(json.dumps(output, indent=2))
         return
     if args.control_summary:
         if not args.report_input:

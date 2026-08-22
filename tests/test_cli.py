@@ -16,12 +16,55 @@ from datetime import datetime, timezone
 
 
 class CliTests(unittest.TestCase):
+    def test_directional_inference_cli_rejects_hash_mismatch_and_duplicate_ids(self) -> None:
+        base = {
+            "schema_version": "directional-outcomes-1.1.0",
+            "dataset_sha256": "a" * 64,
+            "source_id": "source",
+            "model_id": "model",
+            "model_version": "1",
+            "observations": [
+                {"observation_id": "duplicate", "outcome": True},
+                {"observation_id": "duplicate", "outcome": False},
+            ],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "outcomes.json"
+            path.write_text(json.dumps(base), encoding="utf-8")
+            duplicate = subprocess.run(
+                [sys.executable, "-m", "hedge_desk.cli",
+                 "--evaluate-directional-outcomes", str(path)],
+                capture_output=True, text=True, check=False,
+            )
+            base["observations"][1]["observation_id"] = "unique"
+            path.write_text(json.dumps(base), encoding="utf-8")
+            mismatch = subprocess.run(
+                [sys.executable, "-m", "hedge_desk.cli",
+                 "--evaluate-directional-outcomes", str(path)],
+                capture_output=True, text=True, check=False,
+            )
+        self.assertNotEqual(duplicate.returncode, 0)
+        self.assertIn("must be unique", duplicate.stderr)
+        self.assertNotEqual(mismatch.returncode, 0)
+        self.assertIn("hash mismatch", mismatch.stderr)
+
     def test_directional_inference_cli_is_strict_and_never_authorizes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "outcomes.json"
+            observations = [
+                {"observation_id": f"obs-{index}", "outcome": index < 70}
+                for index in range(100)
+            ]
+            dataset_hash = sha256(json.dumps(
+                observations, sort_keys=True, separators=(",", ":")
+            ).encode()).hexdigest()
             path.write_text(json.dumps({
-                "schema_version": "directional-outcomes-1.0.0",
-                "outcomes": [True] * 70 + [False] * 30,
+                "schema_version": "directional-outcomes-1.1.0",
+                "dataset_sha256": dataset_hash,
+                "source_id": "licensed-point-in-time-fixture",
+                "model_id": "stat-directional-fixture",
+                "model_version": "1.0.0",
+                "observations": observations,
             }), encoding="utf-8")
             completed = subprocess.run(
                 [sys.executable, "-m", "hedge_desk.cli",
@@ -29,8 +72,15 @@ class CliTests(unittest.TestCase):
                 capture_output=True, text=True, check=False,
             )
             path.write_text(json.dumps({
-                "schema_version": "directional-outcomes-1.0.0",
-                "outcomes": [True] * 100,
+                "schema_version": "directional-outcomes-1.1.0",
+                "dataset_sha256": "a" * 64,
+                "source_id": "licensed-point-in-time-fixture",
+                "model_id": "stat-directional-fixture",
+                "model_version": "1.0.0",
+                "observations": [
+                    {"observation_id": f"obs-{index}", "outcome": True}
+                    for index in range(100)
+                ],
                 "agent_override": True,
             }), encoding="utf-8")
             rejected = subprocess.run(
@@ -40,10 +90,12 @@ class CliTests(unittest.TestCase):
             )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         output = json.loads(completed.stdout)
-        self.assertEqual(output["alpha"], "0.005")
-        self.assertEqual(output["confidence_level"], "0.95")
-        self.assertTrue(output["statistically_significant"])
-        self.assertFalse(output["trade_authorized"])
+        self.assertEqual(output["label"], "STAT")
+        self.assertEqual(output["dataset_sha256"], dataset_hash)
+        self.assertEqual(output["evaluation"]["alpha"], "0.005")
+        self.assertEqual(output["evaluation"]["confidence_level"], "0.95")
+        self.assertTrue(output["evaluation"]["statistically_significant"])
+        self.assertFalse(output["evaluation"]["trade_authorized"])
         self.assertNotEqual(rejected.returncode, 0)
         self.assertIn("schema is invalid", rejected.stderr)
 

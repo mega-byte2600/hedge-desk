@@ -25,5 +25,7 @@ Local resolved outcomes can be evaluated without copying their source dataset:
 python -m hedge_desk.cli --evaluate-directional-outcomes outcomes.json
 ```
 
-The input is strict JSON with schema version `directional-outcomes-1.0.0` and a
-single `outcomes` array of JSON booleans. Unknown fields are rejected.
+The input is strict JSON with schema version `directional-outcomes-1.1.0`. It
+requires the canonical observation-array SHA-256, source/model identities, and an
+`observations` array containing unique observation IDs and JSON-boolean
+outcomes. Unknown fields, duplicate IDs, and dataset substitution are rejected.
