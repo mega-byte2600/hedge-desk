@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
+from hashlib import sha256
+import json
 from typing import Any, Dict, Tuple
 
 from hedge_desk.demo import FIXTURE_AS_OF, build_reference_plan, json_value
@@ -11,6 +13,7 @@ from hedge_desk.metrics import evaluate_pnl_series
 
 
 WAR_GAME_VERSION = "premium-spread-war-games-1.0.0"
+WAR_GAME_FIXTURE_SCHEMA_VERSION = "war-game-fixtures-1.0.0"
 
 
 @dataclass(frozen=True)
@@ -288,6 +291,36 @@ def run_dividend_war_games() -> Tuple[Dict[str, str], ...]:
     return tuple(results)
 
 
+def build_war_game_manifest() -> Dict[str, Any]:
+    """Content-address every declared scenario input using canonical JSON."""
+    fixtures = {
+        "premium": json_value(PREMIUM_WAR_GAMES),
+        "earnings": json_value(EARNINGS_WAR_GAMES),
+        "arbitrage": json_value(ARBITRAGE_WAR_GAMES),
+        "dividend": json_value(DIVIDEND_WAR_GAMES),
+    }
+    scenario_ids = [
+        scenario["scenario_id"]
+        for group in fixtures.values()
+        for scenario in group
+    ]
+    if len(scenario_ids) != len(set(scenario_ids)):
+        raise ValueError("war-game scenario identities must be globally unique")
+    payload = {
+        "schema_version": WAR_GAME_FIXTURE_SCHEMA_VERSION,
+        "fixtures": fixtures,
+    }
+    canonical = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode("utf-8")
+    return {
+        "schema_version": WAR_GAME_FIXTURE_SCHEMA_VERSION,
+        "scenario_count": len(scenario_ids),
+        "scenario_ids": scenario_ids,
+        "fixture_sha256": sha256(canonical).hexdigest(),
+    }
+
+
 def build_war_game_report() -> Dict[str, Any]:
     results = run_premium_war_games()
     earnings = run_earnings_war_games()
@@ -307,6 +340,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "environment": "paper",
         "source": "synthetic_fixture",
         "all_declared_scenarios_included": True,
+        "fixture_manifest": build_war_game_manifest(),
         "summary": {
             "total_scenario_count": (
                 len(results) + len(earnings) + len(arbitrage) + len(dividend)

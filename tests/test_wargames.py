@@ -3,6 +3,7 @@ import unittest
 
 from hedge_desk.wargames import (
     build_war_game_report,
+    build_war_game_manifest,
     run_arbitrage_war_games,
     run_dividend_war_games,
     run_earnings_war_games,
@@ -24,6 +25,12 @@ class PremiumWarGameTests(unittest.TestCase):
             premium["descriptive_metrics"]["inference_status"],
             "INSUFFICIENT_SYNTHETIC_SAMPLE",
         )
+        self.assertEqual(report["fixture_manifest"]["scenario_count"], 17)
+        self.assertEqual(len(report["fixture_manifest"]["fixture_sha256"]), 64)
+
+    def test_fixture_manifest_is_reproducible(self) -> None:
+        self.assertEqual(build_war_game_manifest(), build_war_game_manifest())
+        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 17)
 
     def test_reference_scenario_pnls_are_exact(self) -> None:
         results = {result.scenario_id: result for result in run_premium_war_games()}

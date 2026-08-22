@@ -38,6 +38,12 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn("REPLAY_LINEAGE_INVALID", validate_report(report).reason_codes)
 
+    def test_missing_war_game_manifest_is_blocked(self) -> None:
+        report = build_morning_report(NOW)
+        report["war_games"].pop("fixture_manifest")
+        report = finalize_report(report)
+        self.assertIn("WAR_GAME_MANIFEST_INVALID", validate_report(report).reason_codes)
+
 
 if __name__ == "__main__":
     unittest.main()

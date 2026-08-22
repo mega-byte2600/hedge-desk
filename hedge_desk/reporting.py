@@ -61,6 +61,14 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
         or war_games.get("all_declared_scenarios_included") is not True
     ):
         reasons.append("WAR_GAME_DISCLOSURE_INVALID")
+    manifest = war_games.get("fixture_manifest", {}) if isinstance(war_games, dict) else {}
+    if (
+        not isinstance(manifest, dict)
+        or manifest.get("scenario_count") != 17
+        or not isinstance(manifest.get("fixture_sha256"), str)
+        or len(manifest.get("fixture_sha256", "")) != 64
+    ):
+        reasons.append("WAR_GAME_MANIFEST_INVALID")
     serialized = json.dumps(report, sort_keys=True).lower()
     if any(claim in serialized for claim in PROHIBITED_PERFORMANCE_CLAIMS):
         reasons.append("PROHIBITED_PERFORMANCE_CLAIM")
