@@ -83,12 +83,15 @@ class Decision:
     evaluated_at: datetime
     risk_model_id: str
     risk_model_version: str
+    risk_input_sha256: str
 
     def __post_init__(self) -> None:
         if self.evaluated_at.tzinfo is None:
             raise ValueError("decision timestamp must be timezone-aware")
         if not self.risk_model_id or not self.risk_model_version:
             raise ValueError("risk model identity and version are required")
+        if len(self.risk_input_sha256) != 64:
+            raise ValueError("risk input artifact hash is required")
         if self.status is DecisionStatus.BLOCKED and not self.reason_codes:
             raise ValueError("blocked decisions require reason codes")
 

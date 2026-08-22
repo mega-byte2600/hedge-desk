@@ -4,6 +4,7 @@ from dataclasses import asdict, is_dataclass
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
+from hashlib import sha256
 from typing import Any, Dict
 
 from hedge_desk.core.decision import evaluate_candidate
@@ -22,6 +23,7 @@ from hedge_desk.paper import (
     create_paper_trade_plan,
     execute_paper_open,
 )
+from hedge_desk.risk import build_validated_risk_inputs
 
 
 FIXTURE_ID = "overnight-premium-reference-v1"
@@ -117,7 +119,19 @@ def build_reference_plan() -> Any:
         thesis="Synthetic reference case for executable-side premium capture.",
         invalidation="Reject outside the frozen fixture and validated inputs.",
     )
-    decision = evaluate_candidate(account, candidate, FIXTURE_AS_OF)
+    risk_inputs = build_validated_risk_inputs(
+        candidate.candidate_id,
+        candidate.max_loss,
+        candidate.expected_win,
+        candidate.win_probability,
+        FIXTURE_AS_OF,
+        sha256(FIXTURE_ID.encode()).hexdigest(),
+        "classic-vv-fixture-validator",
+        "1.0.0",
+    )
+    decision = evaluate_candidate(
+        account, candidate, FIXTURE_AS_OF, risk_inputs=risk_inputs
+    )
     compliance_decision = evaluate_paper_compliance(account, candidate, FIXTURE_AS_OF)
     return create_paper_trade_plan(
         plan_id=FIXTURE_ID,

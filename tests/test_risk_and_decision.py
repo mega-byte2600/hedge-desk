@@ -11,6 +11,7 @@ from hedge_desk.domain import (
     TradeCandidate,
 )
 from hedge_desk.risk.ruin import RiskPolicy, estimate_risk_of_ruin
+from hedge_desk.risk import build_validated_risk_inputs
 
 
 NOW = datetime(2026, 7, 28, 13, 0, tzinfo=timezone.utc)
@@ -35,6 +36,19 @@ def make_candidate(**overrides: object) -> TradeCandidate:
     return TradeCandidate(**values)  # type: ignore[arg-type]
 
 
+def risk_inputs(trade: TradeCandidate):
+    return build_validated_risk_inputs(
+        trade.candidate_id,
+        trade.max_loss,
+        trade.expected_win,
+        trade.win_probability,
+        trade.quote_timestamp,
+        "a" * 64,
+        "classic-vv-test-validator",
+        "1.0.0",
+    )
+
+
 class RiskAndDecisionTests(unittest.TestCase):
     def setUp(self) -> None:
         self.account = Account(
@@ -55,30 +69,42 @@ class RiskAndDecisionTests(unittest.TestCase):
 
     def test_stale_quote_blocks_decision(self) -> None:
         trade = make_candidate(quote_timestamp=NOW - timedelta(hours=1))
-        decision = evaluate_candidate(self.account, trade, NOW)
+        decision = evaluate_candidate(self.account, trade, NOW, risk_inputs=risk_inputs(trade))
         self.assertEqual(decision.status, DecisionStatus.BLOCKED)
         self.assertIn("STALE_QUOTE", decision.reason_codes)
 
     def test_excessive_trade_loss_blocks_decision(self) -> None:
         trade = make_candidate(max_loss=Decimal("2000"))
-        decision = evaluate_candidate(self.account, trade, NOW)
+        decision = evaluate_candidate(self.account, trade, NOW, risk_inputs=risk_inputs(trade))
         self.assertIn("SINGLE_TRADE_LOSS_LIMIT", decision.reason_codes)
 
     def test_valid_candidate_is_approved_for_paper_only(self) -> None:
+        trade = make_candidate()
         decision = evaluate_candidate(
             self.account,
-            make_candidate(),
+            trade,
             NOW,
             RiskPolicy(maximum_risk_of_ruin=Decimal("0.04")),
+            risk_inputs(trade),
         )
         self.assertEqual(decision.status, DecisionStatus.RISK_PASS)
         self.assertEqual(decision.reason_codes, ())
 
     def test_decision_is_deterministic(self) -> None:
         trade = make_candidate()
-        first = evaluate_candidate(self.account, trade, NOW)
-        second = evaluate_candidate(self.account, trade, NOW)
+        first = evaluate_candidate(self.account, trade, NOW, risk_inputs=risk_inputs(trade))
+        second = evaluate_candidate(self.account, trade, NOW, risk_inputs=risk_inputs(trade))
         self.assertEqual(first, second)
+
+    def test_missing_or_mismatched_risk_input_artifact_fails_closed(self) -> None:
+        trade = make_candidate()
+        with self.assertRaisesRegex(ValueError, "validated quantitative"):
+            evaluate_candidate(self.account, trade, NOW)
+        changed = make_candidate(win_probability=Decimal("0.61"))
+        with self.assertRaisesRegex(ValueError, "differ"):
+            evaluate_candidate(
+                self.account, changed, NOW, risk_inputs=risk_inputs(trade)
+            )
 
 
 if __name__ == "__main__":

@@ -174,6 +174,7 @@ def _calculate_plan_hash(
             risk_decision.evaluated_at.isoformat(),
             risk_decision.risk_model_id,
             risk_decision.risk_model_version,
+            risk_decision.risk_input_sha256,
             compliance_decision.candidate_id,
             compliance_decision.account_id,
             compliance_decision.status.value,

@@ -112,9 +112,10 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         plan.reason_codes,
         {
             "risk_artifact": plan.plan_hash,
+            "risk_input_artifact": plan.risk_decision.risk_input_sha256,
             "risk_of_ruin": str(plan.risk_decision.risk_of_ruin_after),
         },
-        (plan.plan_hash,),
+        (plan.risk_decision.risk_input_sha256, plan.plan_hash),
     )
     compliance_pass = plan.compliance_decision.status is BackOfficeStatus.PASS
     compliance = LayerEvaluation(
