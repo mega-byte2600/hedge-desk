@@ -6,6 +6,7 @@ from hashlib import sha256
 from typing import Any, Dict, Mapping, Tuple
 from hedge_desk.audit import validate_audit_evaluation
 from hedge_desk.data import validate_serialized_batch_manifest
+from hedge_desk.replay import validate_replay_evaluation
 
 
 PROHIBITED_PERFORMANCE_CLAIMS = (
@@ -53,9 +54,16 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
     if not report.get("limitations"):
         reasons.append("REQUIRED_LIMITATIONS_MISSING")
     replay = report.get("chronological_replay", {})
-    if not isinstance(replay, dict) or replay.get("valid") is not True:
+    replay_validation_reasons = (
+        validate_replay_evaluation(replay) if isinstance(replay, dict) else ()
+    )
+    if (
+        not isinstance(replay, dict)
+        or replay.get("valid") is not True
+        or replay_validation_reasons
+    ):
         reasons.append("REPLAY_LINEAGE_INVALID")
-    elif report.get("real_trades_executed") == 0:
+    if isinstance(replay, dict) and report.get("real_trades_executed") == 0:
         events = replay.get("events", [])
         if not events or events[-1].get("kind") != "HUMAN_PENDING":
             reasons.append("REPLAY_STATE_MISMATCH")

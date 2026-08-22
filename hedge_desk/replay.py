@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Mapping, Tuple
 
 from hedge_desk.demo import (
     FIXTURE_AS_OF,
@@ -136,3 +136,35 @@ def build_replay_evaluation() -> Dict[str, Any]:
             for event in events
         ],
     }
+
+
+def validate_replay_evaluation(value: Mapping[str, Any]) -> Tuple[str, ...]:
+    """Rebuild serialized replay events instead of trusting their valid flag."""
+    if value.get("environment") != "paper":
+        return ("REPLAY_ENVIRONMENT_INVALID",)
+    raw_events = value.get("events")
+    if not isinstance(raw_events, list):
+        return ("REPLAY_EVENTS_MISSING",)
+    expected_fields = {"kind", "event_time", "received_time", "artifact_id"}
+    events = []
+    try:
+        for raw in raw_events:
+            if not isinstance(raw, dict) or set(raw) != expected_fields:
+                raise ValueError("event schema")
+            events.append(
+                ReplayEvent(
+                    ReplayEventKind(str(raw["kind"])),
+                    datetime.fromisoformat(str(raw["event_time"])),
+                    datetime.fromisoformat(str(raw["received_time"])),
+                    str(raw["artifact_id"]),
+                )
+            )
+    except (TypeError, ValueError):
+        return ("REPLAY_EVENT_SCHEMA_INVALID",)
+    validation = validate_replay(tuple(events))
+    reasons = list(validation.reason_codes)
+    if tuple(value.get("reason_codes", ())) != validation.reason_codes:
+        reasons.append("REPLAY_REASON_CODES_MISMATCH")
+    if value.get("valid") is not validation.valid:
+        reasons.append("REPLAY_VALIDITY_FLAG_INVALID")
+    return tuple(sorted(set(reasons)))

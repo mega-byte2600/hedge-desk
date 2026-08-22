@@ -61,6 +61,14 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn("REPLAY_STATE_MISMATCH", validate_report(report).reason_codes)
 
+    def test_rehashed_report_cannot_hide_replay_time_tampering(self) -> None:
+        report = build_morning_report(NOW)
+        report["chronological_replay"]["events"][3]["received_time"] = (
+            "2026-07-28T19:00:00+00:00"
+        )
+        report = finalize_report(report)
+        self.assertIn("REPLAY_LINEAGE_INVALID", validate_report(report).reason_codes)
+
     def test_replay_artifacts_must_match_candidate_control_artifacts(self) -> None:
         report = build_morning_report(NOW)
         report["chronological_replay"]["events"][4]["artifact_id"] = "wrong-risk"

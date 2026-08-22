@@ -7,10 +7,20 @@ from hedge_desk.replay import (
     reference_replay,
     reference_pending_replay,
     validate_replay,
+    build_replay_evaluation,
+    validate_replay_evaluation,
 )
 
 
 class ReplayTests(unittest.TestCase):
+    def test_serialized_replay_is_independently_rebuilt(self) -> None:
+        evaluation = build_replay_evaluation()
+        self.assertEqual(validate_replay_evaluation(evaluation), ())
+        evaluation["events"][3]["received_time"] = "2026-07-28T19:00:00+00:00"
+        self.assertIn(
+            "RECEIVED_BEFORE_EVENT", validate_replay_evaluation(evaluation)
+        )
+
     def test_complete_reference_replay_passes(self) -> None:
         self.assertTrue(validate_replay(reference_replay()).valid)
         pending = reference_pending_replay()
