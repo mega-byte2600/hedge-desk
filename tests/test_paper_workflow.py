@@ -10,7 +10,7 @@ from hedge_desk.demo import (
     run_reference_demo,
 )
 from hedge_desk.domain import DecisionStatus
-from hedge_desk.backoffice import BackOfficeStatus
+from hedge_desk.backoffice import BackOfficeStatus, evaluate_paper_reconciliation
 from hedge_desk.paper import (
     HumanAuthorization,
     HumanAuthorizationStatus,
@@ -341,6 +341,19 @@ class PaperWorkflowTests(unittest.TestCase):
         self.assertEqual(closed.realized_pnl, Decimal("77.40"))
         self.assertEqual(len(closed.exit_evaluation_sha256), 64)
         self.assertEqual(len(closed.close_sha256), 64)
+        reconciled = evaluate_paper_reconciliation(
+            approved.plan_hash,
+            "c" * 64,
+            "c" * 64,
+            Decimal("100077.40"),
+            Decimal("100077.40"),
+            0,
+            0,
+            closed_at,
+            lifecycle_artifact_sha256=closed.close_sha256,
+        )
+        self.assertIs(reconciled.status, BackOfficeStatus.PASS)
+        self.assertEqual(reconciled.lifecycle_artifact_sha256, closed.close_sha256)
 
     def test_paper_close_rejects_tampered_open_or_wrong_plan(self) -> None:
         plan = build_reference_plan()
