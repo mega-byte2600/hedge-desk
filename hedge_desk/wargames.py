@@ -52,6 +52,12 @@ from hedge_desk.strategic_allocation import (
     AssetClass,
     evaluate_strategic_allocation,
 )
+from hedge_desk.release import (
+    REQUIRED_RELEASE_EVIDENCE,
+    ReleaseEvidence,
+    ReleaseStatus,
+    evaluate_live_release_readiness,
+)
 
 
 WAR_GAME_VERSION = "premium-spread-war-games-1.0.0"
@@ -365,6 +371,9 @@ COMPLIANCE_WAR_GAMES: Tuple[ComplianceWarGame, ...] = (
     ComplianceWarGame("agent-compliance-pass-override", "PASS_OVERRIDE"),
     ComplianceWarGame("options-disclosure-missing", "MISSING_ODD"),
     ComplianceWarGame("options-disclosure-after-candidate", "LATE_ODD"),
+    ComplianceWarGame(
+        "front-office-without-back-office-release", "MISSING_BACK_OFFICE_RELEASE"
+    ),
 )
 
 
@@ -673,6 +682,25 @@ def run_compliance_war_games() -> Tuple[Dict[str, Any], ...]:
     plan = build_reference_plan()
     results = []
     for scenario in COMPLIANCE_WAR_GAMES:
+        if scenario.attack == "MISSING_BACK_OFFICE_RELEASE":
+            release = evaluate_live_release_readiness(tuple(
+                ReleaseEvidence(
+                    requirement_id,
+                    requirement_id != "BACK_OFFICE_RECONCILIATION_CERTIFIED",
+                    "0" * 64 if requirement_id == "BACK_OFFICE_RECONCILIATION_CERTIFIED"
+                    else "a" * 64,
+                )
+                for requirement_id in REQUIRED_RELEASE_EVIDENCE
+            ))
+            results.append({
+                "scenario_id": scenario.scenario_id,
+                "disposition": "NO_TRADE",
+                "reason_codes": list(release.reason_codes),
+                "human_override_allowed": release.human_override_allowed,
+            })
+            if release.status is not ReleaseStatus.BLOCKED:
+                raise AssertionError("missing Back Office release evidence must block")
+            continue
         account = _reference_account(
             disclosure_present=scenario.attack != "MISSING_ODD",
             disclosure_late=scenario.attack == "LATE_ODD",

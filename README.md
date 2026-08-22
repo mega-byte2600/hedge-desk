@@ -63,6 +63,10 @@ The system evaluates every trade candidate through independent gates:
 3. portfolio exposure and conventional economic-risk controls;
 4. exact-plan human authorization for paper execution.
 
+No future live transition can pass unless an independently hashed Back Office
+reconciliation certification is present. Front Office, risk, compliance, human
+authorization, and Back Office must all refer to the same immutable plan.
+
 Passing every gate produces a paper-trade decision record. It never submits an
 order to a broker.
 

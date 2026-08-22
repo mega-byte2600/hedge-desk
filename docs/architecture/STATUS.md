@@ -6,16 +6,16 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 246 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 247 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
   JSON war games plus JSON/Markdown morning reports.
 - Morning reports are publication-gated, hashed, explicitly PAPER /
   HYPOTHETICAL, and report real-money P&L and real trades as zero.
-- The declared synthetic suite contains 56 strategy, timing, execution,
+- The declared synthetic suite contains 57 strategy, timing, execution,
   compliance, and lifecycle war games plus five combined-MVP capital-path
-  stresses.
+  stresses. Thirty-one scenarios are explicit `NO_TRADE` controls.
 
 Run the evidence directly:
 
@@ -77,7 +77,8 @@ python3 -m hedge_desk.cli --morning-markdown
 - AST-enforced trust boundaries confining RoR calculation and validated risk
   input construction, and rejecting broker/network clients from paper runtime.
 - a non-overridable, content-addressed paper-to-live release gate; current
-  status is `LIVE_RELEASE_BLOCKED` until every required evidence artifact exists.
+  status is `LIVE_RELEASE_BLOCKED` until every required evidence artifact
+  exists, including explicit Back Office reconciliation certification.
 
 ## Blocks before forward paper validation or live production
 

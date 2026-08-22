@@ -30,7 +30,7 @@ class CliTests(unittest.TestCase):
         summary = json.loads(completed.stdout)
         self.assertEqual(summary["real_money_pnl"], "0")
         self.assertEqual(summary["real_trades_executed"], 0)
-        self.assertEqual(summary["war_game_scenarios"], 56)
+        self.assertEqual(summary["war_game_scenarios"], 57)
         self.assertFalse(summary["live_transition_authorized"])
 
     def test_run_health_cli_verifies_fresh_paper_artifacts(self) -> None:

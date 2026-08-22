@@ -7,8 +7,9 @@ from hashlib import sha256
 from typing import Any, Dict, Mapping, Tuple
 
 
-RELEASE_GATE_VERSION = "live-release-gate-1.1.0"
+RELEASE_GATE_VERSION = "live-release-gate-1.2.0"
 REQUIRED_RELEASE_EVIDENCE = (
+    "BACK_OFFICE_RECONCILIATION_CERTIFIED",
     "BROKER_ORDER_ADAPTER_CERTIFIED",
     "EXTERNAL_AUDIT_DURABILITY_VERIFIED",
     "KILL_SWITCH_AND_DR_TESTED",

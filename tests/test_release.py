@@ -23,6 +23,11 @@ class ReleaseReadinessTests(unittest.TestCase):
             "RELEASE_REQUIREMENT_UNSATISFIED:REGULATORY_TRACEABILITY_VERIFIED",
             result.reason_codes,
         )
+        self.assertIn(
+            "RELEASE_REQUIREMENT_UNSATISFIED:BACK_OFFICE_RECONCILIATION_CERTIFIED",
+            result.reason_codes,
+        )
+        self.assertEqual(result.gate_version, "live-release-gate-1.2.0")
 
     def test_all_hashed_evidence_only_reaches_separate_authorization(self) -> None:
         evidence = tuple(
