@@ -27,6 +27,10 @@ from the Hedge Desk specification.
    and explicit `NO_TRADE` outcome.
 3. **European Index Box/Parity Observer:** paper-only search for theoretical
    identity dislocations using deterministic executable-side economics.
+4. **Dividend Opportunity Desk:** rank sustainable dividend opportunities from
+   point-in-time ten-year histories, then compare owning shares, a defined-risk
+   option expression, and `NO_TRADE`. Long calls do not receive dividends, so
+   the system must never equate buying a call with earning the cash payout.
 
 Together these MVPs build toward a coordinated 24/7 research orchestration. Each
 MVP shares the same deterministic calculation, independent risk, audit, and
@@ -51,6 +55,7 @@ order to a broker.
 ```bash
 python -m hedge_desk.cli
 python -m hedge_desk.cli --approve --human-id captain
+python -m hedge_desk.cli --projects
 python -m unittest discover -s tests -v
 ```
 

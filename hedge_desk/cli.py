@@ -4,10 +4,16 @@ import argparse
 import json
 
 from hedge_desk.demo import run_reference_demo
+from hedge_desk.projects import MVP_PROJECTS
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--projects",
+        action="store_true",
+        help="print the machine-readable MVP project registry",
+    )
     parser.add_argument(
         "--approve",
         action="store_true",
@@ -19,6 +25,9 @@ def main() -> None:
         help="required human identity when --approve is supplied",
     )
     args = parser.parse_args()
+    if args.projects:
+        print(json.dumps([project.__dict__ for project in MVP_PROJECTS], indent=2))
+        return
     if args.approve and not args.human_id.strip():
         parser.error("--human-id is required with --approve")
     print(json.dumps(run_reference_demo(args.approve, args.human_id), indent=2))
