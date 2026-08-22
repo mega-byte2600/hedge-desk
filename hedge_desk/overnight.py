@@ -17,6 +17,7 @@ from hedge_desk.paper import HumanAuthorizationStatus, MachineRiskStatus
 from hedge_desk.backoffice import BackOfficeStatus
 from hedge_desk.projects import MVP_PROJECTS, ProjectStatus, validate_project_registry
 from hedge_desk.wargames import build_war_game_report
+from hedge_desk.replay import build_replay_evaluation
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -142,6 +143,8 @@ def build_morning_report(generated_at: datetime) -> Dict[str, Any]:
         "environment": "paper",
         "complete": True,
         "live_orders_enabled": False,
+        "real_money_pnl": "0",
+        "real_trades_executed": 0,
         "summary": {
             "projects_evaluated": len(evaluations),
             "human_review": human_review,
@@ -154,6 +157,7 @@ def build_morning_report(generated_at: datetime) -> Dict[str, Any]:
         ],
         "projects": json_value(evaluations),
         "war_games": build_war_game_report(),
+        "chronological_replay": build_replay_evaluation(),
     }
 
 

@@ -25,6 +25,9 @@ class OvernightEvaluationTests(unittest.TestCase):
         report = build_morning_report(NOW)
         self.assertEqual(report["environment"], "paper")
         self.assertFalse(report["live_orders_enabled"])
+        self.assertEqual(report["real_money_pnl"], "0")
+        self.assertEqual(report["real_trades_executed"], 0)
+        self.assertTrue(report["chronological_replay"]["valid"])
         self.assertEqual(report["summary"], {"projects_evaluated": 5, "human_review": 1, "no_trade": 4})
         self.assertIn("Synthetic fixtures only", report["limitations"][0])
 
