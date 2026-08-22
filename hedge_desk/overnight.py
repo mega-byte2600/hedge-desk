@@ -19,6 +19,7 @@ from hedge_desk.projects import MVP_PROJECTS, ProjectStatus, validate_project_re
 from hedge_desk.wargames import build_war_game_report
 from hedge_desk.replay import build_replay_evaluation
 from hedge_desk.reporting import finalize_report
+from hedge_desk.audit import build_audit_evaluation
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -159,6 +160,7 @@ def build_morning_report(generated_at: datetime) -> Dict[str, Any]:
         "projects": json_value(evaluations),
         "war_games": build_war_game_report(),
         "chronological_replay": build_replay_evaluation(),
+        "audit_chain": build_audit_evaluation(),
     }
     return finalize_report(report)
 

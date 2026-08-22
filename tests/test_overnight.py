@@ -28,6 +28,8 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertEqual(report["real_money_pnl"], "0")
         self.assertEqual(report["real_trades_executed"], 0)
         self.assertTrue(report["chronological_replay"]["valid"])
+        self.assertTrue(report["audit_chain"]["valid"])
+        self.assertEqual(report["audit_chain"]["event_count"], 9)
         self.assertEqual(report["summary"], {"projects_evaluated": 5, "human_review": 1, "no_trade": 4})
         self.assertIn("Synthetic fixtures only", report["limitations"][0])
 
