@@ -41,6 +41,25 @@ class AuditJournalTests(unittest.TestCase):
                 read_audit_journal(path)
             self.assertEqual(append_audit_journal(path, chain[-1]).status, "BLOCKED")
 
+    def test_empty_journal_and_empty_initialization_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "audit.jsonl"
+            self.assertEqual(
+                initialize_audit_journal(path, ()).reason_codes,
+                ("AUDIT_JOURNAL_EMPTY",),
+            )
+            path.write_text("", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "AUDIT_JOURNAL_EMPTY"):
+                read_audit_journal(path)
+
+    def test_missing_parent_returns_write_failure_not_exception(self) -> None:
+        chain = build_reference_audit()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "missing" / "audit.jsonl"
+            result = initialize_audit_journal(path, chain)
+            self.assertEqual(result.status, "BLOCKED")
+            self.assertEqual(result.reason_codes, ("AUDIT_JOURNAL_WRITE_FAILED",))
+
 
 if __name__ == "__main__":
     unittest.main()

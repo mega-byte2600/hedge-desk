@@ -65,6 +65,8 @@ def read_audit_journal(path: Path) -> Tuple[AuditEvent, ...]:
         events = tuple(_parse_event(json.loads(line)) for line in lines if line)
     except (OSError, UnicodeError, json.JSONDecodeError, TypeError, ValueError) as exc:
         raise ValueError("AUDIT_JOURNAL_CORRUPT") from exc
+    if not events:
+        raise ValueError("AUDIT_JOURNAL_EMPTY")
     reasons = verify_audit_chain(events)
     if reasons:
         raise ValueError("AUDIT_JOURNAL_CORRUPT:" + ",".join(reasons))
@@ -72,6 +74,8 @@ def read_audit_journal(path: Path) -> Tuple[AuditEvent, ...]:
 
 
 def initialize_audit_journal(path: Path, chain: Tuple[AuditEvent, ...]) -> AuditJournalResult:
+    if not chain:
+        return AuditJournalResult("BLOCKED", 0, "", ("AUDIT_JOURNAL_EMPTY",))
     reasons = verify_audit_chain(chain)
     if reasons:
         return AuditJournalResult("BLOCKED", len(chain), "", reasons)
@@ -86,6 +90,8 @@ def initialize_audit_journal(path: Path, chain: Tuple[AuditEvent, ...]) -> Audit
             os.fsync(stream.fileno())
     except FileExistsError:
         return AuditJournalResult("BLOCKED", 0, "", ("AUDIT_JOURNAL_ALREADY_EXISTS",))
+    except OSError:
+        return AuditJournalResult("BLOCKED", 0, "", ("AUDIT_JOURNAL_WRITE_FAILED",))
     return AuditJournalResult(
         "INITIALIZED", len(chain), chain[-1].event_hash if chain else "0" * 64, ()
     )
