@@ -19,6 +19,11 @@ class PremiumWarGameTests(unittest.TestCase):
         premium = report["summary"]["premium_fixed_trade"]
         self.assertEqual(premium["profitable_scenarios"], 1)
         self.assertEqual(premium["losing_scenarios"], 4)
+        self.assertFalse(premium["statistical_significance_computed"])
+        self.assertEqual(
+            premium["descriptive_metrics"]["inference_status"],
+            "INSUFFICIENT_SYNTHETIC_SAMPLE",
+        )
 
     def test_reference_scenario_pnls_are_exact(self) -> None:
         results = {result.scenario_id: result for result in run_premium_war_games()}

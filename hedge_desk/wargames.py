@@ -7,6 +7,7 @@ from typing import Any, Dict, Tuple
 
 from hedge_desk.demo import FIXTURE_AS_OF, build_reference_plan, json_value
 from hedge_desk.paper import approve_paper_trade, close_paper_trade, execute_paper_open
+from hedge_desk.metrics import evaluate_pnl_series
 
 
 WAR_GAME_VERSION = "premium-spread-war-games-1.0.0"
@@ -294,6 +295,7 @@ def build_war_game_report() -> Dict[str, Any]:
     dividend = run_dividend_war_games()
     pnls = tuple(result.net_pnl for result in results)
     wins = sum(result.profitable for result in results)
+    premium_metrics = evaluate_pnl_series(pnls)
     no_trade_controls = (
         sum(item["best_hindsight_arm"] == "NO_TRADE" for item in earnings)
         + sum(item["disposition"] == "NO_TRADE" for item in arbitrage)
@@ -322,6 +324,9 @@ def build_war_game_report() -> Dict[str, Any]:
                 "mean_pnl": str(sum(pnls, Decimal("0")) / Decimal(len(pnls))),
                 "worst_pnl": str(min(pnls)),
                 "best_pnl": str(max(pnls)),
+                "descriptive_metrics": json_value(premium_metrics),
+                "sequence_label": "declared_synthetic_stress_order_not_time_series",
+                "statistical_significance_computed": False,
             },
         },
         "premium": json_value(results),
