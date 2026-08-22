@@ -67,6 +67,40 @@ class PaperWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(PermissionError, "integrity check failed"):
             execute_paper_open(changed_plan, FIXTURE_AS_OF)
 
+    def test_changed_compliance_artifact_invalidates_plan(self) -> None:
+        plan = approve_paper_trade(build_reference_plan(), "captain", FIXTURE_AS_OF)
+        changed_compliance = replace(
+            plan.compliance_decision,
+            policy_decision=replace(
+                plan.compliance_decision.policy_decision,
+                artifact_sha256="f" * 64,
+            ),
+        )
+        with self.assertRaisesRegex(PermissionError, "integrity check failed"):
+            execute_paper_open(
+                replace(plan, compliance_decision=changed_compliance), FIXTURE_AS_OF
+            )
+
+    def test_unverifiable_compliance_artifact_cannot_create_plan(self) -> None:
+        plan = build_reference_plan()
+        forged_compliance = replace(
+            plan.compliance_decision,
+            policy_decision=replace(
+                plan.compliance_decision.policy_decision,
+                artifact_sha256="f" * 64,
+            ),
+        )
+        with self.assertRaisesRegex(ValueError, "invalid compliance artifact"):
+            create_paper_trade_plan(
+                plan.plan_id,
+                plan.spread,
+                plan.risk_decision,
+                forged_compliance,
+                plan.created_at,
+                plan.approval_expires_at,
+                event_calendar_gate=plan.event_calendar_gate,
+            )
+
     def test_risk_and_back_office_must_use_same_portfolio_snapshot(self) -> None:
         plan = build_reference_plan()
         mismatched_risk = replace(

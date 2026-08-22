@@ -8,7 +8,10 @@ from hashlib import sha256
 from typing import Optional, Tuple
 
 from hedge_desk.backoffice import BackOfficeDecision, BackOfficeStatus
-from hedge_desk.backoffice.compliance import APPROVED_BACK_OFFICE_POLICY_VERSIONS
+from hedge_desk.backoffice.compliance import (
+    APPROVED_BACK_OFFICE_POLICY_VERSIONS,
+    validate_compliance_policy_artifact,
+)
 from hedge_desk.domain import Decision, DecisionStatus
 from hedge_desk.options import EventCalendarGate, VerticalSpreadCalculation
 
@@ -185,6 +188,14 @@ def _calculate_plan_hash(
             compliance_decision.policy_version,
             compliance_decision.portfolio_snapshot_sha256,
             compliance_decision.circuit_breaker_sha256,
+            compliance_decision.policy_decision.candidate_id,
+            compliance_decision.policy_decision.account_id,
+            compliance_decision.policy_decision.status.value,
+            ",".join(compliance_decision.policy_decision.reason_codes),
+            compliance_decision.policy_decision.policy_version,
+            compliance_decision.policy_decision.evaluated_at.isoformat(),
+            compliance_decision.policy_decision.environment,
+            compliance_decision.policy_decision.artifact_sha256,
             compliance_decision.evaluated_at.isoformat(),
             compliance_decision.environment,
             str(event_calendar_gate.admissible),
@@ -258,6 +269,24 @@ def create_paper_trade_plan(
         raise ValueError("risk and compliance portfolio snapshots must match")
     if compliance_decision.policy_version not in APPROVED_BACK_OFFICE_POLICY_VERSIONS:
         raise ValueError("Back Office policy version is not approved")
+    policy_decision = compliance_decision.policy_decision
+    artifact_reasons = validate_compliance_policy_artifact(policy_decision)
+    if artifact_reasons:
+        raise ValueError("invalid compliance artifact: " + ",".join(artifact_reasons))
+    if policy_decision.candidate_id != risk_decision.candidate_id:
+        raise ValueError("compliance artifact candidate identity must match")
+    if policy_decision.account_id != risk_decision.account_id:
+        raise ValueError("compliance artifact account identity must match")
+    if policy_decision.evaluated_at != compliance_decision.evaluated_at:
+        raise ValueError("compliance artifact timestamp must match Back Office")
+    if policy_decision.environment != compliance_decision.environment:
+        raise ValueError("compliance artifact environment must match Back Office")
+    if policy_decision.status is BackOfficeStatus.BLOCK:
+        missing_reasons = set(policy_decision.reason_codes) - set(
+            compliance_decision.reason_codes
+        )
+        if missing_reasons:
+            raise ValueError("Back Office omitted compliance block reasons")
     for label, evaluated_at in (
         ("risk", risk_decision.evaluated_at),
         ("compliance", compliance_decision.evaluated_at),

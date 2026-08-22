@@ -4,6 +4,7 @@ import unittest
 
 from hedge_desk.backoffice import (
     BackOfficeStatus,
+    evaluate_compliance_policy,
     evaluate_drawdown_circuit_breaker,
     evaluate_paper_compliance,
 )
@@ -34,6 +35,18 @@ class BackOfficeTests(unittest.TestCase):
         )
         self.assertIs(result.status, BackOfficeStatus.PASS)
         self.assertEqual(result.environment, "paper")
+        self.assertEqual(len(result.policy_decision.artifact_sha256), 64)
+
+    def test_compliance_policy_is_independent_and_live_fails_closed(self) -> None:
+        result = evaluate_compliance_policy(
+            self.account,
+            candidate(ProductType.DEFINED_RISK_OPTION),
+            NOW,
+            environment="live",
+        )
+        self.assertIs(result.status, BackOfficeStatus.BLOCK)
+        self.assertEqual(result.reason_codes, ("PAPER_ONLY_VIOLATION",))
+        self.assertEqual(len(result.artifact_sha256), 64)
 
     def test_front_office_equity_proposal_cannot_enter_premium_workflow(self) -> None:
         result = evaluate_paper_compliance(

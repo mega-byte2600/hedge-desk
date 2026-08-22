@@ -2,8 +2,12 @@
 
 from .compliance import (
     BACK_OFFICE_POLICY_VERSION,
+    COMPLIANCE_POLICY_VERSION,
     BackOfficeDecision,
     BackOfficeStatus,
+    CompliancePolicyDecision,
+    evaluate_compliance_policy,
+    validate_compliance_policy_artifact,
     evaluate_paper_compliance,
 )
 from .portfolio import (
@@ -18,8 +22,12 @@ from .portfolio import (
 
 __all__ = [
     "BACK_OFFICE_POLICY_VERSION",
+    "COMPLIANCE_POLICY_VERSION",
     "BackOfficeDecision",
     "BackOfficeStatus",
+    "CompliancePolicyDecision",
+    "evaluate_compliance_policy",
+    "validate_compliance_policy_artifact",
     "evaluate_paper_compliance",
     "PORTFOLIO_POLICY_VERSION",
     "CircuitBreakerResult",

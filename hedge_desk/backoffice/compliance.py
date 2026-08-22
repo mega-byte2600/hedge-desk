@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from hashlib import sha256
 from typing import Tuple
 
 from hedge_desk.compliance.account_gate import account_gate
@@ -23,11 +24,26 @@ from .portfolio import (
 
 BACK_OFFICE_POLICY_VERSION = "paper-options-1.0.0"
 APPROVED_BACK_OFFICE_POLICY_VERSIONS = frozenset({BACK_OFFICE_POLICY_VERSION})
+COMPLIANCE_POLICY_VERSION = "paper-securities-1.0.0"
 
 
 class BackOfficeStatus(str, Enum):
     PASS = "pass"
     BLOCK = "block"
+
+
+@dataclass(frozen=True)
+class CompliancePolicyDecision:
+    """Independent policy artifact; it contains no portfolio-risk calculation."""
+
+    candidate_id: str
+    account_id: str
+    status: BackOfficeStatus
+    reason_codes: Tuple[str, ...]
+    policy_version: str
+    evaluated_at: datetime
+    environment: str
+    artifact_sha256: str
 
 
 @dataclass(frozen=True)
@@ -39,8 +55,98 @@ class BackOfficeDecision:
     policy_version: str
     portfolio_snapshot_sha256: str
     circuit_breaker_sha256: str
+    policy_decision: CompliancePolicyDecision
     evaluated_at: datetime
     environment: str = "paper"
+
+
+def _compliance_artifact_hash(
+    candidate_id: str,
+    account_id: str,
+    status: BackOfficeStatus,
+    reason_codes: Tuple[str, ...],
+    policy_version: str,
+    evaluated_at: datetime,
+    environment: str,
+) -> str:
+    payload = "|".join(
+        (
+            candidate_id,
+            account_id,
+            status.value,
+            ",".join(reason_codes),
+            policy_version,
+            evaluated_at.isoformat(),
+            environment,
+        )
+    )
+    return sha256(payload.encode("utf-8")).hexdigest()
+
+
+def validate_compliance_policy_artifact(
+    decision: CompliancePolicyDecision,
+) -> Tuple[str, ...]:
+    reasons = []
+    if decision.policy_version != COMPLIANCE_POLICY_VERSION:
+        reasons.append("COMPLIANCE_POLICY_VERSION_UNAPPROVED")
+    if decision.evaluated_at.tzinfo is None:
+        reasons.append("COMPLIANCE_TIMESTAMP_INVALID")
+    if decision.reason_codes != tuple(sorted(set(decision.reason_codes))):
+        reasons.append("COMPLIANCE_REASON_CODES_NONCANONICAL")
+    expected_status = (
+        BackOfficeStatus.BLOCK if decision.reason_codes else BackOfficeStatus.PASS
+    )
+    if decision.status is not expected_status:
+        reasons.append("COMPLIANCE_STATUS_INCONSISTENT")
+    expected_hash = _compliance_artifact_hash(
+        decision.candidate_id,
+        decision.account_id,
+        decision.status,
+        decision.reason_codes,
+        decision.policy_version,
+        decision.evaluated_at,
+        decision.environment,
+    )
+    if decision.artifact_sha256 != expected_hash:
+        reasons.append("COMPLIANCE_ARTIFACT_HASH_MISMATCH")
+    return tuple(sorted(reasons))
+
+
+def evaluate_compliance_policy(
+    account: Account,
+    candidate: TradeCandidate,
+    evaluated_at: datetime,
+    environment: str = "paper",
+) -> CompliancePolicyDecision:
+    """Apply the immutable MVP policy separately from risk and portfolio gates."""
+    if evaluated_at.tzinfo is None:
+        raise ValueError("compliance timestamp must be timezone-aware")
+    reasons = account_gate(account, candidate)
+    if environment != "paper":
+        reasons.append("PAPER_ONLY_VIOLATION")
+    if candidate.product_type is not ProductType.DEFINED_RISK_OPTION:
+        reasons.append("PREMIUM_MVP_DEFINED_RISK_OPTIONS_ONLY")
+    reason_codes = tuple(sorted(set(reasons)))
+    status = BackOfficeStatus.BLOCK if reason_codes else BackOfficeStatus.PASS
+    artifact_sha256 = _compliance_artifact_hash(
+        candidate.candidate_id,
+        account.account_id,
+        status,
+        reason_codes,
+        COMPLIANCE_POLICY_VERSION,
+        evaluated_at,
+        environment,
+    )
+    return CompliancePolicyDecision(
+        candidate.candidate_id,
+        account.account_id,
+        status,
+        reason_codes,
+        COMPLIANCE_POLICY_VERSION,
+        evaluated_at,
+        environment,
+        artifact_sha256,
+    )
 
 
 def evaluate_paper_compliance(
@@ -58,14 +164,13 @@ def evaluate_paper_compliance(
     """Evaluate the deliberately narrow paper-only product/account policy."""
     if evaluated_at.tzinfo is None:
         raise ValueError("Back Office timestamp must be timezone-aware")
-    reasons = account_gate(account, candidate)
+    compliance = evaluate_compliance_policy(account, candidate, evaluated_at)
+    reasons = list(compliance.reason_codes)
     portfolio = evaluate_portfolio_gate(
         account, candidate, positions, portfolio_policy
     )
     reasons.extend(portfolio.reason_codes)
     reasons.extend(circuit_breaker.reason_codes)
-    if candidate.product_type is not ProductType.DEFINED_RISK_OPTION:
-        reasons.append("PREMIUM_MVP_DEFINED_RISK_OPTIONS_ONLY")
     reason_codes = tuple(sorted(set(reasons)))
     return BackOfficeDecision(
         candidate_id=candidate.candidate_id,
@@ -75,5 +180,6 @@ def evaluate_paper_compliance(
         policy_version=BACK_OFFICE_POLICY_VERSION,
         portfolio_snapshot_sha256=portfolio.snapshot_sha256,
         circuit_breaker_sha256=circuit_breaker.artifact_sha256,
+        policy_decision=compliance,
         evaluated_at=evaluated_at,
     )
