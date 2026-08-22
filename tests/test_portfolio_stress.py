@@ -1,0 +1,36 @@
+from decimal import Decimal
+import unittest
+
+from hedge_desk.portfolio_stress import build_portfolio_stress_report
+
+
+class PortfolioStressTests(unittest.TestCase):
+    def test_combined_capital_path_is_exact_and_cost_inclusive(self) -> None:
+        report = build_portfolio_stress_report()
+        self.assertEqual(report["scenario_count"], 5)
+        self.assertEqual(report["real_money_pnl"], "0")
+        self.assertEqual(len(report["fixture_sha256"]), 64)
+        first = report["scenarios"][0]
+        self.assertEqual(first["combined_net_pnl"], "98.40")
+        self.assertEqual(first["ending_capital"], "100098.40")
+        crowded = report["scenarios"][-1]
+        self.assertEqual(crowded["combined_net_pnl"], "-3355.60")
+        self.assertEqual(crowded["disposition"], "FREEZE_NEW_RISK")
+        self.assertIn("DRAWDOWN_LIMIT_BREACHED", crowded["reason_codes"])
+
+    def test_results_are_reproducible_and_not_statistical_inference(self) -> None:
+        self.assertEqual(build_portfolio_stress_report(), build_portfolio_stress_report())
+        self.assertEqual(
+            build_portfolio_stress_report()["inference_status"],
+            "INSUFFICIENT_SYNTHETIC_SAMPLE",
+        )
+
+    def test_invalid_capital_policy_fails_closed(self) -> None:
+        with self.assertRaises(ValueError):
+            build_portfolio_stress_report(Decimal("0"))
+        with self.assertRaises(ValueError):
+            build_portfolio_stress_report(maximum_drawdown_fraction=Decimal("1"))
+
+
+if __name__ == "__main__":
+    unittest.main()

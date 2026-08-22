@@ -27,6 +27,8 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertFalse(report["live_orders_enabled"])
         self.assertEqual(report["real_money_pnl"], "0")
         self.assertEqual(report["real_trades_executed"], 0)
+        self.assertEqual(report["portfolio_stress"]["scenario_count"], 5)
+        self.assertEqual(report["portfolio_stress"]["real_money_pnl"], "0")
         self.assertTrue(report["chronological_replay"]["valid"])
         self.assertTrue(report["audit_chain"]["valid"])
         self.assertEqual(report["audit_chain"]["event_count"], 9)

@@ -87,6 +87,20 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
         or len(manifest.get("fixture_sha256", "")) != 64
     ):
         reasons.append("WAR_GAME_MANIFEST_INVALID")
+    portfolio_stress = report.get("portfolio_stress", {})
+    if (
+        not isinstance(portfolio_stress, dict)
+        or portfolio_stress.get("report_type")
+        != "synthetic_hypothetical_portfolio_stress"
+        or portfolio_stress.get("source") != "synthetic_fixture"
+        or portfolio_stress.get("scenario_count") != 5
+        or portfolio_stress.get("inference_status")
+        != "INSUFFICIENT_SYNTHETIC_SAMPLE"
+        or portfolio_stress.get("real_money_pnl") != "0"
+        or not isinstance(portfolio_stress.get("fixture_sha256"), str)
+        or len(portfolio_stress.get("fixture_sha256", "")) != 64
+    ):
+        reasons.append("PORTFOLIO_STRESS_DISCLOSURE_INVALID")
     serialized = json.dumps(report, sort_keys=True).lower()
     if any(claim in serialized for claim in PROHIBITED_PERFORMANCE_CLAIMS):
         reasons.append("PROHIBITED_PERFORMANCE_CLAIM")
@@ -173,6 +187,8 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
     war_summary = war_games["summary"]
     premium = war_summary["premium_fixed_trade"]
     metrics = premium["descriptive_metrics"]
+    portfolio_stress = report["portfolio_stress"]
+    stress_metrics = portfolio_stress["descriptive_metrics"]
     projects = report["projects"]
     lines = [
         "# Hedge Desk Morning Evaluation",
@@ -212,6 +228,14 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
             f"- STAT inference: {report['stat_evaluation']['inference_status']}",
             f"- STAT p-value: {report['stat_evaluation']['p_value']}",
             f"- STAT 95% CI: {report['stat_evaluation']['confidence_interval']}",
+            "",
+            "## Combined-MVP capital stress",
+            "",
+            f"- Synthetic scenarios: {portfolio_stress['scenario_count']}",
+            f"- Starting synthetic capital: ${portfolio_stress['starting_capital']}",
+            f"- Synthetic total P&L: ${stress_metrics['total_pnl']}",
+            f"- Synthetic maximum drawdown: ${stress_metrics['maximum_drawdown']}",
+            f"- Inference status: {portfolio_stress['inference_status']}",
             "",
             "## Control verification",
             "",

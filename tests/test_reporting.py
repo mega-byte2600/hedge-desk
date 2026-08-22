@@ -61,6 +61,8 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("Real trades executed: 0", markdown)
         self.assertIn("Premium synthetic total P&L: $-848.00", markdown)
         self.assertIn("NO_TRADE controls: 11", markdown)
+        self.assertIn("Combined-MVP capital stress", markdown)
+        self.assertIn("Starting synthetic capital: $100000", markdown)
 
     def test_unpublishable_report_cannot_be_rendered(self) -> None:
         report = build_morning_report(NOW)
@@ -73,6 +75,15 @@ class ReportingTests(unittest.TestCase):
         report["stat_evaluation"]["p_value"] = "0.001"
         report = finalize_report(report)
         self.assertIn("STAT_DISCLOSURE_INVALID", validate_report(report).reason_codes)
+
+    def test_tampered_portfolio_stress_disclosure_is_blocked(self) -> None:
+        report = build_morning_report(NOW)
+        report["portfolio_stress"]["real_money_pnl"] = "1"
+        report = finalize_report(report)
+        self.assertIn(
+            "PORTFOLIO_STRESS_DISCLOSURE_INVALID",
+            validate_report(report).reason_codes,
+        )
 
     def test_run_comparison_is_deterministic_and_never_claims_real_profit(self) -> None:
         previous = build_morning_report(NOW)

@@ -22,6 +22,7 @@ from hedge_desk.replay import build_replay_evaluation
 from hedge_desk.reporting import finalize_report
 from hedge_desk.audit import build_audit_evaluation
 from hedge_desk.stat_evaluation import build_stat_evaluation
+from hedge_desk.portfolio_stress import build_portfolio_stress_report
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -181,6 +182,7 @@ def build_morning_report(generated_at: datetime) -> Dict[str, Any]:
         "chronological_replay": build_replay_evaluation(),
         "audit_chain": build_audit_evaluation(),
         "stat_evaluation": build_stat_evaluation(),
+        "portfolio_stress": build_portfolio_stress_report(),
     }
     return finalize_report(report)
 
