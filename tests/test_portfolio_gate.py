@@ -5,6 +5,7 @@ import unittest
 from hedge_desk.backoffice import (
     PortfolioPolicy,
     PositionExposure,
+    evaluate_drawdown_circuit_breaker,
     evaluate_portfolio_gate,
 )
 from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
@@ -56,6 +57,21 @@ class PortfolioGateTests(unittest.TestCase):
         forward = evaluate_portfolio_gate(ACCOUNT, CANDIDATE, (one, two))
         reverse = evaluate_portfolio_gate(ACCOUNT, CANDIDATE, (two, one))
         self.assertEqual(forward.snapshot_sha256, reverse.snapshot_sha256)
+
+    def test_drawdown_circuit_breaker_exact_boundary_and_breach(self) -> None:
+        source_hash = "a" * 64
+        exact = evaluate_drawdown_circuit_breaker(
+            Decimal("5000"), Decimal("5000"), source_hash
+        )
+        self.assertFalse(exact.new_risk_frozen)
+        breached = evaluate_drawdown_circuit_breaker(
+            Decimal("5000.01"), Decimal("5000"), source_hash
+        )
+        self.assertTrue(breached.new_risk_frozen)
+        self.assertEqual(
+            breached.reason_codes, ("PORTFOLIO_DRAWDOWN_CIRCUIT_BREAKER",)
+        )
+        self.assertEqual(len(breached.artifact_sha256), 64)
 
 
 if __name__ == "__main__":

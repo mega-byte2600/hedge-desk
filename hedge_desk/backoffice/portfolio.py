@@ -38,6 +38,42 @@ class PortfolioGateResult:
     symbol_maximum_loss_after: Decimal
 
 
+@dataclass(frozen=True)
+class CircuitBreakerResult:
+    new_risk_frozen: bool
+    reason_codes: Tuple[str, ...]
+    artifact_sha256: str
+
+
+def evaluate_drawdown_circuit_breaker(
+    current_drawdown: Decimal,
+    maximum_drawdown: Decimal,
+    source_report_sha256: str,
+) -> CircuitBreakerResult:
+    """Create a deterministic Back Office new-risk state from validated inputs."""
+    if current_drawdown < 0 or maximum_drawdown <= 0:
+        raise ValueError("drawdown inputs must be nonnegative with a positive limit")
+    try:
+        valid_hash = len(source_report_sha256) == 64 and int(source_report_sha256, 16) >= 0
+    except ValueError:
+        valid_hash = False
+    if not valid_hash:
+        raise ValueError("circuit-breaker source report hash must be valid")
+    frozen = current_drawdown > maximum_drawdown
+    reasons = ("PORTFOLIO_DRAWDOWN_CIRCUIT_BREAKER",) if frozen else ()
+    payload = {
+        "current_drawdown": str(current_drawdown),
+        "maximum_drawdown": str(maximum_drawdown),
+        "new_risk_frozen": frozen,
+        "reason_codes": list(reasons),
+        "source_report_sha256": source_report_sha256,
+    }
+    artifact_sha256 = sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return CircuitBreakerResult(frozen, reasons, artifact_sha256)
+
+
 def evaluate_portfolio_gate(
     account: Account,
     candidate: TradeCandidate,

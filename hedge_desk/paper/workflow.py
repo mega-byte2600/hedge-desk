@@ -170,6 +170,7 @@ def _calculate_plan_hash(
             ",".join(compliance_decision.reason_codes),
             compliance_decision.policy_version,
             compliance_decision.portfolio_snapshot_sha256,
+            compliance_decision.circuit_breaker_sha256,
             compliance_decision.evaluated_at.isoformat(),
             compliance_decision.environment,
             created_at.isoformat(),

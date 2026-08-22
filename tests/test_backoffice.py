@@ -2,7 +2,11 @@ from datetime import datetime, timezone
 from decimal import Decimal
 import unittest
 
-from hedge_desk.backoffice import BackOfficeStatus, evaluate_paper_compliance
+from hedge_desk.backoffice import (
+    BackOfficeStatus,
+    evaluate_drawdown_circuit_breaker,
+    evaluate_paper_compliance,
+)
 from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
 
 
@@ -47,6 +51,20 @@ class BackOfficeTests(unittest.TestCase):
             account, candidate(ProductType.DEFINED_RISK_OPTION), NOW
         )
         self.assertIn("OPTIONS_APPROVAL_REQUIRED", result.reason_codes)
+
+    def test_portfolio_drawdown_freeze_blocks_front_office_candidate(self) -> None:
+        circuit_breaker = evaluate_drawdown_circuit_breaker(
+            Decimal("5000.01"), Decimal("5000"), "a" * 64
+        )
+        result = evaluate_paper_compliance(
+            self.account,
+            candidate(ProductType.DEFINED_RISK_OPTION),
+            NOW,
+            circuit_breaker=circuit_breaker,
+        )
+        self.assertIs(result.status, BackOfficeStatus.BLOCK)
+        self.assertIn("PORTFOLIO_DRAWDOWN_CIRCUIT_BREAKER", result.reason_codes)
+        self.assertEqual(result.circuit_breaker_sha256, circuit_breaker.artifact_sha256)
 
 
 if __name__ == "__main__":

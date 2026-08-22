@@ -6,12 +6,19 @@ broker, tax, or registration obligation has been resolved for live trading.
 
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 from typing import Tuple
 
 from hedge_desk.compliance.account_gate import account_gate
 from hedge_desk.domain import Account, ProductType, TradeCandidate
-from .portfolio import PositionExposure, PortfolioPolicy, evaluate_portfolio_gate
+from .portfolio import (
+    CircuitBreakerResult,
+    PositionExposure,
+    PortfolioPolicy,
+    evaluate_drawdown_circuit_breaker,
+    evaluate_portfolio_gate,
+)
 
 
 BACK_OFFICE_POLICY_VERSION = "paper-options-1.0.0"
@@ -31,6 +38,7 @@ class BackOfficeDecision:
     reason_codes: Tuple[str, ...]
     policy_version: str
     portfolio_snapshot_sha256: str
+    circuit_breaker_sha256: str
     evaluated_at: datetime
     environment: str = "paper"
 
@@ -41,6 +49,11 @@ def evaluate_paper_compliance(
     evaluated_at: datetime,
     positions: Tuple[PositionExposure, ...] = (),
     portfolio_policy: PortfolioPolicy = PortfolioPolicy(),
+    circuit_breaker: CircuitBreakerResult = evaluate_drawdown_circuit_breaker(
+        current_drawdown=Decimal("0"),
+        maximum_drawdown=Decimal("1"),
+        source_report_sha256="0" * 64,
+    ),
 ) -> BackOfficeDecision:
     """Evaluate the deliberately narrow paper-only product/account policy."""
     if evaluated_at.tzinfo is None:
@@ -50,6 +63,7 @@ def evaluate_paper_compliance(
         account, candidate, positions, portfolio_policy
     )
     reasons.extend(portfolio.reason_codes)
+    reasons.extend(circuit_breaker.reason_codes)
     if candidate.product_type is not ProductType.DEFINED_RISK_OPTION:
         reasons.append("PREMIUM_MVP_DEFINED_RISK_OPTIONS_ONLY")
     reason_codes = tuple(sorted(set(reasons)))
@@ -60,5 +74,6 @@ def evaluate_paper_compliance(
         reason_codes=reason_codes,
         policy_version=BACK_OFFICE_POLICY_VERSION,
         portfolio_snapshot_sha256=portfolio.snapshot_sha256,
+        circuit_breaker_sha256=circuit_breaker.artifact_sha256,
         evaluated_at=evaluated_at,
     )
