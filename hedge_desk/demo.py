@@ -1,6 +1,6 @@
 """Frozen end-to-end fixture for the Overnight Premium Desk MVP."""
 
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict, is_dataclass, replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
@@ -222,11 +222,23 @@ def run_reference_demo(approve: bool = False, human_id: str = "") -> Dict[str, A
     opened = execute_paper_open(
         approved, opened_at=FIXTURE_AS_OF + timedelta(minutes=2)
     )
+    exit_snapshot = build_reference_option_snapshot()
+    closed_at = FIXTURE_AS_OF + timedelta(days=1)
+    exit_short = replace(
+        exit_snapshot.option_quotes[0],
+        bid=Decimal("0.40"), ask=Decimal("0.50"), quoted_at=closed_at,
+    )
+    exit_long = replace(
+        exit_snapshot.option_quotes[1],
+        bid=Decimal("0.10"), ask=Decimal("0.20"), quoted_at=closed_at,
+    )
     closed = close_paper_trade(
         opened,
-        exit_debit_per_share=Decimal("0.40"),
+        approved,
+        exit_short,
+        exit_long,
         exit_commission_per_contract=Decimal("0.65"),
-        closed_at=FIXTURE_AS_OF + timedelta(days=1),
+        closed_at=closed_at,
     )
     output.update(
         {

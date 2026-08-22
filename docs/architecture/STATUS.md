@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 296 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 297 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - CI enforces an 80% whole-package branch-coverage floor; the current measured
@@ -51,6 +51,8 @@ python3 -m hedge_desk.cli --morning-markdown
   and never authorizes an order;
 - opening-to-close lineage binds the exact underlying, contract IDs,
   expiration, and quote-source identity before exit economics are evaluated;
+- paper closes re-verify the exact approved plan and matching paper-open terms,
+  consume source-bound executable exit quotes, and retain the exit artifact hash;
 - point-in-time corporate-event calendars complete through expiration;
 - independently hashed quantitative inputs and exact validator-issued
   RoR-before/RoR-after outputs for the conventional RoR engine; the agentic

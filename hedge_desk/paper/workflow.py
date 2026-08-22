@@ -13,7 +13,13 @@ from hedge_desk.backoffice.compliance import (
     validate_compliance_policy_artifact,
 )
 from hedge_desk.domain import Decision, DecisionStatus
-from hedge_desk.options import EventCalendarGate, VerticalSpreadCalculation
+from hedge_desk.options import (
+    EventCalendarGate,
+    OptionQuote,
+    PremiumExitPolicy,
+    VerticalSpreadCalculation,
+    evaluate_premium_exit,
+)
 
 
 class MachineRiskStatus(str, Enum):
@@ -56,6 +62,7 @@ class PaperTradePlan:
 class PaperOpen:
     plan_id: str
     plan_hash: str
+    spread_id: str
     opened_at: datetime
     entry_credit: Decimal
     quantity: int
@@ -70,6 +77,7 @@ class PaperClose:
     exit_debit: Decimal
     exit_commission: Decimal
     realized_pnl: Decimal
+    exit_evaluation_sha256: str
     environment: str = "paper"
 
 
@@ -388,6 +396,7 @@ def execute_paper_open(plan: PaperTradePlan, opened_at: datetime) -> PaperOpen:
     return PaperOpen(
         plan_id=plan.plan_id,
         plan_hash=plan.plan_hash,
+        spread_id=plan.spread.spread_id,
         opened_at=opened_at,
         entry_credit=plan.spread.net_credit,
         quantity=plan.spread.quantity,
@@ -460,25 +469,45 @@ def evaluate_plan_lifecycle(
 
 def close_paper_trade(
     opened: PaperOpen,
-    exit_debit_per_share: Decimal,
+    plan: PaperTradePlan,
+    current_short_quote: OptionQuote,
+    current_long_quote: OptionQuote,
     exit_commission_per_contract: Decimal,
     closed_at: datetime,
+    event_escalation_required: bool = False,
+    exit_policy: PremiumExitPolicy = PremiumExitPolicy(),
 ) -> PaperClose:
+    _assert_plan_integrity(plan)
     if closed_at.tzinfo is None:
         raise ValueError("paper-close timestamp must be timezone-aware")
     if closed_at <= opened.opened_at:
         raise ValueError("paper close must follow paper open")
-    if exit_debit_per_share < 0 or exit_commission_per_contract < 0:
-        raise ValueError("exit debit and commission cannot be negative")
-
-    quantity = Decimal(opened.quantity)
-    exit_debit = exit_debit_per_share * Decimal(100) * quantity
-    exit_commission = exit_commission_per_contract * Decimal(2) * quantity
+    if plan.authorization.status is not HumanAuthorizationStatus.APPROVED:
+        raise PermissionError("paper close requires the exact approved plan")
+    if (
+        opened.plan_id != plan.plan_id
+        or opened.plan_hash != plan.plan_hash
+        or opened.spread_id != plan.spread.spread_id
+        or opened.quantity != plan.spread.quantity
+        or opened.entry_credit != plan.spread.net_credit
+        or opened.environment != "paper"
+    ):
+        raise ValueError("paper open does not match approved plan")
+    exit_evaluation = evaluate_premium_exit(
+        plan.spread,
+        current_short_quote,
+        current_long_quote,
+        closed_at,
+        exit_commission_per_contract,
+        event_escalation_required,
+        exit_policy,
+    )
     return PaperClose(
         plan_id=opened.plan_id,
         plan_hash=opened.plan_hash,
         closed_at=closed_at,
-        exit_debit=exit_debit,
-        exit_commission=exit_commission,
-        realized_pnl=opened.entry_credit - exit_debit - exit_commission,
+        exit_debit=exit_evaluation.executable_close_debit,
+        exit_commission=exit_evaluation.close_commission,
+        realized_pnl=exit_evaluation.marked_pnl,
+        exit_evaluation_sha256=exit_evaluation.artifact_sha256,
     )

@@ -3,7 +3,12 @@ from datetime import timedelta
 from decimal import Decimal
 import unittest
 
-from hedge_desk.demo import FIXTURE_AS_OF, build_reference_plan, run_reference_demo
+from hedge_desk.demo import (
+    FIXTURE_AS_OF,
+    build_reference_option_snapshot,
+    build_reference_plan,
+    run_reference_demo,
+)
 from hedge_desk.domain import DecisionStatus
 from hedge_desk.backoffice import BackOfficeStatus
 from hedge_desk.paper import (
@@ -315,15 +320,50 @@ class PaperWorkflowTests(unittest.TestCase):
         plan = build_reference_plan()
         approved = approve_paper_trade(plan, "captain", FIXTURE_AS_OF)
         opened = execute_paper_open(approved, FIXTURE_AS_OF + timedelta(minutes=1))
+        snapshot = build_reference_option_snapshot()
+        closed_at = FIXTURE_AS_OF + timedelta(days=1)
         closed = close_paper_trade(
             opened,
-            exit_debit_per_share=Decimal("0.40"),
+            approved,
+            replace(
+                snapshot.option_quotes[0], bid=Decimal("0.40"),
+                ask=Decimal("0.50"), quoted_at=closed_at,
+            ),
+            replace(
+                snapshot.option_quotes[1], bid=Decimal("0.10"),
+                ask=Decimal("0.20"), quoted_at=closed_at,
+            ),
             exit_commission_per_contract=Decimal("0.65"),
-            closed_at=FIXTURE_AS_OF + timedelta(days=1),
+            closed_at=closed_at,
         )
         self.assertEqual(closed.exit_debit, Decimal("40.00"))
         self.assertEqual(closed.exit_commission, Decimal("1.30"))
         self.assertEqual(closed.realized_pnl, Decimal("77.40"))
+        self.assertEqual(len(closed.exit_evaluation_sha256), 64)
+
+    def test_paper_close_rejects_tampered_open_or_wrong_plan(self) -> None:
+        plan = build_reference_plan()
+        approved = approve_paper_trade(plan, "captain", FIXTURE_AS_OF)
+        opened = execute_paper_open(approved, FIXTURE_AS_OF + timedelta(minutes=1))
+        snapshot = build_reference_option_snapshot()
+        closed_at = FIXTURE_AS_OF + timedelta(days=1)
+        quotes = (
+            replace(
+                snapshot.option_quotes[0], bid=Decimal("0.40"),
+                ask=Decimal("0.50"), quoted_at=closed_at,
+            ),
+            replace(
+                snapshot.option_quotes[1], bid=Decimal("0.10"),
+                ask=Decimal("0.20"), quoted_at=closed_at,
+            ),
+        )
+        with self.assertRaisesRegex(ValueError, "does not match"):
+            close_paper_trade(
+                replace(opened, entry_credit=opened.entry_credit + Decimal("1")),
+                approved, *quotes, Decimal("0.65"), closed_at,
+            )
+        with self.assertRaisesRegex(PermissionError, "approved plan"):
+            close_paper_trade(opened, plan, *quotes, Decimal("0.65"), closed_at)
 
     def test_approved_demo_is_reproducible(self) -> None:
         first = run_reference_demo(True, "captain")

@@ -502,13 +502,28 @@ def run_premium_war_games() -> Tuple[PremiumWarGameResult, ...]:
     plan = build_reference_plan()
     approved = approve_paper_trade(plan, "war-game-human", FIXTURE_AS_OF)
     opened = execute_paper_open(approved, FIXTURE_AS_OF + timedelta(minutes=1))
+    snapshot = build_reference_option_snapshot()
     results = []
     for index, scenario in enumerate(PREMIUM_WAR_GAMES, start=1):
+        closed_at = FIXTURE_AS_OF + timedelta(days=index)
+        exit_long = replace(
+            snapshot.option_quotes[1],
+            bid=Decimal("0.10"), ask=Decimal("0.20"), quoted_at=closed_at,
+        )
+        short_ask = scenario.exit_debit_per_share + exit_long.bid
+        exit_short = replace(
+            snapshot.option_quotes[0],
+            bid=max(Decimal("0"), short_ask - Decimal("0.10")),
+            ask=short_ask,
+            quoted_at=closed_at,
+        )
         closed = close_paper_trade(
             opened,
-            scenario.exit_debit_per_share,
+            approved,
+            exit_short,
+            exit_long,
             scenario.exit_commission_per_contract,
-            FIXTURE_AS_OF + timedelta(days=index),
+            closed_at,
         )
         net_pnl = closed.realized_pnl - scenario.additional_operational_cost
         results.append(
