@@ -35,6 +35,7 @@ SCENARIOS: Tuple[PortfolioStressScenario, ...] = (
             StrategyShock("earnings-event-desk", Decimal("0"), Decimal("0")),
             StrategyShock("arbitrage-observer", Decimal("0"), Decimal("0")),
             StrategyShock("dividend-opportunity-desk", Decimal("25"), Decimal("4")),
+            StrategyShock("event-futures-desk", Decimal("0"), Decimal("0")),
         ),
     ),
     PortfolioStressScenario(
@@ -44,6 +45,7 @@ SCENARIOS: Tuple[PortfolioStressScenario, ...] = (
             StrategyShock("earnings-event-desk", Decimal("-600"), Decimal("8")),
             StrategyShock("arbitrage-observer", Decimal("0"), Decimal("0")),
             StrategyShock("dividend-opportunity-desk", Decimal("-1450"), Decimal("5")),
+            StrategyShock("event-futures-desk", Decimal("-450"), Decimal("50")),
         ),
     ),
     PortfolioStressScenario(
@@ -53,6 +55,7 @@ SCENARIOS: Tuple[PortfolioStressScenario, ...] = (
             StrategyShock("earnings-event-desk", Decimal("0"), Decimal("0")),
             StrategyShock("arbitrage-observer", Decimal("-250"), Decimal("35")),
             StrategyShock("dividend-opportunity-desk", Decimal("0"), Decimal("0")),
+            StrategyShock("event-futures-desk", Decimal("0"), Decimal("0")),
         ),
     ),
     PortfolioStressScenario(
@@ -62,6 +65,7 @@ SCENARIOS: Tuple[PortfolioStressScenario, ...] = (
             StrategyShock("earnings-event-desk", Decimal("-300"), Decimal("8")),
             StrategyShock("arbitrage-observer", Decimal("0"), Decimal("0")),
             StrategyShock("dividend-opportunity-desk", Decimal("-1200"), Decimal("5")),
+            StrategyShock("event-futures-desk", Decimal("-250"), Decimal("50")),
         ),
     ),
     PortfolioStressScenario(
@@ -71,6 +75,7 @@ SCENARIOS: Tuple[PortfolioStressScenario, ...] = (
             StrategyShock("earnings-event-desk", Decimal("-750"), Decimal("58")),
             StrategyShock("arbitrage-observer", Decimal("-400"), Decimal("85")),
             StrategyShock("dividend-opportunity-desk", Decimal("-1600"), Decimal("55")),
+            StrategyShock("event-futures-desk", Decimal("-1200"), Decimal("100")),
         ),
     ),
 )

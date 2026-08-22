@@ -18,9 +18,10 @@ class PortfolioStressTests(unittest.TestCase):
         self.assertEqual(first["combined_net_pnl"], "98.40")
         self.assertEqual(first["ending_capital"], "100098.40")
         crowded = report["scenarios"][-1]
-        self.assertEqual(crowded["combined_net_pnl"], "-3355.60")
+        self.assertEqual(crowded["combined_net_pnl"], "-4655.60")
         self.assertEqual(crowded["disposition"], "FREEZE_NEW_RISK")
         self.assertIn("DRAWDOWN_LIMIT_BREACHED", crowded["reason_codes"])
+        self.assertIn("event-futures-desk", crowded["net_pnl_by_project"])
 
     def test_results_are_reproducible_and_not_statistical_inference(self) -> None:
         self.assertEqual(build_portfolio_stress_report(), build_portfolio_stress_report())
