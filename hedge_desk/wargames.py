@@ -63,6 +63,7 @@ from hedge_desk.release import (
     ReleaseStatus,
     evaluate_live_release_readiness,
 )
+from hedge_desk.audit import build_reference_audit, verify_audit_chain
 
 
 WAR_GAME_VERSION = "premium-spread-war-games-1.0.0"
@@ -196,6 +197,12 @@ class PremiumCadenceWarGame:
 
 @dataclass(frozen=True)
 class PremiumExitAttackWarGame:
+    scenario_id: str
+    attack: str
+
+
+@dataclass(frozen=True)
+class AuditAttackWarGame:
     scenario_id: str
     attack: str
 
@@ -432,6 +439,13 @@ PREMIUM_EXIT_ATTACK_WAR_GAMES: Tuple[PremiumExitAttackWarGame, ...] = (
     PremiumExitAttackWarGame("exit-stale-quotes", "STALE"),
     PremiumExitAttackWarGame("exit-contract-substitution", "CONTRACT_SWAP"),
     PremiumExitAttackWarGame("exit-unsynchronized-legs", "DESYNC"),
+)
+
+
+AUDIT_ATTACK_WAR_GAMES: Tuple[AuditAttackWarGame, ...] = (
+    AuditAttackWarGame("audit-event-mutation", "MUTATE"),
+    AuditAttackWarGame("audit-event-deletion", "DELETE"),
+    AuditAttackWarGame("audit-zero-output-hash", "ZERO_OUTPUT"),
 )
 
 
@@ -988,6 +1002,27 @@ def run_premium_exit_attack_war_games() -> Tuple[Dict[str, Any], ...]:
     return tuple(results)
 
 
+def run_audit_attack_war_games() -> Tuple[Dict[str, Any], ...]:
+    results = []
+    for scenario in AUDIT_ATTACK_WAR_GAMES:
+        chain = build_reference_audit()
+        if scenario.attack == "MUTATE":
+            attacked = chain[:2] + (replace(chain[2], artifact_id="tampered"),) + chain[3:]
+        elif scenario.attack == "DELETE":
+            attacked = chain[:2] + chain[3:]
+        else:
+            attacked = chain[:2] + (replace(chain[2], output_sha256="0" * 64),) + chain[3:]
+        reasons = verify_audit_chain(attacked)
+        results.append({
+            "scenario_id": scenario.scenario_id,
+            "disposition": "NO_TRADE",
+            "reason_codes": list(reasons),
+            "audit_valid": not reasons,
+            "trade_authorized": False,
+        })
+    return tuple(results)
+
+
 def run_candidate_pipeline_war_games() -> Tuple[Dict[str, Any], ...]:
     base_snapshot = build_reference_option_snapshot()
     results = []
@@ -1117,6 +1152,7 @@ def build_war_game_manifest() -> Dict[str, Any]:
         "premium_timing": json_value(PREMIUM_TIMING_WAR_GAMES),
         "premium_cadence": json_value(PREMIUM_CADENCE_WAR_GAMES),
         "premium_exit_attacks": json_value(PREMIUM_EXIT_ATTACK_WAR_GAMES),
+        "audit_attacks": json_value(AUDIT_ATTACK_WAR_GAMES),
         "candidate_pipeline": json_value(CANDIDATE_PIPELINE_WAR_GAMES),
         "option_universe": json_value(OPTION_UNIVERSE_WAR_GAMES),
         "strategic_allocation": json_value(STRATEGIC_ALLOCATION_WAR_GAMES),
@@ -1157,6 +1193,7 @@ def build_war_game_report() -> Dict[str, Any]:
     premium_timing = run_premium_timing_war_games()
     premium_cadence = run_premium_cadence_war_games()
     premium_exit_attacks = run_premium_exit_attack_war_games()
+    audit_attacks = run_audit_attack_war_games()
     candidate_pipeline = run_candidate_pipeline_war_games()
     option_universe = run_option_universe_war_games()
     strategic_allocation = run_strategic_allocation_war_games()
@@ -1207,6 +1244,7 @@ def build_war_game_report() -> Dict[str, Any]:
         + sum(item["disposition"] == "NO_TRADE" for item in strategic_allocation)
         + sum(item["disposition"] == "NO_TRADE" for item in premium_cadence)
         + sum(item["disposition"] == "NO_TRADE" for item in premium_exit_attacks)
+        + sum(item["disposition"] == "NO_TRADE" for item in audit_attacks)
     )
     report = {
         "report_type": "synthetic_hypothetical_war_games",
@@ -1229,6 +1267,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 + len(strategic_allocation)
                 + len(premium_cadence)
                 + len(premium_exit_attacks)
+                + len(audit_attacks)
             ),
             "scenario_count_by_mvp": {
                 "overnight-premium-desk": len(results),
@@ -1246,6 +1285,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 "strategic-allocation-controls": len(strategic_allocation),
                 "premium-cadence-controls": len(premium_cadence),
                 "premium-exit-attack-controls": len(premium_exit_attacks),
+                "audit-attack-controls": len(audit_attacks),
             },
             "no_trade_control_count": no_trade_controls,
             "premium_fixed_trade": {
@@ -1287,6 +1327,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "strategic_allocation": strategic_allocation,
         "premium_cadence": premium_cadence,
         "premium_exit_attacks": premium_exit_attacks,
+        "audit_attacks": audit_attacks,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",

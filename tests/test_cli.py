@@ -30,7 +30,7 @@ class CliTests(unittest.TestCase):
         summary = json.loads(completed.stdout)
         self.assertEqual(summary["real_money_pnl"], "0")
         self.assertEqual(summary["real_trades_executed"], 0)
-        self.assertEqual(summary["war_game_scenarios"], 69)
+        self.assertEqual(summary["war_game_scenarios"], 72)
         self.assertFalse(summary["live_transition_authorized"])
         self.assertEqual(summary["paper_back_office_reconciliation"], "pass")
         self.assertFalse(summary["paper_reconciliation_live_release_eligible"])

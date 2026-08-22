@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 304 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 305 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - A pinned CodeQL Python security-extended scan runs on pushes, pull requests,
@@ -17,9 +17,9 @@ no demonstrated real-money profit.
   JSON war games plus JSON/Markdown morning reports.
 - Morning reports are publication-gated, hashed, explicitly PAPER /
   HYPOTHETICAL, and report real-money P&L and real trades as zero.
-- The declared synthetic suite contains 69 strategy, timing, execution,
+- The declared synthetic suite contains 72 strategy, timing, execution,
   compliance, and lifecycle war games plus five combined-MVP capital-path
-  stresses. Forty-two scenarios are explicit `NO_TRADE` controls.
+  stresses. Forty-five scenarios are explicit `NO_TRADE` controls.
 
 Run the evidence directly:
 
