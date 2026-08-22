@@ -48,6 +48,7 @@ from hedge_desk.earnings import (
     evaluate_earnings_surprise,
     evaluate_earnings_universe,
 )
+from hedge_desk.earnings_experiment import assign_earnings_experiment
 from hedge_desk.arbitrage import (
     ArbitrageLeg,
     ArbitragePackage,
@@ -214,6 +215,13 @@ def _earnings_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
         ),
         evaluated_at,
     )
+    experiment = assign_earnings_experiment(
+        "synthetic-earnings-four-arm-v1",
+        universe.candidates[0].event_id,
+        release.published_at - timedelta(hours=1),
+        release.published_at,
+        "5" * 64,
+    )
     layers = (
         LayerEvaluation(
             EvaluationLayer.OBSERVED,
@@ -227,6 +235,8 @@ def _earnings_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                 "universe_candidate_count": str(len(universe.candidates)),
                 "universe_rejected_count": str(len(universe.rejected_events)),
                 "top_ranked_event": universe.candidates[0].event_id,
+                "locked_experiment_arm": experiment.assigned_arm.value,
+                "experiment_plan_sha256": experiment.plan_sha256,
             },
             (consensus.source_artifact_sha256, release.source_artifact_sha256),
         ),
@@ -241,6 +251,9 @@ def _earnings_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                 "directional_trade_authorized": "false",
                 "universe_directional_trade_authorized": str(
                     universe.directional_trade_authorized
+                ).lower(),
+                "experiment_trade_authorized": str(
+                    experiment.trade_authorized
                 ).lower(),
             },
         ),
