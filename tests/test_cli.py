@@ -11,6 +11,32 @@ from datetime import datetime, timezone
 
 
 class CliTests(unittest.TestCase):
+    def test_data_stack_cli_reports_readiness_without_vendor_payload(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "data-stack.json"
+            path.write_text(json.dumps({
+                "schema_version": "hedge-desk-data-stack-1.0.0",
+                "monthly_budget": "100",
+                "subscriptions": [{
+                    "source_id": "permissioned-options-feed",
+                    "monthly_cost": "80",
+                    "entitlement_id": "internal-research-license",
+                    "historical_nbbo_quotes": True,
+                    "expired_option_contracts": True,
+                    "option_chain_snapshots": True,
+                    "corporate_actions": True,
+                    "redistribution_allowed": False,
+                }],
+            }), encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, "-m", "hedge_desk.cli", "--validate-data-stack", str(path)],
+                check=True, capture_output=True, text=True,
+            )
+        output = json.loads(result.stdout)
+        self.assertTrue(output["ready_for_internal_options_research"])
+        self.assertFalse(output["raw_payload_commit_allowed"])
+        self.assertNotIn("vendor_payload", result.stdout)
+
     def test_option_snapshot_cli_reports_structure_not_quote_payload(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

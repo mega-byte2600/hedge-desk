@@ -19,7 +19,11 @@ from hedge_desk.scheduler import (
     execute_scheduled_run,
     validate_serialized_scheduled_run_receipt,
 )
-from hedge_desk.data import validate_local_observation
+from hedge_desk.data import (
+    evaluate_options_data_stack,
+    parse_data_stack_manifest,
+    validate_local_observation,
+)
 from hedge_desk.options import (
     build_candidate_control_handoffs,
     parse_option_snapshot,
@@ -29,6 +33,11 @@ from hedge_desk.options import (
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--validate-data-stack",
+        metavar="FILE",
+        help="validate a strict subscription capability manifest",
+    )
     parser.add_argument(
         "--validate-data-envelope",
         metavar="FILE",
@@ -119,6 +128,17 @@ def main() -> None:
         help="stable run identity required with --scheduled-receipt",
     )
     args = parser.parse_args()
+    if args.validate_data_stack:
+        try:
+            payload = json.loads(Path(args.validate_data_stack).read_text(encoding="utf-8"))
+            budget, subscriptions = parse_data_stack_manifest(payload)
+            result = evaluate_options_data_stack(subscriptions, budget)
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+            parser.error(str(exc))
+        print(json.dumps(json_value(result), indent=2))
+        if not result.ready_for_internal_options_research:
+            raise SystemExit(2)
+        return
     if args.verify_scheduled_receipt:
         try:
             receipt = json.loads(

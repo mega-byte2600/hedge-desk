@@ -2,7 +2,10 @@
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Tuple
+from typing import Any, Dict, Tuple
+
+
+DATA_STACK_SCHEMA_VERSION = "hedge-desk-data-stack-1.0.0"
 
 
 @dataclass(frozen=True)
@@ -64,3 +67,37 @@ def evaluate_options_data_stack(
     )
     reason_codes = tuple(sorted(set(reasons)))
     return DataReadinessResult(not reason_codes, total, reason_codes, False)
+
+
+def parse_data_stack_manifest(payload: Dict[str, Any]) -> Tuple[Decimal, Tuple[DataSubscription, ...]]:
+    expected = {"schema_version", "monthly_budget", "subscriptions"}
+    if set(payload) != expected or payload.get("schema_version") != DATA_STACK_SCHEMA_VERSION:
+        raise ValueError("data stack manifest schema invalid")
+    if not isinstance(payload["monthly_budget"], str):
+        raise ValueError("monthly budget must be an exact decimal string")
+    rows = payload["subscriptions"]
+    if not isinstance(rows, list):
+        raise ValueError("subscriptions must be a list")
+    fields = {
+        "source_id", "monthly_cost", "entitlement_id", "historical_nbbo_quotes",
+        "expired_option_contracts", "option_chain_snapshots", "corporate_actions",
+        "redistribution_allowed",
+    }
+    subscriptions = []
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != fields:
+            raise ValueError("subscription schema invalid")
+        if not isinstance(row["monthly_cost"], str):
+            raise ValueError("subscription cost must be an exact decimal string")
+        bool_fields = fields - {"source_id", "monthly_cost", "entitlement_id"}
+        if any(type(row[field]) is not bool for field in bool_fields):
+            raise ValueError("subscription capabilities must be boolean")
+        subscriptions.append(
+            DataSubscription(
+                row["source_id"], Decimal(row["monthly_cost"]), row["entitlement_id"],
+                row["historical_nbbo_quotes"], row["expired_option_contracts"],
+                row["option_chain_snapshots"], row["corporate_actions"],
+                row["redistribution_allowed"],
+            )
+        )
+    return Decimal(payload["monthly_budget"]), tuple(subscriptions)

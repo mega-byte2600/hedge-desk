@@ -15,9 +15,11 @@ from .intake import (
     validate_local_observation,
 )
 from .entitlements import (
+    DATA_STACK_SCHEMA_VERSION,
     DataReadinessResult,
     DataSubscription,
     evaluate_options_data_stack,
+    parse_data_stack_manifest,
 )
 
 __all__ = [
@@ -27,5 +29,6 @@ __all__ = [
     "validate_serialized_batch_manifest",
     "DATA_ENVELOPE_SCHEMA_VERSION", "LocalIntakeResult",
     "validate_local_observation",
-    "DataReadinessResult", "DataSubscription", "evaluate_options_data_stack",
+    "DATA_STACK_SCHEMA_VERSION", "DataReadinessResult", "DataSubscription",
+    "evaluate_options_data_stack", "parse_data_stack_manifest",
 ]

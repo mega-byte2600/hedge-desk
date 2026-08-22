@@ -61,3 +61,12 @@ The executable `evaluate_options_data_stack` entitlement gate enforces the
 budget, a nonempty permission record, historical NBBO, expired contracts, chain
 snapshots, and corporate actions. It never authorizes raw vendor payloads to be
 committed, even when the internal-research capability check passes.
+
+Agents can run the same gate with:
+
+```bash
+python3 -m hedge_desk.cli --validate-data-stack /absolute/path/data-stack.json
+```
+
+The strict manifest schema is `hedge-desk-data-stack-1.0.0`; money values must
+be decimal strings, unknown fields fail, and a non-ready result exits nonzero.

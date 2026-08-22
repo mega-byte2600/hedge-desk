@@ -4,6 +4,7 @@ import unittest
 from hedge_desk.data.entitlements import (
     DataSubscription,
     evaluate_options_data_stack,
+    parse_data_stack_manifest,
 )
 
 
@@ -46,6 +47,19 @@ class DataEntitlementTests(unittest.TestCase):
         )
         self.assertIn("DATA_ENTITLEMENT_UNVERIFIED", result.reason_codes)
         self.assertIn("CORPORATE_ACTIONS_ABSENT", result.reason_codes)
+
+    def test_manifest_rejects_float_costs_and_unknown_fields(self) -> None:
+        base = {
+            "schema_version": "hedge-desk-data-stack-1.0.0",
+            "monthly_budget": "100",
+            "subscriptions": [],
+        }
+        invalid = dict(base, monthly_budget=100.0)
+        with self.assertRaisesRegex(ValueError, "exact decimal string"):
+            parse_data_stack_manifest(invalid)
+        invalid = dict(base, extra=True)
+        with self.assertRaisesRegex(ValueError, "schema invalid"):
+            parse_data_stack_manifest(invalid)
 
 
 if __name__ == "__main__":
