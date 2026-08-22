@@ -127,8 +127,9 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             "break_even": str(plan.spread.break_even),
             "days_to_expiration": str(plan.spread.days_to_expiration),
             "planned_exit_date": plan.spread.planned_exit_date.isoformat(),
+            "event_calendar_complete_through": plan.event_calendar_gate.complete_through.isoformat(),
         },
-        (artifact.artifact_id,),
+        (artifact.artifact_id, plan.event_calendar_gate.calendar_sha256),
     )
     # No statistical inference is claimed by this executable-side reference case.
     stat = LayerEvaluation(

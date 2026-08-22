@@ -14,6 +14,7 @@ from hedge_desk.options import (
     OptionQuote,
     OptionType,
     UnderlyingQuote,
+    evaluate_event_calendar,
     VerticalCreditSpread,
     calculate_vertical_credit_spread,
 )
@@ -133,11 +134,21 @@ def build_reference_plan() -> Any:
         account, candidate, FIXTURE_AS_OF, risk_inputs=risk_inputs
     )
     compliance_decision = evaluate_paper_compliance(account, candidate, FIXTURE_AS_OF)
+    event_calendar_gate = evaluate_event_calendar(
+        "TEST",
+        FIXTURE_AS_OF,
+        expiration,
+        (),
+        spread,
+        OptionType.PUT,
+        short_quote.strike,
+    )
     return create_paper_trade_plan(
         plan_id=FIXTURE_ID,
         spread=spread,
         risk_decision=decision,
         compliance_decision=compliance_decision,
+        event_calendar_gate=event_calendar_gate,
         created_at=FIXTURE_AS_OF,
         approval_expires_at=FIXTURE_AS_OF + timedelta(minutes=15),
     )

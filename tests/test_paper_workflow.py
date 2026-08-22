@@ -81,6 +81,7 @@ class PaperWorkflowTests(unittest.TestCase):
                 plan.compliance_decision,
                 plan.created_at,
                 plan.approval_expires_at,
+                event_calendar_gate=plan.event_calendar_gate,
             )
         unknown_policy = replace(
             plan.compliance_decision, policy_version="unapproved-policy"
@@ -93,6 +94,7 @@ class PaperWorkflowTests(unittest.TestCase):
                 unknown_policy,
                 plan.created_at,
                 plan.approval_expires_at,
+                event_calendar_gate=plan.event_calendar_gate,
             )
 
     def test_control_artifact_exact_age_boundary_passes(self) -> None:
@@ -108,8 +110,27 @@ class PaperWorkflowTests(unittest.TestCase):
             plan.compliance_decision,
             plan.created_at,
             plan.approval_expires_at,
+            event_calendar_gate=plan.event_calendar_gate,
         )
         self.assertEqual(created.risk_decision.risk_model_version, "0.1.0-unvalidated")
+
+    def test_blocked_event_calendar_cannot_create_human_plan(self) -> None:
+        plan = build_reference_plan()
+        blocked_calendar = replace(
+            plan.event_calendar_gate,
+            admissible=False,
+            reason_codes=("EARNINGS_INSIDE_PLANNED_HOLDING_WINDOW",),
+        )
+        with self.assertRaisesRegex(ValueError, "event calendar blocked"):
+            create_paper_trade_plan(
+                plan.plan_id,
+                plan.spread,
+                plan.risk_decision,
+                plan.compliance_decision,
+                plan.created_at,
+                plan.approval_expires_at,
+                event_calendar_gate=blocked_calendar,
+            )
 
     def test_human_cannot_override_machine_rejection(self) -> None:
         plan = build_reference_plan()
@@ -126,6 +147,7 @@ class PaperWorkflowTests(unittest.TestCase):
             plan.created_at,
             plan.approval_expires_at,
             plan.execution_quote_max_age_seconds,
+            event_calendar_gate=plan.event_calendar_gate,
         )
         self.assertIs(rejected_plan.machine_risk_status, MachineRiskStatus.REJECT)
         with self.assertRaisesRegex(PermissionError, "cannot override"):
@@ -146,6 +168,7 @@ class PaperWorkflowTests(unittest.TestCase):
             plan.created_at,
             plan.approval_expires_at,
             plan.execution_quote_max_age_seconds,
+            event_calendar_gate=plan.event_calendar_gate,
         )
         with self.assertRaisesRegex(PermissionError, "Back Office compliance block"):
             approve_paper_trade(blocked_plan, "captain", FIXTURE_AS_OF)

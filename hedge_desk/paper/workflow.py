@@ -10,7 +10,7 @@ from typing import Optional, Tuple
 from hedge_desk.backoffice import BackOfficeDecision, BackOfficeStatus
 from hedge_desk.backoffice.compliance import APPROVED_BACK_OFFICE_POLICY_VERSIONS
 from hedge_desk.domain import Decision, DecisionStatus
-from hedge_desk.options import VerticalSpreadCalculation
+from hedge_desk.options import EventCalendarGate, VerticalSpreadCalculation
 
 
 class MachineRiskStatus(str, Enum):
@@ -38,6 +38,7 @@ class PaperTradePlan:
     spread: VerticalSpreadCalculation
     risk_decision: Decision
     compliance_decision: BackOfficeDecision
+    event_calendar_gate: EventCalendarGate
     machine_risk_status: MachineRiskStatus
     reason_codes: Tuple[str, ...]
     authorization: HumanAuthorization
@@ -134,6 +135,7 @@ def _calculate_plan_hash(
     approval_expires_at: datetime,
     execution_quote_max_age_seconds: int,
     control_artifact_max_age_seconds: int,
+    event_calendar_gate: EventCalendarGate,
 ) -> str:
     payload = "|".join(
         (
@@ -184,6 +186,10 @@ def _calculate_plan_hash(
             compliance_decision.circuit_breaker_sha256,
             compliance_decision.evaluated_at.isoformat(),
             compliance_decision.environment,
+            str(event_calendar_gate.admissible),
+            ",".join(event_calendar_gate.reason_codes),
+            event_calendar_gate.calendar_sha256,
+            event_calendar_gate.complete_through.isoformat(),
             created_at.isoformat(),
             approval_expires_at.isoformat(),
             str(execution_quote_max_age_seconds),
@@ -203,6 +209,7 @@ def _assert_plan_integrity(plan: PaperTradePlan) -> None:
         plan.approval_expires_at,
         plan.execution_quote_max_age_seconds,
         plan.control_artifact_max_age_seconds,
+        plan.event_calendar_gate,
     )
     if expected != plan.plan_hash:
         raise PermissionError("paper-trade plan integrity check failed")
@@ -217,6 +224,7 @@ def create_paper_trade_plan(
     approval_expires_at: datetime,
     execution_quote_max_age_seconds: int = 120,
     control_artifact_max_age_seconds: int = 120,
+    event_calendar_gate: Optional[EventCalendarGate] = None,
 ) -> PaperTradePlan:
     if not plan_id:
         raise ValueError("plan identity is required")
@@ -228,6 +236,14 @@ def create_paper_trade_plan(
         raise ValueError("execution quote age limit must be positive")
     if control_artifact_max_age_seconds <= 0:
         raise ValueError("control artifact age limit must be positive")
+    if event_calendar_gate is None:
+        raise ValueError("validated event calendar gate is required")
+    if not event_calendar_gate.admissible:
+        raise ValueError(
+            "event calendar blocked plan: " + ",".join(event_calendar_gate.reason_codes)
+        )
+    if event_calendar_gate.complete_through < spread.expiration_date:
+        raise ValueError("event calendar is incomplete through expiration")
     if compliance_decision.environment != "paper":
         raise ValueError("only paper Back Office decisions are accepted")
     if compliance_decision.candidate_id != risk_decision.candidate_id:
@@ -260,12 +276,14 @@ def create_paper_trade_plan(
         approval_expires_at,
         execution_quote_max_age_seconds,
         control_artifact_max_age_seconds,
+        event_calendar_gate,
     )
     return PaperTradePlan(
         plan_id=plan_id,
         spread=spread,
         risk_decision=risk_decision,
         compliance_decision=compliance_decision,
+        event_calendar_gate=event_calendar_gate,
         machine_risk_status=machine_status,
         reason_codes=tuple(
             sorted(set(risk_decision.reason_codes + compliance_decision.reason_codes))

@@ -24,6 +24,10 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertEqual(
             evaluations[0].layers[0].metrics["planned_exit_date"], "2026-08-14"
         )
+        self.assertEqual(
+            evaluations[0].layers[0].metrics["event_calendar_complete_through"],
+            "2026-08-21",
+        )
         risk_layer = evaluations[0].layers[3]
         self.assertEqual(len(risk_layer.metrics["risk_input_artifact"]), 64)
         self.assertEqual(len(risk_layer.artifact_refs), 2)
