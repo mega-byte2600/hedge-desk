@@ -62,7 +62,13 @@ class OvernightEvaluationTests(unittest.TestCase):
             risk_layer.metrics["risk_source_artifact"],
             evaluations[0].layers[2].metrics["handoff_calculation_artifact"],
         )
-        self.assertEqual(len(risk_layer.artifact_refs), 2)
+        self.assertEqual(len(risk_layer.artifact_refs), 3)
+        self.assertEqual(
+            risk_layer.metrics["strategic_allocation_admissible"], "true"
+        )
+        self.assertEqual(
+            risk_layer.metrics["strategic_allocation_trade_authorized"], "false"
+        )
         self.assertEqual(
             len(evaluations[0].layers[4].metrics["regulatory_traceability_sha256"]),
             64,

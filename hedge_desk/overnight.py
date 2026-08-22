@@ -83,6 +83,11 @@ from hedge_desk.options import (
     scan_vertical_credit_spreads,
 )
 from hedge_desk.release import build_reference_release_readiness
+from hedge_desk.strategic_allocation import (
+    AllocationWeight,
+    AssetClass,
+    evaluate_strategic_allocation,
+)
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -609,6 +614,16 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         FIXTURE_AS_OF,
         build_reference_market_session_gate(),
     )
+    strategic_allocation = evaluate_strategic_allocation(
+        (
+            AllocationWeight(AssetClass.US_EQUITY, Decimal("0.25")),
+            AllocationWeight(AssetClass.INTERNATIONAL_EQUITY, Decimal("0.20")),
+            AllocationWeight(AssetClass.FIXED_INCOME, Decimal("0.25")),
+            AllocationWeight(AssetClass.REAL_ASSET, Decimal("0.20")),
+            AllocationWeight(AssetClass.CASH, Decimal("0.10")),
+        ),
+        Decimal("35"),
+    )
     observed = LayerEvaluation(
         EvaluationLayer.OBSERVED,
         EvaluationStatus.PASS if data_gate.admissible else EvaluationStatus.BLOCKED,
@@ -661,7 +676,10 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         },
         (FIXTURE_ID, handoffs[0].handoff_sha256),
     )
-    risk_pass = plan.machine_risk_status is MachineRiskStatus.PASS
+    risk_pass = (
+        plan.machine_risk_status is MachineRiskStatus.PASS
+        and strategic_allocation.admissible
+    )
     risk = LayerEvaluation(
         EvaluationLayer.DETERMINISTIC_RISK,
         EvaluationStatus.PASS if risk_pass else EvaluationStatus.BLOCKED,
@@ -673,8 +691,20 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             "risk_of_ruin": str(plan.risk_decision.risk_of_ruin_after),
             "risk_model_id": plan.risk_decision.risk_model_id,
             "risk_model_version": plan.risk_decision.risk_model_version,
+            "strategic_allocation_admissible": str(
+                strategic_allocation.admissible
+            ).lower(),
+            "strategic_allocation_artifact": strategic_allocation.artifact_sha256,
+            "strategic_allocation_cape": str(strategic_allocation.cape_ratio),
+            "strategic_allocation_trade_authorized": str(
+                strategic_allocation.trade_authorized
+            ).lower(),
         },
-        (plan.risk_decision.risk_input_sha256, plan.plan_hash),
+        (
+            plan.risk_decision.risk_input_sha256,
+            plan.plan_hash,
+            strategic_allocation.artifact_sha256,
+        ),
     )
     compliance_pass = plan.compliance_decision.status is BackOfficeStatus.PASS
     compliance = LayerEvaluation(
