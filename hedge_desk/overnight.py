@@ -85,6 +85,7 @@ from hedge_desk.futures_events import (
 from hedge_desk.options import (
     build_candidate_control_handoffs,
     evaluate_option_universe,
+    evaluate_premium_cadence,
     scan_vertical_credit_spreads,
 )
 from hedge_desk.release import build_reference_release_readiness
@@ -638,6 +639,9 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         ),
         Decimal("35"),
     )
+    cadence = evaluate_premium_cadence(
+        FIXTURE_AS_OF, FIXTURE_AS_OF - timedelta(days=30)
+    )
     observed = LayerEvaluation(
         EvaluationLayer.OBSERVED,
         EvaluationStatus.PASS if data_gate.admissible else EvaluationStatus.BLOCKED,
@@ -673,8 +677,9 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
     )
     big = LayerEvaluation(
         EvaluationLayer.BIG,
-        EvaluationStatus.PASS,
-        (),
+        EvaluationStatus.PASS if cadence.new_entry_evaluation_allowed
+        else EvaluationStatus.BLOCKED,
+        cadence.reason_codes,
         {
             "proposal": "defined-risk synthetic put credit spread",
             "candidate_handoff_count": str(len(handoffs)),
@@ -687,8 +692,16 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             "underlying_universe_trade_authorized": str(
                 option_universe.trade_authorized
             ).lower(),
+            "monthly_new_entry_evaluation_allowed": str(
+                cadence.new_entry_evaluation_allowed
+            ).lower(),
+            "continuous_monitoring_allowed": str(
+                cadence.monitoring_allowed
+            ).lower(),
+            "cadence_trade_authorized": str(cadence.trade_authorized).lower(),
+            "cadence_artifact": cadence.artifact_sha256,
         },
-        (FIXTURE_ID, handoffs[0].handoff_sha256),
+        (FIXTURE_ID, handoffs[0].handoff_sha256, cadence.artifact_sha256),
     )
     risk_pass = (
         plan.machine_risk_status is MachineRiskStatus.PASS

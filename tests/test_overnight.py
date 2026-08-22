@@ -56,6 +56,20 @@ class OvernightEvaluationTests(unittest.TestCase):
             ],
             "false",
         )
+        self.assertEqual(
+            evaluations[0].layers[2].metrics[
+                "monthly_new_entry_evaluation_allowed"
+            ],
+            "true",
+        )
+        self.assertEqual(
+            evaluations[0].layers[2].metrics["continuous_monitoring_allowed"],
+            "true",
+        )
+        self.assertEqual(
+            evaluations[0].layers[2].metrics["cadence_trade_authorized"],
+            "false",
+        )
         risk_layer = evaluations[0].layers[3]
         self.assertEqual(len(risk_layer.metrics["risk_input_artifact"]), 64)
         self.assertEqual(

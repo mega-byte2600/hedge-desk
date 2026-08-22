@@ -49,6 +49,7 @@ from hedge_desk.options import (
     scan_vertical_credit_spreads,
     evaluate_option_universe,
     validate_candidate_control_handoff,
+    evaluate_premium_cadence,
 )
 from hedge_desk.strategic_allocation import (
     AllocationWeight,
@@ -184,6 +185,12 @@ class PremiumTimingWarGame:
     scenario_id: str
     days_before_expiration: int
     executable_exit_debit_per_share: Decimal
+
+
+@dataclass(frozen=True)
+class PremiumCadenceWarGame:
+    scenario_id: str
+    last_entry_days_offset: int
 
 
 @dataclass(frozen=True)
@@ -404,6 +411,13 @@ PREMIUM_TIMING_WAR_GAMES: Tuple[PremiumTimingWarGame, ...] = (
     PremiumTimingWarGame("timing-planned-exit-7-dte", 7, Decimal("0.40")),
     PremiumTimingWarGame("timing-adverse-1-dte", 1, Decimal("4.80")),
     PremiumTimingWarGame("timing-expiration", 0, Decimal("5.00")),
+)
+
+
+PREMIUM_CADENCE_WAR_GAMES: Tuple[PremiumCadenceWarGame, ...] = (
+    PremiumCadenceWarGame("cadence-monthly-window-open", -30),
+    PremiumCadenceWarGame("cadence-same-month-blocked", -1),
+    PremiumCadenceWarGame("cadence-future-ledger-entry", 1),
 )
 
 
@@ -845,6 +859,27 @@ def run_premium_timing_war_games() -> Tuple[Dict[str, Any], ...]:
     return tuple(results)
 
 
+def run_premium_cadence_war_games() -> Tuple[Dict[str, Any], ...]:
+    results = []
+    for scenario in PREMIUM_CADENCE_WAR_GAMES:
+        gate = evaluate_premium_cadence(
+            FIXTURE_AS_OF,
+            FIXTURE_AS_OF + timedelta(days=scenario.last_entry_days_offset),
+        )
+        results.append({
+            "scenario_id": scenario.scenario_id,
+            "disposition": (
+                "NEW_ENTRY_RESEARCH_WINDOW" if gate.new_entry_evaluation_allowed
+                else "NO_TRADE"
+            ),
+            "monitoring_allowed": gate.monitoring_allowed,
+            "trade_authorized": gate.trade_authorized,
+            "reason_codes": list(gate.reason_codes),
+            "artifact_sha256": gate.artifact_sha256,
+        })
+    return tuple(results)
+
+
 def run_candidate_pipeline_war_games() -> Tuple[Dict[str, Any], ...]:
     base_snapshot = build_reference_option_snapshot()
     results = []
@@ -972,6 +1007,7 @@ def build_war_game_manifest() -> Dict[str, Any]:
         "model_governance": json_value(MODEL_GOVERNANCE_WAR_GAMES),
         "compliance_controls": json_value(COMPLIANCE_WAR_GAMES),
         "premium_timing": json_value(PREMIUM_TIMING_WAR_GAMES),
+        "premium_cadence": json_value(PREMIUM_CADENCE_WAR_GAMES),
         "candidate_pipeline": json_value(CANDIDATE_PIPELINE_WAR_GAMES),
         "option_universe": json_value(OPTION_UNIVERSE_WAR_GAMES),
         "strategic_allocation": json_value(STRATEGIC_ALLOCATION_WAR_GAMES),
@@ -1010,6 +1046,7 @@ def build_war_game_report() -> Dict[str, Any]:
     model_governance = run_model_governance_war_games()
     compliance_controls = run_compliance_war_games()
     premium_timing = run_premium_timing_war_games()
+    premium_cadence = run_premium_cadence_war_games()
     candidate_pipeline = run_candidate_pipeline_war_games()
     option_universe = run_option_universe_war_games()
     strategic_allocation = run_strategic_allocation_war_games()
@@ -1058,6 +1095,7 @@ def build_war_game_report() -> Dict[str, Any]:
         + sum(item["disposition"] == "NO_TRADE" for item in candidate_pipeline)
         + sum(item["disposition"] == "NO_TRADE" for item in option_universe)
         + sum(item["disposition"] == "NO_TRADE" for item in strategic_allocation)
+        + sum(item["disposition"] == "NO_TRADE" for item in premium_cadence)
     )
     report = {
         "report_type": "synthetic_hypothetical_war_games",
@@ -1078,6 +1116,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 + len(candidate_pipeline)
                 + len(option_universe)
                 + len(strategic_allocation)
+                + len(premium_cadence)
             ),
             "scenario_count_by_mvp": {
                 "overnight-premium-desk": len(results),
@@ -1093,6 +1132,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 "candidate-pipeline-controls": len(candidate_pipeline),
                 "option-universe-controls": len(option_universe),
                 "strategic-allocation-controls": len(strategic_allocation),
+                "premium-cadence-controls": len(premium_cadence),
             },
             "no_trade_control_count": no_trade_controls,
             "premium_fixed_trade": {
@@ -1132,6 +1172,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "candidate_pipeline": candidate_pipeline,
         "option_universe": option_universe,
         "strategic_allocation": strategic_allocation,
+        "premium_cadence": premium_cadence,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",

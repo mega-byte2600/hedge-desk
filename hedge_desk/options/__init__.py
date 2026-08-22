@@ -46,6 +46,11 @@ from .universe import (
     RankedOptionCandidate,
     evaluate_option_universe,
 )
+from .cadence import (
+    CADENCE_GATE_VERSION,
+    PremiumCadenceGate,
+    evaluate_premium_cadence,
+)
 
 __all__ = [
     "CONTRACT_MULTIPLIER",
@@ -78,4 +83,5 @@ __all__ = [
     "evaluate_market_session",
     "parse_market_session_evidence",
     "OptionUniverseEvaluation", "RankedOptionCandidate", "evaluate_option_universe",
+    "CADENCE_GATE_VERSION", "PremiumCadenceGate", "evaluate_premium_cadence",
 ]
