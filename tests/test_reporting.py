@@ -131,7 +131,7 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("Real money P&L: $0", markdown)
         self.assertIn("Real trades executed: 0", markdown)
         self.assertIn("Premium synthetic total P&L: $-848.00", markdown)
-        self.assertIn("NO_TRADE controls: 28", markdown)
+        self.assertIn("NO_TRADE controls: 30", markdown)
         self.assertIn("Combined-MVP capital stress", markdown)
         self.assertIn("Starting synthetic capital: $100000", markdown)
         self.assertIn("BIG proposal (agent research)", markdown)
