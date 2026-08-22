@@ -18,6 +18,8 @@ class StatEvaluationTests(unittest.TestCase):
         self.assertEqual(result.observed_event_rate, Decimal("0.5"))
         self.assertEqual(result.alpha, Decimal("0.005"))
         self.assertEqual(result.confidence_level, Decimal("0.95"))
+        self.assertEqual(result.confidence_interval_alpha, Decimal("0.05"))
+        self.assertNotEqual(result.alpha, result.confidence_interval_alpha)
         self.assertEqual(result.inference_status, "INSUFFICIENT_SAMPLE")
         self.assertIsNone(result.p_value)
         self.assertIsNone(result.confidence_interval)
@@ -37,6 +39,18 @@ class StatEvaluationTests(unittest.TestCase):
             evaluate_calibration(duplicate)
         with self.assertRaises(ValueError):
             ForecastObservation("bad", Decimal("1.01"), True)
+
+    def test_significance_alpha_and_interval_coverage_are_validated_separately(self) -> None:
+        with self.assertRaisesRegex(ValueError, "significance alpha"):
+            evaluate_calibration(
+                REFERENCE_FORECASTS,
+                InferencePolicy(alpha=Decimal("0")),
+            )
+        with self.assertRaisesRegex(ValueError, "confidence level"):
+            evaluate_calibration(
+                REFERENCE_FORECASTS,
+                InferencePolicy(confidence_level=Decimal("1")),
+            )
 
 
 if __name__ == "__main__":

@@ -37,6 +37,7 @@ class CalibrationEvaluation:
     observed_event_rate: Decimal
     alpha: Decimal
     confidence_level: Decimal
+    confidence_interval_alpha: Decimal
     inference_status: str
     p_value: Optional[Decimal]
     confidence_interval: Optional[Tuple[Decimal, Decimal]]
@@ -46,6 +47,12 @@ def evaluate_calibration(
     observations: Tuple[ForecastObservation, ...],
     policy: InferencePolicy = InferencePolicy(),
 ) -> CalibrationEvaluation:
+    if not Decimal("0") < policy.alpha < Decimal("1"):
+        raise ValueError("significance alpha must be between zero and one")
+    if not Decimal("0") < policy.confidence_level < Decimal("1"):
+        raise ValueError("confidence level must be between zero and one")
+    if policy.minimum_sample_size <= 0:
+        raise ValueError("minimum sample size must be positive")
     if not observations:
         raise ValueError("calibration requires observations")
     if len({item.observation_id for item in observations}) != len(observations):
@@ -68,6 +75,7 @@ def evaluate_calibration(
         sum(outcomes, Decimal("0")) / count,
         policy.alpha,
         policy.confidence_level,
+        Decimal("1") - policy.confidence_level,
         "METHOD_VALIDATION_REQUIRED" if sufficient else "INSUFFICIENT_SAMPLE",
         None,
         None,
@@ -95,6 +103,9 @@ def build_stat_evaluation() -> Dict[str, Any]:
         "observed_event_rate": str(evaluation.observed_event_rate),
         "alpha": str(evaluation.alpha),
         "confidence_level": str(evaluation.confidence_level),
+        "confidence_interval_alpha": str(evaluation.confidence_interval_alpha),
+        "alpha_semantics": "hypothesis_test_significance_threshold",
+        "confidence_level_semantics": "separate_interval_coverage_target",
         "inference_status": evaluation.inference_status,
         "p_value": None,
         "confidence_interval": None,
