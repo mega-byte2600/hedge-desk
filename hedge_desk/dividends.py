@@ -65,6 +65,40 @@ class DividendUniverseEvaluation:
     trade_authorized: bool = False
 
 
+@dataclass(frozen=True)
+class CapeObservation:
+    symbol: str
+    cape_ratio: Decimal
+    observed_at: datetime
+    received_at: datetime
+    source_artifact_sha256: str
+
+
+@dataclass(frozen=True)
+class DividendCapeInput:
+    history: DividendCompanyHistory
+    cape: CapeObservation
+
+
+@dataclass(frozen=True)
+class DividendCapeCandidate:
+    rank: int
+    symbol: str
+    cape_ratio: Decimal
+    yield_per_payout_ratio: Decimal
+    valuation_adjusted_distribution_score: Decimal
+    long_call_cash_dividend_entitlement: Decimal = Decimal("0")
+    trade_authorized: bool = False
+
+
+@dataclass(frozen=True)
+class DividendCapeEvaluation:
+    disposition: str
+    candidates: Tuple[DividendCapeCandidate, ...]
+    rejected_symbols: Tuple[Tuple[str, Tuple[str, ...]], ...]
+    trade_authorized: bool = False
+
+
 def _valid_hash(value: str) -> bool:
     try:
         return len(value) == 64 and int(value, 16) >= 0
@@ -207,5 +241,65 @@ def evaluate_dividend_universe(
         "RANKED_RESEARCH_ONLY" if candidates else "NO_TRADE",
         candidates,
         tuple(rejected),
+        False,
+    )
+
+
+def evaluate_dividend_cape_universe(
+    inputs: Tuple[DividendCapeInput, ...],
+    decision_time: datetime,
+    policy: DividendUniversePolicy = DividendUniversePolicy(),
+) -> DividendCapeEvaluation:
+    """Combine ten-year distributions with PIT CAPE; research ranking only."""
+    if not inputs:
+        raise ValueError("dividend CAPE universe cannot be empty")
+    symbols = [item.history.symbol for item in inputs]
+    if len(symbols) != len(set(symbols)):
+        raise ValueError("dividend CAPE universe symbols must be unique")
+    history_evaluation = evaluate_dividend_universe(
+        tuple(item.history for item in inputs), decision_time, policy
+    )
+    ranked_by_symbol = {item.symbol: item for item in history_evaluation.candidates}
+    rejected = dict(history_evaluation.rejected_symbols)
+    admitted = []
+    for item in sorted(inputs, key=lambda value: value.history.symbol):
+        symbol = item.history.symbol
+        reasons = list(rejected.get(symbol, ()))
+        cape = item.cape
+        if cape.symbol != symbol:
+            reasons.append("CAPE_SYMBOL_MISMATCH")
+        if cape.observed_at.tzinfo is None or cape.received_at.tzinfo is None:
+            reasons.append("CAPE_TIMESTAMP_NOT_TIMEZONE_AWARE")
+        else:
+            if cape.received_at < cape.observed_at:
+                reasons.append("CAPE_RECEIVED_BEFORE_OBSERVED")
+            if cape.received_at > decision_time:
+                reasons.append("CAPE_LOOKAHEAD_VIOLATION")
+        if cape.cape_ratio <= 0:
+            reasons.append("CAPE_RATIO_INVALID")
+        if not _valid_hash(cape.source_artifact_sha256):
+            reasons.append("CAPE_SOURCE_HASH_INVALID")
+        if symbol not in ranked_by_symbol and not reasons:
+            reasons.append("DIVIDEND_HISTORY_NOT_ADMISSIBLE")
+        reason_codes = tuple(sorted(set(reasons)))
+        if reason_codes:
+            rejected[symbol] = reason_codes
+            continue
+        dividend = ranked_by_symbol[symbol]
+        admitted.append((
+            symbol,
+            cape.cape_ratio,
+            dividend.yield_per_payout_ratio,
+            dividend.yield_per_payout_ratio / cape.cape_ratio,
+        ))
+    ordered = sorted(admitted, key=lambda value: (-value[3], value[0]))
+    candidates = tuple(
+        DividendCapeCandidate(rank, symbol, cape, efficiency, score)
+        for rank, (symbol, cape, efficiency, score) in enumerate(ordered, start=1)
+    )
+    return DividendCapeEvaluation(
+        "CAPE_ADJUSTED_RESEARCH_ONLY" if candidates else "NO_TRADE",
+        candidates,
+        tuple(sorted(rejected.items())),
         False,
     )

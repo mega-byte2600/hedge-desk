@@ -116,7 +116,14 @@ class OvernightEvaluationTests(unittest.TestCase):
             dividend.layers[0].metrics["top_ranked_symbol"], "TEST-EFFICIENT"
         )
         self.assertEqual(
+            dividend.layers[0].metrics["cape_top_ranked_symbol"],
+            "TEST-EFFICIENT",
+        )
+        self.assertEqual(
             dividend.layers[2].metrics["universe_trade_authorized"], "false"
+        )
+        self.assertEqual(
+            dividend.layers[2].metrics["cape_trade_authorized"], "false"
         )
         futures = evaluations[5]
         self.assertEqual(futures.project_id, "event-futures-desk")

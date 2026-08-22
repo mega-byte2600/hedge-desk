@@ -56,7 +56,10 @@ from hedge_desk.arbitrage import (
 )
 from hedge_desk.dividends import (
     AnnualPayoutObservation,
+    CapeObservation,
+    DividendCapeInput,
     DividendCompanyHistory,
+    evaluate_dividend_cape_universe,
     evaluate_dividend_history,
     evaluate_dividend_universe,
 )
@@ -360,6 +363,25 @@ def _dividend_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
         ),
         evaluated_at,
     )
+    cape_universe = evaluate_dividend_cape_universe(
+        (
+            DividendCapeInput(
+                DividendCompanyHistory("TEST", history),
+                CapeObservation(
+                    "TEST", Decimal("30"), evaluated_at - timedelta(days=1),
+                    evaluated_at, "a" * 64,
+                ),
+            ),
+            DividendCapeInput(
+                DividendCompanyHistory("TEST-EFFICIENT", efficient_history),
+                CapeObservation(
+                    "TEST-EFFICIENT", Decimal("15"),
+                    evaluated_at - timedelta(days=1), evaluated_at, "b" * 64,
+                ),
+            ),
+        ),
+        evaluated_at,
+    )
     layers = (
         LayerEvaluation(
             EvaluationLayer.OBSERVED,
@@ -374,6 +396,9 @@ def _dividend_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                 "universe_candidate_count": str(len(universe.candidates)),
                 "top_ranked_symbol": universe.candidates[0].symbol,
                 "ranking_basis": "ten_year_yield_per_payout_ratio",
+                "cape_candidate_count": str(len(cape_universe.candidates)),
+                "cape_top_ranked_symbol": cape_universe.candidates[0].symbol,
+                "cape_ranking_basis": "yield_per_payout_ratio_divided_by_cape",
             },
             tuple(item.source_artifact_sha256 for item in history),
         ),
@@ -389,6 +414,7 @@ def _dividend_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                 ),
                 "trade_authorized": str(result.trade_authorized).lower(),
                 "universe_trade_authorized": str(universe.trade_authorized).lower(),
+                "cape_trade_authorized": str(cape_universe.trade_authorized).lower(),
             },
         ),
         LayerEvaluation(

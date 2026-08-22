@@ -6,8 +6,11 @@ import unittest
 from hedge_desk.dividends import (
     AnnualPayoutObservation,
     DividendCompanyHistory,
+    CapeObservation,
+    DividendCapeInput,
     evaluate_dividend_history,
     evaluate_dividend_universe,
+    evaluate_dividend_cape_universe,
 )
 
 
@@ -28,6 +31,41 @@ def history():
 
 
 class DividendTests(unittest.TestCase):
+    def test_cape_overlay_rewards_distribution_efficiency_and_lower_valuation(self) -> None:
+        evaluation = evaluate_dividend_cape_universe((
+            DividendCapeInput(
+                DividendCompanyHistory("LOW_CAPE", history()),
+                CapeObservation("LOW_CAPE", Decimal("15"), NOW - timedelta(days=1), NOW, "a" * 64),
+            ),
+            DividendCapeInput(
+                DividendCompanyHistory("HIGH_CAPE", history()),
+                CapeObservation("HIGH_CAPE", Decimal("30"), NOW - timedelta(days=1), NOW, "b" * 64),
+            ),
+        ), NOW)
+        self.assertEqual(evaluation.candidates[0].symbol, "LOW_CAPE")
+        self.assertEqual(
+            evaluation.candidates[0].valuation_adjusted_distribution_score,
+            evaluation.candidates[0].yield_per_payout_ratio / Decimal("15"),
+        )
+        self.assertEqual(
+            evaluation.candidates[0].long_call_cash_dividend_entitlement,
+            Decimal("0"),
+        )
+        self.assertFalse(evaluation.trade_authorized)
+
+    def test_cape_lookahead_or_symbol_mismatch_returns_no_trade(self) -> None:
+        evaluation = evaluate_dividend_cape_universe((
+            DividendCapeInput(
+                DividendCompanyHistory("TEST", history()),
+                CapeObservation(
+                    "WRONG", Decimal("20"), NOW, NOW + timedelta(seconds=1), "a" * 64
+                ),
+            ),
+        ), NOW)
+        self.assertEqual(evaluation.disposition, "NO_TRADE")
+        self.assertIn("CAPE_SYMBOL_MISMATCH", evaluation.rejected_symbols[0][1])
+        self.assertIn("CAPE_LOOKAHEAD_VIOLATION", evaluation.rejected_symbols[0][1])
+
     def test_universe_ranks_yield_per_payout_but_never_authorizes(self) -> None:
         base = history()
         efficient = tuple(
