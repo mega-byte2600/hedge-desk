@@ -94,6 +94,73 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
     return PublicationDecision(not reason_codes, reason_codes)
 
 
+def compare_morning_reports(
+    previous: Mapping[str, Any], current: Mapping[str, Any]
+) -> Dict[str, Any]:
+    """Return a deterministic, non-performance-claiming delta between valid reports."""
+    previous_decision = validate_report(previous)
+    current_decision = validate_report(current)
+    if not previous_decision.publishable or not current_decision.publishable:
+        raise ValueError("report comparison requires two publishable reports")
+
+    previous_projects = {
+        project["project_id"]: project["disposition"] for project in previous["projects"]
+    }
+    current_projects = {
+        project["project_id"]: project["disposition"] for project in current["projects"]
+    }
+    project_ids = sorted(set(previous_projects) | set(current_projects))
+    disposition_changes = [
+        {
+            "project_id": project_id,
+            "previous": previous_projects.get(project_id, "ABSENT"),
+            "current": current_projects.get(project_id, "ABSENT"),
+        }
+        for project_id in project_ids
+        if previous_projects.get(project_id) != current_projects.get(project_id)
+    ]
+
+    def war_summary(report: Mapping[str, Any]) -> Mapping[str, Any]:
+        return report["war_games"]["summary"]
+
+    def premium_metrics(report: Mapping[str, Any]) -> Mapping[str, Any]:
+        return war_summary(report)["premium_fixed_trade"]["descriptive_metrics"]
+
+    comparison = {
+        "comparison_type": "paper_hypothetical_run_delta",
+        "previous_report_sha256": previous["report_sha256"],
+        "current_report_sha256": current["report_sha256"],
+        "real_money_pnl_change": "0",
+        "real_trades_executed_change": 0,
+        "project_disposition_changes": disposition_changes,
+        "war_game_changes": {
+            "scenario_count": {
+                "previous": war_summary(previous)["total_scenario_count"],
+                "current": war_summary(current)["total_scenario_count"],
+            },
+            "no_trade_control_count": {
+                "previous": war_summary(previous)["no_trade_control_count"],
+                "current": war_summary(current)["no_trade_control_count"],
+            },
+            "fixture_sha256_changed": previous["war_games"]["fixture_manifest"][
+                "fixture_sha256"
+            ]
+            != current["war_games"]["fixture_manifest"]["fixture_sha256"],
+        },
+        "synthetic_premium_metric_changes": {
+            metric: {
+                "previous": premium_metrics(previous)[metric],
+                "current": premium_metrics(current)[metric],
+            }
+            for metric in ("total_pnl", "maximum_drawdown", "expected_shortfall")
+        },
+    }
+    comparison["comparison_sha256"] = sha256(
+        json.dumps(comparison, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    return comparison
+
+
 def render_morning_markdown(report: Mapping[str, Any]) -> str:
     """Render a concise human control report only after publication validation."""
     decision = validate_report(report)

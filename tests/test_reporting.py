@@ -3,7 +3,12 @@ from datetime import datetime, timezone
 import unittest
 
 from hedge_desk.overnight import build_morning_report
-from hedge_desk.reporting import finalize_report, render_morning_markdown, validate_report
+from hedge_desk.reporting import (
+    compare_morning_reports,
+    finalize_report,
+    render_morning_markdown,
+    validate_report,
+)
 
 
 NOW = datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc)
@@ -68,6 +73,24 @@ class ReportingTests(unittest.TestCase):
         report["stat_evaluation"]["p_value"] = "0.001"
         report = finalize_report(report)
         self.assertIn("STAT_DISCLOSURE_INVALID", validate_report(report).reason_codes)
+
+    def test_run_comparison_is_deterministic_and_never_claims_real_profit(self) -> None:
+        previous = build_morning_report(NOW)
+        current = build_morning_report(NOW)
+        first = compare_morning_reports(previous, current)
+        second = compare_morning_reports(previous, current)
+        self.assertEqual(first, second)
+        self.assertEqual(first["project_disposition_changes"], [])
+        self.assertEqual(first["real_money_pnl_change"], "0")
+        self.assertEqual(first["real_trades_executed_change"], 0)
+        self.assertEqual(len(first["comparison_sha256"]), 64)
+
+    def test_run_comparison_rejects_tampered_input(self) -> None:
+        previous = build_morning_report(NOW)
+        current = deepcopy(previous)
+        current["summary"]["no_trade"] = 999
+        with self.assertRaises(ValueError):
+            compare_morning_reports(previous, current)
 
 
 if __name__ == "__main__":
