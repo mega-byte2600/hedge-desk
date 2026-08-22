@@ -17,6 +17,11 @@ from .events import (
     ScheduledCorporateEvent,
     evaluate_event_calendar,
 )
+from .snapshot import (
+    OPTION_SNAPSHOT_SCHEMA_VERSION,
+    OptionSnapshot,
+    parse_option_snapshot,
+)
 
 __all__ = [
     "CONTRACT_MULTIPLIER",
@@ -32,4 +37,7 @@ __all__ = [
     "EventCalendarGate",
     "ScheduledCorporateEvent",
     "evaluate_event_calendar",
+    "OPTION_SNAPSHOT_SCHEMA_VERSION",
+    "OptionSnapshot",
+    "parse_option_snapshot",
 ]

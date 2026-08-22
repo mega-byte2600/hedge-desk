@@ -16,6 +16,7 @@ from hedge_desk.artifacts import (
 )
 from hedge_desk.scheduler import ScheduledRunRequest, execute_scheduled_run
 from hedge_desk.data import validate_local_observation
+from hedge_desk.options import parse_option_snapshot
 
 
 def main() -> None:
@@ -29,6 +30,11 @@ def main() -> None:
         "--payload",
         metavar="FILE",
         help="local payload used with --validate-data-envelope; never copied",
+    )
+    parser.add_argument(
+        "--validate-option-snapshot",
+        action="store_true",
+        help="also enforce the canonical option snapshot schema",
     )
     parser.add_argument(
         "--decision-cutoff",
@@ -112,7 +118,28 @@ def main() -> None:
             )
         except ValueError as exc:
             parser.error(str(exc))
-        print(json.dumps(json_value(result), indent=2))
+        output = json_value(result)
+        if args.validate_option_snapshot:
+            if result.artifact.payload_kind != "option_chain":
+                parser.error(
+                    "--validate-option-snapshot requires payload_kind option_chain"
+                )
+            try:
+                snapshot = parse_option_snapshot(
+                    Path(args.payload), result.artifact.source_id
+                )
+            except ValueError as exc:
+                parser.error(str(exc))
+            output["option_snapshot"] = {
+                "schema_version": snapshot.schema_version,
+                "source_id": snapshot.source_id,
+                "symbol": snapshot.underlying_quote.symbol,
+                "contract_count": len(snapshot.option_quotes),
+                "contract_ids": [
+                    quote.contract_id for quote in snapshot.option_quotes
+                ],
+            }
+        print(json.dumps(output, indent=2))
         if not result.gate.admissible:
             raise SystemExit(2)
         return

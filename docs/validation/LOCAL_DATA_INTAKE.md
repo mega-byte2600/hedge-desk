@@ -27,6 +27,7 @@ Validate it locally:
 python3 -m hedge_desk.cli \
   --validate-data-envelope snapshot.envelope.json \
   --payload /private/path/snapshot.json \
+  --validate-option-snapshot \
   --decision-cutoff 2026-08-22T08:00:02-07:00 \
   --max-age-seconds 120
 ```
@@ -35,3 +36,9 @@ Exit code `0` means the artifact passed the declared provenance,
 point-in-time, hash, and freshness gate. Exit code `2` means it was blocked.
 Admissibility does not grant redistribution rights and does not validate the
 financial meaning of vendor fields.
+
+With `--validate-option-snapshot`, the payload must use schema version
+`hedge-desk-option-snapshot-1.0.0`. Money fields must be decimal strings, quote
+times must include offsets, option and underlying symbols/sources must agree,
+contracts must be unique, and unknown fields are rejected. The command outputs
+only structural metadata and contract IDs—not the licensed quote payload.
