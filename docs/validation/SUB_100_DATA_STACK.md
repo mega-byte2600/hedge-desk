@@ -70,3 +70,6 @@ python3 -m hedge_desk.cli --validate-data-stack /absolute/path/data-stack.json
 
 The strict manifest schema is `hedge-desk-data-stack-1.0.0`; money values must
 be decimal strings, unknown fields fail, and a non-ready result exits nonzero.
+Start from `examples/data-stack.synthetic.json`, but replace every synthetic
+claim only after checking the purchased entitlement. The example is capability
+shape, not proof that a named vendor license grants those rights.

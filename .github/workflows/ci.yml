@@ -39,6 +39,11 @@ jobs:
       - name: Run deterministic unit and integration tests
         run: python -m unittest discover -s tests -v
 
+      - name: Verify strict synthetic data entitlement manifest
+        run: |
+          python -m hedge_desk.cli --validate-data-stack examples/data-stack.synthetic.json > data-readiness.json
+          python -c 'import json; d=json.load(open("data-readiness.json")); assert d["ready_for_internal_options_research"] is True; assert d["raw_payload_commit_allowed"] is False; assert d["total_monthly_cost"] == "80"'
+
       - name: Verify human-pending default
         run: |
           python -m hedge_desk.cli > pending.json

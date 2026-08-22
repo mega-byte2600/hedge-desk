@@ -1,0 +1,16 @@
+{
+  "schema_version": "hedge-desk-data-stack-1.0.0",
+  "monthly_budget": "100",
+  "subscriptions": [
+    {
+      "source_id": "synthetic-permissioned-options-feed",
+      "monthly_cost": "80",
+      "entitlement_id": "synthetic-internal-research-license",
+      "historical_nbbo_quotes": true,
+      "expired_option_contracts": true,
+      "option_chain_snapshots": true,
+      "corporate_actions": true,
+      "redistribution_allowed": false
+    }
+  ]
+}
