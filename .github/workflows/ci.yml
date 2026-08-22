@@ -42,7 +42,7 @@ jobs:
       - name: Verify strict synthetic data entitlement manifest
         run: |
           python -m hedge_desk.cli --validate-data-stack examples/data-stack.synthetic.json > data-readiness.json
-          python -c 'import json; d=json.load(open("data-readiness.json")); assert d["ready_for_internal_options_research"] is True; assert d["raw_payload_commit_allowed"] is False; assert d["total_monthly_cost"] == "80"'
+          python -c 'import json; d=json.load(open("data-readiness.json")); assert d["ready_for_internal_options_research"] is True; assert d["ready_for_live_production_data"] is False; assert d["live_production_reason_codes"] == ["COMMERCIAL_USE_PERMISSION_ABSENT", "REAL_TIME_NBBO_ABSENT"]; assert d["raw_payload_commit_allowed"] is False; assert d["total_monthly_cost"] == "80"'
 
       - name: Verify synthetic intake through calendar-bound handoff
         run: |

@@ -83,7 +83,7 @@ class CliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "data-stack.json"
             path.write_text(json.dumps({
-                "schema_version": "hedge-desk-data-stack-1.0.0",
+                "schema_version": "hedge-desk-data-stack-1.1.0",
                 "monthly_budget": "100",
                 "subscriptions": [{
                     "source_id": "permissioned-options-feed",
@@ -93,6 +93,12 @@ class CliTests(unittest.TestCase):
                     "expired_option_contracts": True,
                     "option_chain_snapshots": True,
                     "corporate_actions": True,
+                    "point_in_time_timestamps": True,
+                    "trades": True,
+                    "open_interest": True,
+                    "historical_years": 8,
+                    "real_time_nbbo": False,
+                    "commercial_use_allowed": False,
                     "redistribution_allowed": False,
                 }],
             }), encoding="utf-8")
@@ -102,6 +108,10 @@ class CliTests(unittest.TestCase):
             )
         output = json.loads(result.stdout)
         self.assertTrue(output["ready_for_internal_options_research"])
+        self.assertFalse(output["ready_for_live_production_data"])
+        self.assertEqual(output["live_production_reason_codes"], [
+            "COMMERCIAL_USE_PERMISSION_ABSENT", "REAL_TIME_NBBO_ABSENT"
+        ])
         self.assertFalse(output["raw_payload_commit_allowed"])
         self.assertNotIn("vendor_payload", result.stdout)
 

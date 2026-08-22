@@ -1,5 +1,5 @@
 {
-  "schema_version": "hedge-desk-data-stack-1.0.0",
+  "schema_version": "hedge-desk-data-stack-1.1.0",
   "monthly_budget": "100",
   "subscriptions": [
     {
@@ -10,6 +10,12 @@
       "expired_option_contracts": true,
       "option_chain_snapshots": true,
       "corporate_actions": true,
+      "point_in_time_timestamps": true,
+      "trades": true,
+      "open_interest": true,
+      "historical_years": 8,
+      "real_time_nbbo": false,
+      "commercial_use_allowed": false,
       "redistribution_allowed": false
     }
   ]

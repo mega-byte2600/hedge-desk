@@ -57,10 +57,13 @@ IBES estimate vintages, or institutional OptionMetrics data. At this budget,
 the system must label those gaps and return `NO_TRADE` when a required artifact
 is absent.
 
-The executable `evaluate_options_data_stack` entitlement gate enforces the
-budget, a nonempty permission record, historical NBBO, expired contracts, chain
-snapshots, and corporate actions. It never authorizes raw vendor payloads to be
-committed, even when the internal-research capability check passes.
+The executable `evaluate_options_data_stack` entitlement gate separately emits
+internal-research and live-production-data readiness. Internal research requires
+the budget, a permission record, at least five declared historical years,
+point-in-time timestamps, historical NBBO, trades, open interest, expired
+contracts, chain snapshots, and corporate actions. Live-production-data
+readiness additionally requires real-time NBBO and explicit commercial-use
+permission. It never authorizes raw vendor payloads to be committed.
 
 Agents can run the same gate with:
 
@@ -68,7 +71,7 @@ Agents can run the same gate with:
 python3 -m hedge_desk.cli --validate-data-stack /absolute/path/data-stack.json
 ```
 
-The strict manifest schema is `hedge-desk-data-stack-1.0.0`; money values must
+The strict manifest schema is `hedge-desk-data-stack-1.1.0`; money values must
 be decimal strings, unknown fields fail, and a non-ready result exits nonzero.
 Start from `examples/data-stack.synthetic.json`, but replace every synthetic
 claim only after checking the purchased entitlement. The example is capability

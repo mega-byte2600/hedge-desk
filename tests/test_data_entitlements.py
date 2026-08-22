@@ -17,6 +17,12 @@ def subscription(**changes):
         "expired_option_contracts": True,
         "option_chain_snapshots": True,
         "corporate_actions": True,
+        "point_in_time_timestamps": True,
+        "trades": True,
+        "open_interest": True,
+        "historical_years": 8,
+        "real_time_nbbo": False,
+        "commercial_use_allowed": False,
         "redistribution_allowed": False,
     }
     values.update(changes)
@@ -27,6 +33,10 @@ class DataEntitlementTests(unittest.TestCase):
     def test_complete_internal_stack_is_ready_but_raw_commit_is_forbidden(self) -> None:
         result = evaluate_options_data_stack((subscription(),), Decimal("100"))
         self.assertTrue(result.ready_for_internal_options_research)
+        self.assertFalse(result.ready_for_live_production_data)
+        self.assertEqual(result.live_production_reason_codes, (
+            "COMMERCIAL_USE_PERMISSION_ABSENT", "REAL_TIME_NBBO_ABSENT"
+        ))
         self.assertEqual(result.total_monthly_cost, Decimal("80"))
         self.assertFalse(result.raw_payload_commit_allowed)
 
@@ -48,9 +58,31 @@ class DataEntitlementTests(unittest.TestCase):
         self.assertIn("DATA_ENTITLEMENT_UNVERIFIED", result.reason_codes)
         self.assertIn("CORPORATE_ACTIONS_ABSENT", result.reason_codes)
 
+    def test_live_data_readiness_requires_realtime_and_commercial_permission(self) -> None:
+        result = evaluate_options_data_stack((subscription(
+            real_time_nbbo=True, commercial_use_allowed=True
+        ),), Decimal("100"))
+        self.assertTrue(result.ready_for_internal_options_research)
+        self.assertTrue(result.ready_for_live_production_data)
+        self.assertEqual(result.live_production_reason_codes, ())
+
+    def test_history_timestamp_trade_and_open_interest_gaps_block_research(self) -> None:
+        result = evaluate_options_data_stack((subscription(
+            historical_years=4,
+            point_in_time_timestamps=False,
+            trades=False,
+            open_interest=False,
+        ),), Decimal("100"))
+        self.assertEqual(result.reason_codes, (
+            "MINIMUM_HISTORY_DEPTH_ABSENT",
+            "OPEN_INTEREST_ABSENT",
+            "OPTION_TRADES_ABSENT",
+            "POINT_IN_TIME_TIMESTAMPS_ABSENT",
+        ))
+
     def test_manifest_rejects_float_costs_and_unknown_fields(self) -> None:
         base = {
-            "schema_version": "hedge-desk-data-stack-1.0.0",
+            "schema_version": "hedge-desk-data-stack-1.1.0",
             "monthly_budget": "100",
             "subscriptions": [],
         }

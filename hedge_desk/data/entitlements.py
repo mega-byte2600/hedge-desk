@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Any, Dict, Tuple
 
 
-DATA_STACK_SCHEMA_VERSION = "hedge-desk-data-stack-1.0.0"
+DATA_STACK_SCHEMA_VERSION = "hedge-desk-data-stack-1.1.0"
 
 
 @dataclass(frozen=True)
@@ -17,14 +17,22 @@ class DataSubscription:
     expired_option_contracts: bool
     option_chain_snapshots: bool
     corporate_actions: bool
+    point_in_time_timestamps: bool
+    trades: bool
+    open_interest: bool
+    historical_years: int
+    real_time_nbbo: bool
+    commercial_use_allowed: bool
     redistribution_allowed: bool
 
 
 @dataclass(frozen=True)
 class DataReadinessResult:
     ready_for_internal_options_research: bool
+    ready_for_live_production_data: bool
     total_monthly_cost: Decimal
     reason_codes: Tuple[str, ...]
+    live_production_reason_codes: Tuple[str, ...]
     raw_payload_commit_allowed: bool = False
 
 
@@ -36,7 +44,10 @@ def evaluate_options_data_stack(
     if monthly_budget < 0:
         raise ValueError("monthly budget cannot be negative")
     if not subscriptions:
-        return DataReadinessResult(False, Decimal("0"), ("DATA_SOURCE_ABSENT",))
+        return DataReadinessResult(
+            False, False, Decimal("0"), ("DATA_SOURCE_ABSENT",),
+            ("DATA_SOURCE_ABSENT",),
+        )
     identities = [item.source_id for item in subscriptions]
     if any(not item for item in identities) or len(identities) != len(set(identities)):
         raise ValueError("subscription source identities must be unique and nonempty")
@@ -61,12 +72,33 @@ def evaluate_options_data_stack(
         "CORPORATE_ACTIONS_ABSENT": any(
             item.corporate_actions for item in subscriptions
         ),
+        "POINT_IN_TIME_TIMESTAMPS_ABSENT": any(
+            item.point_in_time_timestamps for item in subscriptions
+        ),
+        "OPTION_TRADES_ABSENT": any(item.trades for item in subscriptions),
+        "OPEN_INTEREST_ABSENT": any(item.open_interest for item in subscriptions),
+        "MINIMUM_HISTORY_DEPTH_ABSENT": any(
+            item.historical_years >= 5 for item in subscriptions
+        ),
     }
     reasons.extend(
         reason for reason, present in required_capabilities.items() if not present
     )
     reason_codes = tuple(sorted(set(reasons)))
-    return DataReadinessResult(not reason_codes, total, reason_codes, False)
+    production_reasons = list(reason_codes)
+    if not any(item.real_time_nbbo for item in subscriptions):
+        production_reasons.append("REAL_TIME_NBBO_ABSENT")
+    if not any(item.commercial_use_allowed for item in subscriptions):
+        production_reasons.append("COMMERCIAL_USE_PERMISSION_ABSENT")
+    production_reason_codes = tuple(sorted(set(production_reasons)))
+    return DataReadinessResult(
+        not reason_codes,
+        not production_reason_codes,
+        total,
+        reason_codes,
+        production_reason_codes,
+        False,
+    )
 
 
 def parse_data_stack_manifest(payload: Dict[str, Any]) -> Tuple[Decimal, Tuple[DataSubscription, ...]]:
@@ -81,6 +113,8 @@ def parse_data_stack_manifest(payload: Dict[str, Any]) -> Tuple[Decimal, Tuple[D
     fields = {
         "source_id", "monthly_cost", "entitlement_id", "historical_nbbo_quotes",
         "expired_option_contracts", "option_chain_snapshots", "corporate_actions",
+        "point_in_time_timestamps", "trades", "open_interest", "historical_years",
+        "real_time_nbbo", "commercial_use_allowed",
         "redistribution_allowed",
     }
     subscriptions = []
@@ -89,14 +123,21 @@ def parse_data_stack_manifest(payload: Dict[str, Any]) -> Tuple[Decimal, Tuple[D
             raise ValueError("subscription schema invalid")
         if not isinstance(row["monthly_cost"], str):
             raise ValueError("subscription cost must be an exact decimal string")
-        bool_fields = fields - {"source_id", "monthly_cost", "entitlement_id"}
+        bool_fields = fields - {
+            "source_id", "monthly_cost", "entitlement_id", "historical_years"
+        }
         if any(type(row[field]) is not bool for field in bool_fields):
             raise ValueError("subscription capabilities must be boolean")
+        if type(row["historical_years"]) is not int or row["historical_years"] < 0:
+            raise ValueError("subscription historical years must be a nonnegative integer")
         subscriptions.append(
             DataSubscription(
                 row["source_id"], Decimal(row["monthly_cost"]), row["entitlement_id"],
                 row["historical_nbbo_quotes"], row["expired_option_contracts"],
                 row["option_chain_snapshots"], row["corporate_actions"],
+                row["point_in_time_timestamps"], row["trades"],
+                row["open_interest"], row["historical_years"],
+                row["real_time_nbbo"], row["commercial_use_allowed"],
                 row["redistribution_allowed"],
             )
         )
