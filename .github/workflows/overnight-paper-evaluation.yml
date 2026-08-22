@@ -31,7 +31,7 @@ jobs:
         run: python -m hedge_desk.cli --war-games > war-games.json
       - name: Validate report safety boundary
         run: |
-          python -c 'import json; d=json.load(open("morning-report.json")); assert d["complete"] is True; assert d["environment"] == "paper"; assert d["live_orders_enabled"] is False; assert d["summary"]["projects_evaluated"] == 5'
+          python -c 'import json; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); assert d["summary"]["projects_evaluated"] == 5; assert validate_report(d).publishable'
       - uses: actions/upload-artifact@v4
         with:
           name: paper-morning-evaluation-${{ github.run_id }}

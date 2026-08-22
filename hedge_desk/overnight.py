@@ -18,6 +18,7 @@ from hedge_desk.backoffice import BackOfficeStatus
 from hedge_desk.projects import MVP_PROJECTS, ProjectStatus, validate_project_registry
 from hedge_desk.wargames import build_war_game_report
 from hedge_desk.replay import build_replay_evaluation
+from hedge_desk.reporting import finalize_report
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -136,7 +137,7 @@ def build_morning_report(generated_at: datetime) -> Dict[str, Any]:
     no_trade = sum(
         evaluation.disposition is Disposition.NO_TRADE for evaluation in evaluations
     )
-    return {
+    report = {
         "report_type": "paper_hypothetical_morning_evaluation",
         "runner_version": OVERNIGHT_RUNNER_VERSION,
         "generated_at": generated_at.isoformat(),
@@ -159,6 +160,7 @@ def build_morning_report(generated_at: datetime) -> Dict[str, Any]:
         "war_games": build_war_game_report(),
         "chronological_replay": build_replay_evaluation(),
     }
+    return finalize_report(report)
 
 
 def current_morning_report() -> Dict[str, Any]:
