@@ -14,6 +14,11 @@ from .intake import (
     LocalIntakeResult,
     validate_local_observation,
 )
+from .entitlements import (
+    DataReadinessResult,
+    DataSubscription,
+    evaluate_options_data_stack,
+)
 
 __all__ = [
     "DataArtifact", "DataGateResult", "validate_data_artifact",
@@ -22,4 +27,5 @@ __all__ = [
     "validate_serialized_batch_manifest",
     "DATA_ENVELOPE_SCHEMA_VERSION", "LocalIntakeResult",
     "validate_local_observation",
+    "DataReadinessResult", "DataSubscription", "evaluate_options_data_stack",
 ]

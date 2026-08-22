@@ -56,3 +56,8 @@ These sources do not replace survivorship-clean CRSP histories, point-in-time
 IBES estimate vintages, or institutional OptionMetrics data. At this budget,
 the system must label those gaps and return `NO_TRADE` when a required artifact
 is absent.
+
+The executable `evaluate_options_data_stack` entitlement gate enforces the
+budget, a nonempty permission record, historical NBBO, expired contracts, chain
+snapshots, and corporate actions. It never authorizes raw vendor payloads to be
+committed, even when the internal-research capability check passes.
