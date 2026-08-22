@@ -40,7 +40,7 @@ def finalize_report(report: Mapping[str, Any]) -> Dict[str, Any]:
     return finalized
 
 
-def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
+def _validate_report_unchecked(report: Mapping[str, Any]) -> PublicationDecision:
     reasons = []
     expected_hash = sha256(canonical_report_bytes(report)).hexdigest()
     if report.get("report_sha256") != expected_hash:
@@ -250,6 +250,14 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
         reasons.append("PROHIBITED_PERFORMANCE_CLAIM")
     reason_codes = tuple(sorted(set(reasons)))
     return PublicationDecision(not reason_codes, reason_codes)
+
+
+def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
+    """Validate untrusted serialized reports without leaking parser exceptions."""
+    try:
+        return _validate_report_unchecked(report)
+    except (ArithmeticError, KeyError, TypeError, ValueError):
+        return PublicationDecision(False, ("REPORT_SCHEMA_INVALID",))
 
 
 def build_control_summary(report: Mapping[str, Any]) -> Dict[str, Any]:

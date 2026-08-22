@@ -64,6 +64,22 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn("PROJECT_SUMMARY_INVALID", validate_report(report).reason_codes)
 
+    def test_malformed_nested_report_fails_closed_without_parser_exception(self) -> None:
+        for mutation in ("unhashable_project_id", "missing_layers", "bad_stress"):
+            report = build_morning_report(NOW)
+            if mutation == "unhashable_project_id":
+                report["projects"][0]["project_id"] = {"agent": "injected"}
+            elif mutation == "missing_layers":
+                report["projects"][0].pop("layers")
+            else:
+                report["portfolio_stress"]["scenarios"] = None
+            report = finalize_report(report)
+            decision = validate_report(report)
+            self.assertFalse(decision.publishable)
+            self.assertTrue(decision.reason_codes)
+            with self.assertRaisesRegex(ValueError, "not publishable"):
+                build_control_summary(report)
+
     def test_real_profit_claim_is_blocked_even_with_rehashed_report(self) -> None:
         report = build_morning_report(NOW)
         report["real_money_pnl"] = "1000"
