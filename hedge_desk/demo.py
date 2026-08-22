@@ -64,6 +64,8 @@ def build_reference_plan() -> Any:
         ask_size=30,
         quoted_at=FIXTURE_AS_OF,
         source_id="synthetic-fixture",
+        open_interest=1000,
+        volume=500,
     )
     long_quote = OptionQuote(
         contract_id="TEST260821P00090000",
@@ -77,6 +79,8 @@ def build_reference_plan() -> Any:
         ask_size=30,
         quoted_at=FIXTURE_AS_OF,
         source_id="synthetic-fixture",
+        open_interest=1000,
+        volume=500,
     )
     spread = calculate_vertical_credit_spread(
         VerticalCreditSpread(

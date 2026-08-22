@@ -30,6 +30,8 @@ class OptionQuote:
     ask_size: int
     quoted_at: datetime
     source_id: str
+    open_interest: int
+    volume: int
 
     def __post_init__(self) -> None:
         if not self.contract_id or not self.underlying or not self.source_id:
@@ -42,6 +44,8 @@ class OptionQuote:
             raise ValueError("crossed option quote is prohibited")
         if self.bid_size <= 0 or self.ask_size <= 0:
             raise ValueError("executable quote sizes must be positive")
+        if self.open_interest < 0 or self.volume < 0:
+            raise ValueError("open interest and volume cannot be negative")
 
 
 @dataclass(frozen=True)
@@ -71,6 +75,9 @@ class VerticalCreditSpread:
     commission_per_contract: Decimal
     quote_tolerance_seconds: int = 2
     planned_exit_days_before_expiration: int = 7
+    minimum_open_interest: int = 100
+    minimum_volume: int = 10
+    maximum_leg_spread_fraction: Decimal = Decimal("0.25")
 
     def __post_init__(self) -> None:
         if not self.spread_id or self.quantity <= 0:
@@ -81,6 +88,10 @@ class VerticalCreditSpread:
             raise ValueError("quote tolerance cannot be negative")
         if self.planned_exit_days_before_expiration <= 0:
             raise ValueError("planned exit offset must be positive")
+        if self.minimum_open_interest < 0 or self.minimum_volume < 0:
+            raise ValueError("liquidity thresholds cannot be negative")
+        if not Decimal("0") < self.maximum_leg_spread_fraction < Decimal("1"):
+            raise ValueError("maximum leg spread fraction must be between zero and one")
 
 
 @dataclass(frozen=True)
@@ -98,6 +109,9 @@ class VerticalSpreadCalculation:
     days_to_expiration: int
     planned_exit_days_before_expiration: int
     planned_exit_date: date
+    minimum_leg_open_interest: int
+    minimum_leg_volume: int
+    maximum_observed_leg_spread_fraction: Decimal
     quantity: int
     contract_multiplier: int
     width_per_share: Decimal
@@ -154,6 +168,18 @@ def calculate_vertical_credit_spread(
     )
     if spread.quantity > min(short.bid_size, long.ask_size):
         raise ValueError("spread quantity exceeds executable displayed size")
+    minimum_open_interest = min(short.open_interest, long.open_interest)
+    minimum_volume = min(short.volume, long.volume)
+    if minimum_open_interest < spread.minimum_open_interest:
+        raise ValueError("spread leg open interest is below policy")
+    if minimum_volume < spread.minimum_volume:
+        raise ValueError("spread leg volume is below policy")
+    maximum_observed_spread_fraction = max(
+        (short.ask - short.bid) / short.ask,
+        (long.ask - long.bid) / long.ask,
+    )
+    if maximum_observed_spread_fraction > spread.maximum_leg_spread_fraction:
+        raise ValueError("option leg bid-ask spread exceeds liquidity policy")
 
     if short.option_type is OptionType.PUT:
         if short.strike <= long.strike:
@@ -200,6 +226,9 @@ def calculate_vertical_credit_spread(
         days_to_expiration=days_to_expiration,
         planned_exit_days_before_expiration=spread.planned_exit_days_before_expiration,
         planned_exit_date=planned_exit_date,
+        minimum_leg_open_interest=minimum_open_interest,
+        minimum_leg_volume=minimum_volume,
+        maximum_observed_leg_spread_fraction=maximum_observed_spread_fraction,
         quantity=spread.quantity,
         contract_multiplier=CONTRACT_MULTIPLIER,
         width_per_share=width,
