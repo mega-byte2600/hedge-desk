@@ -53,3 +53,30 @@ Before a source becomes a V&V dependency, capture:
 5. deterministic reference inputs, expected outputs, units, and tolerances;
 6. errata and edition/revision status;
 7. independent validator and approval evidence.
+
+## Intake batch 2026-08-21 - MIT 15.401 Finance Theory I
+
+The title pages and embedded metadata identify this batch as Andrew W. Lo's
+MIT Sloan 15.401 Finance Theory I lecture materials from 2008. Licensing and
+the authoritative MIT OpenCourseWare source URLs must be confirmed before any
+PDF is redistributed.
+
+| Local artifact | SHA-256 | Pages | Preliminary role | Public-repository treatment |
+|---|---|---:|---|---|
+| `Equities_MIT.pdf` | `9eb7e4c30ff8a42220d947554d0021fad446fea9c270fd2cca00f82039bba106` | 24 | Lecture 7, Equities; candidate cross-check for equity valuation/return assumptions and deterministic reference-case design | Metadata/citation only pending exact source URL and license confirmation |
+| `Fixed.Income_MIT.pdf` | `2a6d65689c33c1d67dbea5fe3eaf8925eea97cd6ea9842092fe6aa1077a384ef` | 66 | Lectures 4-6, Fixed-Income Securities; candidate cross-check for discounting, term structure, duration/convexity, and rate-risk requirements | Metadata/citation only pending exact source URL and license confirmation |
+| `Forward.Future.Contracts_MIT.pdf` | `af516e9151c77b9b6dbb1f437736d100591e58220b8847846436e66e3b821d0b` | 33 | Lectures 8-9, Forward and Futures Contracts; deterministic pricing, carry, hedge, and exposure test-case candidate | Metadata/citation only pending exact source URL and license confirmation |
+| `Options_MIT.pdf` | `0305d83f1fe3fb006921e0e58fe10992e0392d7df5a0080a9cd6502f3cf60cfb` | 31 | Lectures 10-11, Options; deterministic payoff/pricing/hedging reference-case candidate and cross-check against Hull | Metadata/citation only pending exact source URL and license confirmation |
+| `Options.MIT.pdf` | `0305d83f1fe3fb006921e0e58fe10992e0392d7df5a0080a9cd6502f3cf60cfb` | 31 | Exact byte-for-byte duplicate of `Options_MIT.pdf`; no separate evidentiary value | Do not retain as a second V&V dependency |
+
+### Disposition
+
+- Treat these materials as secondary instructional cross-checks until each
+  requirement is traced to the exact slide and corroborated by a primary or
+  otherwise authoritative source.
+- Construct independent, redistributable numerical fixtures rather than copying
+  slide content into the repository.
+- Do not use the lecture material to define or calculate authoritative RoR.
+- When formulas are adopted, record compounding, day-count, settlement, dividend,
+  carry, exercise-style, and market-friction conventions explicitly.
+- Resolve the two options filenames to the single SHA-256 identity above.
