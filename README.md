@@ -31,6 +31,11 @@ from the Hedge Desk specification.
    point-in-time ten-year histories, then compare owning shares, a defined-risk
    option expression, and `NO_TRADE`. Long calls do not receive dividends, so
    the system must never equate buying a call with earning the cash payout.
+5. **Open Quant/AI Model Lab:** independent Quant and AI research teams using
+   versioned open code, open-weight models where applicable, explicit licenses,
+   immutable hashes, frozen training cutoffs, and reproducible evaluations.
+   Neither team can create authoritative RoR, clear compliance, or authorize a
+   trade.
 
 Together these MVPs build toward a coordinated 24/7 research orchestration. Each
 MVP shares the same deterministic calculation, independent risk, audit, and

@@ -11,7 +11,7 @@ NOW = datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc)
 class OvernightEvaluationTests(unittest.TestCase):
     def test_every_project_has_complete_distinct_layers(self) -> None:
         evaluations = evaluate_reference_projects()
-        self.assertEqual(len(evaluations), 4)
+        self.assertEqual(len(evaluations), 5)
         for evaluation in evaluations:
             self.assertEqual(tuple(layer.layer for layer in evaluation.layers), tuple(EvaluationLayer))
 
@@ -25,7 +25,7 @@ class OvernightEvaluationTests(unittest.TestCase):
         report = build_morning_report(NOW)
         self.assertEqual(report["environment"], "paper")
         self.assertFalse(report["live_orders_enabled"])
-        self.assertEqual(report["summary"], {"projects_evaluated": 4, "human_review": 1, "no_trade": 3})
+        self.assertEqual(report["summary"], {"projects_evaluated": 5, "human_review": 1, "no_trade": 4})
         self.assertIn("Synthetic fixtures only", report["limitations"][0])
 
     def test_fixed_clock_produces_identical_report(self) -> None:

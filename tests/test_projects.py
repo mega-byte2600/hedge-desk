@@ -13,9 +13,15 @@ class ProjectRegistryTests(unittest.TestCase):
         self.assertEqual(dividend.status, ProjectStatus.ARCHITECTURE_ONLY)
 
     def test_duplicate_project_identity_fails_closed(self) -> None:
-        duplicate = replace(MVP_PROJECTS[3], project_id=MVP_PROJECTS[0].project_id)
+        duplicate = replace(MVP_PROJECTS[4], project_id=MVP_PROJECTS[0].project_id)
         with self.assertRaisesRegex(ValueError, "identifiers must be unique"):
-            validate_project_registry(MVP_PROJECTS[:3] + (duplicate,))
+            validate_project_registry(MVP_PROJECTS[:4] + (duplicate,))
+
+    def test_fifth_mvp_is_open_quant_ai_lab(self) -> None:
+        project = MVP_PROJECTS[4]
+        self.assertEqual(project.number, 5)
+        self.assertEqual(project.project_id, "open-quant-ai-model-lab")
+        self.assertEqual(project.status, ProjectStatus.ARCHITECTURE_ONLY)
 
 
 if __name__ == "__main__":
