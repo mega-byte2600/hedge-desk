@@ -83,6 +83,7 @@ python -m hedge_desk.cli --control-summary --report-input morning-report.json
 python -m hedge_desk.cli --validate-data-stack examples/data-stack.synthetic.json
 python -m hedge_desk.cli --validate-option-universe-manifest examples/option-universe.synthetic.json
 python -m unittest discover -s tests -v
+python -m coverage run -m unittest discover -s tests -v && python -m coverage report
 ```
 
 The default command stops at `human_authorization_required`. The second command
@@ -107,6 +108,10 @@ trade.
 `--control-summary` refuses unpublishable or tampered reports, then emits only
 the validated operator headlines: paper versus real results, scenario/control
 counts, combined synthetic stress result, and live-release status.
+
+CI enforces at least 80% branch coverage over the complete `hedge_desk`
+package. The measured baseline includes CLI code even though subprocess-driven
+CLI tests are not attributed to the parent coverage process.
 
 ## Safety boundary
 
