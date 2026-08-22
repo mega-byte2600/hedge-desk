@@ -34,6 +34,37 @@ class ArbitrageEvaluation:
     trade_authorized: bool = False
 
 
+@dataclass(frozen=True)
+class ArbitragePackage:
+    package_id: str
+    legs: Tuple[ArbitrageLeg, ...]
+    quantity: int
+    contract_multiplier: int
+    terminal_present_value: Decimal
+    fees: Decimal
+    slippage_reserve: Decimal
+    financing_cost: Decimal
+    minimum_edge_buffer: Decimal
+
+
+@dataclass(frozen=True)
+class RankedArbitrageCandidate:
+    rank: int
+    package_id: str
+    executable_entry_cashflow: Decimal
+    net_edge: Decimal
+    source_artifact_sha256s: Tuple[str, ...]
+    trade_authorized: bool = False
+
+
+@dataclass(frozen=True)
+class ArbitrageUniverseEvaluation:
+    disposition: str
+    candidates: Tuple[RankedArbitrageCandidate, ...]
+    rejected_packages: Tuple[Tuple[str, Tuple[str, ...]], ...]
+    trade_authorized: bool = False
+
+
 def _valid_hash(value: str) -> bool:
     try:
         return len(value) == 64 and int(value, 16) >= 0
@@ -94,4 +125,48 @@ def evaluate_arbitrage_package(
         reason_codes,
         entry_cashflow,
         net_edge,
+    )
+
+
+def evaluate_arbitrage_universe(
+    packages: Tuple[ArbitragePackage, ...],
+) -> ArbitrageUniverseEvaluation:
+    if not packages:
+        raise ValueError("arbitrage universe cannot be empty")
+    package_ids = [item.package_id for item in packages]
+    if any(not item for item in package_ids) or len(package_ids) != len(set(package_ids)):
+        raise ValueError("arbitrage package identities must be unique and nonempty")
+    admitted = []
+    rejected = []
+    for package in sorted(packages, key=lambda item: item.package_id):
+        evaluation = evaluate_arbitrage_package(
+            package.legs,
+            package.quantity,
+            package.contract_multiplier,
+            package.terminal_present_value,
+            package.fees,
+            package.slippage_reserve,
+            package.financing_cost,
+            package.minimum_edge_buffer,
+        )
+        if not evaluation.admissible:
+            rejected.append((package.package_id, evaluation.reason_codes))
+            continue
+        admitted.append((package, evaluation))
+    ordered = sorted(admitted, key=lambda item: (-item[1].net_edge, item[0].package_id))
+    candidates = tuple(
+        RankedArbitrageCandidate(
+            rank,
+            package.package_id,
+            evaluation.executable_entry_cashflow,
+            evaluation.net_edge,
+            tuple(sorted(leg.source_artifact_sha256 for leg in package.legs)),
+        )
+        for rank, (package, evaluation) in enumerate(ordered, start=1)
+    )
+    return ArbitrageUniverseEvaluation(
+        "RANKED_RESEARCH_ONLY" if candidates else "NO_TRADE",
+        candidates,
+        tuple(rejected),
+        False,
     )

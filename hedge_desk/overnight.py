@@ -39,7 +39,13 @@ from hedge_desk.earnings import (
     EarningsRelease,
     evaluate_earnings_surprise,
 )
-from hedge_desk.arbitrage import ArbitrageLeg, LegSide, evaluate_arbitrage_package
+from hedge_desk.arbitrage import (
+    ArbitrageLeg,
+    ArbitragePackage,
+    LegSide,
+    evaluate_arbitrage_package,
+    evaluate_arbitrage_universe,
+)
 from hedge_desk.dividends import (
     AnnualPayoutObservation,
     DividendCompanyHistory,
@@ -206,6 +212,18 @@ def _arbitrage_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
         legs, 1, 100, Decimal("100"), Decimal("5"), Decimal("5"),
         Decimal("5"), Decimal("20"),
     )
+    universe = evaluate_arbitrage_universe(
+        (
+            ArbitragePackage(
+                "synthetic-parity-strong", legs, 1, 100, Decimal("100"),
+                Decimal("5"), Decimal("5"), Decimal("5"), Decimal("20"),
+            ),
+            ArbitragePackage(
+                "synthetic-parity-erased", legs, 1, 100, Decimal("30"),
+                Decimal("5"), Decimal("5"), Decimal("5"), Decimal("20"),
+            ),
+        )
+    )
     layers = (
         LayerEvaluation(
             EvaluationLayer.OBSERVED,
@@ -215,6 +233,8 @@ def _arbitrage_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                 "source": "synthetic_fixture",
                 "executable_entry_cashflow": str(result.executable_entry_cashflow),
                 "net_edge": str(result.net_edge),
+                "universe_candidate_count": str(len(universe.candidates)),
+                "top_ranked_package": universe.candidates[0].package_id,
             },
             tuple(leg.source_artifact_sha256 for leg in legs),
         ),
@@ -227,6 +247,7 @@ def _arbitrage_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
             {
                 "disposition": result.disposition,
                 "trade_authorized": str(result.trade_authorized).lower(),
+                "universe_trade_authorized": str(universe.trade_authorized).lower(),
             },
         ),
         LayerEvaluation(

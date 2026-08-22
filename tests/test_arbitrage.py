@@ -3,7 +3,13 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 import unittest
 
-from hedge_desk.arbitrage import ArbitrageLeg, LegSide, evaluate_arbitrage_package
+from hedge_desk.arbitrage import (
+    ArbitrageLeg,
+    ArbitragePackage,
+    LegSide,
+    evaluate_arbitrage_package,
+    evaluate_arbitrage_universe,
+)
 
 
 NOW = datetime(2026, 8, 21, 20, 0, tzinfo=timezone.utc)
@@ -18,6 +24,33 @@ def legs():
 
 
 class ArbitrageTests(unittest.TestCase):
+    def package(self, package_id, terminal_value):
+        return ArbitragePackage(
+            package_id, legs(), 1, 100, Decimal(terminal_value), Decimal("5"),
+            Decimal("5"), Decimal("5"), Decimal("20"),
+        )
+
+    def test_universe_ranks_executable_net_edge_without_authorizing(self) -> None:
+        lower = self.package("LOWER", "100")
+        higher = self.package("HIGHER", "120")
+        evaluation = evaluate_arbitrage_universe((lower, higher))
+        self.assertEqual(evaluation.disposition, "RANKED_RESEARCH_ONLY")
+        self.assertEqual(evaluation.candidates[0].package_id, "HIGHER")
+        self.assertEqual(evaluation.candidates[0].net_edge, Decimal("55.0"))
+        self.assertFalse(evaluation.trade_authorized)
+        self.assertTrue(all(not item.trade_authorized for item in evaluation.candidates))
+
+    def test_universe_is_order_stable_and_can_return_no_trade(self) -> None:
+        one = self.package("ONE", "100")
+        two = self.package("TWO", "110")
+        self.assertEqual(
+            evaluate_arbitrage_universe((one, two)),
+            evaluate_arbitrage_universe((two, one)),
+        )
+        blocked = evaluate_arbitrage_universe((self.package("BLOCKED", "70"),))
+        self.assertEqual(blocked.disposition, "NO_TRADE")
+        self.assertIn("EDGE_BELOW_SAFETY_BUFFER", blocked.rejected_packages[0][1])
+
     def test_executable_net_edge_survives_all_reserves_but_is_research_only(self) -> None:
         result = evaluate_arbitrage_package(
             legs(), 1, 100, Decimal("100"), Decimal("5"), Decimal("5"),

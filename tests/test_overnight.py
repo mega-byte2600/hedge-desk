@@ -63,6 +63,14 @@ class OvernightEvaluationTests(unittest.TestCase):
         arbitrage = evaluations[2]
         self.assertEqual(arbitrage.project_id, "arbitrage-observer")
         self.assertEqual(arbitrage.layers[2].metrics["trade_authorized"], "false")
+        self.assertEqual(arbitrage.layers[0].metrics["universe_candidate_count"], "1")
+        self.assertEqual(
+            arbitrage.layers[0].metrics["top_ranked_package"],
+            "synthetic-parity-strong",
+        )
+        self.assertEqual(
+            arbitrage.layers[2].metrics["universe_trade_authorized"], "false"
+        )
         self.assertEqual(arbitrage.layers[3].status, EvaluationStatus.BLOCKED)
         dividend = evaluations[3]
         self.assertEqual(dividend.project_id, "dividend-opportunity-desk")
