@@ -1,0 +1,32 @@
+name: Agent task
+description: A bounded, auditable task for a coding agent
+title: "[agent] "
+labels: ["agent-task"]
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: State one concrete outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance checks
+      description: List deterministic tests or observable completion criteria.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Safety and scope constraints
+      description: Identify protected paths, financial-model changes, and prohibited actions.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Required evidence
+      description: Specify logs, test output, calculation versions, or source citations to retain.
+
