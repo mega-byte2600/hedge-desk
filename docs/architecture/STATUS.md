@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 202 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 204 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
@@ -56,6 +56,9 @@ python3 -m hedge_desk.cli --morning-markdown
   bound recovery of failed runs.
 - complete per-stage audit lineage binding candidate, input/output hashes,
   component version, policy version, stage order, and prior event hash.
+- fail-closed local JSONL audit persistence with fsync, full-chain verification,
+  duplicate suppression, and corruption rejection; this is not regulated WORM
+  storage or a substitute for an external retention service.
 - strict local BYO-data envelopes with byte-level hashes; licensed payloads are
   validated in place and are never copied into the public repository.
 - a strict canonical option-snapshot schema with exact decimal prices,
@@ -77,7 +80,8 @@ python3 -m hedge_desk.cli --morning-markdown
    the current risk model is explicitly `0.1.0-unvalidated`.
 4. Out-of-sample historical replay with realistic fills, halts, assignments,
    taxes where applicable, and regime separation.
-5. Durable external audit/receipt storage and operational monitoring.
+5. Durable external WORM audit/receipt storage and operational monitoring; the
+   implemented local JSONL journal is a paper-stage persistence boundary only.
 6. Securities/commodities counsel review, broker-specific controls, approvals,
    and a separately authorized live architecture. Open-source disclaimers do
    not satisfy those requirements.
