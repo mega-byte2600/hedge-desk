@@ -28,6 +28,12 @@ from .scanner import (
     SpreadScanResult,
     scan_vertical_credit_spreads,
 )
+from .handoff import (
+    CANDIDATE_HANDOFF_SCHEMA_VERSION,
+    CandidateControlHandoff,
+    build_candidate_control_handoffs,
+    validate_candidate_control_handoff,
+)
 
 __all__ = [
     "CONTRACT_MULTIPLIER",
@@ -50,4 +56,8 @@ __all__ = [
     "SpreadScanPolicy",
     "SpreadScanResult",
     "scan_vertical_credit_spreads",
+    "CANDIDATE_HANDOFF_SCHEMA_VERSION",
+    "CandidateControlHandoff",
+    "build_candidate_control_handoffs",
+    "validate_candidate_control_handoff",
 ]

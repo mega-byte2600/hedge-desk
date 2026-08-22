@@ -37,6 +37,7 @@ class OptionSnapshot:
     source_id: str
     underlying_quote: UnderlyingQuote
     option_quotes: Tuple[OptionQuote, ...]
+    source_artifact_sha256: str = "0" * 64
 
 
 def _exact_fields(value: Any, expected: frozenset, label: str) -> Dict[str, Any]:
@@ -90,9 +91,19 @@ def _date(value: Any, field: str) -> date:
         raise ValueError(f"{field} must be a valid ISO date") from exc
 
 
-def parse_option_snapshot(path: Path, source_id: str) -> OptionSnapshot:
+def parse_option_snapshot(
+    path: Path, source_id: str, source_artifact_sha256: str = "0" * 64
+) -> OptionSnapshot:
     if not source_id:
         raise ValueError("validated source identity is required")
+    try:
+        hash_valid = len(source_artifact_sha256) == 64 and int(
+            source_artifact_sha256, 16
+        ) >= 0
+    except ValueError:
+        hash_valid = False
+    if not hash_valid:
+        raise ValueError("validated source artifact hash is required")
     try:
         root = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
@@ -150,4 +161,5 @@ def parse_option_snapshot(path: Path, source_id: str) -> OptionSnapshot:
         source_id,
         underlying_quote,
         tuple(sorted(quotes, key=lambda item: item.contract_id)),
+        source_artifact_sha256,
     )

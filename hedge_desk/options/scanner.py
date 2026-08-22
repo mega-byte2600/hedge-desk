@@ -41,6 +41,7 @@ class SpreadPairEvaluation:
 @dataclass(frozen=True)
 class SpreadScanResult:
     source_id: str
+    source_artifact_sha256: str
     symbol: str
     evaluated_at: datetime
     disposition: str
@@ -145,6 +146,7 @@ def scan_vertical_credit_spreads(
     admissible_count = sum(item.admissible for item in ordered_evaluations)
     return SpreadScanResult(
         snapshot.source_id,
+        snapshot.source_artifact_sha256,
         snapshot.underlying_quote.symbol,
         evaluated_at,
         "CANDIDATES_FOR_CONTROL_PIPELINE" if admissible_count else "NO_TRADE",

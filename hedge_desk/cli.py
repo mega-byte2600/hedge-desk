@@ -16,7 +16,11 @@ from hedge_desk.artifacts import (
 )
 from hedge_desk.scheduler import ScheduledRunRequest, execute_scheduled_run
 from hedge_desk.data import validate_local_observation
-from hedge_desk.options import parse_option_snapshot, scan_vertical_credit_spreads
+from hedge_desk.options import (
+    build_candidate_control_handoffs,
+    parse_option_snapshot,
+    scan_vertical_credit_spreads,
+)
 
 
 def main() -> None:
@@ -133,7 +137,9 @@ def main() -> None:
                 )
             try:
                 snapshot = parse_option_snapshot(
-                    Path(args.payload), result.artifact.source_id
+                    Path(args.payload),
+                    result.artifact.source_id,
+                    result.artifact.payload_sha256,
                 )
             except ValueError as exc:
                 parser.error(str(exc))
@@ -149,6 +155,9 @@ def main() -> None:
             if args.scan_vertical_spreads:
                 scan = scan_vertical_credit_spreads(snapshot, cutoff)
                 output["vertical_spread_scan"] = json_value(scan)
+                output["control_handoffs"] = json_value(
+                    build_candidate_control_handoffs(scan)
+                )
         print(json.dumps(output, indent=2))
         if not result.gate.admissible:
             raise SystemExit(2)
