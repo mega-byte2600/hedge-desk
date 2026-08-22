@@ -5,8 +5,10 @@ import unittest
 
 from hedge_desk.earnings import (
     EarningsConsensus,
+    EarningsEventInput,
     EarningsRelease,
     evaluate_earnings_surprise,
+    evaluate_earnings_universe,
 )
 
 
@@ -31,6 +33,33 @@ class EarningsTests(unittest.TestCase):
         self.assertEqual(result.revenue_surprise_fraction, Decimal("0.02"))
         self.assertEqual(result.surprise_alignment, "BOTH_POSITIVE")
         self.assertFalse(result.directional_trade_authorized)
+
+    def test_universe_ranks_aligned_surprises_without_directional_trade(self) -> None:
+        stronger = EarningsEventInput(
+            "stronger",
+            replace(self.consensus, symbol="STRONG"),
+            replace(
+                self.release, symbol="STRONG", eps_actual=Decimal("1.20"),
+                revenue_actual=Decimal("1050"),
+            ),
+        )
+        weaker = EarningsEventInput("weaker", self.consensus, self.release)
+        evaluation = evaluate_earnings_universe((weaker, stronger), NOW)
+        self.assertEqual(evaluation.candidates[0].event_id, "stronger")
+        self.assertEqual(evaluation.candidates[0].surprise_alignment, "BOTH_POSITIVE")
+        self.assertFalse(evaluation.directional_trade_authorized)
+        self.assertTrue(
+            all(not item.directional_trade_authorized for item in evaluation.candidates)
+        )
+
+    def test_mixed_or_invalid_universe_events_are_rejected_not_forced(self) -> None:
+        mixed = EarningsEventInput(
+            "mixed", self.consensus,
+            replace(self.release, revenue_actual=Decimal("990")),
+        )
+        evaluation = evaluate_earnings_universe((mixed,), NOW)
+        self.assertEqual(evaluation.disposition, "NO_TRADE")
+        self.assertIn("SURPRISE_NOT_ALIGNED", evaluation.rejected_events[0][1])
 
     def test_mixed_surprise_is_not_forced_into_call_or_put(self) -> None:
         release = replace(self.release, revenue_actual=Decimal("990"))

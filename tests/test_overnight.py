@@ -57,8 +57,15 @@ class OvernightEvaluationTests(unittest.TestCase):
         earnings = evaluations[1]
         self.assertEqual(earnings.project_id, "earnings-event-desk")
         self.assertEqual(earnings.layers[0].metrics["surprise_alignment"], "BOTH_POSITIVE")
+        self.assertEqual(earnings.layers[0].metrics["universe_candidate_count"], "2")
+        self.assertEqual(earnings.layers[0].metrics["universe_rejected_count"], "1")
+        self.assertEqual(earnings.layers[0].metrics["top_ranked_event"], "stronger-aligned")
         self.assertEqual(
             earnings.layers[2].metrics["directional_trade_authorized"], "false"
+        )
+        self.assertEqual(
+            earnings.layers[2].metrics["universe_directional_trade_authorized"],
+            "false",
         )
         arbitrage = evaluations[2]
         self.assertEqual(arbitrage.project_id, "arbitrage-observer")

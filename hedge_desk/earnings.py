@@ -38,6 +38,34 @@ class EarningsSurpriseResult:
     directional_trade_authorized: bool = False
 
 
+@dataclass(frozen=True)
+class EarningsEventInput:
+    event_id: str
+    consensus: EarningsConsensus
+    release: EarningsRelease
+
+
+@dataclass(frozen=True)
+class RankedEarningsEvent:
+    rank: int
+    event_id: str
+    symbol: str
+    fiscal_period: str
+    eps_surprise_fraction: Decimal
+    revenue_surprise_fraction: Decimal
+    surprise_alignment: str
+    combined_absolute_surprise: Decimal
+    directional_trade_authorized: bool = False
+
+
+@dataclass(frozen=True)
+class EarningsUniverseEvaluation:
+    disposition: str
+    candidates: Tuple[RankedEarningsEvent, ...]
+    rejected_events: Tuple[Tuple[str, Tuple[str, ...]], ...]
+    directional_trade_authorized: bool = False
+
+
 def _valid_hash(value: str) -> bool:
     try:
         return len(value) == 64 and int(value, 16) >= 0
@@ -88,3 +116,60 @@ def evaluate_earnings_surprise(
     else:
         alignment = "MIXED"
     return EarningsSurpriseResult(True, (), eps, revenue, alignment)
+
+
+def evaluate_earnings_universe(
+    events: Tuple[EarningsEventInput, ...],
+    decision_time: datetime,
+) -> EarningsUniverseEvaluation:
+    if not events:
+        raise ValueError("earnings event universe cannot be empty")
+    event_ids = [event.event_id for event in events]
+    if any(not event_id for event_id in event_ids) or len(event_ids) != len(set(event_ids)):
+        raise ValueError("earnings event identities must be unique and nonempty")
+    admitted = []
+    rejected = []
+    for event in sorted(events, key=lambda item: item.event_id):
+        result = evaluate_earnings_surprise(
+            event.consensus, event.release, decision_time
+        )
+        reasons = list(result.reason_codes)
+        if result.admissible and result.surprise_alignment == "MIXED":
+            reasons.append("SURPRISE_NOT_ALIGNED")
+        reason_codes = tuple(sorted(set(reasons)))
+        if reason_codes:
+            rejected.append((event.event_id, reason_codes))
+            continue
+        assert result.eps_surprise_fraction is not None
+        assert result.revenue_surprise_fraction is not None
+        admitted.append((event, result))
+    ordered = sorted(
+        admitted,
+        key=lambda item: (
+            -(
+                abs(item[1].eps_surprise_fraction)
+                + abs(item[1].revenue_surprise_fraction)
+            ),
+            item[0].event_id,
+        ),
+    )
+    candidates = tuple(
+        RankedEarningsEvent(
+            rank,
+            event.event_id,
+            event.consensus.symbol,
+            event.consensus.fiscal_period,
+            result.eps_surprise_fraction,
+            result.revenue_surprise_fraction,
+            result.surprise_alignment,
+            abs(result.eps_surprise_fraction)
+            + abs(result.revenue_surprise_fraction),
+        )
+        for rank, (event, result) in enumerate(ordered, start=1)
+    )
+    return EarningsUniverseEvaluation(
+        "ALIGNED_RESEARCH_EVENTS" if candidates else "NO_TRADE",
+        candidates,
+        tuple(rejected),
+        False,
+    )

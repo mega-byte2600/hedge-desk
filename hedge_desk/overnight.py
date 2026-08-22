@@ -36,8 +36,10 @@ from hedge_desk.portfolio_stress import build_portfolio_stress_report
 from hedge_desk.models import build_synthetic_reference_quorum
 from hedge_desk.earnings import (
     EarningsConsensus,
+    EarningsEventInput,
     EarningsRelease,
     evaluate_earnings_surprise,
+    evaluate_earnings_universe,
 )
 from hedge_desk.arbitrage import (
     ArbitrageLeg,
@@ -160,6 +162,36 @@ def _earnings_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
         evaluated_at - timedelta(minutes=1), "f" * 64,
     )
     result = evaluate_earnings_surprise(consensus, release, evaluated_at)
+    universe = evaluate_earnings_universe(
+        (
+            EarningsEventInput("base-aligned", consensus, release),
+            EarningsEventInput(
+                "stronger-aligned",
+                EarningsConsensus(
+                    "STRONG", "2026Q2", Decimal("1.00"), Decimal("1000"), 10,
+                    evaluated_at - timedelta(hours=2), "1" * 64,
+                ),
+                EarningsRelease(
+                    "STRONG", "2026Q2", Decimal("1.20"), Decimal("1050"),
+                    evaluated_at - timedelta(minutes=2),
+                    evaluated_at - timedelta(minutes=1), "2" * 64,
+                ),
+            ),
+            EarningsEventInput(
+                "mixed-rejected",
+                EarningsConsensus(
+                    "MIXED", "2026Q2", Decimal("1.00"), Decimal("1000"), 7,
+                    evaluated_at - timedelta(hours=2), "3" * 64,
+                ),
+                EarningsRelease(
+                    "MIXED", "2026Q2", Decimal("1.10"), Decimal("990"),
+                    evaluated_at - timedelta(minutes=2),
+                    evaluated_at - timedelta(minutes=1), "4" * 64,
+                ),
+            ),
+        ),
+        evaluated_at,
+    )
     layers = (
         LayerEvaluation(
             EvaluationLayer.OBSERVED,
@@ -170,6 +202,9 @@ def _earnings_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                 "eps_surprise_fraction": str(result.eps_surprise_fraction),
                 "revenue_surprise_fraction": str(result.revenue_surprise_fraction),
                 "surprise_alignment": result.surprise_alignment,
+                "universe_candidate_count": str(len(universe.candidates)),
+                "universe_rejected_count": str(len(universe.rejected_events)),
+                "top_ranked_event": universe.candidates[0].event_id,
             },
             (consensus.source_artifact_sha256, release.source_artifact_sha256),
         ),
@@ -180,7 +215,12 @@ def _earnings_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
         LayerEvaluation(
             EvaluationLayer.BIG, EvaluationStatus.BLOCKED,
             ("PRICE_REACTION_NOT_OBSERVED",),
-            {"directional_trade_authorized": "false"},
+            {
+                "directional_trade_authorized": "false",
+                "universe_directional_trade_authorized": str(
+                    universe.directional_trade_authorized
+                ).lower(),
+            },
         ),
         LayerEvaluation(
             EvaluationLayer.DETERMINISTIC_RISK, EvaluationStatus.BLOCKED,
