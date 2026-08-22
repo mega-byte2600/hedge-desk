@@ -79,18 +79,46 @@ def _calculate_plan_hash(
             spread.spread_id,
             spread.model_id,
             spread.model_version,
+            spread.calculated_at.isoformat(),
+            ",".join(spread.input_contract_ids),
+            ",".join(timestamp.isoformat() for timestamp in spread.quote_timestamps),
+            str(spread.quantity),
+            str(spread.contract_multiplier),
+            str(spread.width_per_share),
+            str(spread.short_sale_price_per_share),
+            str(spread.long_purchase_price_per_share),
+            str(spread.gross_credit),
+            str(spread.total_commission),
             str(spread.net_credit),
             str(spread.maximum_loss),
+            str(spread.break_even),
+            str(spread.return_on_risk),
             risk_decision.candidate_id,
             risk_decision.account_id,
             risk_decision.status.value,
+            ",".join(risk_decision.reason_codes),
+            str(risk_decision.risk_of_ruin_before),
             str(risk_decision.risk_of_ruin_after),
+            risk_decision.evaluated_at.isoformat(),
             created_at.isoformat(),
             approval_expires_at.isoformat(),
             str(execution_quote_max_age_seconds),
         )
     )
     return sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _assert_plan_integrity(plan: PaperTradePlan) -> None:
+    expected = _calculate_plan_hash(
+        plan.plan_id,
+        plan.spread,
+        plan.risk_decision,
+        plan.created_at,
+        plan.approval_expires_at,
+        plan.execution_quote_max_age_seconds,
+    )
+    if expected != plan.plan_hash:
+        raise PermissionError("paper-trade plan integrity check failed")
 
 
 def create_paper_trade_plan(
@@ -142,6 +170,7 @@ def approve_paper_trade(
     human_id: str,
     decided_at: datetime,
 ) -> PaperTradePlan:
+    _assert_plan_integrity(plan)
     if not human_id.strip():
         raise ValueError("human identity is required")
     if decided_at.tzinfo is None:
@@ -165,6 +194,7 @@ def approve_paper_trade(
 
 
 def execute_paper_open(plan: PaperTradePlan, opened_at: datetime) -> PaperOpen:
+    _assert_plan_integrity(plan)
     if opened_at.tzinfo is None:
         raise ValueError("paper-open timestamp must be timezone-aware")
     if plan.authorization.status is not HumanAuthorizationStatus.APPROVED:

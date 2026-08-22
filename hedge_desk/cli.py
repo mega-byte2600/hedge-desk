@@ -4,11 +4,17 @@ import argparse
 import json
 
 from hedge_desk.demo import run_reference_demo
+from hedge_desk.overnight import current_morning_report
 from hedge_desk.projects import MVP_PROJECTS
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--overnight-report",
+        action="store_true",
+        help="run all four paper evaluations and emit the morning JSON report",
+    )
     parser.add_argument(
         "--projects",
         action="store_true",
@@ -27,6 +33,9 @@ def main() -> None:
     args = parser.parse_args()
     if args.projects:
         print(json.dumps([project.__dict__ for project in MVP_PROJECTS], indent=2))
+        return
+    if args.overnight_report:
+        print(json.dumps(current_morning_report(), indent=2))
         return
     if args.approve and not args.human_id.strip():
         parser.error("--human-id is required with --approve")

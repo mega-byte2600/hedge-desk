@@ -11,6 +11,7 @@ from hedge_desk.paper import (
     MachineRiskStatus,
     approve_paper_trade,
     close_paper_trade,
+    create_paper_trade_plan,
     execute_paper_open,
 )
 
@@ -40,6 +41,17 @@ class PaperWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(PermissionError, "not bound"):
             execute_paper_open(forged, FIXTURE_AS_OF)
 
+    def test_material_change_after_approval_invalidates_plan(self) -> None:
+        plan = build_reference_plan()
+        approved = approve_paper_trade(plan, "captain", FIXTURE_AS_OF)
+        changed_spread = replace(
+            approved.spread,
+            net_credit=approved.spread.net_credit + Decimal("0.01"),
+        )
+        changed_plan = replace(approved, spread=changed_spread)
+        with self.assertRaisesRegex(PermissionError, "integrity check failed"):
+            execute_paper_open(changed_plan, FIXTURE_AS_OF)
+
     def test_human_cannot_override_machine_rejection(self) -> None:
         plan = build_reference_plan()
         rejected_decision = replace(
@@ -47,12 +59,15 @@ class PaperWorkflowTests(unittest.TestCase):
             status=DecisionStatus.BLOCKED,
             reason_codes=("TEST_BLOCK",),
         )
-        rejected_plan = replace(
-            plan,
-            risk_decision=rejected_decision,
-            machine_risk_status=MachineRiskStatus.REJECT,
-            reason_codes=("TEST_BLOCK",),
+        rejected_plan = create_paper_trade_plan(
+            plan.plan_id,
+            plan.spread,
+            rejected_decision,
+            plan.created_at,
+            plan.approval_expires_at,
+            plan.execution_quote_max_age_seconds,
         )
+        self.assertIs(rejected_plan.machine_risk_status, MachineRiskStatus.REJECT)
         with self.assertRaisesRegex(PermissionError, "cannot override"):
             approve_paper_trade(rejected_plan, "captain", FIXTURE_AS_OF)
 

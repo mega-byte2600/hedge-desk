@@ -56,12 +56,19 @@ order to a broker.
 python -m hedge_desk.cli
 python -m hedge_desk.cli --approve --human-id captain
 python -m hedge_desk.cli --projects
+python -m hedge_desk.cli --overnight-report
 python -m unittest discover -s tests -v
 ```
 
 The default command stops at `human_authorization_required`. The second command
 simulates a named human approval and paper-only open/close against a frozen
 synthetic fixture; it does not connect to a broker or market-data vendor.
+
+The overnight report evaluates every registered MVP through separately labeled
+`OBSERVED`, `STAT`, `BIG`, `DETERMINISTIC_RISK`, and `HUMAN` layers. Until real
+licensed adapters exist, it truthfully runs synthetic fixtures and returns
+`NO_TRADE` for architecture-only projects. GitHub Actions runs this paper-only
+evaluation on weekdays and retains its JSON report for 30 days.
 
 ## Safety boundary
 
