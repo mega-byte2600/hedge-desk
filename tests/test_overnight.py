@@ -37,6 +37,12 @@ class OvernightEvaluationTests(unittest.TestCase):
             model_lab.layers[2].metrics["authoritative_risk_input"], "false"
         )
         self.assertEqual(model_lab.layers[3].status, EvaluationStatus.BLOCKED)
+        earnings = evaluations[1]
+        self.assertEqual(earnings.project_id, "earnings-event-desk")
+        self.assertEqual(earnings.layers[0].metrics["surprise_alignment"], "BOTH_POSITIVE")
+        self.assertEqual(
+            earnings.layers[2].metrics["directional_trade_authorized"], "false"
+        )
 
     def test_morning_report_is_explicitly_paper_and_reconciles(self) -> None:
         report = build_morning_report(NOW)

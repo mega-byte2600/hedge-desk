@@ -1,6 +1,7 @@
 """Deterministic paper-only overnight evaluation and morning report."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 import os
 from typing import Any, Dict, Tuple
 
@@ -25,6 +26,11 @@ from hedge_desk.audit import build_audit_evaluation
 from hedge_desk.stat_evaluation import build_stat_evaluation
 from hedge_desk.portfolio_stress import build_portfolio_stress_report
 from hedge_desk.models import build_synthetic_reference_quorum
+from hedge_desk.earnings import (
+    EarningsConsensus,
+    EarningsRelease,
+    evaluate_earnings_surprise,
+)
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -111,6 +117,57 @@ def _model_lab_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
     )
 
 
+def _earnings_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
+    consensus = EarningsConsensus(
+        "TEST", "2026Q2", Decimal("1.00"), Decimal("1000"), 8,
+        evaluated_at - timedelta(hours=2), "e" * 64,
+    )
+    release = EarningsRelease(
+        "TEST", "2026Q2", Decimal("1.10"), Decimal("1020"),
+        evaluated_at - timedelta(minutes=2),
+        evaluated_at - timedelta(minutes=1), "f" * 64,
+    )
+    result = evaluate_earnings_surprise(consensus, release, evaluated_at)
+    layers = (
+        LayerEvaluation(
+            EvaluationLayer.OBSERVED,
+            EvaluationStatus.PASS if result.admissible else EvaluationStatus.BLOCKED,
+            result.reason_codes,
+            {
+                "source": "synthetic_fixture",
+                "eps_surprise_fraction": str(result.eps_surprise_fraction),
+                "revenue_surprise_fraction": str(result.revenue_surprise_fraction),
+                "surprise_alignment": result.surprise_alignment,
+            },
+            (consensus.source_artifact_sha256, release.source_artifact_sha256),
+        ),
+        LayerEvaluation(
+            EvaluationLayer.STAT, EvaluationStatus.NOT_REQUIRED,
+            ("OUT_OF_SAMPLE_REACTION_MODEL_ABSENT",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.BIG, EvaluationStatus.BLOCKED,
+            ("PRICE_REACTION_NOT_OBSERVED",),
+            {"directional_trade_authorized": "false"},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.DETERMINISTIC_RISK, EvaluationStatus.BLOCKED,
+            ("AUTHORITATIVE_RISK_INPUT_ABSENT",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.DETERMINISTIC_COMPLIANCE, EvaluationStatus.NOT_REQUIRED,
+            ("RESEARCH_ONLY_NO_TRADE",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.HUMAN, EvaluationStatus.NOT_REQUIRED,
+            ("RESEARCH_ONLY_NO_TRADE",), {},
+        ),
+    )
+    return ProjectEvaluation(
+        "earnings-event-desk", evaluated_at, Disposition.NO_TRADE, layers
+    )
+
+
 def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
     """Evaluate every registered project without inventing unbuilt strategies."""
     validate_project_registry()
@@ -189,7 +246,11 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         for project in MVP_PROJECTS[1:]
         if project.status is ProjectStatus.ARCHITECTURE_ONLY
     )
-    return (premium,) + inactive + (_model_lab_evaluation(FIXTURE_AS_OF),)
+    return (
+        (premium, _earnings_evaluation(FIXTURE_AS_OF))
+        + inactive
+        + (_model_lab_evaluation(FIXTURE_AS_OF),)
+    )
 
 
 def build_morning_report(

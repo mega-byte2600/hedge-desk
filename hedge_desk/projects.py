@@ -31,7 +31,7 @@ MVP_PROJECTS: Tuple[MvpProject, ...] = (
         2,
         "earnings-event-desk",
         "Earnings Event Desk",
-        ProjectStatus.ARCHITECTURE_ONLY,
+        ProjectStatus.WORKING_FOUNDATION,
         "Compare equity, defined-risk option, hedged-equity, and no-trade arms.",
     ),
     MvpProject(

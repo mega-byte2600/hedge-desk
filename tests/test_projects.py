@@ -23,6 +23,9 @@ class ProjectRegistryTests(unittest.TestCase):
         self.assertEqual(project.project_id, "open-quant-ai-model-lab")
         self.assertEqual(project.status, ProjectStatus.WORKING_FOUNDATION)
 
+    def test_earnings_mvp_has_working_point_in_time_foundation(self) -> None:
+        self.assertEqual(MVP_PROJECTS[1].status, ProjectStatus.WORKING_FOUNDATION)
+
 
 if __name__ == "__main__":
     unittest.main()
