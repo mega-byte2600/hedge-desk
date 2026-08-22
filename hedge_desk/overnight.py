@@ -48,7 +48,7 @@ def _reference_artifact() -> DataArtifact:
     return DataArtifact(
         artifact_id="synthetic-option-chain-v1",
         payload_kind="option_chain",
-        source_id="synthetic-fixture",
+        source_id="synthetic-option-chain",
         license_id="repository-synthetic-fixture",
         source_as_of=FIXTURE_AS_OF,
         received_at=FIXTURE_AS_OF,
@@ -60,15 +60,28 @@ def _reference_artifact() -> DataArtifact:
 
 def _reference_batch() -> Any:
     artifact = _reference_artifact()
+    source_hashes = {
+        "synthetic-option-chain": artifact.payload_sha256,
+        "synthetic-underlying-quote": sha256_text("synthetic-underlying-quote-v1"),
+        "synthetic-corporate-events": sha256_text("synthetic-corporate-events-v1"),
+        "synthetic-earnings-consensus": "e" * 64,
+        "synthetic-earnings-release": "f" * 64,
+        "synthetic-arbitrage-legs": sha256_text("synthetic-arbitrage-legs-v1"),
+        "synthetic-dividend-history": sha256_text("synthetic-dividend-history-v1"),
+        "synthetic-model-governance": sha256_text("synthetic-model-governance-v1"),
+        "synthetic-futures-contract": "5" * 64,
+        "synthetic-futures-event": sha256_text("synthetic-futures-event-v1"),
+    }
     return build_batch_manifest(
         "synthetic-reference-batch-v1",
-        (artifact.source_id,),
-        (
+        tuple(source_hashes),
+        tuple(
             SourceBatchResult(
-                artifact.source_id,
+                source_id,
                 SourceBatchStatus.PASS,
-                artifact.payload_sha256,
-            ),
+                artifact_hash,
+            )
+            for source_id, artifact_hash in source_hashes.items()
         ),
         sha256_text("paper-source-policy-1.0.0"),
     )

@@ -67,6 +67,10 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertEqual(report["code_commit"], "LOCAL_UNSPECIFIED")
         self.assertEqual(report["portfolio_stress"]["scenario_count"], 5)
         self.assertEqual(report["portfolio_stress"]["real_money_pnl"], "0")
+        self.assertEqual(len(report["data_batch"]["required_sources"]), 10)
+        self.assertIn(
+            "synthetic-futures-event", report["data_batch"]["required_sources"]
+        )
         self.assertTrue(report["chronological_replay"]["valid"])
         self.assertTrue(report["audit_chain"]["valid"])
         self.assertEqual(report["audit_chain"]["event_count"], 7)
