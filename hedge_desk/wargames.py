@@ -12,6 +12,7 @@ from hedge_desk.paper import (
     approve_paper_trade,
     close_paper_trade,
     evaluate_paper_fill,
+    evaluate_paper_lifecycle,
     execute_paper_open,
 )
 from hedge_desk.metrics import evaluate_pnl_series
@@ -91,6 +92,18 @@ class ExecutionWarGame:
     current_net_credit: Decimal
     checked_offset_seconds: int
     contract_adjustment_pending: bool = False
+
+
+@dataclass(frozen=True)
+class LifecycleWarGame:
+    scenario_id: str
+    planned_exit_reached: bool = False
+    expiration_reached: bool = False
+    short_leg_in_the_money: bool = False
+    ex_dividend_before_expiration: bool = False
+    assignment_notice_received: bool = False
+    contract_adjustment_pending: bool = False
+    settlement_terms_confirmed: bool = True
 
 
 PREMIUM_WAR_GAMES: Tuple[PremiumWarGame, ...] = (
@@ -198,6 +211,22 @@ EXECUTION_WAR_GAMES: Tuple[ExecutionWarGame, ...] = (
     ExecutionWarGame("approved-credit-unavailable", 1, Decimal("118.69"), 60),
     ExecutionWarGame(
         "contract-adjustment-pending", 1, Decimal("118.70"), 60, True
+    ),
+)
+
+
+LIFECYCLE_WAR_GAMES: Tuple[LifecycleWarGame, ...] = (
+    LifecycleWarGame("normal-monitoring"),
+    LifecycleWarGame("planned-pre-expiration-exit", planned_exit_reached=True),
+    LifecycleWarGame(
+        "ex-dividend-early-assignment-risk",
+        short_leg_in_the_money=True,
+        ex_dividend_before_expiration=True,
+    ),
+    LifecycleWarGame("assignment-notice", assignment_notice_received=True),
+    LifecycleWarGame("expiration-reconciliation", expiration_reached=True),
+    LifecycleWarGame(
+        "unconfirmed-settlement-terms", settlement_terms_confirmed=False
     ),
 )
 
@@ -337,6 +366,29 @@ def run_execution_war_games() -> Tuple[Dict[str, Any], ...]:
     return tuple(results)
 
 
+def run_lifecycle_war_games() -> Tuple[Dict[str, Any], ...]:
+    results = []
+    for scenario in LIFECYCLE_WAR_GAMES:
+        check = evaluate_paper_lifecycle(
+            FIXTURE_AS_OF + timedelta(days=1),
+            scenario.planned_exit_reached,
+            scenario.expiration_reached,
+            scenario.short_leg_in_the_money,
+            scenario.ex_dividend_before_expiration,
+            scenario.assignment_notice_received,
+            scenario.contract_adjustment_pending,
+            scenario.settlement_terms_confirmed,
+        )
+        results.append(
+            {
+                "scenario_id": scenario.scenario_id,
+                "action": check.action,
+                "reason_codes": list(check.reason_codes),
+            }
+        )
+    return tuple(results)
+
+
 def build_war_game_manifest() -> Dict[str, Any]:
     """Content-address every declared scenario input using canonical JSON."""
     fixtures = {
@@ -345,6 +397,7 @@ def build_war_game_manifest() -> Dict[str, Any]:
         "arbitrage": json_value(ARBITRAGE_WAR_GAMES),
         "dividend": json_value(DIVIDEND_WAR_GAMES),
         "execution": json_value(EXECUTION_WAR_GAMES),
+        "lifecycle": json_value(LIFECYCLE_WAR_GAMES),
     }
     scenario_ids = [
         scenario["scenario_id"]
@@ -374,6 +427,7 @@ def build_war_game_report() -> Dict[str, Any]:
     arbitrage = run_arbitrage_war_games()
     dividend = run_dividend_war_games()
     execution = run_execution_war_games()
+    lifecycle = run_lifecycle_war_games()
     pnls = tuple(result.net_pnl for result in results)
     wins = sum(result.profitable for result in results)
     premium_metrics = evaluate_pnl_series(pnls)
@@ -394,6 +448,7 @@ def build_war_game_report() -> Dict[str, Any]:
             "total_scenario_count": (
                 len(results) + len(earnings) + len(arbitrage) + len(dividend)
                 + len(execution)
+                + len(lifecycle)
             ),
             "scenario_count_by_mvp": {
                 "overnight-premium-desk": len(results),
@@ -401,6 +456,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 "arbitrage-observer": len(arbitrage),
                 "dividend-opportunity-desk": len(dividend),
                 "execution-controls": len(execution),
+                "lifecycle-controls": len(lifecycle),
             },
             "no_trade_control_count": no_trade_controls,
             "premium_fixed_trade": {
@@ -419,6 +475,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "arbitrage": arbitrage,
         "dividend": dividend,
         "execution_controls": execution,
+        "lifecycle_controls": lifecycle,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",

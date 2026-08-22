@@ -78,6 +78,53 @@ class PaperFillCheck:
     checked_at: datetime
 
 
+@dataclass(frozen=True)
+class PaperLifecycleCheck:
+    action: str
+    reason_codes: Tuple[str, ...]
+    checked_at: datetime
+
+
+def evaluate_paper_lifecycle(
+    checked_at: datetime,
+    planned_exit_reached: bool,
+    expiration_reached: bool,
+    short_leg_in_the_money: bool,
+    ex_dividend_before_expiration: bool,
+    assignment_notice_received: bool,
+    contract_adjustment_pending: bool,
+    settlement_terms_confirmed: bool,
+) -> PaperLifecycleCheck:
+    """Select a fail-closed operational action; never estimate market risk or RoR."""
+    if checked_at.tzinfo is None:
+        raise ValueError("lifecycle timestamp must be timezone-aware")
+    blocking = []
+    if contract_adjustment_pending:
+        blocking.append("CONTRACT_ADJUSTMENT_PENDING")
+    if not settlement_terms_confirmed:
+        blocking.append("SETTLEMENT_TERMS_UNCONFIRMED")
+    if blocking:
+        return PaperLifecycleCheck("BLOCK_AND_ESCALATE", tuple(sorted(blocking)), checked_at)
+    if assignment_notice_received:
+        return PaperLifecycleCheck(
+            "ASSIGNMENT_RECONCILIATION_REQUIRED",
+            ("ASSIGNMENT_NOTICE_RECEIVED",), checked_at,
+        )
+    if expiration_reached:
+        return PaperLifecycleCheck(
+            "EXPIRATION_RECONCILIATION_REQUIRED", ("EXPIRATION_REACHED",), checked_at
+        )
+    if short_leg_in_the_money and ex_dividend_before_expiration:
+        return PaperLifecycleCheck(
+            "CLOSE_REVIEW_REQUIRED", ("EARLY_ASSIGNMENT_RISK",), checked_at
+        )
+    if planned_exit_reached:
+        return PaperLifecycleCheck(
+            "CLOSE_REVIEW_REQUIRED", ("PLANNED_EXIT_REACHED",), checked_at
+        )
+    return PaperLifecycleCheck("MONITOR", (), checked_at)
+
+
 def _calculate_plan_hash(
     plan_id: str,
     spread: VerticalSpreadCalculation,

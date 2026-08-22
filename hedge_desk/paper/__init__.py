@@ -6,6 +6,7 @@ from .workflow import (
     MachineRiskStatus,
     PaperClose,
     PaperFillCheck,
+    PaperLifecycleCheck,
     PaperOpen,
     PaperTradePlan,
     approve_paper_trade,
@@ -13,6 +14,7 @@ from .workflow import (
     create_paper_trade_plan,
     execute_paper_open,
     evaluate_paper_fill,
+    evaluate_paper_lifecycle,
 )
 
 __all__ = [
@@ -21,6 +23,7 @@ __all__ = [
     "MachineRiskStatus",
     "PaperClose",
     "PaperFillCheck",
+    "PaperLifecycleCheck",
     "PaperOpen",
     "PaperTradePlan",
     "approve_paper_trade",
@@ -28,4 +31,5 @@ __all__ = [
     "create_paper_trade_plan",
     "execute_paper_open",
     "evaluate_paper_fill",
+    "evaluate_paper_lifecycle",
 ]

@@ -15,6 +15,7 @@ from hedge_desk.paper import (
     create_paper_trade_plan,
     execute_paper_open,
     evaluate_paper_fill,
+    evaluate_paper_lifecycle,
 )
 
 
@@ -188,6 +189,23 @@ class PaperWorkflowTests(unittest.TestCase):
         )
         self.assertIn("HUMAN_AUTHORIZATION_REQUIRED", result.reason_codes)
         self.assertIn("STALE_QUOTE", result.reason_codes)
+
+    def test_lifecycle_control_prioritizes_unresolved_contract_terms(self) -> None:
+        result = evaluate_paper_lifecycle(
+            FIXTURE_AS_OF,
+            planned_exit_reached=True,
+            expiration_reached=True,
+            short_leg_in_the_money=True,
+            ex_dividend_before_expiration=True,
+            assignment_notice_received=True,
+            contract_adjustment_pending=True,
+            settlement_terms_confirmed=False,
+        )
+        self.assertEqual(result.action, "BLOCK_AND_ESCALATE")
+        self.assertEqual(
+            result.reason_codes,
+            ("CONTRACT_ADJUSTMENT_PENDING", "SETTLEMENT_TERMS_UNCONFIRMED"),
+        )
 
     def test_paper_close_pnl_is_deterministic(self) -> None:
         plan = build_reference_plan()
