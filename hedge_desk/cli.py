@@ -1,39 +1,28 @@
-"""Demonstrate the deterministic paper-only decision workflow."""
+"""Command-line entry point for the frozen paper-only vertical slice."""
 
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+import argparse
+import json
 
-from hedge_desk.core.decision import evaluate_candidate
-from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
+from hedge_desk.demo import run_reference_demo
 
 
 def main() -> None:
-    evaluated_at = datetime(2026, 7, 28, 13, 0, tzinfo=timezone.utc)
-    account = Account(
-        account_id="paper-individual-001",
-        account_type=AccountType.INDIVIDUAL,
-        equity=Decimal("100000"),
-        cash=Decimal("50000"),
-        options_approved=True,
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--approve",
+        action="store_true",
+        help="simulate an explicit human approval for this frozen paper fixture",
     )
-    candidate = TradeCandidate(
-        candidate_id="demo-aapl-001",
-        symbol="AAPL",
-        product_type=ProductType.EQUITY,
-        quantity=10,
-        entry_price=Decimal("200"),
-        max_loss=Decimal("500"),
-        expected_win=Decimal("1000"),
-        win_probability=Decimal("0.55"),
-        quote_timestamp=evaluated_at - timedelta(minutes=1),
-        average_daily_dollar_volume=Decimal("1000000000"),
-        thesis="Demonstration candidate with bounded loss and positive expectancy.",
-        invalidation="Block if the documented valuation premise fails.",
+    parser.add_argument(
+        "--human-id",
+        default="",
+        help="required human identity when --approve is supplied",
     )
-    decision = evaluate_candidate(account, candidate, evaluated_at)
-    print(decision)
+    args = parser.parse_args()
+    if args.approve and not args.human_id.strip():
+        parser.error("--human-id is required with --approve")
+    print(json.dumps(run_reference_demo(args.approve, args.human_id), indent=2))
 
 
 if __name__ == "__main__":
     main()
-

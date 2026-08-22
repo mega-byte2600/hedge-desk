@@ -1,34 +1,31 @@
-## Objective
+## Working increment
 
-Closes #
+- What runnable behavior changed?
+- What failed fast during development, and what was learned?
 
-## Changes
+## Evidence
 
-- 
+- [ ] Deterministic unit tests added or updated
+- [ ] Full local test suite passes
+- [ ] CLI/integration path exercised
+- [ ] Failure paths tested
 
-## Verification
+Paste commands and results:
 
 ```text
-Paste deterministic check output here.
+
 ```
 
-## Risk-control impact
+## Control boundaries
 
-- [ ] No risk-control or financial-model behavior changed.
-- [ ] Risk-control or financial-model behavior changed; reference cases are included.
-- [ ] Independent review is required before merge.
+- [ ] Paper-only boundary remains intact
+- [ ] No agent-generated or agent-modified authoritative RoR
+- [ ] Human authorization remains explicit and hash-bound
+- [ ] Data provenance, as-of time, license, and redistribution status reviewed
+- [ ] No secrets, licensed payloads, customer data, or MNPI committed
 
-## Safety gates
+## ADR trigger
 
-- [ ] The system remains paper-only.
-- [ ] Failure and missing inputs fail closed.
-- [ ] Machine risk approval remains separate from human authorization.
-- [ ] No execution path bypasses compliance, deterministic risk, or human approval.
-- [ ] Audit inputs, reason codes, versions, and outputs remain reproducible.
-
-## Agent disclosure
-
-- Agent/tool used:
-- Commands run:
-- Limitations or unresolved questions:
+An ADR is included only if this changes a durable architecture, model, data,
+compliance, or risk-control decision. Link it here, or write `not required`:
 

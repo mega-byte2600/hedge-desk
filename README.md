@@ -10,6 +10,14 @@ paper-trade proposals. It does not autonomously authorize or execute trades.
 This repository implements the first deterministic, paper-only vertical slice
 from the Hedge Desk specification.
 
+## Build culture: the 80/20 hacker rule
+
+- **80% working code:** fail fast, build, measure, learn, and ship small tested
+  vertical slices.
+- **20% ADR:** record only decisions needed to reproduce, review, or safely
+  change the software.
+- A feature is not real until it has deterministic tests and a runnable path.
+
 ## MVP series
 
 1. **Overnight Premium Desk:** defined-risk premium-selling research with a
@@ -42,8 +50,13 @@ order to a broker.
 
 ```bash
 python -m hedge_desk.cli
+python -m hedge_desk.cli --approve --human-id captain
 python -m unittest discover -s tests -v
 ```
+
+The default command stops at `human_authorization_required`. The second command
+simulates a named human approval and paper-only open/close against a frozen
+synthetic fixture; it does not connect to a broker or market-data vendor.
 
 ## Safety boundary
 

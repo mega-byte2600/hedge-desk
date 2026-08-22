@@ -1,5 +1,14 @@
 # Hedge Desk Agent Rules
 
+## 80/20 delivery rule
+
+- Target 80% working, tested code and 20% durable decision records.
+- Fail fast, build, measure, learn, and ship the smallest useful vertical slice.
+- Do not count commentary, plans, or generated prose as implementation.
+- No merge is complete until CI passes unit, failure-path, and runnable smoke
+  tests. Financial calculations require exact deterministic reference cases.
+- CI/CD and model/data validation gates fail closed; agents cannot waive them.
+
 - Keep the system paper-only until a separately reviewed release explicitly
   introduces read-only brokerage access.
 - Never bypass, weaken, or silently default a failed risk or compliance gate.

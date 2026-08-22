@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package
+        run: python -m pip install --disable-pip-version-check -e .
+
+      - name: Compile every Python module
+        run: python -m compileall -q hedge_desk tests
+
+      - name: Run deterministic unit and integration tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Verify human-pending default
+        run: |
+          python -m hedge_desk.cli > pending.json
+          python -c 'import json; d=json.load(open("pending.json")); assert d["mode"] == "paper"; assert d["next_action"] == "human_authorization_required"; assert "paper_open" not in d'
+
+      - name: Verify authorized paper lifecycle
+        run: |
+          python -m hedge_desk.cli --approve --human-id ci-human > approved.json
+          python -c 'import json; d=json.load(open("approved.json")); assert d["mode"] == "paper"; assert d["paper_open"]["environment"] == "paper"; assert d["paper_close"]["realized_pnl"] == "77.40"'
+
+      - name: Assert no production broker adapter exists
+        run: |
+          test ! -e hedge_desk/broker
+          ! grep -R -E 'api\.(alpaca|ibkr)|interactivebrokers|submit_order|placeOrder' hedge_desk
