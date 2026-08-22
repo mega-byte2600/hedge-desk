@@ -70,6 +70,10 @@ class OvernightEvaluationTests(unittest.TestCase):
         model_lab = evaluations[4]
         self.assertEqual(model_lab.project_id, "open-quant-ai-model-lab")
         self.assertEqual(
+            model_lab.layers[0].metrics["otc_live_hidden_order_visibility"],
+            "false",
+        )
+        self.assertEqual(
             model_lab.layers[2].metrics["quant_training_manifest_admissible"],
             "true",
         )
@@ -79,6 +83,10 @@ class OvernightEvaluationTests(unittest.TestCase):
         )
         self.assertEqual(
             model_lab.layers[2].metrics["training_trade_authorized"], "false"
+        )
+        self.assertEqual(
+            model_lab.layers[2].metrics["otc_directional_signal_authorized"],
+            "false",
         )
         self.assertEqual(
             model_lab.layers[2].metrics["authoritative_risk_input"], "false"
@@ -169,7 +177,10 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertEqual(report["code_commit"], "LOCAL_UNSPECIFIED")
         self.assertEqual(report["portfolio_stress"]["scenario_count"], 5)
         self.assertEqual(report["portfolio_stress"]["real_money_pnl"], "0")
-        self.assertEqual(len(report["data_batch"]["required_sources"]), 10)
+        self.assertEqual(len(report["data_batch"]["required_sources"]), 11)
+        self.assertIn(
+            "synthetic-off-exchange", report["data_batch"]["required_sources"]
+        )
         self.assertIn(
             "synthetic-futures-event", report["data_batch"]["required_sources"]
         )

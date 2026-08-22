@@ -41,6 +41,10 @@ from hedge_desk.models import (
     build_synthetic_reference_quorum,
     build_synthetic_training_gate,
 )
+from hedge_desk.off_exchange import (
+    OtcWeeklyObservation,
+    evaluate_otc_weekly_observation,
+)
 from hedge_desk.earnings import (
     EarningsConsensus,
     EarningsEventInput,
@@ -109,6 +113,7 @@ def _reference_batch() -> Any:
         "synthetic-arbitrage-legs": sha256_text("synthetic-arbitrage-legs-v1"),
         "synthetic-dividend-history": sha256_text("synthetic-dividend-history-v1"),
         "synthetic-model-governance": sha256_text("synthetic-model-governance-v1"),
+        "synthetic-off-exchange": "0" * 63 + "1",
         "synthetic-futures-contract": "5" * 64,
         "synthetic-futures-event": sha256_text("synthetic-futures-event-v1"),
     }
@@ -131,10 +136,26 @@ def _model_lab_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
     quorum = build_synthetic_reference_quorum(evaluated_at)
     quant_training = build_synthetic_training_gate(ModelTeam.QUANT)
     ai_training = build_synthetic_training_gate(ModelTeam.AI)
+    otc = evaluate_otc_weekly_observation(
+        OtcWeeklyObservation(
+            "synthetic-finra-week", "TEST", "T1", date(2026, 6, 29),
+            100000, 1000, evaluated_at - timedelta(days=1),
+            evaluated_at - timedelta(days=1), 14, "1" * 64,
+        ),
+        evaluated_at,
+    )
     layers = (
         LayerEvaluation(
             EvaluationLayer.OBSERVED, EvaluationStatus.PASS, (),
-            {"source": "synthetic_fixture"}, quorum.model_artifact_ids,
+            {
+                "source": "synthetic_fixture",
+                "otc_delayed_aggregate_admissible": str(otc.admissible).lower(),
+                "otc_average_shares_per_trade": str(otc.average_shares_per_trade),
+                "otc_live_hidden_order_visibility": str(
+                    otc.live_hidden_order_visibility
+                ).lower(),
+            },
+            quorum.model_artifact_ids + ("1" * 64,),
         ),
         LayerEvaluation(
             EvaluationLayer.STAT, EvaluationStatus.NOT_REQUIRED,
@@ -153,6 +174,9 @@ def _model_lab_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                     ai_training.admissible
                 ).lower(),
                 "training_trade_authorized": "false",
+                "otc_directional_signal_authorized": str(
+                    otc.directional_signal_authorized
+                ).lower(),
             },
             quorum.model_artifact_ids,
         ),
