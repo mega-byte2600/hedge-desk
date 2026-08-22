@@ -10,6 +10,10 @@ paper-trade proposals. It does not autonomously authorize or execute trades.
 This repository implements the first deterministic, paper-only vertical slice
 from the Hedge Desk specification.
 
+Original repository code and documentation are open source under
+[Apache License 2.0](LICENSE). Market data, model weights, publications, and
+other third-party inputs retain their own licenses and are not relicensed here.
+
 See [current implementation status](docs/architecture/STATUS.md) for the tested
 MVP matrix, war-game coverage, and known production blockers.
 See the [sub-$100 data stack](docs/validation/SUB_100_DATA_STACK.md) and
