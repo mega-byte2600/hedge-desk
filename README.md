@@ -1,5 +1,12 @@
 # Hedge Desk MVP
 
+> **Corporate motto:** Making money overnight - the dream: making money while
+> you sleep.
+
+This is an aspirational product motto, not a promise of investment performance.
+The MVP automates overnight research and prepares human-pending, defined-risk
+paper-trade proposals. It does not autonomously authorize or execute trades.
+
 This repository implements the first deterministic, paper-only vertical slice
 from the Hedge Desk specification.
 
@@ -26,4 +33,3 @@ python -m unittest discover -s tests -v
   blocked.
 - Risk estimates are model outputs requiring independent validation; they are
   not guarantees of future loss or portfolio survival.
-
