@@ -33,6 +33,13 @@ def evaluate_candidate(
         raise ValueError("candidate economics differ from validated risk inputs")
     if risk_inputs.as_of > evaluated_at:
         raise ValueError("risk inputs cannot be from the future")
+    if (
+        risk_inputs.risk_model_id != policy.required_risk_model_id
+        or risk_inputs.risk_model_version != policy.required_risk_model_version
+    ):
+        raise ValueError("risk model is not permitted by policy")
+    if risk_inputs.validator_id not in policy.permitted_validator_ids:
+        raise ValueError("risk validator is not permitted by policy")
     reasons = account_gate(account, candidate)
     reasons.extend(
         risk_gate(

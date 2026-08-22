@@ -6,6 +6,8 @@ both `risk_of_ruin_before` and `risk_of_ruin_after`, the conventional model ID
 and version, validator identity and version, source hash, portfolio snapshot
 hash, candidate economics, and as-of time. Missing, mismatched, future-dated,
 or corrupt artifacts fail closed.
+The risk policy also pins an allowed model ID/version and validator identity;
+a structurally valid artifact from any other authority fails closed.
 
 `hedge_desk/risk/ruin.py` contains the isolated conventional reference
 implementation and its hard comparison gate. Its numerical implementation is

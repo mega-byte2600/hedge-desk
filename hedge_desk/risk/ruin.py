@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, localcontext
-from typing import List
+from typing import List, Tuple
 
 from hedge_desk.domain import Account, TradeCandidate
 
@@ -19,6 +19,12 @@ class RiskPolicy:
     minimum_daily_dollar_volume: Decimal = Decimal("1000000")
     maximum_single_trade_loss_fraction: Decimal = Decimal("0.01")
     assumed_loss_sequence: int = 20
+    required_risk_model_id: str = RISK_MODEL_ID
+    required_risk_model_version: str = RISK_MODEL_VERSION
+    permitted_validator_ids: Tuple[str, ...] = (
+        "classic-vv-fixture-validator",
+        "classic-vv-test-validator",
+    )
 
 
 def estimate_risk_of_ruin(

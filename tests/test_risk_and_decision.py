@@ -135,6 +135,25 @@ class RiskAndDecisionTests(unittest.TestCase):
                 self.account, changed, NOW, risk_inputs=risk_inputs(trade)
             )
 
+    def test_unapproved_model_or_validator_identity_fails_closed(self) -> None:
+        trade = make_candidate()
+        with self.assertRaisesRegex(ValueError, "risk model is not permitted"):
+            evaluate_candidate(
+                self.account,
+                trade,
+                NOW,
+                RiskPolicy(required_risk_model_version="approved-v2"),
+                risk_inputs(trade),
+            )
+        with self.assertRaisesRegex(ValueError, "risk validator is not permitted"):
+            evaluate_candidate(
+                self.account,
+                trade,
+                NOW,
+                RiskPolicy(permitted_validator_ids=("independent-vv-prod",)),
+                risk_inputs(trade),
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
