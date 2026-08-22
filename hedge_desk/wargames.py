@@ -920,3 +920,16 @@ def build_war_game_report() -> Dict[str, Any]:
         json.dumps(report, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
     return report
+
+
+def validate_war_game_report(value: Dict[str, Any]) -> Tuple[str, ...]:
+    """Require the serialized synthetic suite to equal a fresh deterministic run."""
+    expected = build_war_game_report()
+    canonical = lambda item: json.dumps(  # noqa: E731 - compact canonicalizer
+        item, sort_keys=True, separators=(",", ":")
+    )
+    return (
+        ()
+        if canonical(value) == canonical(expected)
+        else ("WAR_GAME_REFERENCE_MISMATCH",)
+    )

@@ -1,4 +1,5 @@
 from decimal import Decimal
+import json
 import unittest
 
 from hedge_desk.wargames import (
@@ -15,6 +16,7 @@ from hedge_desk.wargames import (
     run_premium_timing_war_games,
     run_candidate_pipeline_war_games,
     run_premium_war_games,
+    validate_war_game_report,
 )
 
 
@@ -52,6 +54,10 @@ class PremiumWarGameTests(unittest.TestCase):
     def test_fixture_manifest_is_reproducible(self) -> None:
         self.assertEqual(build_war_game_manifest(), build_war_game_manifest())
         self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 50)
+
+    def test_serialized_report_matches_fresh_deterministic_run(self) -> None:
+        serialized = json.loads(json.dumps(build_war_game_report()))
+        self.assertEqual(validate_war_game_report(serialized), ())
 
     def test_reference_scenario_pnls_are_exact(self) -> None:
         results = {result.scenario_id: result for result in run_premium_war_games()}

@@ -1,5 +1,7 @@
 from copy import deepcopy
 from datetime import datetime, timezone
+from hashlib import sha256
+import json
 import unittest
 
 from hedge_desk.overnight import build_morning_report
@@ -90,6 +92,20 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn("WAR_GAME_DISCLOSURE_INVALID", validate_report(report).reason_codes)
 
+    def test_recomputed_inner_hash_cannot_hide_war_game_tampering(self) -> None:
+        report = build_morning_report(NOW)
+        war_games = report["war_games"]
+        war_games["premium"][0]["net_pnl"] = "999"
+        payload = {
+            key: value for key, value in war_games.items()
+            if key != "war_game_report_sha256"
+        }
+        war_games["war_game_report_sha256"] = sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        report = finalize_report(report)
+        self.assertIn("WAR_GAME_DISCLOSURE_INVALID", validate_report(report).reason_codes)
+
     def test_incomplete_data_batch_is_blocked(self) -> None:
         report = build_morning_report(NOW)
         report["data_batch"]["status"] = "INCOMPLETE"
@@ -142,6 +158,23 @@ class ReportingTests(unittest.TestCase):
     def test_rehashed_outer_report_cannot_hide_tampered_stress_metrics(self) -> None:
         report = build_morning_report(NOW)
         report["portfolio_stress"]["descriptive_metrics"]["maximum_drawdown"] = "0"
+        report = finalize_report(report)
+        self.assertIn(
+            "PORTFOLIO_STRESS_DISCLOSURE_INVALID",
+            validate_report(report).reason_codes,
+        )
+
+    def test_recomputed_inner_hash_cannot_hide_stress_scenario_tampering(self) -> None:
+        report = build_morning_report(NOW)
+        stress = report["portfolio_stress"]
+        stress["scenarios"][0]["combined_net_pnl"] = "999"
+        payload = {
+            key: value for key, value in stress.items()
+            if key != "stress_report_sha256"
+        }
+        stress["stress_report_sha256"] = sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
         report = finalize_report(report)
         self.assertIn(
             "PORTFOLIO_STRESS_DISCLOSURE_INVALID",

@@ -7,6 +7,8 @@ from typing import Any, Dict, Mapping, Tuple
 from hedge_desk.audit import validate_audit_evaluation
 from hedge_desk.data import validate_serialized_batch_manifest
 from hedge_desk.replay import validate_replay_evaluation
+from hedge_desk.wargames import validate_war_game_report
+from hedge_desk.portfolio_stress import validate_portfolio_stress_report
 
 
 PROHIBITED_PERFORMANCE_CLAIMS = (
@@ -168,6 +170,8 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
         or len(manifest.get("fixture_sha256", "")) != 64
     ):
         reasons.append("WAR_GAME_MANIFEST_INVALID")
+    if isinstance(war_games, dict) and validate_war_game_report(war_games):
+        reasons.append("WAR_GAME_DISCLOSURE_INVALID")
     portfolio_stress = report.get("portfolio_stress", {})
     stress_hash_valid = False
     if isinstance(portfolio_stress, dict):
@@ -197,6 +201,15 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
         or not stress_hash_valid
     ):
         reasons.append("PORTFOLIO_STRESS_DISCLOSURE_INVALID")
+    if isinstance(portfolio_stress, dict):
+        try:
+            stress_reference_reasons = validate_portfolio_stress_report(
+                portfolio_stress
+            )
+        except (ArithmeticError, TypeError, ValueError):
+            stress_reference_reasons = ("PORTFOLIO_STRESS_SCHEMA_INVALID",)
+        if stress_reference_reasons:
+            reasons.append("PORTFOLIO_STRESS_DISCLOSURE_INVALID")
     serialized = json.dumps(report, sort_keys=True).lower()
     if any(claim in serialized for claim in PROHIBITED_PERFORMANCE_CLAIMS):
         reasons.append("PROHIBITED_PERFORMANCE_CLAIM")

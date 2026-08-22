@@ -159,3 +159,12 @@ def build_stress_circuit_breaker(report: Dict[str, Any]) -> CircuitBreakerResult
     return evaluate_drawdown_circuit_breaker(
         current_drawdown, maximum_drawdown, expected_hash
     )
+
+
+def validate_portfolio_stress_report(value: Dict[str, Any]) -> Tuple[str, ...]:
+    """Require the frozen stress report to equal a fresh deterministic run."""
+    expected = build_portfolio_stress_report(
+        Decimal(value.get("starting_capital", "0")),
+        Decimal(value.get("maximum_drawdown_fraction", "0")),
+    )
+    return () if value == expected else ("PORTFOLIO_STRESS_REFERENCE_MISMATCH",)
