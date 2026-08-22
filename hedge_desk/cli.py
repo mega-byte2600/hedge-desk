@@ -15,10 +15,31 @@ from hedge_desk.artifacts import (
     verify_artifact_bundle_manifest,
 )
 from hedge_desk.scheduler import ScheduledRunRequest, execute_scheduled_run
+from hedge_desk.data import validate_local_observation
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--validate-data-envelope",
+        metavar="FILE",
+        help="validate a local BYO-data envelope against --payload",
+    )
+    parser.add_argument(
+        "--payload",
+        metavar="FILE",
+        help="local payload used with --validate-data-envelope; never copied",
+    )
+    parser.add_argument(
+        "--decision-cutoff",
+        help="timezone-aware ISO-8601 cutoff for local data validation",
+    )
+    parser.add_argument(
+        "--max-age-seconds",
+        type=int,
+        default=0,
+        help="maximum data age for local validation (default: 0)",
+    )
     parser.add_argument(
         "--morning-markdown",
         action="store_true",
@@ -74,6 +95,27 @@ def main() -> None:
         help="stable run identity required with --scheduled-receipt",
     )
     args = parser.parse_args()
+    if args.validate_data_envelope:
+        if not args.payload or not args.decision_cutoff:
+            parser.error(
+                "--validate-data-envelope requires --payload and --decision-cutoff"
+            )
+        try:
+            cutoff = datetime.fromisoformat(
+                args.decision_cutoff.replace("Z", "+00:00")
+            )
+            result = validate_local_observation(
+                Path(args.validate_data_envelope),
+                Path(args.payload),
+                cutoff,
+                args.max_age_seconds,
+            )
+        except ValueError as exc:
+            parser.error(str(exc))
+        print(json.dumps(json_value(result), indent=2))
+        if not result.gate.admissible:
+            raise SystemExit(2)
+        return
     if args.verify_bundle_manifest:
         manifest_path = Path(args.verify_bundle_manifest)
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
