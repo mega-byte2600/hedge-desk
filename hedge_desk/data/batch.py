@@ -40,10 +40,15 @@ class BatchManifest:
     manifest_sha256: str
 
 
-def _is_hash(value: str) -> bool:
+def _is_hash(value: str, allow_zero: bool = False) -> bool:
     try:
-        return len(value) == 64 and int(value, 16) >= 0
-    except ValueError:
+        parsed = int(value, 16)
+        return (
+            isinstance(value, str)
+            and len(value) == 64
+            and (parsed > 0 or (allow_zero and parsed == 0))
+        )
+    except (TypeError, ValueError):
         return False
 
 
@@ -56,19 +61,51 @@ def build_batch_manifest(
 ) -> BatchManifest:
     if not batch_id or not required_sources:
         raise ValueError("batch identity and required sources are required")
-    if len(set(required_sources)) != len(required_sources):
-        raise ValueError("required sources must be unique")
-    if len({result.source_id for result in source_results}) != len(source_results):
-        raise ValueError("source batch results must be unique")
-    if not _is_hash(source_policy_sha256) or not _is_hash(prior_manifest_sha256):
+    if (
+        any(not isinstance(item, str) or not item for item in required_sources)
+        or len(set(required_sources)) != len(required_sources)
+    ):
+        raise ValueError("required sources must be unique and nonempty")
+    result_ids = [result.source_id for result in source_results]
+    if (
+        any(not isinstance(item, str) or not item for item in result_ids)
+        or len(set(result_ids)) != len(source_results)
+    ):
+        raise ValueError("source batch results must be unique and nonempty")
+    if not _is_hash(source_policy_sha256) or not _is_hash(
+        prior_manifest_sha256, allow_zero=True
+    ):
         raise ValueError("batch policy and prior manifest hashes must be valid")
 
     by_source = {result.source_id: result for result in source_results}
     missing = sorted(set(required_sources) - set(by_source))
+    unexpected = sorted(set(by_source) - set(required_sources))
     reasons = []
     if missing:
         reasons.extend(f"REQUIRED_SOURCE_MISSING:{source}" for source in missing)
-    if any(result.status is SourceBatchStatus.REJECT for result in source_results):
+    if unexpected:
+        reasons.extend(f"UNEXPECTED_SOURCE:{source}" for source in unexpected)
+    invalid_hash = any(
+        not _is_hash(result.artifact_sha256) for result in source_results
+    )
+    pass_with_reasons = any(
+        result.status is SourceBatchStatus.PASS and result.reason_codes
+        for result in source_results
+    )
+    noncanonical_reasons = any(
+        result.reason_codes != tuple(sorted(set(result.reason_codes)))
+        for result in source_results
+    )
+    if invalid_hash:
+        status = BatchStatus.REJECTED
+        reasons.append("SOURCE_ARTIFACT_HASH_INVALID")
+    elif pass_with_reasons or noncanonical_reasons or unexpected:
+        status = BatchStatus.REJECTED
+        if pass_with_reasons:
+            reasons.append("SOURCE_PASS_HAS_REASONS")
+        if noncanonical_reasons:
+            reasons.append("SOURCE_REASON_CODES_NONCANONICAL")
+    elif any(result.status is SourceBatchStatus.REJECT for result in source_results):
         status = BatchStatus.REJECTED
         reasons.append("SOURCE_REJECTED")
     elif any(result.status is SourceBatchStatus.QUARANTINE for result in source_results):
@@ -76,9 +113,6 @@ def build_batch_manifest(
         reasons.append("SOURCE_QUARANTINED")
     elif missing:
         status = BatchStatus.INCOMPLETE
-    elif any(not _is_hash(result.artifact_sha256) for result in source_results):
-        status = BatchStatus.REJECTED
-        reasons.append("SOURCE_ARTIFACT_HASH_INVALID")
     else:
         status = BatchStatus.READY_FOR_RESEARCH
 

@@ -47,6 +47,20 @@ class DataBatchTests(unittest.TestCase):
         self.assertIs(manifest.status, BatchStatus.REJECTED)
         self.assertIn("SOURCE_ARTIFACT_HASH_INVALID", manifest.reason_codes)
 
+    def test_unexpected_source_pass_reasons_and_zero_policy_reject(self) -> None:
+        unexpected = SourceBatchResult("extra", SourceBatchStatus.PASS, HASH_B)
+        claimed_pass = SourceBatchResult(
+            "a", SourceBatchStatus.PASS, HASH_A, ("STALE",)
+        )
+        manifest = build_batch_manifest(
+            "batch", ("a",), (claimed_pass, unexpected), HASH_A
+        )
+        self.assertIs(manifest.status, BatchStatus.REJECTED)
+        self.assertIn("SOURCE_PASS_HAS_REASONS", manifest.reason_codes)
+        self.assertIn("UNEXPECTED_SOURCE:extra", manifest.reason_codes)
+        with self.assertRaisesRegex(ValueError, "hashes"):
+            build_batch_manifest("batch", ("a",), (claimed_pass,), "0" * 64)
+
     def test_serialized_manifest_is_independently_rebuilt(self) -> None:
         result = SourceBatchResult("a", SourceBatchStatus.PASS, HASH_A)
         manifest = json_value(
