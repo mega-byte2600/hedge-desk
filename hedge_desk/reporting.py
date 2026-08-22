@@ -231,6 +231,32 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
     return PublicationDecision(not reason_codes, reason_codes)
 
 
+def build_control_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
+    """Extract operator headlines only after full report validation succeeds."""
+    decision = validate_report(report)
+    if not decision.publishable:
+        raise ValueError("morning report is not publishable")
+    war_summary = report["war_games"]["summary"]
+    stress = report["portfolio_stress"]
+    release = report["release_readiness"]
+    return {
+        "report_type": "paper_morning_control_summary",
+        "code_commit": report["code_commit"],
+        "report_sha256": report["report_sha256"],
+        "projects_evaluated": report["summary"]["projects_evaluated"],
+        "human_review": report["summary"]["human_review"],
+        "no_trade_projects": report["summary"]["no_trade"],
+        "real_money_pnl": report["real_money_pnl"],
+        "real_trades_executed": report["real_trades_executed"],
+        "war_game_scenarios": war_summary["total_scenario_count"],
+        "no_trade_controls": war_summary["no_trade_control_count"],
+        "portfolio_stress_scenarios": stress["scenario_count"],
+        "synthetic_stress_total_pnl": stress["descriptive_metrics"]["total_pnl"],
+        "release_status": release["status"],
+        "live_transition_authorized": release["live_transition_authorized"],
+    }
+
+
 def compare_morning_reports(
     previous: Mapping[str, Any], current: Mapping[str, Any]
 ) -> Dict[str, Any]:

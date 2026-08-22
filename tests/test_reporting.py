@@ -6,6 +6,7 @@ import unittest
 
 from hedge_desk.overnight import build_morning_report
 from hedge_desk.reporting import (
+    build_control_summary,
     compare_morning_reports,
     finalize_report,
     render_morning_markdown,
@@ -21,6 +22,27 @@ class ReportingTests(unittest.TestCase):
         report = build_morning_report(NOW)
         self.assertTrue(validate_report(report).publishable)
         self.assertEqual(len(report["report_sha256"]), 64)
+
+    def test_control_summary_is_validated_and_truthfully_separates_results(self) -> None:
+        report = build_morning_report(NOW)
+        summary = build_control_summary(report)
+        self.assertEqual(summary["report_type"], "paper_morning_control_summary")
+        self.assertEqual(summary["projects_evaluated"], 6)
+        self.assertEqual(summary["human_review"], 1)
+        self.assertEqual(summary["no_trade_projects"], 5)
+        self.assertEqual(summary["real_money_pnl"], "0")
+        self.assertEqual(summary["real_trades_executed"], 0)
+        self.assertEqual(summary["war_game_scenarios"], 56)
+        self.assertEqual(summary["no_trade_controls"], 30)
+        self.assertEqual(summary["portfolio_stress_scenarios"], 5)
+        self.assertEqual(summary["synthetic_stress_total_pnl"], "-9936.00")
+        self.assertEqual(summary["release_status"], "LIVE_RELEASE_BLOCKED")
+        self.assertFalse(summary["live_transition_authorized"])
+
+        report["real_money_pnl"] = "1"
+        report = finalize_report(report)
+        with self.assertRaisesRegex(ValueError, "not publishable"):
+            build_control_summary(report)
 
     def test_tampering_invalidates_report_hash(self) -> None:
         report = build_morning_report(NOW)

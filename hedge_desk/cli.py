@@ -10,7 +10,7 @@ from hedge_desk.demo import json_value, run_reference_demo
 from hedge_desk.overnight import current_morning_report
 from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.wargames import build_war_game_report
-from hedge_desk.reporting import render_morning_markdown
+from hedge_desk.reporting import build_control_summary, render_morning_markdown
 from hedge_desk.artifacts import (
     build_artifact_bundle_manifest,
     verify_artifact_bundle_manifest,
@@ -122,6 +122,11 @@ def main() -> None:
         help="render the validated paper morning evaluation as Markdown",
     )
     parser.add_argument(
+        "--control-summary",
+        action="store_true",
+        help="emit validated paper/real, war-game, stress, and release headlines",
+    )
+    parser.add_argument(
         "--war-games",
         action="store_true",
         help="run every declared synthetic premium-spread stress scenario",
@@ -176,6 +181,16 @@ def main() -> None:
         help="stable run identity required with --scheduled-receipt",
     )
     args = parser.parse_args()
+    if args.control_summary:
+        if not args.report_input:
+            parser.error("--control-summary requires --report-input")
+        try:
+            report = json.loads(Path(args.report_input).read_text(encoding="utf-8"))
+            summary = build_control_summary(report)
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+            parser.error(str(exc))
+        print(json.dumps(summary, indent=2))
+        return
     if args.validate_option_universe_manifest:
         try:
             result = validate_local_option_universe(

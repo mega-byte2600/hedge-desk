@@ -16,6 +16,23 @@ from datetime import datetime, timezone
 
 
 class CliTests(unittest.TestCase):
+    def test_control_summary_cli_requires_and_validates_report(self) -> None:
+        report = build_morning_report(datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "report.json"
+            path.write_text(json.dumps(report), encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, "-m", "hedge_desk.cli", "--control-summary",
+                 "--report-input", str(path)],
+                capture_output=True, text=True, check=False,
+            )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        summary = json.loads(completed.stdout)
+        self.assertEqual(summary["real_money_pnl"], "0")
+        self.assertEqual(summary["real_trades_executed"], 0)
+        self.assertEqual(summary["war_game_scenarios"], 56)
+        self.assertFalse(summary["live_transition_authorized"])
+
     def test_run_health_cli_verifies_fresh_paper_artifacts(self) -> None:
         now = datetime(2026, 8, 22, 9, 0, tzinfo=timezone.utc)
         commit = "a" * 40
