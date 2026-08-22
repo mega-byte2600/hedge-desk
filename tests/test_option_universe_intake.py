@@ -34,6 +34,31 @@ class OptionUniverseIntakeTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "schema invalid"):
                 validate_local_option_universe(path)
 
+    def test_nonstring_or_empty_snapshot_paths_fail_with_stable_reason(self) -> None:
+        for envelope, payload_path in ((None, "quotes.json"), ("", "quotes.json"),
+                                       ("envelope.json", 7), ("envelope.json", "")):
+            payload = json.loads(EXAMPLE.read_text(encoding="utf-8"))
+            payload["snapshots"] = [{"envelope": envelope, "payload": payload_path}]
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "manifest.json"
+                path.write_text(json.dumps(payload), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "snapshot paths invalid"):
+                    validate_local_option_universe(path)
+
+    def test_missing_snapshot_files_fail_with_stable_reason(self) -> None:
+        payload = json.loads(EXAMPLE.read_text(encoding="utf-8"))
+        payload["market_session_evidence"] = str(
+            EXAMPLE.parent / "market-session.synthetic.json"
+        )
+        payload["snapshots"] = [
+            {"envelope": "missing-envelope.json", "payload": "missing-quotes.json"}
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "manifest.json"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "snapshot unreadable"):
+                validate_local_option_universe(path)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -75,6 +75,8 @@ python -m hedge_desk.cli --projects
 python -m hedge_desk.cli --overnight-report
 python -m hedge_desk.cli --war-games
 python -m hedge_desk.cli --morning-markdown
+python -m hedge_desk.cli --validate-data-stack examples/data-stack.synthetic.json
+python -m hedge_desk.cli --validate-option-universe-manifest examples/option-universe.synthetic.json
 python -m unittest discover -s tests -v
 ```
 
@@ -90,6 +92,12 @@ licensed adapters exist, it truthfully runs synthetic fixtures and returns
 evaluation every 15 minutes, 24/7, and retains its JSON report for 30 days.
 GitHub scheduling is best-effort; delayed runs do not constitute a production
 uptime guarantee.
+
+The two strict data commands exercise the entitlement/capability gate and the
+cross-underlying local option intake. Local vendor payloads remain outside the
+repository; only validated, content-addressed derived output is emitted. Neither
+command estimates win probability, calculates Risk of Ruin, or authorizes a
+trade.
 
 ## Safety boundary
 
