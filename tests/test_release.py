@@ -19,6 +19,10 @@ class ReleaseReadinessTests(unittest.TestCase):
         self.assertFalse(result.live_transition_authorized)
         self.assertEqual(len(result.reason_codes), len(REQUIRED_RELEASE_EVIDENCE))
         self.assertEqual(validate_serialized_release_readiness(json_value(result)), ())
+        self.assertIn(
+            "RELEASE_REQUIREMENT_UNSATISFIED:REGULATORY_TRACEABILITY_VERIFIED",
+            result.reason_codes,
+        )
 
     def test_all_hashed_evidence_only_reaches_separate_authorization(self) -> None:
         evidence = tuple(
