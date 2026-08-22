@@ -23,12 +23,30 @@ Create a sibling JSON envelope with exactly these fields:
 
 Validate it locally:
 
+Create a separate point-in-time exchange-session evidence file using schema
+`hedge-desk-market-session-1.0.0`:
+
+```json
+{
+  "schema_version": "hedge-desk-market-session-1.0.0",
+  "venue": "OPRA",
+  "regular_open": "2026-08-22T06:30:00-07:00",
+  "regular_close": "2026-08-22T13:00:00-07:00",
+  "received_at": "2026-08-22T05:00:00-07:00",
+  "calendar_artifact_sha256": "sha256-of-the-exact-calendar-artifact"
+}
+```
+
+Then validate and scan:
+
 ```bash
 python3 -m hedge_desk.cli \
   --validate-data-envelope snapshot.envelope.json \
   --payload /private/path/snapshot.json \
   --validate-option-snapshot \
   --scan-vertical-spreads \
+  --market-session-evidence /private/path/market-session.json \
+  --minimum-seconds-before-close 900 \
   --decision-cutoff 2026-08-22T08:00:02-07:00 \
   --max-age-seconds 120
 ```
@@ -47,3 +65,6 @@ only structural metadata and contract IDs—not the licensed quote payload.
 `--scan-vertical-spreads` enumerates all executable-side defined-risk vertical
 pairs under the checked-in liquidity and timing policy. It does not select a
 best trade, estimate probability, calculate Risk of Ruin, or authorize a trade.
+The CLI withholds all candidate handoffs when market-session evidence is absent
+or blocked. An admitted handoff binds the calendar hash, decision time, and
+latest entry time; it still stops at `VALIDATED_RISK_INPUT_REQUIRED`.

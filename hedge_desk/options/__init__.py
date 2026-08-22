@@ -35,9 +35,11 @@ from .handoff import (
     validate_candidate_control_handoff,
 )
 from .session import (
+    MARKET_SESSION_SCHEMA_VERSION,
     MarketSessionEvidence,
     MarketSessionGate,
     evaluate_market_session,
+    parse_market_session_evidence,
 )
 
 __all__ = [
@@ -67,5 +69,7 @@ __all__ = [
     "validate_candidate_control_handoff",
     "MarketSessionEvidence",
     "MarketSessionGate",
+    "MARKET_SESSION_SCHEMA_VERSION",
     "evaluate_market_session",
+    "parse_market_session_evidence",
 ]

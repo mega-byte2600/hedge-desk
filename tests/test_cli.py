@@ -56,6 +56,13 @@ class CliTests(unittest.TestCase):
                             "bid": "2.00", "ask": "2.10", "bid_size": 25,
                             "ask_size": 30, "quoted_at": "2026-08-21T12:00:00Z",
                             "open_interest": 1000, "volume": 500,
+                        }, {
+                            "contract_id": "TEST260918P00090000",
+                            "underlying": "TEST", "option_type": "put",
+                            "strike": "90", "expiration": "2026-09-18",
+                            "bid": "0.75", "ask": "0.80", "bid_size": 25,
+                            "ask_size": 30, "quoted_at": "2026-08-21T12:00:00Z",
+                            "open_interest": 1000, "volume": 500,
                         }],
                     }
                 ),
@@ -71,24 +78,33 @@ class CliTests(unittest.TestCase):
                 "payload_sha256": sha256(payload.read_bytes()).hexdigest(),
                 "synthetic": False, "redistribution_allowed": False,
             }), encoding="utf-8")
+            session = root / "market-session.json"
+            session.write_text(json.dumps({
+                "schema_version": "hedge-desk-market-session-1.0.0",
+                "venue": "OPRA",
+                "regular_open": "2026-08-21T11:00:00Z",
+                "regular_close": "2026-08-21T13:00:00Z",
+                "received_at": "2026-08-21T10:00:00Z",
+                "calendar_artifact_sha256": "b" * 64,
+            }), encoding="utf-8")
             result = subprocess.run([
                 sys.executable, "-m", "hedge_desk.cli",
                 "--validate-data-envelope", str(envelope),
                 "--payload", str(payload), "--validate-option-snapshot",
                 "--scan-vertical-spreads",
+                "--market-session-evidence", str(session),
                 "--decision-cutoff", "2026-08-21T12:00:00Z",
             ], check=True, capture_output=True, text=True)
             output = json.loads(result.stdout)
-            self.assertEqual(output["option_snapshot"]["contract_count"], 1)
+            self.assertEqual(output["option_snapshot"]["contract_count"], 2)
             self.assertEqual(output["option_snapshot"]["symbol"], "TEST")
             self.assertEqual(
-                output["vertical_spread_scan"]["disposition"], "NO_TRADE"
+                output["vertical_spread_scan"]["disposition"],
+                "CANDIDATES_FOR_CONTROL_PIPELINE",
             )
-            self.assertEqual(output["control_handoffs"], [])
-            self.assertEqual(
-                output["handoff_reason_codes"],
-                ["MARKET_SESSION_EVIDENCE_REQUIRED"],
-            )
+            self.assertEqual(len(output["control_handoffs"]), 1)
+            self.assertFalse(output["control_handoffs"][0]["trade_authorized"])
+            self.assertEqual(output["handoff_reason_codes"], [])
             self.assertNotIn('"bid": "2.00"', result.stdout)
 
     def test_local_data_intake_cli_validates_without_copying_payload(self) -> None:

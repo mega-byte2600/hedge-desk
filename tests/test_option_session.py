@@ -2,7 +2,11 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import unittest
 
-from hedge_desk.options.session import MarketSessionEvidence, evaluate_market_session
+from hedge_desk.options.session import (
+    MarketSessionEvidence,
+    evaluate_market_session,
+    parse_market_session_evidence,
+)
 
 
 OPEN = datetime(2026, 8, 21, 13, 30, tzinfo=timezone.utc)
@@ -37,6 +41,21 @@ class MarketSessionTests(unittest.TestCase):
         )
         self.assertIn("MARKET_SESSION_INTERVAL_INVALID", result.reason_codes)
         self.assertIn("MARKET_CALENDAR_HASH_INVALID", result.reason_codes)
+
+    def test_parser_rejects_unknown_fields_and_naive_time_remains_blocked(self) -> None:
+        payload = {
+            "schema_version": "hedge-desk-market-session-1.0.0",
+            "venue": "OPRA", "regular_open": "2026-08-21T13:30:00",
+            "regular_close": "2026-08-21T20:00:00Z",
+            "received_at": "2026-08-21T12:00:00Z",
+            "calendar_artifact_sha256": "a" * 64,
+        }
+        parsed = parse_market_session_evidence(payload)
+        result = evaluate_market_session(parsed, OPEN, 900)
+        self.assertIn("MARKET_SESSION_TIMESTAMP_NOT_TIMEZONE_AWARE", result.reason_codes)
+        payload["extra"] = True
+        with self.assertRaisesRegex(ValueError, "schema invalid"):
+            parse_market_session_evidence(payload)
 
 
 if __name__ == "__main__":

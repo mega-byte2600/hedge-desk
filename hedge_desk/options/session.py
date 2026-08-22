@@ -2,7 +2,10 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Tuple
+from typing import Any, Dict, Tuple
+
+
+MARKET_SESSION_SCHEMA_VERSION = "hedge-desk-market-session-1.0.0"
 
 
 @dataclass(frozen=True)
@@ -72,4 +75,24 @@ def evaluate_market_session(
         latest_entry,
         decision_time,
         evidence.calendar_artifact_sha256,
+    )
+
+
+def parse_market_session_evidence(payload: Dict[str, Any]) -> MarketSessionEvidence:
+    expected = {
+        "schema_version", "venue", "regular_open", "regular_close",
+        "received_at", "calendar_artifact_sha256",
+    }
+    if set(payload) != expected or payload.get("schema_version") != MARKET_SESSION_SCHEMA_VERSION:
+        raise ValueError("market session evidence schema invalid")
+    try:
+        values = tuple(
+            datetime.fromisoformat(payload[field].replace("Z", "+00:00"))
+            for field in ("regular_open", "regular_close", "received_at")
+        )
+    except (AttributeError, TypeError, ValueError) as exc:
+        raise ValueError("market session timestamp invalid") from exc
+    return MarketSessionEvidence(
+        payload["venue"], values[0], values[1], values[2],
+        payload["calendar_artifact_sha256"],
     )
