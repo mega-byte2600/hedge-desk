@@ -413,12 +413,13 @@ def build_war_game_manifest() -> Dict[str, Any]:
     canonical = json.dumps(
         payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True
     ).encode("utf-8")
-    return {
+    report = {
         "schema_version": WAR_GAME_FIXTURE_SCHEMA_VERSION,
         "scenario_count": len(scenario_ids),
         "scenario_ids": scenario_ids,
         "fixture_sha256": sha256(canonical).hexdigest(),
     }
+    return report
 
 
 def build_war_game_report() -> Dict[str, Any]:
@@ -468,7 +469,7 @@ def build_war_game_report() -> Dict[str, Any]:
         + sum(item["best_hindsight_arm"] == "NO_TRADE" for item in dividend)
         + sum(item["disposition"] == "NO_TRADE" for item in execution)
     )
-    return {
+    report = {
         "report_type": "synthetic_hypothetical_war_games",
         "version": WAR_GAME_VERSION,
         "environment": "paper",
@@ -518,3 +519,7 @@ def build_war_game_report() -> Dict[str, Any]:
             "Assignment cost is a declared synthetic reserve, not a broker quote.",
         ],
     }
+    report["war_game_report_sha256"] = sha256(
+        json.dumps(report, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return report

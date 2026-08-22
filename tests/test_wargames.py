@@ -29,6 +29,7 @@ class PremiumWarGameTests(unittest.TestCase):
         )
         self.assertEqual(report["fixture_manifest"]["scenario_count"], 28)
         self.assertEqual(len(report["fixture_manifest"]["fixture_sha256"]), 64)
+        self.assertEqual(len(report["war_game_report_sha256"]), 64)
         summary = report["summary"]
         self.assertEqual(
             summary["earnings_fixed_arm_metrics"]["EQUITY"]["total_pnl"], "-22"

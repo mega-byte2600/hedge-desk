@@ -77,10 +77,23 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
     ):
         reasons.append("STAT_DISCLOSURE_INVALID")
     war_games = report.get("war_games", {})
+    war_game_hash_valid = False
+    if isinstance(war_games, dict):
+        war_game_payload = {
+            key: value
+            for key, value in war_games.items()
+            if key != "war_game_report_sha256"
+        }
+        war_game_hash_valid = war_games.get("war_game_report_sha256") == sha256(
+            json.dumps(
+                war_game_payload, sort_keys=True, separators=(",", ":")
+            ).encode()
+        ).hexdigest()
     if (
         not isinstance(war_games, dict)
         or war_games.get("source") != "synthetic_fixture"
         or war_games.get("all_declared_scenarios_included") is not True
+        or not war_game_hash_valid
     ):
         reasons.append("WAR_GAME_DISCLOSURE_INVALID")
     manifest = war_games.get("fixture_manifest", {}) if isinstance(war_games, dict) else {}

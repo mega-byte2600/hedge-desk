@@ -55,6 +55,12 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn("WAR_GAME_MANIFEST_INVALID", validate_report(report).reason_codes)
 
+    def test_rehashed_outer_report_cannot_hide_war_game_metric_tampering(self) -> None:
+        report = build_morning_report(NOW)
+        report["war_games"]["summary"]["arbitrage_policy_metrics"]["total_pnl"] = "999"
+        report = finalize_report(report)
+        self.assertIn("WAR_GAME_DISCLOSURE_INVALID", validate_report(report).reason_codes)
+
     def test_incomplete_data_batch_is_blocked(self) -> None:
         report = build_morning_report(NOW)
         report["data_batch"]["status"] = "INCOMPLETE"
