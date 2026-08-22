@@ -15,6 +15,7 @@ from .portfolio import PositionExposure, PortfolioPolicy, evaluate_portfolio_gat
 
 
 BACK_OFFICE_POLICY_VERSION = "paper-options-1.0.0"
+APPROVED_BACK_OFFICE_POLICY_VERSIONS = frozenset({BACK_OFFICE_POLICY_VERSION})
 
 
 class BackOfficeStatus(str, Enum):

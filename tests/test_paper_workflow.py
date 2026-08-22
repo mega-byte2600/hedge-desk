@@ -64,6 +64,50 @@ class PaperWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(PermissionError, "integrity check failed"):
             execute_paper_open(changed_plan, FIXTURE_AS_OF)
 
+    def test_stale_or_unknown_control_artifact_cannot_create_plan(self) -> None:
+        plan = build_reference_plan()
+        stale_risk = replace(
+            plan.risk_decision,
+            evaluated_at=FIXTURE_AS_OF - timedelta(seconds=121),
+        )
+        with self.assertRaisesRegex(ValueError, "risk control artifact is stale"):
+            create_paper_trade_plan(
+                plan.plan_id,
+                plan.spread,
+                stale_risk,
+                plan.compliance_decision,
+                plan.created_at,
+                plan.approval_expires_at,
+            )
+        unknown_policy = replace(
+            plan.compliance_decision, policy_version="unapproved-policy"
+        )
+        with self.assertRaisesRegex(ValueError, "policy version is not approved"):
+            create_paper_trade_plan(
+                plan.plan_id,
+                plan.spread,
+                plan.risk_decision,
+                unknown_policy,
+                plan.created_at,
+                plan.approval_expires_at,
+            )
+
+    def test_control_artifact_exact_age_boundary_passes(self) -> None:
+        plan = build_reference_plan()
+        boundary_risk = replace(
+            plan.risk_decision,
+            evaluated_at=FIXTURE_AS_OF - timedelta(seconds=120),
+        )
+        created = create_paper_trade_plan(
+            plan.plan_id,
+            plan.spread,
+            boundary_risk,
+            plan.compliance_decision,
+            plan.created_at,
+            plan.approval_expires_at,
+        )
+        self.assertEqual(created.risk_decision.risk_model_version, "0.1.0-unvalidated")
+
     def test_human_cannot_override_machine_rejection(self) -> None:
         plan = build_reference_plan()
         rejected_decision = replace(

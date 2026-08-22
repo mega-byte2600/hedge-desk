@@ -8,6 +8,7 @@ from hashlib import sha256
 from typing import Optional, Tuple
 
 from hedge_desk.backoffice import BackOfficeDecision, BackOfficeStatus
+from hedge_desk.backoffice.compliance import APPROVED_BACK_OFFICE_POLICY_VERSIONS
 from hedge_desk.domain import Decision, DecisionStatus
 from hedge_desk.options import VerticalSpreadCalculation
 
@@ -43,6 +44,7 @@ class PaperTradePlan:
     created_at: datetime
     approval_expires_at: datetime
     execution_quote_max_age_seconds: int
+    control_artifact_max_age_seconds: int
     plan_hash: str
 
 
@@ -75,6 +77,7 @@ def _calculate_plan_hash(
     created_at: datetime,
     approval_expires_at: datetime,
     execution_quote_max_age_seconds: int,
+    control_artifact_max_age_seconds: int,
 ) -> str:
     payload = "|".join(
         (
@@ -103,6 +106,8 @@ def _calculate_plan_hash(
             str(risk_decision.risk_of_ruin_before),
             str(risk_decision.risk_of_ruin_after),
             risk_decision.evaluated_at.isoformat(),
+            risk_decision.risk_model_id,
+            risk_decision.risk_model_version,
             compliance_decision.candidate_id,
             compliance_decision.account_id,
             compliance_decision.status.value,
@@ -114,6 +119,7 @@ def _calculate_plan_hash(
             created_at.isoformat(),
             approval_expires_at.isoformat(),
             str(execution_quote_max_age_seconds),
+            str(control_artifact_max_age_seconds),
         )
     )
     return sha256(payload.encode("utf-8")).hexdigest()
@@ -128,6 +134,7 @@ def _assert_plan_integrity(plan: PaperTradePlan) -> None:
         plan.created_at,
         plan.approval_expires_at,
         plan.execution_quote_max_age_seconds,
+        plan.control_artifact_max_age_seconds,
     )
     if expected != plan.plan_hash:
         raise PermissionError("paper-trade plan integrity check failed")
@@ -141,6 +148,7 @@ def create_paper_trade_plan(
     created_at: datetime,
     approval_expires_at: datetime,
     execution_quote_max_age_seconds: int = 120,
+    control_artifact_max_age_seconds: int = 120,
 ) -> PaperTradePlan:
     if not plan_id:
         raise ValueError("plan identity is required")
@@ -150,12 +158,25 @@ def create_paper_trade_plan(
         raise ValueError("approval expiry must follow plan creation")
     if execution_quote_max_age_seconds <= 0:
         raise ValueError("execution quote age limit must be positive")
+    if control_artifact_max_age_seconds <= 0:
+        raise ValueError("control artifact age limit must be positive")
     if compliance_decision.environment != "paper":
         raise ValueError("only paper Back Office decisions are accepted")
     if compliance_decision.candidate_id != risk_decision.candidate_id:
         raise ValueError("risk and compliance candidate identities must match")
     if compliance_decision.account_id != risk_decision.account_id:
         raise ValueError("risk and compliance account identities must match")
+    if compliance_decision.policy_version not in APPROVED_BACK_OFFICE_POLICY_VERSIONS:
+        raise ValueError("Back Office policy version is not approved")
+    for label, evaluated_at in (
+        ("risk", risk_decision.evaluated_at),
+        ("compliance", compliance_decision.evaluated_at),
+    ):
+        age = (created_at - evaluated_at).total_seconds()
+        if age < 0:
+            raise ValueError(f"{label} control cannot be from the future")
+        if age > control_artifact_max_age_seconds:
+            raise ValueError(f"{label} control artifact is stale")
 
     machine_status = (
         MachineRiskStatus.PASS
@@ -170,6 +191,7 @@ def create_paper_trade_plan(
         created_at,
         approval_expires_at,
         execution_quote_max_age_seconds,
+        control_artifact_max_age_seconds,
     )
     return PaperTradePlan(
         plan_id=plan_id,
@@ -184,6 +206,7 @@ def create_paper_trade_plan(
         created_at=created_at,
         approval_expires_at=approval_expires_at,
         execution_quote_max_age_seconds=execution_quote_max_age_seconds,
+        control_artifact_max_age_seconds=control_artifact_max_age_seconds,
         plan_hash=plan_hash,
     )
 

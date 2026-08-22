@@ -5,7 +5,13 @@ from decimal import Decimal
 
 from hedge_desk.compliance.account_gate import account_gate
 from hedge_desk.domain import Account, Decision, DecisionStatus, TradeCandidate
-from hedge_desk.risk.ruin import RiskPolicy, estimate_risk_of_ruin, risk_gate
+from hedge_desk.risk.ruin import (
+    RISK_MODEL_ID,
+    RISK_MODEL_VERSION,
+    RiskPolicy,
+    estimate_risk_of_ruin,
+    risk_gate,
+)
 
 
 def evaluate_candidate(
@@ -37,4 +43,6 @@ def evaluate_candidate(
         risk_of_ruin_before=Decimal("0"),
         risk_of_ruin_after=ruin_after,
         evaluated_at=evaluated_at,
+        risk_model_id=RISK_MODEL_ID,
+        risk_model_version=RISK_MODEL_VERSION,
     )

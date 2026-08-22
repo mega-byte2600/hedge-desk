@@ -8,6 +8,10 @@ from typing import List
 from hedge_desk.domain import Account, TradeCandidate
 
 
+RISK_MODEL_ID = "finite-capital-ruin-approximation"
+RISK_MODEL_VERSION = "0.1.0-unvalidated"
+
+
 @dataclass(frozen=True)
 class RiskPolicy:
     maximum_risk_of_ruin: Decimal = Decimal("0.04")
@@ -87,4 +91,3 @@ def risk_gate(
         reasons.append("RISK_OF_RUIN_LIMIT")
 
     return sorted(set(reasons))
-

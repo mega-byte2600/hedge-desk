@@ -81,10 +81,14 @@ class Decision:
     risk_of_ruin_before: Decimal
     risk_of_ruin_after: Decimal
     evaluated_at: datetime
+    risk_model_id: str
+    risk_model_version: str
 
     def __post_init__(self) -> None:
         if self.evaluated_at.tzinfo is None:
             raise ValueError("decision timestamp must be timezone-aware")
+        if not self.risk_model_id or not self.risk_model_version:
+            raise ValueError("risk model identity and version are required")
         if self.status is DecisionStatus.BLOCKED and not self.reason_codes:
             raise ValueError("blocked decisions require reason codes")
 
