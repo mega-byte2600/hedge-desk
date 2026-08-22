@@ -133,7 +133,7 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
     manifest = war_games.get("fixture_manifest", {}) if isinstance(war_games, dict) else {}
     if (
         not isinstance(manifest, dict)
-        or manifest.get("scenario_count") != 33
+        or manifest.get("scenario_count") != 36
         or not isinstance(manifest.get("fixture_sha256"), str)
         or len(manifest.get("fixture_sha256", "")) != 64
     ):

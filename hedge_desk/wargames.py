@@ -22,6 +22,13 @@ from hedge_desk.futures_events import (
     PhysicalEventType,
     evaluate_futures_event,
 )
+from hedge_desk.models import (
+    ModelArtifact,
+    ModelTeam,
+    ResearchLabel,
+    ResearchVote,
+    evaluate_research_quorum,
+)
 
 
 WAR_GAME_VERSION = "premium-spread-war-games-1.0.0"
@@ -123,6 +130,14 @@ class FuturesEventWarGame:
     transaction_cost: Decimal
     physically_deliverable: bool = False
     received_after_decision: bool = False
+
+
+@dataclass(frozen=True)
+class ModelGovernanceWarGame:
+    scenario_id: str
+    quant_label: ResearchLabel
+    ai_label: ResearchLabel
+    ai_license: str = "Apache-2.0"
 
 
 PREMIUM_WAR_GAMES: Tuple[PremiumWarGame, ...] = (
@@ -272,6 +287,20 @@ FUTURES_EVENT_WAR_GAMES: Tuple[FuturesEventWarGame, ...] = (
         "war-event-evidence-arrives-late", PhysicalEventType.WAR_GEOPOLITICAL,
         Decimal("1000"), Decimal("400"), Decimal("100"), Decimal("50"), Decimal("50"),
         received_after_decision=True,
+    ),
+)
+
+
+MODEL_GOVERNANCE_WAR_GAMES: Tuple[ModelGovernanceWarGame, ...] = (
+    ModelGovernanceWarGame(
+        "quant-ai-agree-research-only", ResearchLabel.POSITIVE, ResearchLabel.POSITIVE
+    ),
+    ModelGovernanceWarGame(
+        "quant-ai-disagree", ResearchLabel.POSITIVE, ResearchLabel.NEGATIVE
+    ),
+    ModelGovernanceWarGame(
+        "ai-artifact-license-blocked", ResearchLabel.POSITIVE,
+        ResearchLabel.POSITIVE, "proprietary",
     ),
 )
 
@@ -470,6 +499,42 @@ def run_futures_event_war_games() -> Tuple[Dict[str, Any], ...]:
     return tuple(results)
 
 
+def run_model_governance_war_games() -> Tuple[Dict[str, Any], ...]:
+    results = []
+    for scenario in MODEL_GOVERNANCE_WAR_GAMES:
+        artifacts = tuple(
+            ModelArtifact(
+                f"{team.value.lower()}-war-model", team, "open-war-model", "1.0.0",
+                "https://huggingface.co/example/open-war-model",
+                scenario.ai_license if team is ModelTeam.AI else "Apache-2.0",
+                "b" * 64, "deadbeef",
+                FIXTURE_AS_OF - timedelta(days=100), "c" * 64, "d" * 64,
+            )
+            for team in (ModelTeam.QUANT, ModelTeam.AI)
+        )
+        votes = (
+            ResearchVote(
+                scenario.scenario_id, ModelTeam.QUANT, "quant-war-model",
+                scenario.quant_label, FIXTURE_AS_OF, "e" * 64,
+            ),
+            ResearchVote(
+                scenario.scenario_id, ModelTeam.AI, "ai-war-model",
+                scenario.ai_label, FIXTURE_AS_OF, "f" * 64,
+            ),
+        )
+        evaluation = evaluate_research_quorum(votes, artifacts)  # type: ignore[arg-type]
+        results.append(
+            {
+                "scenario_id": scenario.scenario_id,
+                "disposition": evaluation.disposition,
+                "label": evaluation.label.value,
+                "reason_codes": list(evaluation.reason_codes),
+                "authoritative_risk_input": evaluation.authoritative_risk_input,
+            }
+        )
+    return tuple(results)
+
+
 def build_war_game_manifest() -> Dict[str, Any]:
     """Content-address every declared scenario input using canonical JSON."""
     fixtures = {
@@ -480,6 +545,7 @@ def build_war_game_manifest() -> Dict[str, Any]:
         "execution": json_value(EXECUTION_WAR_GAMES),
         "lifecycle": json_value(LIFECYCLE_WAR_GAMES),
         "futures_events": json_value(FUTURES_EVENT_WAR_GAMES),
+        "model_governance": json_value(MODEL_GOVERNANCE_WAR_GAMES),
     }
     scenario_ids = [
         scenario["scenario_id"]
@@ -512,6 +578,7 @@ def build_war_game_report() -> Dict[str, Any]:
     execution = run_execution_war_games()
     lifecycle = run_lifecycle_war_games()
     futures_events = run_futures_event_war_games()
+    model_governance = run_model_governance_war_games()
     pnls = tuple(result.net_pnl for result in results)
     wins = sum(result.profitable for result in results)
     premium_metrics = evaluate_pnl_series(pnls)
@@ -552,6 +619,7 @@ def build_war_game_report() -> Dict[str, Any]:
         + sum(item["best_hindsight_arm"] == "NO_TRADE" for item in dividend)
         + sum(item["disposition"] == "NO_TRADE" for item in execution)
         + sum(item["disposition"] == "NO_TRADE" for item in futures_events)
+        + sum(item["disposition"] == "NO_TRADE" for item in model_governance)
     )
     report = {
         "report_type": "synthetic_hypothetical_war_games",
@@ -566,6 +634,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 + len(execution)
                 + len(lifecycle)
                 + len(futures_events)
+                + len(model_governance)
             ),
             "scenario_count_by_mvp": {
                 "overnight-premium-desk": len(results),
@@ -575,6 +644,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 "execution-controls": len(execution),
                 "lifecycle-controls": len(lifecycle),
                 "event-futures-desk": len(futures_events),
+                "open-quant-ai-model-lab": len(model_governance),
             },
             "no_trade_control_count": no_trade_controls,
             "premium_fixed_trade": {
@@ -600,6 +670,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "execution_controls": execution,
         "lifecycle_controls": lifecycle,
         "futures_events": futures_events,
+        "model_governance": model_governance,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",
