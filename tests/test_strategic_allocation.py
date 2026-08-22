@@ -3,6 +3,7 @@ import unittest
 
 from hedge_desk.strategic_allocation import (
     AllocationWeight, AssetClass, evaluate_strategic_allocation,
+    serialize_strategic_allocation, validate_serialized_strategic_allocation,
 )
 
 
@@ -46,6 +47,18 @@ class StrategicAllocationTests(unittest.TestCase):
             (AllocationWeight(AssetClass.CASH, Decimal("0.99")),), Decimal("20")
         )
         self.assertIn("ALLOCATION_WEIGHTS_DO_NOT_SUM_TO_ONE", result.reason_codes)
+
+    def test_serialized_artifact_is_reconstructable_and_tamper_evident(self) -> None:
+        weights = diversified()
+        serialized = serialize_strategic_allocation(
+            weights, evaluate_strategic_allocation(weights, Decimal("35"))
+        )
+        self.assertEqual(validate_serialized_strategic_allocation(serialized), ())
+        serialized["cape_ratio"] = "20"
+        self.assertEqual(
+            validate_serialized_strategic_allocation(serialized),
+            ("STRATEGIC_ALLOCATION_ARTIFACT_INVALID",),
+        )
 
 
 if __name__ == "__main__":

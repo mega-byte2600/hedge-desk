@@ -94,10 +94,18 @@ from hedge_desk.strategic_allocation import (
     AllocationWeight,
     AssetClass,
     evaluate_strategic_allocation,
+    serialize_strategic_allocation,
 )
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
+REFERENCE_STRATEGIC_WEIGHTS = (
+    AllocationWeight(AssetClass.US_EQUITY, Decimal("0.25")),
+    AllocationWeight(AssetClass.INTERNATIONAL_EQUITY, Decimal("0.20")),
+    AllocationWeight(AssetClass.FIXED_INCOME, Decimal("0.25")),
+    AllocationWeight(AssetClass.REAL_ASSET, Decimal("0.20")),
+    AllocationWeight(AssetClass.CASH, Decimal("0.10")),
+)
 
 
 def _reference_artifact() -> DataArtifact:
@@ -631,14 +639,7 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         build_reference_market_session_gate(),
     )
     strategic_allocation = evaluate_strategic_allocation(
-        (
-            AllocationWeight(AssetClass.US_EQUITY, Decimal("0.25")),
-            AllocationWeight(AssetClass.INTERNATIONAL_EQUITY, Decimal("0.20")),
-            AllocationWeight(AssetClass.FIXED_INCOME, Decimal("0.25")),
-            AllocationWeight(AssetClass.REAL_ASSET, Decimal("0.20")),
-            AllocationWeight(AssetClass.CASH, Decimal("0.10")),
-        ),
-        Decimal("35"),
+        REFERENCE_STRATEGIC_WEIGHTS, Decimal("35")
     )
     cadence = evaluate_premium_cadence(
         FIXTURE_AS_OF, FIXTURE_AS_OF - timedelta(days=30)
@@ -864,6 +865,12 @@ def build_morning_report(
             evaluate_premium_cadence(
                 FIXTURE_AS_OF, FIXTURE_AS_OF - timedelta(days=30)
             )
+        ),
+        "strategic_allocation": serialize_strategic_allocation(
+            REFERENCE_STRATEGIC_WEIGHTS,
+            evaluate_strategic_allocation(
+                REFERENCE_STRATEGIC_WEIGHTS, Decimal("35")
+            ),
         ),
         "stat_evaluation": build_stat_evaluation(),
         "portfolio_stress": build_portfolio_stress_report(),

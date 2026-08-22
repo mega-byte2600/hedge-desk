@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 276 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 278 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - CI enforces an 80% whole-package branch-coverage floor; the current measured
@@ -87,6 +87,8 @@ python3 -m hedge_desk.cli --morning-markdown
   contain no probability or Risk of Ruin and cannot authorize a trade.
 - AST-enforced trust boundaries confining RoR calculation and validated risk
   input construction, and rejecting broker/network clients from paper runtime.
+- reconstructable strategic-allocation evidence binding exact project-policy
+  thresholds, weights, supplied CAPE, outcome, and explicit no-RoR/no-trade flags.
 - a non-overridable, content-addressed paper-to-live release gate; current
   status is `LIVE_RELEASE_BLOCKED` until every required evidence artifact
   exists, including explicit Back Office reconciliation certification.

@@ -5,7 +5,7 @@ from decimal import Decimal
 from enum import Enum
 from hashlib import sha256
 import json
-from typing import Tuple
+from typing import Any, Dict, Mapping, Tuple
 
 
 ALLOCATION_POLICY_VERSION = "diversification-cape-policy-1.0.0"
@@ -109,3 +109,69 @@ def evaluate_strategic_allocation(
         not reason_codes, reason_codes, us_equity, largest, cape_ratio,
         ALLOCATION_POLICY_VERSION, False, False, artifact_hash,
     )
+
+
+def serialize_strategic_allocation(
+    weights: Tuple[AllocationWeight, ...],
+    gate: StrategicAllocationGate,
+    policy: StrategicAllocationPolicy = StrategicAllocationPolicy(),
+) -> Dict[str, Any]:
+    return {
+        "version": gate.policy_version,
+        "weights": [
+            {"asset_class": item.asset_class.value, "weight": str(item.weight)}
+            for item in sorted(weights, key=lambda value: value.asset_class.value)
+        ],
+        "cape_ratio": str(gate.cape_ratio),
+        "policy": {
+            "minimum_distinct_asset_classes": policy.minimum_distinct_asset_classes,
+            "maximum_single_asset_class_weight": str(
+                policy.maximum_single_asset_class_weight
+            ),
+            "high_cape_threshold": str(policy.high_cape_threshold),
+            "high_cape_us_equity_maximum": str(
+                policy.high_cape_us_equity_maximum
+            ),
+        },
+        "admissible": gate.admissible,
+        "reason_codes": list(gate.reason_codes),
+        "us_equity_weight": str(gate.us_equity_weight),
+        "largest_asset_class_weight": str(gate.largest_asset_class_weight),
+        "risk_of_ruin_calculated": gate.risk_of_ruin_calculated,
+        "trade_authorized": gate.trade_authorized,
+        "artifact_sha256": gate.artifact_sha256,
+    }
+
+
+def validate_serialized_strategic_allocation(
+    value: Mapping[str, Any],
+) -> Tuple[str, ...]:
+    try:
+        if value.get("version") != ALLOCATION_POLICY_VERSION:
+            raise ValueError("version")
+        raw_policy = value["policy"]
+        policy = StrategicAllocationPolicy(
+            minimum_distinct_asset_classes=raw_policy[
+                "minimum_distinct_asset_classes"
+            ],
+            maximum_single_asset_class_weight=Decimal(
+                str(raw_policy["maximum_single_asset_class_weight"])
+            ),
+            high_cape_threshold=Decimal(str(raw_policy["high_cape_threshold"])),
+            high_cape_us_equity_maximum=Decimal(
+                str(raw_policy["high_cape_us_equity_maximum"])
+            ),
+        )
+        weights = tuple(
+            AllocationWeight(
+                AssetClass(item["asset_class"]), Decimal(str(item["weight"]))
+            )
+            for item in value["weights"]
+        )
+        rebuilt = evaluate_strategic_allocation(
+            weights, Decimal(str(value["cape_ratio"])), policy
+        )
+        expected = serialize_strategic_allocation(weights, rebuilt, policy)
+    except (ArithmeticError, KeyError, TypeError, ValueError):
+        return ("STRATEGIC_ALLOCATION_SCHEMA_INVALID",)
+    return () if dict(value) == expected else ("STRATEGIC_ALLOCATION_ARTIFACT_INVALID",)

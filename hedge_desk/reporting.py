@@ -13,6 +13,7 @@ from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.backoffice import validate_serialized_paper_reconciliation
 from hedge_desk.options import validate_serialized_premium_cadence
 from hedge_desk.release import validate_serialized_release_readiness
+from hedge_desk.strategic_allocation import validate_serialized_strategic_allocation
 
 
 PROHIBITED_PERFORMANCE_CLAIMS = (
@@ -139,6 +140,35 @@ def _validate_report_unchecked(report: Mapping[str, Any]) -> PublicationDecision
             cadence_bound = False
         if not cadence_bound:
             reasons.append("PREMIUM_CADENCE_LINEAGE_MISMATCH")
+    allocation = report.get("strategic_allocation", {})
+    allocation_reasons = (
+        validate_serialized_strategic_allocation(allocation)
+        if isinstance(allocation, dict)
+        else ("STRATEGIC_ALLOCATION_SCHEMA_INVALID",)
+    )
+    if allocation_reasons:
+        reasons.append("STRATEGIC_ALLOCATION_INVALID")
+    else:
+        try:
+            premium = next(
+                item for item in projects
+                if item["project_id"] == "overnight-premium-desk"
+            )
+            risk_layer = next(
+                layer for layer in premium["layers"]
+                if layer["layer"] == "DETERMINISTIC_RISK"
+            )
+            allocation_bound = (
+                risk_layer["metrics"]["strategic_allocation_artifact"]
+                == allocation["artifact_sha256"]
+                and allocation["artifact_sha256"] in risk_layer["artifact_refs"]
+                and allocation["risk_of_ruin_calculated"] is False
+                and allocation["trade_authorized"] is False
+            )
+        except (KeyError, StopIteration, TypeError):
+            allocation_bound = False
+        if not allocation_bound:
+            reasons.append("STRATEGIC_ALLOCATION_LINEAGE_MISMATCH")
     replay = report.get("chronological_replay", {})
     replay_validation_reasons = (
         validate_replay_evaluation(replay) if isinstance(replay, dict) else ()
@@ -334,6 +364,7 @@ def build_control_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
         report_summary = report["summary"]
         reconciliation = report["back_office_reconciliation"]
         cadence = report["premium_cadence"]
+        allocation = report["strategic_allocation"]
     except (KeyError, TypeError) as exc:
         raise ValueError("morning report control fields invalid") from exc
     return {
@@ -357,6 +388,11 @@ def build_control_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
             "new_entry_evaluation_allowed"
         ],
         "premium_monitoring_allowed": cadence["monitoring_allowed"],
+        "strategic_allocation_admissible": allocation["admissible"],
+        "strategic_allocation_policy_version": allocation["version"],
+        "strategic_allocation_ror_calculated": allocation[
+            "risk_of_ruin_calculated"
+        ],
         "release_status": release["status"],
         "live_transition_authorized": release["live_transition_authorized"],
     }

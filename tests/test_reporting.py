@@ -42,6 +42,12 @@ class ReportingTests(unittest.TestCase):
         self.assertFalse(summary["paper_reconciliation_live_release_eligible"])
         self.assertTrue(summary["premium_new_entry_evaluation_allowed"])
         self.assertTrue(summary["premium_monitoring_allowed"])
+        self.assertTrue(summary["strategic_allocation_admissible"])
+        self.assertEqual(
+            summary["strategic_allocation_policy_version"],
+            "diversification-cape-policy-1.0.0",
+        )
+        self.assertFalse(summary["strategic_allocation_ror_calculated"])
 
         report["real_money_pnl"] = "1"
         report = finalize_report(report)
@@ -52,6 +58,14 @@ class ReportingTests(unittest.TestCase):
         report = build_morning_report(NOW)
         report["summary"]["human_review"] = 99
         self.assertIn("REPORT_HASH_INVALID", validate_report(report).reason_codes)
+
+    def test_rehashed_strategic_allocation_tampering_is_blocked(self) -> None:
+        report = build_morning_report(NOW)
+        report["strategic_allocation"]["cape_ratio"] = "20"
+        report = finalize_report(report)
+        self.assertIn(
+            "STRATEGIC_ALLOCATION_INVALID", validate_report(report).reason_codes
+        )
 
     def test_rehashed_summary_must_reconcile_to_registered_projects(self) -> None:
         report = build_morning_report(NOW)
