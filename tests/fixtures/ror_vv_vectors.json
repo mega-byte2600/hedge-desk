@@ -1,0 +1,40 @@
+{
+  "schema_version": "ror-vv-vectors-1.0.0",
+  "model_id": "finite-capital-ruin-approximation",
+  "model_version": "0.1.0-unvalidated",
+  "relative_oracle_tolerance": "1E-25",
+  "vectors": [
+    {
+      "id": "simple-positive-expectancy",
+      "account_equity": "1000",
+      "maximum_loss": "100",
+      "win_probability": "0.6",
+      "expected_win": "200",
+      "expected_output": "0.00001693508780843028671103659672475401784957"
+    },
+    {
+      "id": "asymmetric-payoff-adjustment",
+      "account_equity": "2500",
+      "maximum_loss": "250",
+      "win_probability": "0.75",
+      "expected_win": "100",
+      "expected_output": "0.1615055828898457213500651997919688879725"
+    },
+    {
+      "id": "reference-premium-spread",
+      "account_equity": "100000",
+      "maximum_loss": "381.30",
+      "win_probability": "0.85",
+      "expected_win": "118.70",
+      "expected_output": "2.593975984816412119211528235543382215462E-65"
+    },
+    {
+      "id": "nonpositive-expectancy",
+      "account_equity": "100000",
+      "maximum_loss": "1000",
+      "win_probability": "0.4",
+      "expected_win": "500",
+      "expected_output": "1"
+    }
+  ]
+}
