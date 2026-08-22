@@ -28,7 +28,7 @@ class ValidatedRiskInputs:
 
 def _valid_hash(value: str) -> bool:
     try:
-        return len(value) == 64 and int(value, 16) >= 0
+        return isinstance(value, str) and len(value) == 64 and int(value, 16) > 0
     except ValueError:
         return False
 
@@ -93,6 +93,18 @@ def build_validated_risk_inputs(
         raise ValueError("risk input and validator identities are required")
     if as_of.tzinfo is None:
         raise ValueError("risk input timestamp must be timezone-aware")
+    numeric_values = (
+        maximum_loss,
+        expected_win,
+        win_probability,
+        risk_of_ruin_before,
+        risk_of_ruin_after,
+    )
+    if any(
+        not isinstance(value, Decimal) or not value.is_finite()
+        for value in numeric_values
+    ):
+        raise ValueError("risk input numeric values must be finite Decimals")
     if maximum_loss < 0 or expected_win < 0:
         raise ValueError("risk payoff inputs cannot be negative")
     if not Decimal("0") <= win_probability <= Decimal("1"):

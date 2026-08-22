@@ -168,6 +168,25 @@ class RiskAndDecisionTests(unittest.TestCase):
             with self.subTest(values=values), self.assertRaises(ValueError):
                 RiskPolicy(**values)
 
+    def test_nonfinite_or_zero_hash_risk_artifact_fails_before_decision(self) -> None:
+        trade = make_candidate()
+        with self.assertRaisesRegex(ValueError, "finite"):
+            build_validated_risk_inputs(
+                trade.candidate_id, trade.max_loss, trade.expected_win,
+                Decimal("NaN"), NOW, "a" * 64, "b" * 64,
+                Decimal("0"), Decimal("0"),
+                "finite-capital-ruin-approximation", "0.1.0-unvalidated",
+                "classic-vv-test-validator", "1.0.0",
+            )
+        with self.assertRaisesRegex(ValueError, "hashes"):
+            build_validated_risk_inputs(
+                trade.candidate_id, trade.max_loss, trade.expected_win,
+                trade.win_probability, NOW, "0" * 64, "b" * 64,
+                Decimal("0"), Decimal("0"),
+                "finite-capital-ruin-approximation", "0.1.0-unvalidated",
+                "classic-vv-test-validator", "1.0.0",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
