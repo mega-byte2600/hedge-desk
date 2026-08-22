@@ -21,7 +21,7 @@ class ProjectRegistryTests(unittest.TestCase):
         project = MVP_PROJECTS[4]
         self.assertEqual(project.number, 5)
         self.assertEqual(project.project_id, "open-quant-ai-model-lab")
-        self.assertEqual(project.status, ProjectStatus.ARCHITECTURE_ONLY)
+        self.assertEqual(project.status, ProjectStatus.WORKING_FOUNDATION)
 
 
 if __name__ == "__main__":

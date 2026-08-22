@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 105 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 109 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
@@ -34,7 +34,7 @@ python3 -m hedge_desk.cli --morning-markdown
 | Earnings Event Desk | Deterministic synthetic comparison war games | `NO_TRADE`; strategy pipeline not implemented |
 | Arbitrage Observer | Executable-side synthetic edge war games | `NO_TRADE`; market scanner not implemented |
 | Dividend Opportunity Desk | Shares/call/no-trade synthetic war games | `NO_TRADE`; point-in-time screen not implemented |
-| Open Quant/AI Model Lab | Open-license/reproducibility artifact gate | `NO_TRADE`; training pipeline not implemented |
+| Open Quant/AI Model Lab | Working dual-team research quorum plus open-artifact gate | `NO_TRADE`; no authoritative risk input or training pipeline |
 
 ## Implemented control boundaries
 

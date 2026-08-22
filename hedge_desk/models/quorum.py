@@ -1,7 +1,7 @@
 """Independent Quant/AI research quorum with no control-plane authority."""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Tuple
 
@@ -81,3 +81,38 @@ def evaluate_research_quorum(
         reason_codes,
         tuple(sorted(artifact.artifact_id for artifact in artifacts)),
     )
+
+
+def build_synthetic_reference_quorum(observed_at: datetime) -> ResearchQuorumResult:
+    """Build a frozen open-artifact governance fixture, not a market prediction."""
+    if observed_at.tzinfo is None:
+        raise ValueError("reference observation must be timezone-aware")
+    cutoff = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    artifacts = tuple(
+        ModelArtifact(
+            f"{team.value.lower()}-synthetic-model-v1",
+            team,
+            "open-synthetic-research-model",
+            "1.0.0",
+            "https://huggingface.co/example/open-synthetic-research-model",
+            "Apache-2.0",
+            "a" * 64,
+            "deadbeef",
+            cutoff,
+            "b" * 64,
+            "c" * 64,
+        )
+        for team in (ModelTeam.QUANT, ModelTeam.AI)
+    )
+    votes = tuple(
+        ResearchVote(
+            "synthetic-research-candidate",
+            team,
+            f"{team.value.lower()}-synthetic-model-v1",
+            ResearchLabel.POSITIVE,
+            observed_at,
+            "d" * 64,
+        )
+        for team in (ModelTeam.QUANT, ModelTeam.AI)
+    )
+    return evaluate_research_quorum(votes, artifacts)  # type: ignore[arg-type]

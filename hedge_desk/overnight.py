@@ -23,6 +23,7 @@ from hedge_desk.reporting import finalize_report
 from hedge_desk.audit import build_audit_evaluation
 from hedge_desk.stat_evaluation import build_stat_evaluation
 from hedge_desk.portfolio_stress import build_portfolio_stress_report
+from hedge_desk.models import build_synthetic_reference_quorum
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -69,6 +70,44 @@ def _inactive_project(project_id: str, evaluated_at: datetime) -> ProjectEvaluat
         for layer in EvaluationLayer
     )
     return ProjectEvaluation(project_id, evaluated_at, Disposition.NO_TRADE, layers)
+
+
+def _model_lab_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
+    quorum = build_synthetic_reference_quorum(evaluated_at)
+    layers = (
+        LayerEvaluation(
+            EvaluationLayer.OBSERVED, EvaluationStatus.PASS, (),
+            {"source": "synthetic_fixture"}, quorum.model_artifact_ids,
+        ),
+        LayerEvaluation(
+            EvaluationLayer.STAT, EvaluationStatus.NOT_REQUIRED,
+            ("RESEARCH_LABELS_ONLY",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.BIG, EvaluationStatus.PASS, (),
+            {
+                "disposition": quorum.disposition,
+                "label": quorum.label.value,
+                "authoritative_risk_input": str(quorum.authoritative_risk_input).lower(),
+            },
+            quorum.model_artifact_ids,
+        ),
+        LayerEvaluation(
+            EvaluationLayer.DETERMINISTIC_RISK, EvaluationStatus.BLOCKED,
+            ("AUTHORITATIVE_RISK_INPUT_ABSENT",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.DETERMINISTIC_COMPLIANCE, EvaluationStatus.NOT_REQUIRED,
+            ("RESEARCH_ONLY_NO_TRADE",), {},
+        ),
+        LayerEvaluation(
+            EvaluationLayer.HUMAN, EvaluationStatus.NOT_REQUIRED,
+            ("RESEARCH_ONLY_NO_TRADE",), {},
+        ),
+    )
+    return ProjectEvaluation(
+        "open-quant-ai-model-lab", evaluated_at, Disposition.NO_TRADE, layers
+    )
 
 
 def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
@@ -148,7 +187,7 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         for project in MVP_PROJECTS[1:]
         if project.status is ProjectStatus.ARCHITECTURE_ONLY
     )
-    return (premium,) + inactive
+    return (premium,) + inactive + (_model_lab_evaluation(FIXTURE_AS_OF),)
 
 
 def build_morning_report(generated_at: datetime) -> Dict[str, Any]:

@@ -52,7 +52,7 @@ MVP_PROJECTS: Tuple[MvpProject, ...] = (
         5,
         "open-quant-ai-model-lab",
         "Open Quant/AI Model Lab",
-        ProjectStatus.ARCHITECTURE_ONLY,
+        ProjectStatus.WORKING_FOUNDATION,
         "Run independent Quant and AI research teams with reproducible open artifacts.",
     ),
 )

@@ -27,6 +27,12 @@ class OvernightEvaluationTests(unittest.TestCase):
         risk_layer = evaluations[0].layers[3]
         self.assertEqual(len(risk_layer.metrics["risk_input_artifact"]), 64)
         self.assertEqual(len(risk_layer.artifact_refs), 2)
+        model_lab = evaluations[-1]
+        self.assertEqual(model_lab.project_id, "open-quant-ai-model-lab")
+        self.assertEqual(
+            model_lab.layers[2].metrics["authoritative_risk_input"], "false"
+        )
+        self.assertEqual(model_lab.layers[3].status, EvaluationStatus.BLOCKED)
 
     def test_morning_report_is_explicitly_paper_and_reconciles(self) -> None:
         report = build_morning_report(NOW)
