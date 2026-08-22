@@ -35,6 +35,8 @@ jobs:
 
       - name: Compile every Python module
         run: python -m compileall -q hedge_desk tests
+      - name: Verify GitHub Actions are pinned to immutable SHAs
+        run: python -c 'from pathlib import Path; from hedge_desk.supply_chain import validate_github_action_pins; reasons=validate_github_action_pins(tuple(Path(".github/workflows").glob("*.yml"))); assert not reasons, reasons'
 
       - name: Run deterministic unit and integration tests
         run: |
