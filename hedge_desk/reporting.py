@@ -9,6 +9,7 @@ from hedge_desk.data import validate_serialized_batch_manifest
 from hedge_desk.replay import validate_replay_evaluation
 from hedge_desk.wargames import validate_war_game_report
 from hedge_desk.portfolio_stress import validate_portfolio_stress_report
+from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.release import validate_serialized_release_readiness
 
 
@@ -56,6 +57,26 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
         reasons.append("INCOMPLETE_REPORT")
     if not report.get("limitations"):
         reasons.append("REQUIRED_LIMITATIONS_MISSING")
+    projects = report.get("projects")
+    summary = report.get("summary")
+    if isinstance(projects, list) and all(isinstance(item, dict) for item in projects):
+        project_ids = [item.get("project_id") for item in projects]
+        dispositions = [item.get("disposition") for item in projects]
+        expected_summary = {
+            "projects_evaluated": len(projects),
+            "human_review": dispositions.count("HUMAN_REVIEW"),
+            "no_trade": dispositions.count("NO_TRADE"),
+        }
+        project_summary_valid = (
+            summary == expected_summary
+            and len(project_ids) == len(set(project_ids))
+            and set(project_ids) == {project.project_id for project in MVP_PROJECTS}
+            and all(value in {"HUMAN_REVIEW", "NO_TRADE"} for value in dispositions)
+        )
+    else:
+        project_summary_valid = False
+    if not project_summary_valid:
+        reasons.append("PROJECT_SUMMARY_INVALID")
     replay = report.get("chronological_replay", {})
     replay_validation_reasons = (
         validate_replay_evaluation(replay) if isinstance(replay, dict) else ()
@@ -236,16 +257,20 @@ def build_control_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
     decision = validate_report(report)
     if not decision.publishable:
         raise ValueError("morning report is not publishable")
-    war_summary = report["war_games"]["summary"]
-    stress = report["portfolio_stress"]
-    release = report["release_readiness"]
+    try:
+        war_summary = report["war_games"]["summary"]
+        stress = report["portfolio_stress"]
+        release = report["release_readiness"]
+        report_summary = report["summary"]
+    except (KeyError, TypeError) as exc:
+        raise ValueError("morning report control fields invalid") from exc
     return {
         "report_type": "paper_morning_control_summary",
         "code_commit": report["code_commit"],
         "report_sha256": report["report_sha256"],
-        "projects_evaluated": report["summary"]["projects_evaluated"],
-        "human_review": report["summary"]["human_review"],
-        "no_trade_projects": report["summary"]["no_trade"],
+        "projects_evaluated": report_summary["projects_evaluated"],
+        "human_review": report_summary["human_review"],
+        "no_trade_projects": report_summary["no_trade"],
         "real_money_pnl": report["real_money_pnl"],
         "real_trades_executed": report["real_trades_executed"],
         "war_game_scenarios": war_summary["total_scenario_count"],

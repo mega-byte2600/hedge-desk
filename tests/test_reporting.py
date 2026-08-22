@@ -49,6 +49,21 @@ class ReportingTests(unittest.TestCase):
         report["summary"]["human_review"] = 99
         self.assertIn("REPORT_HASH_INVALID", validate_report(report).reason_codes)
 
+    def test_rehashed_summary_must_reconcile_to_registered_projects(self) -> None:
+        report = build_morning_report(NOW)
+        report["summary"]["human_review"] = 0
+        report["summary"]["no_trade"] = 6
+        report = finalize_report(report)
+        self.assertIn("PROJECT_SUMMARY_INVALID", validate_report(report).reason_codes)
+        with self.assertRaisesRegex(ValueError, "not publishable"):
+            build_control_summary(report)
+
+    def test_rehashed_duplicate_or_unknown_project_identity_is_blocked(self) -> None:
+        report = build_morning_report(NOW)
+        report["projects"][1]["project_id"] = report["projects"][0]["project_id"]
+        report = finalize_report(report)
+        self.assertIn("PROJECT_SUMMARY_INVALID", validate_report(report).reason_codes)
+
     def test_real_profit_claim_is_blocked_even_with_rehashed_report(self) -> None:
         report = build_morning_report(NOW)
         report["real_money_pnl"] = "1000"
