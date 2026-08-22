@@ -14,6 +14,7 @@ from hedge_desk.paper import (
     close_paper_trade,
     create_paper_trade_plan,
     execute_paper_open,
+    evaluate_paper_fill,
 )
 
 
@@ -159,6 +160,34 @@ class PaperWorkflowTests(unittest.TestCase):
         execute_paper_open(approved, FIXTURE_AS_OF + timedelta(seconds=120))
         with self.assertRaisesRegex(PermissionError, "quotes are stale"):
             execute_paper_open(approved, FIXTURE_AS_OF + timedelta(seconds=121))
+
+    def test_fill_check_requires_exact_approved_terms(self) -> None:
+        plan = approve_paper_trade(build_reference_plan(), "captain", FIXTURE_AS_OF)
+        ready = evaluate_paper_fill(
+            plan, 1, plan.spread.net_credit, FIXTURE_AS_OF + timedelta(seconds=120)
+        )
+        self.assertTrue(ready.ready)
+        insufficient = evaluate_paper_fill(
+            plan, 0, plan.spread.net_credit, FIXTURE_AS_OF
+        )
+        self.assertIn("INSUFFICIENT_COMBO_SIZE", insufficient.reason_codes)
+        worse_credit = evaluate_paper_fill(
+            plan, 1, plan.spread.net_credit - Decimal("0.01"), FIXTURE_AS_OF
+        )
+        self.assertIn("APPROVED_CREDIT_NOT_AVAILABLE", worse_credit.reason_codes)
+        adjusted = evaluate_paper_fill(
+            plan, 1, plan.spread.net_credit, FIXTURE_AS_OF,
+            contract_adjustment_pending=True,
+        )
+        self.assertIn("CONTRACT_ADJUSTMENT_PENDING", adjusted.reason_codes)
+
+    def test_fill_check_blocks_stale_quote_and_missing_human(self) -> None:
+        plan = build_reference_plan()
+        result = evaluate_paper_fill(
+            plan, 1, plan.spread.net_credit, FIXTURE_AS_OF + timedelta(seconds=121)
+        )
+        self.assertIn("HUMAN_AUTHORIZATION_REQUIRED", result.reason_codes)
+        self.assertIn("STALE_QUOTE", result.reason_codes)
 
     def test_paper_close_pnl_is_deterministic(self) -> None:
         plan = build_reference_plan()

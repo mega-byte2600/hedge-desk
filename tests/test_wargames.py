@@ -7,6 +7,7 @@ from hedge_desk.wargames import (
     run_arbitrage_war_games,
     run_dividend_war_games,
     run_earnings_war_games,
+    run_execution_war_games,
     run_premium_war_games,
 )
 
@@ -15,8 +16,8 @@ class PremiumWarGameTests(unittest.TestCase):
     def test_all_declared_scenarios_are_reported(self) -> None:
         report = build_war_game_report()
         self.assertTrue(report["all_declared_scenarios_included"])
-        self.assertEqual(report["summary"]["total_scenario_count"], 17)
-        self.assertEqual(report["summary"]["no_trade_control_count"], 7)
+        self.assertEqual(report["summary"]["total_scenario_count"], 22)
+        self.assertEqual(report["summary"]["no_trade_control_count"], 11)
         premium = report["summary"]["premium_fixed_trade"]
         self.assertEqual(premium["profitable_scenarios"], 1)
         self.assertEqual(premium["losing_scenarios"], 4)
@@ -25,12 +26,12 @@ class PremiumWarGameTests(unittest.TestCase):
             premium["descriptive_metrics"]["inference_status"],
             "INSUFFICIENT_SYNTHETIC_SAMPLE",
         )
-        self.assertEqual(report["fixture_manifest"]["scenario_count"], 17)
+        self.assertEqual(report["fixture_manifest"]["scenario_count"], 22)
         self.assertEqual(len(report["fixture_manifest"]["fixture_sha256"]), 64)
 
     def test_fixture_manifest_is_reproducible(self) -> None:
         self.assertEqual(build_war_game_manifest(), build_war_game_manifest())
-        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 17)
+        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 22)
 
     def test_reference_scenario_pnls_are_exact(self) -> None:
         results = {result.scenario_id: result for result in run_premium_war_games()}
@@ -64,6 +65,20 @@ class PremiumWarGameTests(unittest.TestCase):
         self.assertTrue(all(item["call_dividend_received"] == "0" for item in results.values()))
         self.assertEqual(results["normal-dividend-entitlement"]["best_hindsight_arm"], "SHARES")
         self.assertEqual(results["yield-trap"]["best_hindsight_arm"], "NO_TRADE")
+
+    def test_execution_terms_cancel_instead_of_partial_or_worse_fill(self) -> None:
+        results = {item["scenario_id"]: item for item in run_execution_war_games()}
+        self.assertEqual(
+            results["approved-terms-available"]["disposition"],
+            "READY_FOR_PAPER_OPEN",
+        )
+        for scenario_id in (
+            "stale-entry-quote",
+            "partial-combo-size",
+            "approved-credit-unavailable",
+            "contract-adjustment-pending",
+        ):
+            self.assertEqual(results[scenario_id]["disposition"], "NO_TRADE")
 
 
 if __name__ == "__main__":

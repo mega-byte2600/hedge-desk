@@ -69,6 +69,15 @@ class PaperClose:
     environment: str = "paper"
 
 
+@dataclass(frozen=True)
+class PaperFillCheck:
+    ready: bool
+    reason_codes: Tuple[str, ...]
+    available_combo_size: int
+    current_net_credit: Decimal
+    checked_at: datetime
+
+
 def _calculate_plan_hash(
     plan_id: str,
     spread: VerticalSpreadCalculation,
@@ -264,6 +273,45 @@ def execute_paper_open(plan: PaperTradePlan, opened_at: datetime) -> PaperOpen:
         opened_at=opened_at,
         entry_credit=plan.spread.net_credit,
         quantity=plan.spread.quantity,
+    )
+
+
+def evaluate_paper_fill(
+    plan: PaperTradePlan,
+    available_combo_size: int,
+    current_net_credit: Decimal,
+    checked_at: datetime,
+    contract_adjustment_pending: bool = False,
+) -> PaperFillCheck:
+    """Fail closed when current executable terms differ from the approved plan."""
+    _assert_plan_integrity(plan)
+    if checked_at.tzinfo is None:
+        raise ValueError("fill-check timestamp must be timezone-aware")
+    reasons = []
+    if plan.authorization.status is not HumanAuthorizationStatus.APPROVED:
+        reasons.append("HUMAN_AUTHORIZATION_REQUIRED")
+    if plan.machine_risk_status is not MachineRiskStatus.PASS:
+        reasons.append("RISK_PASS_REQUIRED")
+    if plan.compliance_decision.status is not BackOfficeStatus.PASS:
+        reasons.append("BACK_OFFICE_PASS_REQUIRED")
+    if available_combo_size < plan.spread.quantity:
+        reasons.append("INSUFFICIENT_COMBO_SIZE")
+    if current_net_credit < plan.spread.net_credit:
+        reasons.append("APPROVED_CREDIT_NOT_AVAILABLE")
+    if contract_adjustment_pending:
+        reasons.append("CONTRACT_ADJUSTMENT_PENDING")
+    quote_age = (checked_at - max(plan.spread.quote_timestamps)).total_seconds()
+    if quote_age < 0:
+        reasons.append("CHECK_PRECEDES_QUOTE")
+    elif quote_age > plan.execution_quote_max_age_seconds:
+        reasons.append("STALE_QUOTE")
+    reason_codes = tuple(sorted(set(reasons)))
+    return PaperFillCheck(
+        not reason_codes,
+        reason_codes,
+        available_combo_size,
+        current_net_credit,
+        checked_at,
     )
 
 

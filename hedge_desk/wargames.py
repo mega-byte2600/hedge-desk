@@ -8,7 +8,12 @@ import json
 from typing import Any, Dict, Tuple
 
 from hedge_desk.demo import FIXTURE_AS_OF, build_reference_plan, json_value
-from hedge_desk.paper import approve_paper_trade, close_paper_trade, execute_paper_open
+from hedge_desk.paper import (
+    approve_paper_trade,
+    close_paper_trade,
+    evaluate_paper_fill,
+    execute_paper_open,
+)
 from hedge_desk.metrics import evaluate_pnl_series
 
 
@@ -77,6 +82,15 @@ class DividendWarGame:
     call_entry_debit: Decimal
     call_exit_credit: Decimal
     call_cost: Decimal
+
+
+@dataclass(frozen=True)
+class ExecutionWarGame:
+    scenario_id: str
+    available_combo_size: int
+    current_net_credit: Decimal
+    checked_offset_seconds: int
+    contract_adjustment_pending: bool = False
 
 
 PREMIUM_WAR_GAMES: Tuple[PremiumWarGame, ...] = (
@@ -173,6 +187,17 @@ DIVIDEND_WAR_GAMES: Tuple[DividendWarGame, ...] = (
     DividendWarGame(
         "yield-trap", Decimal("50"), Decimal("35"), 100, Decimal("0.25"),
         Decimal("4"), Decimal("2"), Decimal("0.10"), Decimal("5"),
+    ),
+)
+
+
+EXECUTION_WAR_GAMES: Tuple[ExecutionWarGame, ...] = (
+    ExecutionWarGame("approved-terms-available", 1, Decimal("118.70"), 120),
+    ExecutionWarGame("stale-entry-quote", 1, Decimal("118.70"), 121),
+    ExecutionWarGame("partial-combo-size", 0, Decimal("118.70"), 60),
+    ExecutionWarGame("approved-credit-unavailable", 1, Decimal("118.69"), 60),
+    ExecutionWarGame(
+        "contract-adjustment-pending", 1, Decimal("118.70"), 60, True
     ),
 )
 
@@ -291,6 +316,27 @@ def run_dividend_war_games() -> Tuple[Dict[str, str], ...]:
     return tuple(results)
 
 
+def run_execution_war_games() -> Tuple[Dict[str, Any], ...]:
+    plan = approve_paper_trade(build_reference_plan(), "war-game-human", FIXTURE_AS_OF)
+    results = []
+    for scenario in EXECUTION_WAR_GAMES:
+        check = evaluate_paper_fill(
+            plan,
+            scenario.available_combo_size,
+            scenario.current_net_credit,
+            FIXTURE_AS_OF + timedelta(seconds=scenario.checked_offset_seconds),
+            scenario.contract_adjustment_pending,
+        )
+        results.append(
+            {
+                "scenario_id": scenario.scenario_id,
+                "disposition": "READY_FOR_PAPER_OPEN" if check.ready else "NO_TRADE",
+                "reason_codes": list(check.reason_codes),
+            }
+        )
+    return tuple(results)
+
+
 def build_war_game_manifest() -> Dict[str, Any]:
     """Content-address every declared scenario input using canonical JSON."""
     fixtures = {
@@ -298,6 +344,7 @@ def build_war_game_manifest() -> Dict[str, Any]:
         "earnings": json_value(EARNINGS_WAR_GAMES),
         "arbitrage": json_value(ARBITRAGE_WAR_GAMES),
         "dividend": json_value(DIVIDEND_WAR_GAMES),
+        "execution": json_value(EXECUTION_WAR_GAMES),
     }
     scenario_ids = [
         scenario["scenario_id"]
@@ -326,6 +373,7 @@ def build_war_game_report() -> Dict[str, Any]:
     earnings = run_earnings_war_games()
     arbitrage = run_arbitrage_war_games()
     dividend = run_dividend_war_games()
+    execution = run_execution_war_games()
     pnls = tuple(result.net_pnl for result in results)
     wins = sum(result.profitable for result in results)
     premium_metrics = evaluate_pnl_series(pnls)
@@ -333,6 +381,7 @@ def build_war_game_report() -> Dict[str, Any]:
         sum(item["best_hindsight_arm"] == "NO_TRADE" for item in earnings)
         + sum(item["disposition"] == "NO_TRADE" for item in arbitrage)
         + sum(item["best_hindsight_arm"] == "NO_TRADE" for item in dividend)
+        + sum(item["disposition"] == "NO_TRADE" for item in execution)
     )
     return {
         "report_type": "synthetic_hypothetical_war_games",
@@ -344,12 +393,14 @@ def build_war_game_report() -> Dict[str, Any]:
         "summary": {
             "total_scenario_count": (
                 len(results) + len(earnings) + len(arbitrage) + len(dividend)
+                + len(execution)
             ),
             "scenario_count_by_mvp": {
                 "overnight-premium-desk": len(results),
                 "earnings-event-desk": len(earnings),
                 "arbitrage-observer": len(arbitrage),
                 "dividend-opportunity-desk": len(dividend),
+                "execution-controls": len(execution),
             },
             "no_trade_control_count": no_trade_controls,
             "premium_fixed_trade": {
@@ -367,6 +418,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "earnings": earnings,
         "arbitrage": arbitrage,
         "dividend": dividend,
+        "execution_controls": execution,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",

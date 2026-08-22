@@ -55,7 +55,7 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("Real money P&L: $0", markdown)
         self.assertIn("Real trades executed: 0", markdown)
         self.assertIn("Premium synthetic total P&L: $-848.00", markdown)
-        self.assertIn("NO_TRADE controls: 7", markdown)
+        self.assertIn("NO_TRADE controls: 11", markdown)
 
     def test_unpublishable_report_cannot_be_rendered(self) -> None:
         report = build_morning_report(NOW)
