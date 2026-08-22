@@ -1,7 +1,13 @@
 from decimal import Decimal
 import unittest
 
-from hedge_desk.wargames import build_war_game_report, run_premium_war_games
+from hedge_desk.wargames import (
+    build_war_game_report,
+    run_arbitrage_war_games,
+    run_dividend_war_games,
+    run_earnings_war_games,
+    run_premium_war_games,
+)
 
 
 class PremiumWarGameTests(unittest.TestCase):
@@ -25,6 +31,25 @@ class PremiumWarGameTests(unittest.TestCase):
         self.assertEqual(report["environment"], "paper")
         self.assertEqual(report["source"], "synthetic_fixture")
         self.assertIn("not historical or live results", report["limitations"][0])
+
+    def test_earnings_iv_crush_can_make_call_lose_after_positive_move(self) -> None:
+        results = {item["scenario_id"]: item for item in run_earnings_war_games()}
+        iv_crush = results["positive-surprise-iv-crush"]
+        self.assertEqual(iv_crush["equity_net_pnl"], "6")
+        self.assertEqual(iv_crush["option_net_pnl"], "-204.00")
+        self.assertEqual(iv_crush["best_hindsight_arm"], "EQUITY")
+
+    def test_arbitrage_requires_executable_net_edge(self) -> None:
+        results = {item["scenario_id"]: item for item in run_arbitrage_war_games()}
+        self.assertEqual(results["net-edge-survives"]["disposition"], "NET_EDGE_CANDIDATE")
+        self.assertEqual(results["one-tick-erased-by-costs"]["disposition"], "NO_TRADE")
+        self.assertIn("QUOTES_NOT_SYNCHRONIZED", results["stale-fourth-leg"]["reason_codes"])
+
+    def test_long_call_never_receives_dividend(self) -> None:
+        results = {item["scenario_id"]: item for item in run_dividend_war_games()}
+        self.assertTrue(all(item["call_dividend_received"] == "0" for item in results.values()))
+        self.assertEqual(results["normal-dividend-entitlement"]["best_hindsight_arm"], "SHARES")
+        self.assertEqual(results["yield-trap"]["best_hindsight_arm"], "NO_TRADE")
 
 
 if __name__ == "__main__":

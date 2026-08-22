@@ -34,6 +34,47 @@ class PremiumWarGameResult:
     maximum_loss_reference: Decimal
 
 
+@dataclass(frozen=True)
+class EarningsWarGame:
+    scenario_id: str
+    start_price: Decimal
+    end_price: Decimal
+    shares: int
+    equity_cost: Decimal
+    option_entry_debit: Decimal
+    option_exit_credit: Decimal
+    option_cost: Decimal
+    hedged_gross_pnl: Decimal
+    hedged_cost: Decimal
+
+
+@dataclass(frozen=True)
+class ArbitrageWarGame:
+    scenario_id: str
+    gross_edge: Decimal
+    quantity: int
+    fees: Decimal
+    slippage_reserve: Decimal
+    financing_cost: Decimal
+    minimum_edge_buffer: Decimal
+    quotes_synchronized: bool = True
+    depth_available: int = 1
+    settlement_compatible: bool = True
+
+
+@dataclass(frozen=True)
+class DividendWarGame:
+    scenario_id: str
+    start_price: Decimal
+    end_price: Decimal
+    shares: int
+    dividend_per_share_received: Decimal
+    share_cost: Decimal
+    call_entry_debit: Decimal
+    call_exit_credit: Decimal
+    call_cost: Decimal
+
+
 PREMIUM_WAR_GAMES: Tuple[PremiumWarGame, ...] = (
     PremiumWarGame(
         "favorable-decay",
@@ -69,6 +110,69 @@ PREMIUM_WAR_GAMES: Tuple[PremiumWarGame, ...] = (
 )
 
 
+EARNINGS_WAR_GAMES: Tuple[EarningsWarGame, ...] = (
+    EarningsWarGame(
+        "surprise-followthrough", Decimal("100"), Decimal("104"), 10,
+        Decimal("4"), Decimal("2.50"), Decimal("4.00"), Decimal("4"),
+        Decimal("25"), Decimal("5"),
+    ),
+    EarningsWarGame(
+        "positive-surprise-iv-crush", Decimal("100"), Decimal("101"), 10,
+        Decimal("4"), Decimal("4.00"), Decimal("2.00"), Decimal("4"),
+        Decimal("5"), Decimal("5"),
+    ),
+    EarningsWarGame(
+        "headline-beat-guidance-reversal", Decimal("100"), Decimal("94"), 10,
+        Decimal("4"), Decimal("3.00"), Decimal("0.50"), Decimal("4"),
+        Decimal("-20"), Decimal("5"),
+    ),
+)
+
+
+ARBITRAGE_WAR_GAMES: Tuple[ArbitrageWarGame, ...] = (
+    ArbitrageWarGame(
+        "net-edge-survives", Decimal("80"), 1, Decimal("12"), Decimal("15"),
+        Decimal("8"), Decimal("20"),
+    ),
+    ArbitrageWarGame(
+        "one-tick-erased-by-costs", Decimal("20"), 1, Decimal("12"),
+        Decimal("10"), Decimal("4"), Decimal("5"),
+    ),
+    ArbitrageWarGame(
+        "stale-fourth-leg", Decimal("100"), 1, Decimal("12"), Decimal("15"),
+        Decimal("8"), Decimal("20"), quotes_synchronized=False,
+    ),
+    ArbitrageWarGame(
+        "insufficient-depth", Decimal("100"), 2, Decimal("12"), Decimal("15"),
+        Decimal("8"), Decimal("20"), depth_available=1,
+    ),
+    ArbitrageWarGame(
+        "settlement-mismatch", Decimal("100"), 1, Decimal("12"), Decimal("15"),
+        Decimal("8"), Decimal("20"), settlement_compatible=False,
+    ),
+)
+
+
+DIVIDEND_WAR_GAMES: Tuple[DividendWarGame, ...] = (
+    DividendWarGame(
+        "normal-dividend-entitlement", Decimal("50"), Decimal("52"), 100,
+        Decimal("1"), Decimal("4"), Decimal("2"), Decimal("3.50"), Decimal("5"),
+    ),
+    DividendWarGame(
+        "special-dividend", Decimal("50"), Decimal("48"), 100, Decimal("5"),
+        Decimal("5"), Decimal("2"), Decimal("1"), Decimal("5"),
+    ),
+    DividendWarGame(
+        "dividend-cut", Decimal("50"), Decimal("48"), 100, Decimal("0.10"),
+        Decimal("5"), Decimal("2"), Decimal("0.50"), Decimal("5"),
+    ),
+    DividendWarGame(
+        "yield-trap", Decimal("50"), Decimal("35"), 100, Decimal("0.25"),
+        Decimal("4"), Decimal("2"), Decimal("0.10"), Decimal("5"),
+    ),
+)
+
+
 def run_premium_war_games() -> Tuple[PremiumWarGameResult, ...]:
     """Replay every declared scenario; no scenario selection is permitted."""
     plan = build_reference_plan()
@@ -99,6 +203,90 @@ def run_premium_war_games() -> Tuple[PremiumWarGameResult, ...]:
     return tuple(results)
 
 
+def run_earnings_war_games() -> Tuple[Dict[str, str], ...]:
+    results = []
+    for scenario in EARNINGS_WAR_GAMES:
+        equity = (
+            (scenario.end_price - scenario.start_price) * Decimal(scenario.shares)
+            - scenario.equity_cost
+        )
+        option = (
+            (scenario.option_exit_credit - scenario.option_entry_debit) * Decimal("100")
+            - scenario.option_cost
+        )
+        hedged = scenario.hedged_gross_pnl - scenario.hedged_cost
+        arms = {"EQUITY": equity, "DEFINED_RISK_OPTION": option, "HEDGED_EQUITY": hedged, "NO_TRADE": Decimal("0")}
+        selected = max(sorted(arms), key=lambda arm: arms[arm])
+        results.append(
+            {
+                "scenario_id": scenario.scenario_id,
+                "equity_net_pnl": str(equity),
+                "option_net_pnl": str(option),
+                "hedged_equity_net_pnl": str(hedged),
+                "no_trade_net_pnl": "0",
+                "best_hindsight_arm": selected,
+            }
+        )
+    return tuple(results)
+
+
+def run_arbitrage_war_games() -> Tuple[Dict[str, str], ...]:
+    results = []
+    for scenario in ARBITRAGE_WAR_GAMES:
+        reasons = []
+        if not scenario.quotes_synchronized:
+            reasons.append("QUOTES_NOT_SYNCHRONIZED")
+        if scenario.depth_available < scenario.quantity:
+            reasons.append("INSUFFICIENT_DEPTH")
+        if not scenario.settlement_compatible:
+            reasons.append("SETTLEMENT_MISMATCH")
+        net_edge = (
+            scenario.gross_edge * Decimal(scenario.quantity)
+            - scenario.fees
+            - scenario.slippage_reserve
+            - scenario.financing_cost
+        )
+        if net_edge < scenario.minimum_edge_buffer:
+            reasons.append("EDGE_BELOW_SAFETY_BUFFER")
+        results.append(
+            {
+                "scenario_id": scenario.scenario_id,
+                "gross_edge": str(scenario.gross_edge * Decimal(scenario.quantity)),
+                "net_edge": str(net_edge),
+                "disposition": "NO_TRADE" if reasons else "NET_EDGE_CANDIDATE",
+                "reason_codes": ",".join(sorted(reasons)),
+            }
+        )
+    return tuple(results)
+
+
+def run_dividend_war_games() -> Tuple[Dict[str, str], ...]:
+    results = []
+    for scenario in DIVIDEND_WAR_GAMES:
+        share_pnl = (
+            (scenario.end_price - scenario.start_price) * Decimal(scenario.shares)
+            + scenario.dividend_per_share_received * Decimal(scenario.shares)
+            - scenario.share_cost
+        )
+        call_pnl = (
+            (scenario.call_exit_credit - scenario.call_entry_debit) * Decimal("100")
+            - scenario.call_cost
+        )
+        arms = {"SHARES": share_pnl, "LONG_CALL": call_pnl, "NO_TRADE": Decimal("0")}
+        selected = max(sorted(arms), key=lambda arm: arms[arm])
+        results.append(
+            {
+                "scenario_id": scenario.scenario_id,
+                "share_net_pnl": str(share_pnl),
+                "call_net_pnl": str(call_pnl),
+                "call_dividend_received": "0",
+                "no_trade_net_pnl": "0",
+                "best_hindsight_arm": selected,
+            }
+        )
+    return tuple(results)
+
+
 def build_war_game_report() -> Dict[str, Any]:
     results = run_premium_war_games()
     pnls = tuple(result.net_pnl for result in results)
@@ -117,7 +305,10 @@ def build_war_game_report() -> Dict[str, Any]:
             "worst_pnl": str(min(pnls)),
             "best_pnl": str(max(pnls)),
         },
-        "results": json_value(results),
+        "premium": json_value(results),
+        "earnings": run_earnings_war_games(),
+        "arbitrage": run_arbitrage_war_games(),
+        "dividend": run_dividend_war_games(),
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",
