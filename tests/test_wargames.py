@@ -17,6 +17,7 @@ from hedge_desk.wargames import (
     run_premium_cadence_war_games,
     run_premium_exit_attack_war_games,
     run_audit_attack_war_games,
+    run_scheduler_attack_war_games,
     run_candidate_pipeline_war_games,
     run_premium_war_games,
     run_option_universe_war_games,
@@ -29,8 +30,8 @@ class PremiumWarGameTests(unittest.TestCase):
     def test_all_declared_scenarios_are_reported(self) -> None:
         report = build_war_game_report()
         self.assertTrue(report["all_declared_scenarios_included"])
-        self.assertEqual(report["summary"]["total_scenario_count"], 72)
-        self.assertEqual(report["summary"]["no_trade_control_count"], 45)
+        self.assertEqual(report["summary"]["total_scenario_count"], 73)
+        self.assertEqual(report["summary"]["no_trade_control_count"], 46)
         premium = report["summary"]["premium_fixed_trade"]
         self.assertEqual(premium["profitable_scenarios"], 1)
         self.assertEqual(premium["losing_scenarios"], 4)
@@ -39,7 +40,7 @@ class PremiumWarGameTests(unittest.TestCase):
             premium["descriptive_metrics"]["inference_status"],
             "INSUFFICIENT_SYNTHETIC_SAMPLE",
         )
-        self.assertEqual(report["fixture_manifest"]["scenario_count"], 72)
+        self.assertEqual(report["fixture_manifest"]["scenario_count"], 73)
         self.assertEqual(len(report["fixture_manifest"]["fixture_sha256"]), 64)
         self.assertEqual(len(report["war_game_report_sha256"]), 64)
         summary = report["summary"]
@@ -58,7 +59,13 @@ class PremiumWarGameTests(unittest.TestCase):
 
     def test_fixture_manifest_is_reproducible(self) -> None:
         self.assertEqual(build_war_game_manifest(), build_war_game_manifest())
-        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 72)
+        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 73)
+
+    def test_scheduler_receipt_attack_is_an_explicit_no_trade_control(self) -> None:
+        result = run_scheduler_attack_war_games()[0]
+        self.assertEqual(result["scheduler_status"], "FAILED_CLOSED")
+        self.assertEqual(result["reason_codes"], ["PRIOR_RECEIPT_INVALID"])
+        self.assertFalse(result["trade_authorized"])
 
     def test_audit_attacks_are_explicit_no_trade_controls(self) -> None:
         results = {item["scenario_id"]: item for item in run_audit_attack_war_games()}
