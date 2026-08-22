@@ -21,6 +21,7 @@ from .entitlements import (
     evaluate_options_data_stack,
     parse_data_stack_manifest,
 )
+from .news import NewsBatchGate, NewsObservation, NewsTransport, evaluate_news_batch
 
 __all__ = [
     "DataArtifact", "DataGateResult", "validate_data_artifact",
@@ -31,4 +32,5 @@ __all__ = [
     "validate_local_observation",
     "DATA_STACK_SCHEMA_VERSION", "DataReadinessResult", "DataSubscription",
     "evaluate_options_data_stack", "parse_data_stack_manifest",
+    "NewsBatchGate", "NewsObservation", "NewsTransport", "evaluate_news_batch",
 ]

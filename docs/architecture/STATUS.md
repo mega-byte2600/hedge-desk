@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 219 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 222 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
@@ -63,6 +63,8 @@ python3 -m hedge_desk.cli --morning-markdown
   storage or a substitute for an external retention service.
 - strict local BYO-data envelopes with byte-level hashes; licensed payloads are
   validated in place and are never copied into the public repository.
+- point-in-time news/RSS evidence gates that treat transport separately from
+  license, reject private/stale/duplicate evidence, and grant no trade authority.
 - a strict canonical option-snapshot schema with exact decimal prices,
   synchronized source identity, and rejection of unknown/model-added fields.
 - deterministic enumeration of every admissible vertical spread from a
