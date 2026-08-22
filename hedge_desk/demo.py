@@ -17,6 +17,7 @@ from hedge_desk.options import (
     evaluate_event_calendar,
     VerticalCreditSpread,
     calculate_vertical_credit_spread,
+    OptionSnapshot,
 )
 from hedge_desk.paper import (
     approve_paper_trade,
@@ -29,6 +30,10 @@ from hedge_desk.risk import build_validated_risk_inputs
 
 FIXTURE_ID = "overnight-premium-reference-v1"
 FIXTURE_AS_OF = datetime(2026, 7, 28, 20, 0, tzinfo=timezone.utc)
+FIXTURE_OPTION_SOURCE_ID = "synthetic-option-chain"
+FIXTURE_OPTION_PAYLOAD_SHA256 = sha256(
+    b"TEST-95-90-PUT-CREDIT|2026-07-28T20:00:00Z"
+).hexdigest()
 
 
 def json_value(value: Any) -> Any:
@@ -48,12 +53,8 @@ def json_value(value: Any) -> Any:
     return value
 
 
-def build_reference_plan() -> Any:
-    """Build a human-pending plan entirely from a frozen synthetic fixture.
-
-    The 0.85 probability is an explicit fixture input standing in for a
-    separately validated model output. This function does not estimate it.
-    """
+def build_reference_option_snapshot() -> OptionSnapshot:
+    """Build the canonical option snapshot used by the frozen reference case."""
     expiration = date(2026, 8, 21)
     short_quote = OptionQuote(
         contract_id="TEST260821P00095000",
@@ -66,7 +67,7 @@ def build_reference_plan() -> Any:
         bid_size=25,
         ask_size=30,
         quoted_at=FIXTURE_AS_OF,
-        source_id="synthetic-fixture",
+        source_id=FIXTURE_OPTION_SOURCE_ID,
         open_interest=1000,
         volume=500,
     )
@@ -81,19 +82,39 @@ def build_reference_plan() -> Any:
         bid_size=25,
         ask_size=30,
         quoted_at=FIXTURE_AS_OF,
-        source_id="synthetic-fixture",
+        source_id=FIXTURE_OPTION_SOURCE_ID,
         open_interest=1000,
         volume=500,
     )
+    underlying_quote = UnderlyingQuote(
+        "TEST", Decimal("99.99"), Decimal("100.01"),
+        FIXTURE_AS_OF, FIXTURE_OPTION_SOURCE_ID,
+    )
+    return OptionSnapshot(
+        "hedge-desk-option-snapshot-1.0.0",
+        FIXTURE_OPTION_SOURCE_ID,
+        underlying_quote,
+        (short_quote, long_quote),
+        FIXTURE_OPTION_PAYLOAD_SHA256,
+    )
+
+
+def build_reference_plan() -> Any:
+    """Build a human-pending plan entirely from a frozen synthetic fixture.
+
+    The 0.85 probability is an explicit fixture input standing in for a
+    separately validated model output. This function does not estimate it.
+    """
+    snapshot = build_reference_option_snapshot()
+    quotes_by_id = {quote.contract_id: quote for quote in snapshot.option_quotes}
+    short_quote = quotes_by_id["TEST260821P00095000"]
+    long_quote = quotes_by_id["TEST260821P00090000"]
     spread = calculate_vertical_credit_spread(
         VerticalCreditSpread(
             spread_id="TEST-95-90-PUT-CREDIT",
             short_leg=short_quote,
             long_leg=long_quote,
-            underlying_quote=UnderlyingQuote(
-                "TEST", Decimal("99.99"), Decimal("100.01"),
-                FIXTURE_AS_OF, "synthetic-fixture",
-            ),
+            underlying_quote=snapshot.underlying_quote,
             quantity=1,
             commission_per_contract=Decimal("0.65"),
         ),
@@ -139,7 +160,7 @@ def build_reference_plan() -> Any:
     event_calendar_gate = evaluate_event_calendar(
         "TEST",
         FIXTURE_AS_OF,
-        expiration,
+        short_quote.expiration,
         (),
         spread,
         OptionType.PUT,

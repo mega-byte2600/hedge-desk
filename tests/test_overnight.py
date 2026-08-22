@@ -28,6 +28,19 @@ class OvernightEvaluationTests(unittest.TestCase):
             evaluations[0].layers[0].metrics["event_calendar_complete_through"],
             "2026-08-21",
         )
+        self.assertEqual(
+            evaluations[0].layers[0].metrics["admissible_vertical_pairs"], "1"
+        )
+        self.assertEqual(
+            evaluations[0].layers[2].metrics["candidate_handoff_count"], "1"
+        )
+        self.assertEqual(
+            evaluations[0].layers[2].metrics["handoff_next_action"],
+            "VALIDATED_RISK_INPUT_REQUIRED",
+        )
+        self.assertEqual(
+            evaluations[0].layers[2].metrics["handoff_trade_authorized"], "false"
+        )
         risk_layer = evaluations[0].layers[3]
         self.assertEqual(len(risk_layer.metrics["risk_input_artifact"]), 64)
         self.assertEqual(len(risk_layer.artifact_refs), 2)

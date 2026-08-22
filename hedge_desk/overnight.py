@@ -8,7 +8,15 @@ from typing import Any, Dict, Tuple
 from hedge_desk.data import DataArtifact, validate_data_artifact
 from hedge_desk.data import SourceBatchResult, SourceBatchStatus, build_batch_manifest
 from hedge_desk.data.contracts import sha256_text
-from hedge_desk.demo import FIXTURE_AS_OF, FIXTURE_ID, build_reference_plan, json_value
+from hedge_desk.demo import (
+    FIXTURE_AS_OF,
+    FIXTURE_ID,
+    FIXTURE_OPTION_PAYLOAD_SHA256,
+    FIXTURE_OPTION_SOURCE_ID,
+    build_reference_option_snapshot,
+    build_reference_plan,
+    json_value,
+)
 from hedge_desk.evaluation import (
     Disposition,
     EvaluationLayer,
@@ -39,6 +47,10 @@ from hedge_desk.futures_events import (
     PhysicalEventType,
     evaluate_futures_event,
 )
+from hedge_desk.options import (
+    build_candidate_control_handoffs,
+    scan_vertical_credit_spreads,
+)
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -48,11 +60,11 @@ def _reference_artifact() -> DataArtifact:
     return DataArtifact(
         artifact_id="synthetic-option-chain-v1",
         payload_kind="option_chain",
-        source_id="synthetic-option-chain",
+        source_id=FIXTURE_OPTION_SOURCE_ID,
         license_id="repository-synthetic-fixture",
         source_as_of=FIXTURE_AS_OF,
         received_at=FIXTURE_AS_OF,
-        payload_sha256=sha256_text("TEST-95-90-PUT-CREDIT|2026-07-28T20:00:00Z"),
+        payload_sha256=FIXTURE_OPTION_PAYLOAD_SHA256,
         synthetic=True,
         redistribution_allowed=True,
     )
@@ -354,6 +366,8 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
     artifact = _reference_artifact()
     data_gate = validate_data_artifact(artifact, FIXTURE_AS_OF, maximum_age_seconds=0)
     plan = build_reference_plan()
+    scan = scan_vertical_credit_spreads(build_reference_option_snapshot(), FIXTURE_AS_OF)
+    handoffs = build_candidate_control_handoffs(scan)
     observed = LayerEvaluation(
         EvaluationLayer.OBSERVED,
         EvaluationStatus.PASS if data_gate.admissible else EvaluationStatus.BLOCKED,
@@ -366,8 +380,14 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             "days_to_expiration": str(plan.spread.days_to_expiration),
             "planned_exit_date": plan.spread.planned_exit_date.isoformat(),
             "event_calendar_complete_through": plan.event_calendar_gate.complete_through.isoformat(),
+            "enumerated_vertical_pairs": str(scan.pair_count),
+            "admissible_vertical_pairs": str(scan.admissible_count),
         },
-        (artifact.artifact_id, plan.event_calendar_gate.calendar_sha256),
+        (
+            artifact.artifact_id,
+            artifact.payload_sha256,
+            plan.event_calendar_gate.calendar_sha256,
+        ),
     )
     # No statistical inference is claimed by this executable-side reference case.
     stat = LayerEvaluation(
@@ -380,8 +400,13 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         EvaluationLayer.BIG,
         EvaluationStatus.PASS,
         (),
-        {"proposal": "defined-risk synthetic put credit spread"},
-        (FIXTURE_ID,),
+        {
+            "proposal": "defined-risk synthetic put credit spread",
+            "candidate_handoff_count": str(len(handoffs)),
+            "handoff_next_action": handoffs[0].next_action,
+            "handoff_trade_authorized": str(handoffs[0].trade_authorized).lower(),
+        },
+        (FIXTURE_ID, handoffs[0].handoff_sha256),
     )
     risk_pass = plan.machine_risk_status is MachineRiskStatus.PASS
     risk = LayerEvaluation(
