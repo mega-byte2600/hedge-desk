@@ -56,6 +56,15 @@ def _is_hash(value: str) -> bool:
 def evaluate_live_release_readiness(
     evidence: Tuple[ReleaseEvidence, ...],
 ) -> ReleaseReadiness:
+    if any(
+        not isinstance(item.requirement_id, str) or not item.requirement_id
+        for item in evidence
+    ):
+        raise ValueError("release evidence identities must be nonempty strings")
+    if any(type(item.satisfied) is not bool for item in evidence):
+        raise ValueError("release evidence satisfaction must be boolean")
+    if any(not isinstance(item.evidence_sha256, str) for item in evidence):
+        raise ValueError("release evidence hashes must be strings")
     if len({item.requirement_id for item in evidence}) != len(evidence):
         raise ValueError("release evidence identities must be unique")
     by_id = {item.requirement_id: item for item in evidence}

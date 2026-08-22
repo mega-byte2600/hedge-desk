@@ -29,6 +29,14 @@ def reconcile(**changes):
 
 
 class BackOfficeReconciliationTests(unittest.TestCase):
+    def test_nonfinite_cash_cannot_reconcile(self) -> None:
+        for value in (Decimal("Infinity"), Decimal("-Infinity"), Decimal("NaN")):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "finite"):
+                evaluate_paper_reconciliation(
+                    "a" * 64, "b" * 64, "b" * 64,
+                    value, value, 0, 0, NOW,
+                )
+
     def test_exact_paper_ledgers_reconcile_but_never_certify_live_release(self) -> None:
         result = reconcile()
         self.assertIs(result.status, BackOfficeStatus.PASS)

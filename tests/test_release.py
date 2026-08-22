@@ -61,6 +61,14 @@ class ReleaseReadinessTests(unittest.TestCase):
             validate_serialized_release_readiness(serialized),
         )
 
+    def test_nonboolean_satisfaction_and_bad_identity_are_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "boolean"):
+            evaluate_live_release_readiness((
+                ReleaseEvidence(REQUIRED_RELEASE_EVIDENCE[0], 1, "a" * 64),
+            ))
+        with self.assertRaisesRegex(ValueError, "nonempty strings"):
+            evaluate_live_release_readiness((ReleaseEvidence("", False, "0" * 64),))
+
 
 if __name__ == "__main__":
     unittest.main()

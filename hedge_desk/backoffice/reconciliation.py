@@ -57,6 +57,8 @@ def evaluate_paper_reconciliation(
         raise ValueError("reconciliation exception counts cannot be negative")
     if not isinstance(internal_cash, Decimal) or not isinstance(broker_cash, Decimal):
         raise ValueError("reconciliation cash values must be Decimal")
+    if not internal_cash.is_finite() or not broker_cash.is_finite():
+        raise ValueError("reconciliation cash values must be finite")
     reasons = []
     if not _valid_hash(plan_sha256):
         reasons.append("RECONCILIATION_PLAN_HASH_INVALID")
