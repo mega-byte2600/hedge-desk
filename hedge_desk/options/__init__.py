@@ -34,6 +34,11 @@ from .handoff import (
     build_candidate_control_handoffs,
     validate_candidate_control_handoff,
 )
+from .session import (
+    MarketSessionEvidence,
+    MarketSessionGate,
+    evaluate_market_session,
+)
 
 __all__ = [
     "CONTRACT_MULTIPLIER",
@@ -60,4 +65,7 @@ __all__ = [
     "CandidateControlHandoff",
     "build_candidate_control_handoffs",
     "validate_candidate_control_handoff",
+    "MarketSessionEvidence",
+    "MarketSessionGate",
+    "evaluate_market_session",
 ]
