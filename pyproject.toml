@@ -13,7 +13,7 @@ hedge-desk = "hedge_desk.cli:main"
 
 [project.optional-dependencies]
 test = [
-  "coverage==7.10.7; python_version < '3.10'",
+  "coverage[toml]==7.10.7; python_version < '3.10'",
   "coverage==7.15.4; python_version >= '3.10'",
 ]
 
