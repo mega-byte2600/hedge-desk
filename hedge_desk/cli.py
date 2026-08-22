@@ -2,6 +2,7 @@
 
 import argparse
 import json
+from pathlib import Path
 
 from hedge_desk.demo import run_reference_demo
 from hedge_desk.overnight import current_morning_report
@@ -42,6 +43,10 @@ def main() -> None:
         default="",
         help="required human identity when --approve is supplied",
     )
+    parser.add_argument(
+        "--report-input",
+        help="render --morning-markdown from this exact finalized JSON report",
+    )
     args = parser.parse_args()
     if args.projects:
         print(json.dumps([project.__dict__ for project in MVP_PROJECTS], indent=2))
@@ -50,8 +55,15 @@ def main() -> None:
         print(json.dumps(current_morning_report(), indent=2))
         return
     if args.morning_markdown:
-        print(render_morning_markdown(current_morning_report()), end="")
+        report = (
+            json.loads(Path(args.report_input).read_text(encoding="utf-8"))
+            if args.report_input
+            else current_morning_report()
+        )
+        print(render_morning_markdown(report), end="")
         return
+    if args.report_input:
+        parser.error("--report-input requires --morning-markdown")
     if args.war_games:
         print(json.dumps(build_war_game_report(), indent=2))
         return

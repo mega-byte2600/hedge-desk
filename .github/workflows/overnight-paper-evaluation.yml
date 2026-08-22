@@ -30,10 +30,10 @@ jobs:
       - name: Produce complete synthetic war games
         run: python -m hedge_desk.cli --war-games > war-games.json
       - name: Produce human morning control report
-        run: python -m hedge_desk.cli --morning-markdown > morning-report.md
+        run: python -m hedge_desk.cli --morning-markdown --report-input morning-report.json > morning-report.md
       - name: Validate report safety boundary
         run: |
-          python -c 'import json; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); assert d["summary"]["projects_evaluated"] == 5; assert validate_report(d).publishable'
+          python -c 'import json; from pathlib import Path; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); m=Path("morning-report.md").read_text(); assert d["summary"]["projects_evaluated"] == 5; assert validate_report(d).publishable; assert d["report_sha256"] in m'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: paper-morning-evaluation-${{ github.run_id }}
