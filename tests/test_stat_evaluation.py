@@ -39,6 +39,10 @@ class StatEvaluationTests(unittest.TestCase):
             evaluate_calibration(duplicate)
         with self.assertRaises(ValueError):
             ForecastObservation("bad", Decimal("1.01"), True)
+        with self.assertRaisesRegex(ValueError, "finite"):
+            ForecastObservation("bad", Decimal("NaN"), True)
+        with self.assertRaisesRegex(ValueError, "boolean"):
+            ForecastObservation("bad", Decimal("0.5"), 1)
 
     def test_significance_alpha_and_interval_coverage_are_validated_separately(self) -> None:
         with self.assertRaisesRegex(ValueError, "significance alpha"):
@@ -51,6 +55,10 @@ class StatEvaluationTests(unittest.TestCase):
                 REFERENCE_FORECASTS,
                 InferencePolicy(confidence_level=Decimal("1")),
             )
+        with self.assertRaisesRegex(ValueError, "finite"):
+            InferencePolicy(alpha=Decimal("NaN"))
+        with self.assertRaisesRegex(ValueError, "positive integer"):
+            InferencePolicy(minimum_sample_size=True)
 
 
 if __name__ == "__main__":

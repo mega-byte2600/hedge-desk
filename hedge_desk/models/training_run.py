@@ -39,7 +39,7 @@ class TrainingRunGate:
 
 def _valid_hash(value: str) -> bool:
     try:
-        return len(value) == 64 and int(value, 16) >= 0
+        return isinstance(value, str) and len(value) == 64 and int(value, 16) > 0
     except ValueError:
         return False
 
@@ -51,7 +51,7 @@ def validate_training_run(
     reasons = list(validate_open_model_artifact(artifact))
     if not run.run_id or not run.split_method:
         reasons.append("TRAINING_RUN_IDENTITY_MISSING")
-    if run.random_seed < 0:
+    if type(run.random_seed) is not int or run.random_seed < 0:
         reasons.append("TRAINING_SEED_INVALID")
     hashes = (
         run.environment_lock_sha256,

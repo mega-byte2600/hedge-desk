@@ -17,8 +17,15 @@ class ForecastObservation:
     def __post_init__(self) -> None:
         if not self.observation_id:
             raise ValueError("forecast observation identity is required")
+        if (
+            not isinstance(self.predicted_probability, Decimal)
+            or not self.predicted_probability.is_finite()
+        ):
+            raise ValueError("predicted probability must be a finite Decimal")
         if not Decimal("0") <= self.predicted_probability <= Decimal("1"):
             raise ValueError("predicted probability must be between zero and one")
+        if type(self.outcome) is not bool:
+            raise ValueError("forecast outcome must be boolean")
 
 
 @dataclass(frozen=True)
@@ -26,6 +33,19 @@ class InferencePolicy:
     alpha: Decimal = Decimal("0.005")
     confidence_level: Decimal = Decimal("0.95")
     minimum_sample_size: int = 100
+
+    def __post_init__(self) -> None:
+        if any(
+            not isinstance(value, Decimal) or not value.is_finite()
+            for value in (self.alpha, self.confidence_level)
+        ):
+            raise ValueError("inference policy probabilities must be finite Decimals")
+        if not Decimal("0") < self.alpha < Decimal("1"):
+            raise ValueError("significance alpha must be between zero and one")
+        if not Decimal("0") < self.confidence_level < Decimal("1"):
+            raise ValueError("confidence level must be between zero and one")
+        if type(self.minimum_sample_size) is not int or self.minimum_sample_size <= 0:
+            raise ValueError("minimum sample size must be a positive integer")
 
 
 @dataclass(frozen=True)
@@ -47,12 +67,6 @@ def evaluate_calibration(
     observations: Tuple[ForecastObservation, ...],
     policy: InferencePolicy = InferencePolicy(),
 ) -> CalibrationEvaluation:
-    if not Decimal("0") < policy.alpha < Decimal("1"):
-        raise ValueError("significance alpha must be between zero and one")
-    if not Decimal("0") < policy.confidence_level < Decimal("1"):
-        raise ValueError("confidence level must be between zero and one")
-    if policy.minimum_sample_size <= 0:
-        raise ValueError("minimum sample size must be positive")
     if not observations:
         raise ValueError("calibration requires observations")
     if len({item.observation_id for item in observations}) != len(observations):

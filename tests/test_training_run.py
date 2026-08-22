@@ -48,6 +48,10 @@ class TrainingRunTests(unittest.TestCase):
         result = validate_training_run(attacked, artifact())
         self.assertIn("TRAINING_CODE_COMMIT_MISMATCH", result.reason_codes)
         self.assertIn("TRAINING_RUN_CONTROL_AUTHORITY_FORBIDDEN", result.reason_codes)
+        boolean_seed = validate_training_run(
+            replace(run(), random_seed=True), artifact()
+        )
+        self.assertIn("TRAINING_SEED_INVALID", boolean_seed.reason_codes)
 
 
 if __name__ == "__main__":
