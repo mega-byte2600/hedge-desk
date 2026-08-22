@@ -6,18 +6,18 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 263 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 264 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - CI enforces an 80% whole-package branch-coverage floor; the current measured
-  local baseline is 81%, including subprocess-tested CLI code at zero attribution.
+  local baseline is 82%, including subprocess-tested CLI code at zero attribution.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
   JSON war games plus JSON/Markdown morning reports.
 - Morning reports are publication-gated, hashed, explicitly PAPER /
   HYPOTHETICAL, and report real-money P&L and real trades as zero.
-- The declared synthetic suite contains 60 strategy, timing, execution,
+- The declared synthetic suite contains 63 strategy, timing, execution,
   compliance, and lifecycle war games plus five combined-MVP capital-path
-  stresses. Thirty-four scenarios are explicit `NO_TRADE` controls.
+  stresses. Thirty-seven scenarios are explicit `NO_TRADE` controls.
 
 Run the evidence directly:
 

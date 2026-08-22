@@ -29,11 +29,13 @@ from hedge_desk.futures_events import (
     evaluate_futures_event,
 )
 from hedge_desk.models import (
+    EvaluationWindow,
     ModelArtifact,
     ModelTeam,
     ResearchLabel,
     ResearchVote,
     evaluate_research_quorum,
+    evaluate_purged_walk_forward_split,
 )
 from hedge_desk.backoffice import (
     BackOfficeStatus,
@@ -168,6 +170,7 @@ class ModelGovernanceWarGame:
     quant_label: ResearchLabel
     ai_label: ResearchLabel
     ai_license: str = "Apache-2.0"
+    split_attack: str = ""
 
 
 @dataclass(frozen=True)
@@ -362,6 +365,18 @@ MODEL_GOVERNANCE_WAR_GAMES: Tuple[ModelGovernanceWarGame, ...] = (
     ModelGovernanceWarGame(
         "ai-artifact-license-blocked", ResearchLabel.POSITIVE,
         ResearchLabel.POSITIVE, "proprietary",
+    ),
+    ModelGovernanceWarGame(
+        "model-train-validation-overlap", ResearchLabel.POSITIVE,
+        ResearchLabel.POSITIVE, split_attack="OVERLAP",
+    ),
+    ModelGovernanceWarGame(
+        "model-future-test-lookahead", ResearchLabel.POSITIVE,
+        ResearchLabel.POSITIVE, split_attack="FUTURE_TEST",
+    ),
+    ModelGovernanceWarGame(
+        "model-split-hash-collision", ResearchLabel.POSITIVE,
+        ResearchLabel.POSITIVE, split_attack="HASH_COLLISION",
     ),
 )
 
@@ -672,13 +687,41 @@ def run_model_governance_war_games() -> Tuple[Dict[str, Any], ...]:
             ),
         )
         evaluation = evaluate_research_quorum(votes, artifacts)  # type: ignore[arg-type]
+        train = EvaluationWindow(
+            "train", FIXTURE_AS_OF - timedelta(days=1000),
+            FIXTURE_AS_OF - timedelta(days=400), 1000, "1" * 64,
+        )
+        validation = EvaluationWindow(
+            "validation", FIXTURE_AS_OF - timedelta(days=393),
+            FIXTURE_AS_OF - timedelta(days=200), 250, "2" * 64,
+        )
+        test = EvaluationWindow(
+            "test", FIXTURE_AS_OF - timedelta(days=193),
+            FIXTURE_AS_OF - timedelta(days=1), 250, "3" * 64,
+        )
+        if scenario.split_attack == "OVERLAP":
+            validation = replace(validation, started_at=train.ended_at)
+        elif scenario.split_attack == "FUTURE_TEST":
+            test = replace(test, ended_at=FIXTURE_AS_OF + timedelta(days=1))
+        elif scenario.split_attack == "HASH_COLLISION":
+            validation = replace(validation, dataset_sha256=train.dataset_sha256)
+        split = evaluate_purged_walk_forward_split(
+            train, validation, test, timedelta(days=7), FIXTURE_AS_OF
+        )
+        reason_codes = tuple(sorted(set(
+            evaluation.reason_codes + split.reason_codes
+        )))
         results.append(
             {
                 "scenario_id": scenario.scenario_id,
-                "disposition": evaluation.disposition,
+                "disposition": (
+                    "RESEARCH_HYPOTHESIS_ONLY" if not reason_codes else "NO_TRADE"
+                ),
                 "label": evaluation.label.value,
-                "reason_codes": list(evaluation.reason_codes),
+                "reason_codes": list(reason_codes),
                 "authoritative_risk_input": evaluation.authoritative_risk_input,
+                "split_artifact_sha256": split.artifact_sha256,
+                "split_trade_authorized": split.trade_authorized,
             }
         )
     return tuple(results)
