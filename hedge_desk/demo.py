@@ -12,6 +12,7 @@ from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
 from hedge_desk.options import (
     OptionQuote,
     OptionType,
+    UnderlyingQuote,
     VerticalCreditSpread,
     calculate_vertical_credit_spread,
 )
@@ -82,6 +83,10 @@ def build_reference_plan() -> Any:
             spread_id="TEST-95-90-PUT-CREDIT",
             short_leg=short_quote,
             long_leg=long_quote,
+            underlying_quote=UnderlyingQuote(
+                "TEST", Decimal("99.99"), Decimal("100.01"),
+                FIXTURE_AS_OF, "synthetic-fixture",
+            ),
             quantity=1,
             commission_per_contract=Decimal("0.65"),
         ),

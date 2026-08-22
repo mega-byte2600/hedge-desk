@@ -6,6 +6,7 @@ import unittest
 from hedge_desk.options import (
     OptionQuote,
     OptionType,
+    UnderlyingQuote,
     VerticalCreditSpread,
     calculate_vertical_credit_spread,
 )
@@ -40,6 +41,9 @@ class OptionSpreadTests(unittest.TestCase):
             "spread_id": "spread-1",
             "short_leg": self.short,
             "long_leg": self.long,
+            "underlying_quote": UnderlyingQuote(
+                "TEST", Decimal("99.99"), Decimal("100.01"), NOW, "fixture"
+            ),
             "quantity": 1,
             "commission_per_contract": Decimal("0.65"),
         }
@@ -56,6 +60,8 @@ class OptionSpreadTests(unittest.TestCase):
         self.assertEqual(result.break_even, Decimal("93.813"))
         self.assertEqual(result.days_to_expiration, 24)
         self.assertEqual(result.expiration_date, date(2026, 8, 21))
+        self.assertEqual(result.underlying_bid, Decimal("99.99"))
+        self.assertEqual(result.underlying_ask, Decimal("100.01"))
         self.assertEqual(result.planned_exit_days_before_expiration, 7)
         self.assertEqual(result.planned_exit_date, date(2026, 8, 14))
         self.assertEqual(result.return_on_risk, Decimal("118.70") / Decimal("381.30"))
@@ -64,6 +70,19 @@ class OptionSpreadTests(unittest.TestCase):
         stale_long = replace(self.long, quoted_at=NOW - timedelta(seconds=3))
         with self.assertRaisesRegex(ValueError, "timestamp-compatible"):
             self.calculate(long_leg=stale_long)
+
+    def test_stale_or_wrong_underlying_snapshot_fails_closed(self) -> None:
+        stale = UnderlyingQuote(
+            "TEST", Decimal("99"), Decimal("100"),
+            NOW - timedelta(seconds=3), "fixture",
+        )
+        with self.assertRaisesRegex(ValueError, "timestamp-compatible"):
+            self.calculate(underlying_quote=stale)
+        wrong = UnderlyingQuote(
+            "OTHER", Decimal("99"), Decimal("100"), NOW, "fixture"
+        )
+        with self.assertRaisesRegex(ValueError, "symbol must match"):
+            self.calculate(underlying_quote=wrong)
 
     def test_quantity_above_displayed_size_fails_closed(self) -> None:
         with self.assertRaisesRegex(ValueError, "displayed size"):
@@ -85,6 +104,9 @@ class OptionSpreadTests(unittest.TestCase):
                     "spread-1",
                     self.short,
                     self.long,
+                    UnderlyingQuote(
+                        "TEST", Decimal("99.99"), Decimal("100.01"), NOW, "fixture"
+                    ),
                     1,
                     Decimal("0.65"),
                     planned_exit_days_before_expiration=24,

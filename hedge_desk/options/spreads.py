@@ -45,10 +45,28 @@ class OptionQuote:
 
 
 @dataclass(frozen=True)
+class UnderlyingQuote:
+    symbol: str
+    bid: Decimal
+    ask: Decimal
+    quoted_at: datetime
+    source_id: str
+
+    def __post_init__(self) -> None:
+        if not self.symbol or not self.source_id:
+            raise ValueError("underlying quote identity and source are required")
+        if self.quoted_at.tzinfo is None:
+            raise ValueError("underlying quote timestamp must be timezone-aware")
+        if self.bid <= 0 or self.ask <= 0 or self.ask < self.bid:
+            raise ValueError("underlying quote must be positive and non-crossed")
+
+
+@dataclass(frozen=True)
 class VerticalCreditSpread:
     spread_id: str
     short_leg: OptionQuote
     long_leg: OptionQuote
+    underlying_quote: UnderlyingQuote
     quantity: int
     commission_per_contract: Decimal
     quote_tolerance_seconds: int = 2
@@ -73,6 +91,9 @@ class VerticalSpreadCalculation:
     calculated_at: datetime
     input_contract_ids: Tuple[str, str]
     quote_timestamps: Tuple[datetime, datetime]
+    underlying_quote_timestamp: datetime
+    underlying_bid: Decimal
+    underlying_ask: Decimal
     expiration_date: date
     days_to_expiration: int
     planned_exit_days_before_expiration: int
@@ -112,12 +133,19 @@ def calculate_vertical_credit_spread(
         raise ValueError("spread legs must share an expiration")
     if short.source_id != long.source_id:
         raise ValueError("spread legs must share a validated quote source")
+    if spread.underlying_quote.symbol != short.underlying:
+        raise ValueError("underlying quote symbol must match option legs")
+    if spread.underlying_quote.source_id != short.source_id:
+        raise ValueError("underlying and option quotes must share a validated source")
 
-    timestamp_gap = abs((short.quoted_at - long.quoted_at).total_seconds())
+    quote_times = (short.quoted_at, long.quoted_at, spread.underlying_quote.quoted_at)
+    timestamp_gap = (max(quote_times) - min(quote_times)).total_seconds()
     if timestamp_gap > spread.quote_tolerance_seconds:
         raise ValueError("spread leg quotes are not timestamp-compatible")
     if calculated_at < short.quoted_at or calculated_at < long.quoted_at:
         raise ValueError("calculation cannot precede quote availability")
+    if calculated_at < spread.underlying_quote.quoted_at:
+        raise ValueError("calculation cannot precede underlying quote availability")
     days_to_expiration = (short.expiration - calculated_at.date()).days
     if days_to_expiration <= spread.planned_exit_days_before_expiration:
         raise ValueError("candidate has reached its planned pre-expiration exit window")
@@ -165,6 +193,9 @@ def calculate_vertical_credit_spread(
         calculated_at=calculated_at,
         input_contract_ids=(short.contract_id, long.contract_id),
         quote_timestamps=(short.quoted_at, long.quoted_at),
+        underlying_quote_timestamp=spread.underlying_quote.quoted_at,
+        underlying_bid=spread.underlying_quote.bid,
+        underlying_ask=spread.underlying_quote.ask,
         expiration_date=short.expiration,
         days_to_expiration=days_to_expiration,
         planned_exit_days_before_expiration=spread.planned_exit_days_before_expiration,
