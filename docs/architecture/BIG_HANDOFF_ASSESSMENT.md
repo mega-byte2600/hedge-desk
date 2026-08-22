@@ -2,6 +2,11 @@
 
 Date: 2026-08-21
 
+> Historical baseline: the inventory and verification counts in this document
+> describe the repository when the handoff was first inspected. They are
+> intentionally preserved as an audit record and are not current project
+> status. See [STATUS.md](STATUS.md) for current executable evidence.
+
 ## Scope and safety boundary
 
 This document maps the BIG Agentic Financial Research & Trade Desk handoff onto

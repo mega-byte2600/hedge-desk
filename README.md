@@ -10,6 +10,9 @@ paper-trade proposals. It does not autonomously authorize or execute trades.
 This repository implements the first deterministic, paper-only vertical slice
 from the Hedge Desk specification.
 
+See [current implementation status](docs/architecture/STATUS.md) for the tested
+MVP matrix, war-game coverage, and known production blockers.
+
 ## Build culture: the 80/20 hacker rule
 
 - **80% working code:** fail fast, build, measure, learn, and ship small tested
