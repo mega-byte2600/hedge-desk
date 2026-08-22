@@ -33,7 +33,8 @@ supplying licensed snapshots.
 1. **Overnight Premium Desk:** defined-risk premium-selling research with a
    planned pre-expiration close. It monitors continuously but admits at most
    one new-entry evaluation per calendar month and enforces a minimum 21-day
-   interval; cadence admission never authorizes a trade.
+   interval on the `America/New_York` market calendar; cadence admission never
+   authorizes a trade.
 2. **Earnings Event Paper Desk:** earnings/guidance surprise and market-response
    research with a defined-risk directional leg, independently calculated hedge,
    and explicit `NO_TRADE` outcome.

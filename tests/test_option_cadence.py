@@ -42,6 +42,15 @@ class OptionCadenceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "timezone-aware"):
             evaluate_premium_cadence(NOW.replace(tzinfo=None), None)
 
+    def test_month_identity_is_normalized_to_new_york_not_input_offset(self) -> None:
+        evaluated = datetime(2026, 8, 1, 0, 30, tzinfo=timezone.utc)
+        prior = datetime(2026, 7, 1, 12, 0, tzinfo=timezone.utc)
+        result = evaluate_premium_cadence(evaluated, prior)
+        self.assertIn("MONTHLY_NEW_ENTRY_ALREADY_EVALUATED", result.reason_codes)
+        self.assertEqual(result.cadence_timezone, "America/New_York")
+        with self.assertRaisesRegex(ValueError, "timezone invalid"):
+            evaluate_premium_cadence(evaluated, prior, cadence_timezone="Mars/Base")
+
 
 if __name__ == "__main__":
     unittest.main()
