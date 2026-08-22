@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import unittest
@@ -5,6 +6,7 @@ import unittest
 from hedge_desk.earnings_experiment import (
     assign_earnings_experiment,
     score_earnings_experiment,
+    validate_earnings_experiment_plan,
 )
 
 
@@ -41,6 +43,20 @@ class EarningsExperimentTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "must follow"):
             score_earnings_experiment(plan, Decimal("1"), Decimal("0"), RELEASE)
+
+    def test_arm_or_authority_tamper_cannot_be_scored(self) -> None:
+        plan = assign_earnings_experiment(
+            "earnings-v1", "event-1", RELEASE - timedelta(days=1), RELEASE, "a" * 64
+        )
+        alternative = next(item for item in type(plan.assigned_arm) if item is not plan.assigned_arm)
+        attacked = replace(plan, assigned_arm=alternative, trade_authorized=True)
+        reasons = validate_earnings_experiment_plan(attacked)
+        self.assertIn("EARNINGS_EXPERIMENT_ARM_TAMPER", reasons)
+        self.assertIn("EARNINGS_EXPERIMENT_AUTHORITY_FORBIDDEN", reasons)
+        with self.assertRaisesRegex(ValueError, "plan invalid"):
+            score_earnings_experiment(
+                attacked, Decimal("100"), Decimal("1"), RELEASE + timedelta(minutes=1)
+            )
 
 
 if __name__ == "__main__":

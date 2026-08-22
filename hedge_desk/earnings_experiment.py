@@ -92,12 +92,41 @@ def assign_earnings_experiment(
     )
 
 
+def validate_earnings_experiment_plan(
+    plan: EarningsExperimentPlan,
+) -> tuple[str, ...]:
+    reasons = []
+    if plan.policy_version != EXPERIMENT_POLICY_VERSION:
+        reasons.append("EARNINGS_EXPERIMENT_POLICY_INVALID")
+    if plan.trade_authorized:
+        reasons.append("EARNINGS_EXPERIMENT_AUTHORITY_FORBIDDEN")
+    try:
+        rebuilt = assign_earnings_experiment(
+            plan.experiment_id,
+            plan.candidate_id,
+            plan.assigned_at,
+            plan.scheduled_release_at,
+            plan.assignment_salt_sha256,
+        )
+    except ValueError:
+        reasons.append("EARNINGS_EXPERIMENT_PLAN_INVALID")
+    else:
+        if plan.assigned_arm is not rebuilt.assigned_arm:
+            reasons.append("EARNINGS_EXPERIMENT_ARM_TAMPER")
+        if plan.plan_sha256 != rebuilt.plan_sha256:
+            reasons.append("EARNINGS_EXPERIMENT_HASH_MISMATCH")
+    return tuple(sorted(set(reasons)))
+
+
 def score_earnings_experiment(
     plan: EarningsExperimentPlan,
     gross_pnl: Decimal,
     costs: Decimal,
     observed_at: datetime,
 ) -> EarningsExperimentOutcome:
+    reasons = validate_earnings_experiment_plan(plan)
+    if reasons:
+        raise ValueError("earnings experiment plan invalid:" + ",".join(reasons))
     if observed_at.tzinfo is None:
         raise ValueError("experiment outcome timestamp must be timezone-aware")
     if observed_at <= plan.scheduled_release_at:
