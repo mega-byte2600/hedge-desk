@@ -1,15 +1,16 @@
 """Minimal append-only, tamper-evident audit chain for paper evaluation."""
 
 import json
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from datetime import datetime
 from hashlib import sha256
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
+from hedge_desk.demo import build_reference_plan
 from hedge_desk.replay import reference_pending_replay
 
 
-AUDIT_VERSION = "audit-chain-1.0.0"
+AUDIT_VERSION = "audit-chain-1.1.0"
 GENESIS_HASH = "0" * 64
 
 
@@ -20,7 +21,11 @@ class AuditEvent:
     stage: str
     occurred_at: datetime
     artifact_id: str
+    candidate_id: str
+    input_sha256: str
+    output_sha256: str
     component_version: str
+    policy_version: str
     reason_codes: Tuple[str, ...]
     previous_hash: str
     event_hash: str
@@ -32,14 +37,22 @@ def _event_hash(
     stage: str,
     occurred_at: datetime,
     artifact_id: str,
+    candidate_id: str,
+    input_sha256: str,
+    output_sha256: str,
     component_version: str,
+    policy_version: str,
     reason_codes: Tuple[str, ...],
     previous_hash: str,
 ) -> str:
     payload = json.dumps(
         {
             "artifact_id": artifact_id,
+            "candidate_id": candidate_id,
+            "input_sha256": input_sha256,
+            "output_sha256": output_sha256,
             "component_version": component_version,
+            "policy_version": policy_version,
             "occurred_at": occurred_at.isoformat(),
             "previous_hash": previous_hash,
             "reason_codes": list(reason_codes),
@@ -59,12 +72,31 @@ def append_audit_event(
     stage: str,
     occurred_at: datetime,
     artifact_id: str,
+    candidate_id: str,
+    input_sha256: str,
+    output_sha256: str,
+    component_version: str,
+    policy_version: str,
     reason_codes: Tuple[str, ...] = (),
 ) -> Tuple[AuditEvent, ...]:
     if occurred_at.tzinfo is None:
         raise ValueError("audit timestamp must be timezone-aware")
-    if not run_id or not stage or not artifact_id:
+    if (
+        not run_id
+        or not stage
+        or not artifact_id
+        or not candidate_id
+        or not component_version
+        or not policy_version
+    ):
         raise ValueError("audit identity, stage, and artifact are required")
+    for value in (input_sha256, output_sha256):
+        try:
+            valid_hash = len(value) == 64 and int(value, 16) >= 0
+        except ValueError:
+            valid_hash = False
+        if not valid_hash:
+            raise ValueError("audit input and output hashes must be valid")
     previous_hash = chain[-1].event_hash if chain else GENESIS_HASH
     sequence = len(chain) + 1
     ordered_reasons = tuple(sorted(set(reason_codes)))
@@ -74,7 +106,11 @@ def append_audit_event(
         stage,
         occurred_at,
         artifact_id,
-        AUDIT_VERSION,
+        candidate_id,
+        input_sha256,
+        output_sha256,
+        component_version,
+        policy_version,
         ordered_reasons,
         previous_hash,
     )
@@ -85,7 +121,11 @@ def append_audit_event(
             stage,
             occurred_at,
             artifact_id,
-            AUDIT_VERSION,
+            candidate_id,
+            input_sha256,
+            output_sha256,
+            component_version,
+            policy_version,
             ordered_reasons,
             previous_hash,
             event_hash,
@@ -96,6 +136,7 @@ def append_audit_event(
 def verify_audit_chain(chain: Tuple[AuditEvent, ...]) -> Tuple[str, ...]:
     reasons = []
     expected_previous = GENESIS_HASH
+    expected_input = GENESIS_HASH
     run_ids = {event.run_id for event in chain}
     if len(run_ids) > 1:
         reasons.append("AUDIT_RUN_ID_MISMATCH")
@@ -104,32 +145,77 @@ def verify_audit_chain(chain: Tuple[AuditEvent, ...]) -> Tuple[str, ...]:
             reasons.append("AUDIT_SEQUENCE_INVALID")
         if event.previous_hash != expected_previous:
             reasons.append("AUDIT_PREVIOUS_HASH_INVALID")
+        if event.input_sha256 != expected_input:
+            reasons.append("AUDIT_INPUT_LINEAGE_INVALID")
+        if not event.candidate_id or not event.component_version or not event.policy_version:
+            reasons.append("AUDIT_METADATA_INCOMPLETE")
         expected_hash = _event_hash(
             event.sequence,
             event.run_id,
             event.stage,
             event.occurred_at,
             event.artifact_id,
+            event.candidate_id,
+            event.input_sha256,
+            event.output_sha256,
             event.component_version,
+            event.policy_version,
             event.reason_codes,
             event.previous_hash,
         )
         if event.event_hash != expected_hash:
             reasons.append("AUDIT_EVENT_HASH_INVALID")
         expected_previous = event.event_hash
+        expected_input = event.output_sha256
     return tuple(sorted(set(reasons)))
 
 
 def build_reference_audit() -> Tuple[AuditEvent, ...]:
     chain: Tuple[AuditEvent, ...] = ()
-    for event in reference_pending_replay():
+    plan = build_reference_plan()
+    component_versions = (
+        "source-fixture-1.0.0",
+        "intake-1.0.0",
+        "data-contract-1.0.0",
+        "vertical-credit-spread-1.0.0",
+        plan.risk_decision.risk_model_version,
+        plan.compliance_decision.policy_decision.policy_version,
+        "human-authorization-1.0.0",
+    )
+    policy_versions = (
+        "paper-source-policy-1.0.0",
+        "paper-source-policy-1.0.0",
+        "paper-source-policy-1.0.0",
+        "paper-options-1.0.0",
+        "paper-risk-1.0.0",
+        plan.compliance_decision.policy_decision.policy_version,
+        "paper-human-checkpoint-1.0.0",
+    )
+    prior_output = GENESIS_HASH
+    for event, component_version, policy_version in zip(
+        reference_pending_replay(), component_versions, policy_versions
+    ):
+        try:
+            output_hash = (
+                event.artifact_id
+                if len(event.artifact_id) == 64 and int(event.artifact_id, 16) >= 0
+                else sha256(event.artifact_id.encode("utf-8")).hexdigest()
+            )
+        except ValueError:
+            output_hash = sha256(event.artifact_id.encode("utf-8")).hexdigest()
         chain = append_audit_event(
             chain,
             "reference-overnight-run",
             event.kind.value,
             event.received_time,
             event.artifact_id,
+            plan.risk_decision.candidate_id,
+            prior_output,
+            output_hash,
+            component_version,
+            policy_version,
         )
+        prior_output = output_hash
     return chain
 
 
@@ -141,5 +227,13 @@ def build_audit_evaluation() -> Dict[str, Any]:
         "valid": not reasons,
         "reason_codes": list(reasons),
         "event_count": len(chain),
+        "complete_lineage": not reasons and all(
+            event.candidate_id
+            and event.input_sha256
+            and event.output_sha256
+            and event.component_version
+            and event.policy_version
+            for event in chain
+        ),
         "head_hash": chain[-1].event_hash if chain else GENESIS_HASH,
     }

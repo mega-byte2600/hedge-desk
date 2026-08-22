@@ -90,7 +90,11 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
                 ):
                     reasons.append("REPLAY_ARTIFACT_LINEAGE_MISMATCH")
     audit = report.get("audit_chain", {})
-    if not isinstance(audit, dict) or audit.get("valid") is not True:
+    if (
+        not isinstance(audit, dict)
+        or audit.get("valid") is not True
+        or audit.get("complete_lineage") is not True
+    ):
         reasons.append("AUDIT_CHAIN_INVALID")
     batch = report.get("data_batch", {})
     if (
