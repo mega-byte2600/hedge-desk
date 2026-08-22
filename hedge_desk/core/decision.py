@@ -56,10 +56,11 @@ def evaluate_candidate(
             else DecisionStatus.RISK_PASS
         ),
         reason_codes=reason_codes,
-        risk_of_ruin_before=Decimal("0"),
+        risk_of_ruin_before=risk_inputs.risk_of_ruin_before,
         risk_of_ruin_after=ruin_after,
         evaluated_at=evaluated_at,
         risk_model_id=RISK_MODEL_ID,
         risk_model_version=RISK_MODEL_VERSION,
         risk_input_sha256=risk_inputs.artifact_sha256,
+        portfolio_snapshot_sha256=risk_inputs.portfolio_snapshot_sha256,
     )

@@ -67,6 +67,22 @@ class PaperWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(PermissionError, "integrity check failed"):
             execute_paper_open(changed_plan, FIXTURE_AS_OF)
 
+    def test_risk_and_back_office_must_use_same_portfolio_snapshot(self) -> None:
+        plan = build_reference_plan()
+        mismatched_risk = replace(
+            plan.risk_decision, portfolio_snapshot_sha256="e" * 64
+        )
+        with self.assertRaisesRegex(ValueError, "portfolio snapshots must match"):
+            create_paper_trade_plan(
+                plan.plan_id,
+                plan.spread,
+                mismatched_risk,
+                plan.compliance_decision,
+                plan.created_at,
+                plan.approval_expires_at,
+                event_calendar_gate=plan.event_calendar_gate,
+            )
+
     def test_stale_or_unknown_control_artifact_cannot_create_plan(self) -> None:
         plan = build_reference_plan()
         stale_risk = replace(

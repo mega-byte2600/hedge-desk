@@ -15,6 +15,8 @@ class ValidatedRiskInputs:
     win_probability: Decimal
     as_of: datetime
     source_artifact_sha256: str
+    portfolio_snapshot_sha256: str
+    risk_of_ruin_before: Decimal
     validator_id: str
     validator_version: str
     environment: str
@@ -35,6 +37,8 @@ def _payload(
     win_probability: Decimal,
     as_of: datetime,
     source_artifact_sha256: str,
+    portfolio_snapshot_sha256: str,
+    risk_of_ruin_before: Decimal,
     validator_id: str,
     validator_version: str,
     environment: str,
@@ -46,6 +50,8 @@ def _payload(
         "expected_win": str(expected_win),
         "maximum_loss": str(maximum_loss),
         "source_artifact_sha256": source_artifact_sha256,
+        "portfolio_snapshot_sha256": portfolio_snapshot_sha256,
+        "risk_of_ruin_before": str(risk_of_ruin_before),
         "validator_id": validator_id,
         "validator_version": validator_version,
         "win_probability": str(win_probability),
@@ -59,6 +65,8 @@ def build_validated_risk_inputs(
     win_probability: Decimal,
     as_of: datetime,
     source_artifact_sha256: str,
+    portfolio_snapshot_sha256: str,
+    risk_of_ruin_before: Decimal,
     validator_id: str,
     validator_version: str,
     environment: str = "paper",
@@ -71,20 +79,26 @@ def build_validated_risk_inputs(
         raise ValueError("risk payoff inputs cannot be negative")
     if not Decimal("0") <= win_probability <= Decimal("1"):
         raise ValueError("risk probability must be between zero and one")
-    if not _valid_hash(source_artifact_sha256):
-        raise ValueError("validated source artifact hash is required")
+    if not _valid_hash(source_artifact_sha256) or not _valid_hash(
+        portfolio_snapshot_sha256
+    ):
+        raise ValueError("validated source and portfolio snapshot hashes are required")
+    if not Decimal("0") <= risk_of_ruin_before <= Decimal("1"):
+        raise ValueError("prior portfolio risk of ruin must be between zero and one")
     if environment != "paper":
         raise ValueError("only paper risk inputs are accepted")
     payload = _payload(
         candidate_id, maximum_loss, expected_win, win_probability, as_of,
-        source_artifact_sha256, validator_id, validator_version, environment,
+        source_artifact_sha256, portfolio_snapshot_sha256, risk_of_ruin_before,
+        validator_id, validator_version, environment,
     )
     artifact_hash = sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
     return ValidatedRiskInputs(
         candidate_id, maximum_loss, expected_win, win_probability, as_of,
-        source_artifact_sha256, validator_id, validator_version, environment,
+        source_artifact_sha256, portfolio_snapshot_sha256, risk_of_ruin_before,
+        validator_id, validator_version, environment,
         artifact_hash,
     )
 
@@ -97,6 +111,8 @@ def validate_risk_inputs(inputs: ValidatedRiskInputs) -> None:
         inputs.win_probability,
         inputs.as_of,
         inputs.source_artifact_sha256,
+        inputs.portfolio_snapshot_sha256,
+        inputs.risk_of_ruin_before,
         inputs.validator_id,
         inputs.validator_version,
         inputs.environment,

@@ -120,6 +120,7 @@ def build_reference_plan() -> Any:
         thesis="Synthetic reference case for executable-side premium capture.",
         invalidation="Reject outside the frozen fixture and validated inputs.",
     )
+    compliance_decision = evaluate_paper_compliance(account, candidate, FIXTURE_AS_OF)
     risk_inputs = build_validated_risk_inputs(
         candidate.candidate_id,
         candidate.max_loss,
@@ -127,13 +128,14 @@ def build_reference_plan() -> Any:
         candidate.win_probability,
         FIXTURE_AS_OF,
         sha256(FIXTURE_ID.encode()).hexdigest(),
+        compliance_decision.portfolio_snapshot_sha256,
+        Decimal("0"),
         "classic-vv-fixture-validator",
         "1.0.0",
     )
     decision = evaluate_candidate(
         account, candidate, FIXTURE_AS_OF, risk_inputs=risk_inputs
     )
-    compliance_decision = evaluate_paper_compliance(account, candidate, FIXTURE_AS_OF)
     event_calendar_gate = evaluate_event_calendar(
         "TEST",
         FIXTURE_AS_OF,

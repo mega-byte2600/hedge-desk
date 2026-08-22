@@ -177,6 +177,7 @@ def _calculate_plan_hash(
             risk_decision.risk_model_id,
             risk_decision.risk_model_version,
             risk_decision.risk_input_sha256,
+            risk_decision.portfolio_snapshot_sha256,
             compliance_decision.candidate_id,
             compliance_decision.account_id,
             compliance_decision.status.value,
@@ -250,6 +251,11 @@ def create_paper_trade_plan(
         raise ValueError("risk and compliance candidate identities must match")
     if compliance_decision.account_id != risk_decision.account_id:
         raise ValueError("risk and compliance account identities must match")
+    if (
+        risk_decision.portfolio_snapshot_sha256
+        != compliance_decision.portfolio_snapshot_sha256
+    ):
+        raise ValueError("risk and compliance portfolio snapshots must match")
     if compliance_decision.policy_version not in APPROVED_BACK_OFFICE_POLICY_VERSIONS:
         raise ValueError("Back Office policy version is not approved")
     for label, evaluated_at in (

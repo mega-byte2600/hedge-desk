@@ -44,6 +44,8 @@ def risk_inputs(trade: TradeCandidate):
         trade.win_probability,
         trade.quote_timestamp,
         "a" * 64,
+        "b" * 64,
+        Decimal("0"),
         "classic-vv-test-validator",
         "1.0.0",
     )
