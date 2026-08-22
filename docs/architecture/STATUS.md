@@ -12,7 +12,7 @@ no demonstrated real-money profit.
 - A pinned CodeQL Python security-extended scan runs on pushes, pull requests,
   and weekly; Dependabot separately monitors actions and Python dependencies.
 - CI enforces an 80% whole-package branch-coverage floor; the current hosted
-  baseline is 83%, including subprocess-tested CLI code at zero attribution.
+  baseline is 82%, including subprocess-tested CLI code at zero attribution.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
   JSON war games plus JSON/Markdown morning reports.
 - Morning reports are publication-gated, hashed, explicitly PAPER /
