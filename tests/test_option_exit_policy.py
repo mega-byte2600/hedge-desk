@@ -97,6 +97,14 @@ class PremiumExitPolicyTests(unittest.TestCase):
                 self.now,
                 Decimal("0.65"),
             )
+        with self.assertRaisesRegex(ValueError, "source does not match"):
+            evaluate_premium_exit(
+                self.spread,
+                replace(short, source_id="SUBSTITUTED-SOURCE"),
+                replace(long, source_id="SUBSTITUTED-SOURCE"),
+                self.now,
+                Decimal("0.65"),
+            )
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ from typing import Tuple
 
 CONTRACT_MULTIPLIER = 100
 SPREAD_MODEL_ID = "vertical-credit-spread-executable-side"
-SPREAD_MODEL_VERSION = "1.0.0"
+SPREAD_MODEL_VERSION = "1.1.0"
 
 
 class OptionType(str, Enum):
@@ -97,6 +97,8 @@ class VerticalCreditSpread:
 @dataclass(frozen=True)
 class VerticalSpreadCalculation:
     spread_id: str
+    underlying: str
+    quote_source_id: str
     model_id: str
     model_version: str
     calculated_at: datetime
@@ -214,6 +216,8 @@ def calculate_vertical_credit_spread(
 
     return VerticalSpreadCalculation(
         spread_id=spread.spread_id,
+        underlying=short.underlying,
+        quote_source_id=short.source_id,
         model_id=SPREAD_MODEL_ID,
         model_version=SPREAD_MODEL_VERSION,
         calculated_at=calculated_at,

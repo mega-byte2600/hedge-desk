@@ -51,6 +51,8 @@ def build_candidate_control_handoffs(
             "maximum_loss": str(calculation.maximum_loss),
             "model_id": calculation.model_id,
             "model_version": calculation.model_version,
+            "quote_source_id": calculation.quote_source_id,
+            "underlying": calculation.underlying,
             "net_credit": str(calculation.net_credit),
             "planned_exit_date": calculation.planned_exit_date.isoformat(),
             "quantity": calculation.quantity,

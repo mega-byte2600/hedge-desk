@@ -49,6 +49,8 @@ python3 -m hedge_desk.cli --morning-markdown
 - executable buy-to-close monitoring with commissions, project-policy profit
   capture/loss thresholds, DTE and event escalation; it requests human review
   and never authorizes an order;
+- opening-to-close lineage binds the exact underlying, contract IDs,
+  expiration, and quote-source identity before exit economics are evaluated;
 - point-in-time corporate-event calendars complete through expiration;
 - independently hashed quantitative inputs and exact validator-issued
   RoR-before/RoR-after outputs for the conventional RoR engine; the agentic

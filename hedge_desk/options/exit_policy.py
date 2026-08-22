@@ -85,6 +85,12 @@ def evaluate_premium_exit(
         or current_short_quote.source_id != current_long_quote.source_id
     ):
         raise ValueError("exit quote legs are incompatible")
+    if current_short_quote.underlying != opened_spread.underlying:
+        raise ValueError("exit underlying does not match opened spread")
+    if current_short_quote.source_id != opened_spread.quote_source_id:
+        raise ValueError("exit quote source does not match opened spread")
+    if current_short_quote.expiration != opened_spread.expiration_date:
+        raise ValueError("exit expiration does not match opened spread")
     quote_times = (current_short_quote.quoted_at, current_long_quote.quoted_at)
     if (max(quote_times) - min(quote_times)).total_seconds() > policy.quote_tolerance_seconds:
         raise ValueError("exit quotes are not timestamp-compatible")

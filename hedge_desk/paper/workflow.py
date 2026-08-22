@@ -144,6 +144,8 @@ def _calculate_plan_hash(
         (
             plan_id,
             spread.spread_id,
+            spread.underlying,
+            spread.quote_source_id,
             spread.model_id,
             spread.model_version,
             spread.calculated_at.isoformat(),
