@@ -114,6 +114,8 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             "risk_artifact": plan.plan_hash,
             "risk_input_artifact": plan.risk_decision.risk_input_sha256,
             "risk_of_ruin": str(plan.risk_decision.risk_of_ruin_after),
+            "risk_model_id": plan.risk_decision.risk_model_id,
+            "risk_model_version": plan.risk_decision.risk_model_version,
         },
         (plan.risk_decision.risk_input_sha256, plan.plan_hash),
     )

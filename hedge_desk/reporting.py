@@ -205,6 +205,10 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
     portfolio_stress = report["portfolio_stress"]
     stress_metrics = portfolio_stress["descriptive_metrics"]
     projects = report["projects"]
+    premium_project = next(
+        project for project in projects if project["project_id"] == "overnight-premium-desk"
+    )
+    premium_layers = {layer["layer"]: layer for layer in premium_project["layers"]}
     lines = [
         "# Hedge Desk Morning Evaluation",
         "",
@@ -243,6 +247,9 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
             f"- STAT inference: {report['stat_evaluation']['inference_status']}",
             f"- STAT p-value: {report['stat_evaluation']['p_value']}",
             f"- STAT 95% CI: {report['stat_evaluation']['confidence_interval']}",
+            f"- BIG proposal (agent research): {premium_layers['BIG']['metrics']['proposal']}",
+            f"- Deterministic risk model: {premium_layers['DETERMINISTIC_RISK']['metrics']['risk_model_id']} {premium_layers['DETERMINISTIC_RISK']['metrics']['risk_model_version']}",
+            f"- Validated risk-input artifact: `{premium_layers['DETERMINISTIC_RISK']['metrics']['risk_input_artifact']}`",
             "",
             "## Combined-MVP capital stress",
             "",
