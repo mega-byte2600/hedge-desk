@@ -70,6 +70,13 @@ class OvernightEvaluationTests(unittest.TestCase):
             dividend.layers[2].metrics["long_call_cash_dividend_entitlement"], "0"
         )
         self.assertEqual(dividend.layers[2].metrics["trade_authorized"], "false")
+        self.assertEqual(dividend.layers[0].metrics["universe_candidate_count"], "2")
+        self.assertEqual(
+            dividend.layers[0].metrics["top_ranked_symbol"], "TEST-EFFICIENT"
+        )
+        self.assertEqual(
+            dividend.layers[2].metrics["universe_trade_authorized"], "false"
+        )
         futures = evaluations[5]
         self.assertEqual(futures.project_id, "event-futures-desk")
         self.assertEqual(futures.layers[2].metrics["trade_authorized"], "false")

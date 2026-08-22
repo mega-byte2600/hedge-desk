@@ -40,7 +40,12 @@ from hedge_desk.earnings import (
     evaluate_earnings_surprise,
 )
 from hedge_desk.arbitrage import ArbitrageLeg, LegSide, evaluate_arbitrage_package
-from hedge_desk.dividends import AnnualPayoutObservation, evaluate_dividend_history
+from hedge_desk.dividends import (
+    AnnualPayoutObservation,
+    DividendCompanyHistory,
+    evaluate_dividend_history,
+    evaluate_dividend_universe,
+)
 from hedge_desk.futures_events import (
     FuturesContractSnapshot,
     FuturesEventInputs,
@@ -255,6 +260,27 @@ def _dividend_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
         for index in range(10)
     )
     result = evaluate_dividend_history(history, evaluated_at)
+    efficient_history = tuple(
+        AnnualPayoutObservation(
+            item.fiscal_year,
+            item.dividends_per_share * Decimal("1.2"),
+            Decimal("8"),
+            item.average_share_price,
+            item.buybacks,
+            item.issuance,
+            item.market_cap,
+            item.available_at,
+            item.source_artifact_sha256,
+        )
+        for item in history
+    )
+    universe = evaluate_dividend_universe(
+        (
+            DividendCompanyHistory("TEST", history),
+            DividendCompanyHistory("TEST-EFFICIENT", efficient_history),
+        ),
+        evaluated_at,
+    )
     layers = (
         LayerEvaluation(
             EvaluationLayer.OBSERVED,
@@ -266,6 +292,9 @@ def _dividend_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                 "ten_year_average_payout_ratio": str(result.ten_year_average_payout_ratio),
                 "ten_year_average_net_shareholder_yield": str(result.ten_year_average_net_shareholder_yield),
                 "dividend_cut_count": str(result.dividend_cut_count),
+                "universe_candidate_count": str(len(universe.candidates)),
+                "top_ranked_symbol": universe.candidates[0].symbol,
+                "ranking_basis": "ten_year_yield_per_payout_ratio",
             },
             tuple(item.source_artifact_sha256 for item in history),
         ),
@@ -280,6 +309,7 @@ def _dividend_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                     result.long_call_cash_dividend_entitlement
                 ),
                 "trade_authorized": str(result.trade_authorized).lower(),
+                "universe_trade_authorized": str(universe.trade_authorized).lower(),
             },
         ),
         LayerEvaluation(

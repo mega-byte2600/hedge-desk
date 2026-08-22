@@ -31,6 +31,40 @@ class DividendResearchResult:
     trade_authorized: bool = False
 
 
+@dataclass(frozen=True)
+class DividendCompanyHistory:
+    symbol: str
+    observations: Tuple[AnnualPayoutObservation, ...]
+
+
+@dataclass(frozen=True)
+class DividendUniversePolicy:
+    maximum_average_payout_ratio: Decimal = Decimal("0.75")
+    maximum_dividend_cuts: int = 0
+    minimum_net_shareholder_yield: Decimal = Decimal("0")
+
+
+@dataclass(frozen=True)
+class DividendRankedCandidate:
+    rank: int
+    symbol: str
+    ten_year_average_dividend_yield: Decimal
+    ten_year_average_payout_ratio: Decimal
+    ten_year_average_net_shareholder_yield: Decimal
+    yield_per_payout_ratio: Decimal
+    dividend_cut_count: int
+    long_call_cash_dividend_entitlement: Decimal
+    trade_authorized: bool = False
+
+
+@dataclass(frozen=True)
+class DividendUniverseEvaluation:
+    disposition: str
+    candidates: Tuple[DividendRankedCandidate, ...]
+    rejected_symbols: Tuple[Tuple[str, Tuple[str, ...]], ...]
+    trade_authorized: bool = False
+
+
 def _valid_hash(value: str) -> bool:
     try:
         return len(value) == 64 and int(value, 16) >= 0
@@ -96,4 +130,82 @@ def evaluate_dividend_history(
     ) / count
     return DividendResearchResult(
         True, (), dividend_yield, payout_ratio, shareholder_yield, cuts
+    )
+
+
+def evaluate_dividend_universe(
+    histories: Tuple[DividendCompanyHistory, ...],
+    decision_time: datetime,
+    policy: DividendUniversePolicy = DividendUniversePolicy(),
+) -> DividendUniverseEvaluation:
+    """Rank admissible histories; never convert research ranking into a trade."""
+    if not histories:
+        raise ValueError("dividend universe cannot be empty")
+    symbols = [item.symbol for item in histories]
+    if any(not symbol for symbol in symbols) or len(symbols) != len(set(symbols)):
+        raise ValueError("dividend universe symbols must be unique and nonempty")
+    if (
+        policy.maximum_average_payout_ratio <= 0
+        or policy.maximum_dividend_cuts < 0
+        or policy.minimum_net_shareholder_yield < 0
+    ):
+        raise ValueError("dividend universe policy is invalid")
+    admitted = []
+    rejected = []
+    for company in sorted(histories, key=lambda item: item.symbol):
+        result = evaluate_dividend_history(company.observations, decision_time)
+        reasons = list(result.reason_codes)
+        if result.admissible:
+            assert result.ten_year_average_payout_ratio is not None
+            assert result.ten_year_average_dividend_yield is not None
+            assert result.ten_year_average_net_shareholder_yield is not None
+            if result.ten_year_average_payout_ratio <= 0:
+                reasons.append("NONPOSITIVE_AVERAGE_PAYOUT_RATIO")
+            if (
+                result.ten_year_average_payout_ratio
+                > policy.maximum_average_payout_ratio
+            ):
+                reasons.append("AVERAGE_PAYOUT_RATIO_ABOVE_POLICY")
+            if result.dividend_cut_count > policy.maximum_dividend_cuts:
+                reasons.append("DIVIDEND_CUTS_ABOVE_POLICY")
+            if (
+                result.ten_year_average_net_shareholder_yield
+                < policy.minimum_net_shareholder_yield
+            ):
+                reasons.append("NET_SHAREHOLDER_YIELD_BELOW_POLICY")
+        reason_codes = tuple(sorted(set(reasons)))
+        if reason_codes:
+            rejected.append((company.symbol, reason_codes))
+            continue
+        admitted.append((company.symbol, result))
+    ordered = sorted(
+        admitted,
+        key=lambda item: (
+            -(
+                item[1].ten_year_average_dividend_yield
+                / item[1].ten_year_average_payout_ratio
+            ),
+            -item[1].ten_year_average_net_shareholder_yield,
+            item[0],
+        ),
+    )
+    candidates = tuple(
+        DividendRankedCandidate(
+            rank,
+            symbol,
+            result.ten_year_average_dividend_yield,
+            result.ten_year_average_payout_ratio,
+            result.ten_year_average_net_shareholder_yield,
+            result.ten_year_average_dividend_yield
+            / result.ten_year_average_payout_ratio,
+            result.dividend_cut_count,
+            result.long_call_cash_dividend_entitlement,
+        )
+        for rank, (symbol, result) in enumerate(ordered, start=1)
+    )
+    return DividendUniverseEvaluation(
+        "RANKED_RESEARCH_ONLY" if candidates else "NO_TRADE",
+        candidates,
+        tuple(rejected),
+        False,
     )
