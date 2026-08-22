@@ -1,5 +1,6 @@
 """Deterministic paper-only overnight evaluation and morning report."""
 
+from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 import os
@@ -69,6 +70,7 @@ from hedge_desk.futures_events import (
 )
 from hedge_desk.options import (
     build_candidate_control_handoffs,
+    evaluate_option_universe,
     scan_vertical_credit_spreads,
 )
 from hedge_desk.release import build_reference_release_readiness
@@ -500,6 +502,26 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
     handoffs = build_candidate_control_handoffs(
         scan, build_reference_market_session_gate()
     )
+    base_snapshot = build_reference_option_snapshot()
+    stronger_snapshot = replace(
+        base_snapshot,
+        underlying_quote=replace(base_snapshot.underlying_quote, symbol="STRONG"),
+        option_quotes=tuple(
+            replace(
+                item,
+                underlying="STRONG",
+                bid=item.bid + (Decimal("1") if index == 0 else Decimal("0")),
+                ask=item.ask + (Decimal("1") if index == 0 else Decimal("0")),
+            )
+            for index, item in enumerate(base_snapshot.option_quotes)
+        ),
+        source_artifact_sha256="c" * 64,
+    )
+    option_universe = evaluate_option_universe(
+        (base_snapshot, stronger_snapshot),
+        FIXTURE_AS_OF,
+        build_reference_market_session_gate(),
+    )
     observed = LayerEvaluation(
         EvaluationLayer.OBSERVED,
         EvaluationStatus.PASS if data_gate.admissible else EvaluationStatus.BLOCKED,
@@ -514,6 +536,11 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             "event_calendar_complete_through": plan.event_calendar_gate.complete_through.isoformat(),
             "enumerated_vertical_pairs": str(scan.pair_count),
             "admissible_vertical_pairs": str(scan.admissible_count),
+            "underlying_universe_candidate_count": str(
+                len(option_universe.candidates)
+            ),
+            "top_ranked_underlying": option_universe.candidates[0].symbol,
+            "underlying_ranking_basis": option_universe.ranking_basis,
         },
         (
             artifact.artifact_id,
@@ -538,6 +565,12 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             "handoff_next_action": handoffs[0].next_action,
             "handoff_trade_authorized": str(handoffs[0].trade_authorized).lower(),
             "handoff_calculation_artifact": handoffs[0].calculation_sha256,
+            "underlying_universe_probability_inferred": str(
+                option_universe.probability_inferred
+            ).lower(),
+            "underlying_universe_trade_authorized": str(
+                option_universe.trade_authorized
+            ).lower(),
         },
         (FIXTURE_ID, handoffs[0].handoff_sha256),
     )

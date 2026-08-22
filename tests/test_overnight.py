@@ -32,6 +32,9 @@ class OvernightEvaluationTests(unittest.TestCase):
             evaluations[0].layers[0].metrics["admissible_vertical_pairs"], "1"
         )
         self.assertEqual(
+            evaluations[0].layers[0].metrics["top_ranked_underlying"], "STRONG"
+        )
+        self.assertEqual(
             evaluations[0].layers[2].metrics["candidate_handoff_count"], "1"
         )
         self.assertEqual(
@@ -40,6 +43,18 @@ class OvernightEvaluationTests(unittest.TestCase):
         )
         self.assertEqual(
             evaluations[0].layers[2].metrics["handoff_trade_authorized"], "false"
+        )
+        self.assertEqual(
+            evaluations[0].layers[2].metrics[
+                "underlying_universe_probability_inferred"
+            ],
+            "false",
+        )
+        self.assertEqual(
+            evaluations[0].layers[2].metrics[
+                "underlying_universe_trade_authorized"
+            ],
+            "false",
         )
         risk_layer = evaluations[0].layers[3]
         self.assertEqual(len(risk_layer.metrics["risk_input_artifact"]), 64)

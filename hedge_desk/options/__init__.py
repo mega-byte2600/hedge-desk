@@ -41,6 +41,11 @@ from .session import (
     evaluate_market_session,
     parse_market_session_evidence,
 )
+from .universe import (
+    OptionUniverseEvaluation,
+    RankedOptionCandidate,
+    evaluate_option_universe,
+)
 
 __all__ = [
     "CONTRACT_MULTIPLIER",
@@ -72,4 +77,5 @@ __all__ = [
     "MARKET_SESSION_SCHEMA_VERSION",
     "evaluate_market_session",
     "parse_market_session_evidence",
+    "OptionUniverseEvaluation", "RankedOptionCandidate", "evaluate_option_universe",
 ]
