@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass
 from hashlib import sha256
 from typing import Any, Dict, Mapping, Tuple
+from hedge_desk.audit import validate_audit_evaluation
 
 
 PROHIBITED_PERFORMANCE_CLAIMS = (
@@ -90,10 +91,14 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
                 ):
                     reasons.append("REPLAY_ARTIFACT_LINEAGE_MISMATCH")
     audit = report.get("audit_chain", {})
+    audit_validation_reasons = (
+        validate_audit_evaluation(audit) if isinstance(audit, dict) else ()
+    )
     if (
         not isinstance(audit, dict)
         or audit.get("valid") is not True
         or audit.get("complete_lineage") is not True
+        or audit_validation_reasons
     ):
         reasons.append("AUDIT_CHAIN_INVALID")
     batch = report.get("data_batch", {})

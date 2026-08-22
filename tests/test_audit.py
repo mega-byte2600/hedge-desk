@@ -1,7 +1,12 @@
 from dataclasses import replace
 import unittest
 
-from hedge_desk.audit import build_reference_audit, verify_audit_chain
+from hedge_desk.audit import (
+    build_audit_evaluation,
+    build_reference_audit,
+    validate_audit_evaluation,
+    verify_audit_chain,
+)
 
 
 class AuditChainTests(unittest.TestCase):
@@ -38,6 +43,14 @@ class AuditChainTests(unittest.TestCase):
         chain = list(build_reference_audit())
         chain[4] = replace(chain[4], input_sha256="f" * 64)
         self.assertIn("AUDIT_INPUT_LINEAGE_INVALID", verify_audit_chain(tuple(chain)))
+
+    def test_serialized_evaluation_is_independently_verified(self) -> None:
+        evaluation = build_audit_evaluation()
+        self.assertEqual(validate_audit_evaluation(evaluation), ())
+        evaluation["events"][3]["artifact_id"] = "tampered"
+        self.assertIn(
+            "AUDIT_EVENT_HASH_INVALID", validate_audit_evaluation(evaluation)
+        )
 
 
 if __name__ == "__main__":

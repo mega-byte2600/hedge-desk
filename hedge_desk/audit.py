@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from hashlib import sha256
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Mapping, Tuple
 
 from hedge_desk.demo import build_reference_plan
 from hedge_desk.replay import reference_pending_replay
@@ -236,4 +236,83 @@ def build_audit_evaluation() -> Dict[str, Any]:
             for event in chain
         ),
         "head_hash": chain[-1].event_hash if chain else GENESIS_HASH,
+        "events": [
+            {
+                "sequence": event.sequence,
+                "run_id": event.run_id,
+                "stage": event.stage,
+                "occurred_at": event.occurred_at.isoformat(),
+                "artifact_id": event.artifact_id,
+                "candidate_id": event.candidate_id,
+                "input_sha256": event.input_sha256,
+                "output_sha256": event.output_sha256,
+                "component_version": event.component_version,
+                "policy_version": event.policy_version,
+                "reason_codes": list(event.reason_codes),
+                "previous_hash": event.previous_hash,
+                "event_hash": event.event_hash,
+            }
+            for event in chain
+        ],
     }
+
+
+def validate_audit_evaluation(value: Mapping[str, Any]) -> Tuple[str, ...]:
+    """Reconstruct and independently verify a serialized audit evaluation."""
+    reasons = []
+    raw_events = value.get("events")
+    if not isinstance(raw_events, list):
+        return ("AUDIT_EVENTS_MISSING",)
+    expected_fields = {
+        "sequence", "run_id", "stage", "occurred_at", "artifact_id",
+        "candidate_id", "input_sha256", "output_sha256", "component_version",
+        "policy_version", "reason_codes", "previous_hash", "event_hash",
+    }
+    events = []
+    try:
+        for raw in raw_events:
+            if not isinstance(raw, dict) or set(raw) != expected_fields:
+                raise ValueError("event schema")
+            if not isinstance(raw["reason_codes"], list):
+                raise ValueError("reason schema")
+            events.append(
+                AuditEvent(
+                    int(raw["sequence"]),
+                    str(raw["run_id"]),
+                    str(raw["stage"]),
+                    datetime.fromisoformat(str(raw["occurred_at"])),
+                    str(raw["artifact_id"]),
+                    str(raw["candidate_id"]),
+                    str(raw["input_sha256"]),
+                    str(raw["output_sha256"]),
+                    str(raw["component_version"]),
+                    str(raw["policy_version"]),
+                    tuple(str(item) for item in raw["reason_codes"]),
+                    str(raw["previous_hash"]),
+                    str(raw["event_hash"]),
+                )
+            )
+    except (TypeError, ValueError):
+        return ("AUDIT_EVENT_SCHEMA_INVALID",)
+    chain = tuple(events)
+    reasons.extend(verify_audit_chain(chain))
+    if value.get("version") != AUDIT_VERSION:
+        reasons.append("AUDIT_VERSION_INVALID")
+    if value.get("event_count") != len(chain):
+        reasons.append("AUDIT_EVENT_COUNT_INVALID")
+    expected_head = chain[-1].event_hash if chain else GENESIS_HASH
+    if value.get("head_hash") != expected_head:
+        reasons.append("AUDIT_HEAD_HASH_INVALID")
+    if value.get("valid") is not (not reasons):
+        reasons.append("AUDIT_VALIDITY_FLAG_INVALID")
+    complete = not reasons and all(
+        event.candidate_id
+        and event.input_sha256
+        and event.output_sha256
+        and event.component_version
+        and event.policy_version
+        for event in chain
+    )
+    if value.get("complete_lineage") is not complete:
+        reasons.append("AUDIT_COMPLETENESS_FLAG_INVALID")
+    return tuple(sorted(set(reasons)))

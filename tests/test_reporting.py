@@ -49,6 +49,12 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn("REPLAY_LINEAGE_INVALID", validate_report(report).reason_codes)
 
+    def test_rehashed_outer_report_cannot_hide_audit_event_tampering(self) -> None:
+        report = build_morning_report(NOW)
+        report["audit_chain"]["events"][3]["policy_version"] = "agent-policy"
+        report = finalize_report(report)
+        self.assertIn("AUDIT_CHAIN_INVALID", validate_report(report).reason_codes)
+
     def test_zero_trade_report_cannot_claim_executed_replay(self) -> None:
         report = build_morning_report(NOW)
         report["chronological_replay"]["events"][-1]["kind"] = "EXIT"
