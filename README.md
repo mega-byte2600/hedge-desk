@@ -12,6 +12,9 @@ from the Hedge Desk specification.
 
 See [current implementation status](docs/architecture/STATUS.md) for the tested
 MVP matrix, war-game coverage, and known production blockers.
+See the [sub-$100 data stack](docs/validation/SUB_100_DATA_STACK.md) and
+[local data intake contract](docs/validation/LOCAL_DATA_INTAKE.md) before
+supplying licensed snapshots.
 
 ## Build culture: the 80/20 hacker rule
 
@@ -53,13 +56,14 @@ off-exchange-flow research path. An independent Compliance Agent assists a
 deterministic Compliance Policy Engine. Human judgment remains a distinct,
 explicit decision point and cannot override risk or compliance blocks.
 
-The system evaluates every trade candidate through two independent gates:
+The system evaluates every trade candidate through independent gates:
 
-1. account and product eligibility;
-2. economic risk, including defined maximum loss and a conservative
-   risk-of-ruin approximation.
+1. source provenance, entitlement, point-in-time, and schema validation;
+2. account/product eligibility and deterministic compliance policy;
+3. portfolio exposure and conventional economic-risk controls;
+4. exact-plan human authorization for paper execution.
 
-Passing both gates produces a paper-trade decision record. It never submits an
+Passing every gate produces a paper-trade decision record. It never submits an
 order to a broker.
 
 ## Run
