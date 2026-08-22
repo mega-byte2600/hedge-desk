@@ -50,6 +50,7 @@ from hedge_desk.options import (
     evaluate_option_universe,
     validate_candidate_control_handoff,
     evaluate_premium_cadence,
+    evaluate_premium_exit,
 )
 from hedge_desk.strategic_allocation import (
     AllocationWeight,
@@ -822,10 +823,19 @@ def run_compliance_war_games() -> Tuple[Dict[str, Any], ...]:
 def run_premium_timing_war_games() -> Tuple[Dict[str, Any], ...]:
     """Evaluate declared executable marks against the immutable exit policy."""
     plan = build_reference_plan()
+    snapshot = build_reference_option_snapshot()
     results = []
     for scenario in PREMIUM_TIMING_WAR_GAMES:
+        evaluation_date = plan.spread.expiration_date - timedelta(
+            days=scenario.days_before_expiration
+        )
+        evaluated_at = FIXTURE_AS_OF.replace(
+            year=evaluation_date.year,
+            month=evaluation_date.month,
+            day=evaluation_date.day,
+        )
         check = evaluate_paper_lifecycle(
-            FIXTURE_AS_OF + timedelta(days=1),
+            evaluated_at,
             planned_exit_reached=(
                 scenario.days_before_expiration
                 <= plan.spread.planned_exit_days_before_expiration
@@ -843,6 +853,26 @@ def run_premium_timing_war_games() -> Tuple[Dict[str, Any], ...]:
             * Decimal(plan.spread.quantity)
         )
         exit_commission = Decimal("0.65") * Decimal("2")
+        long_quote = replace(
+            snapshot.option_quotes[1],
+            bid=Decimal("0.10"),
+            ask=Decimal("0.20"),
+            quoted_at=evaluated_at,
+        )
+        short_ask = scenario.executable_exit_debit_per_share + long_quote.bid
+        short_quote = replace(
+            snapshot.option_quotes[0],
+            bid=max(Decimal("0"), short_ask - Decimal("0.10")),
+            ask=short_ask,
+            quoted_at=evaluated_at,
+        )
+        exit_evaluation = evaluate_premium_exit(
+            plan.spread,
+            short_quote,
+            long_quote,
+            evaluated_at,
+            Decimal("0.65"),
+        )
         results.append(
             {
                 "scenario_id": scenario.scenario_id,
@@ -854,6 +884,10 @@ def run_premium_timing_war_games() -> Tuple[Dict[str, Any], ...]:
                 ),
                 "lifecycle_action": check.action,
                 "reason_codes": list(check.reason_codes),
+                "exit_policy_action": exit_evaluation.action,
+                "exit_policy_reason_codes": list(exit_evaluation.reason_codes),
+                "exit_policy_artifact": exit_evaluation.artifact_sha256,
+                "trade_authorized": exit_evaluation.trade_authorized,
             }
         )
     return tuple(results)

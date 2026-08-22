@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 280 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 284 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - CI enforces an 80% whole-package branch-coverage floor; the current measured
@@ -46,6 +46,9 @@ python3 -m hedge_desk.cli --morning-markdown
 - executable-side option pricing, displayed size, open interest, volume, and
   bid/ask liquidity gates;
 - deterministic DTE and planned pre-expiration exit timing;
+- executable buy-to-close monitoring with commissions, project-policy profit
+  capture/loss thresholds, DTE and event escalation; it requests human review
+  and never authorizes an order;
 - point-in-time corporate-event calendars complete through expiration;
 - independently hashed quantitative inputs and exact validator-issued
   RoR-before/RoR-after outputs for the conventional RoR engine; the agentic

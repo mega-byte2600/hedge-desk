@@ -297,6 +297,7 @@ class PremiumWarGameTests(unittest.TestCase):
             item["scenario_id"]: item for item in run_premium_timing_war_games()
         }
         self.assertEqual(results["timing-8-dte"]["lifecycle_action"], "MONITOR")
+        self.assertEqual(results["timing-8-dte"]["exit_policy_action"], "MONITOR")
         self.assertEqual(
             results["timing-planned-exit-7-dte"]["lifecycle_action"],
             "CLOSE_REVIEW_REQUIRED",
@@ -305,8 +306,19 @@ class PremiumWarGameTests(unittest.TestCase):
             results["timing-planned-exit-7-dte"]["net_pnl_if_closed"],
             "77.40",
         )
+        self.assertIn(
+            "PROFIT_CAPTURE_TARGET_REACHED",
+            results["timing-planned-exit-7-dte"]["exit_policy_reason_codes"],
+        )
         self.assertEqual(
             results["timing-adverse-1-dte"]["net_pnl_if_closed"], "-362.60"
+        )
+        self.assertIn(
+            "LOSS_REVIEW_THRESHOLD_REACHED",
+            results["timing-adverse-1-dte"]["exit_policy_reason_codes"],
+        )
+        self.assertTrue(
+            all(not item["trade_authorized"] for item in results.values())
         )
         self.assertEqual(
             results["timing-expiration"]["lifecycle_action"],

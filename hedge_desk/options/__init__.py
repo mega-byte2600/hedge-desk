@@ -53,6 +53,12 @@ from .cadence import (
     serialize_premium_cadence,
     validate_serialized_premium_cadence,
 )
+from .exit_policy import (
+    EXIT_POLICY_VERSION,
+    PremiumExitEvaluation,
+    PremiumExitPolicy,
+    evaluate_premium_exit,
+)
 
 __all__ = [
     "CONTRACT_MULTIPLIER",
@@ -87,4 +93,6 @@ __all__ = [
     "OptionUniverseEvaluation", "RankedOptionCandidate", "evaluate_option_universe",
     "CADENCE_GATE_VERSION", "PremiumCadenceGate", "evaluate_premium_cadence",
     "serialize_premium_cadence", "validate_serialized_premium_cadence",
+    "EXIT_POLICY_VERSION", "PremiumExitEvaluation", "PremiumExitPolicy",
+    "evaluate_premium_exit",
 ]
