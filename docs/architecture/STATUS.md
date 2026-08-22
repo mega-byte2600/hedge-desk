@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 153 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 157 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
@@ -56,6 +56,8 @@ python3 -m hedge_desk.cli --morning-markdown
   validated in place and are never copied into the public repository.
 - a strict canonical option-snapshot schema with exact decimal prices,
   synchronized source identity, and rejection of unknown/model-added fields.
+- deterministic enumeration of every admissible vertical spread from a
+  validated snapshot, with no forced ranking and explicit `NO_TRADE` output.
 
 ## Blocks before forward paper validation or live production
 

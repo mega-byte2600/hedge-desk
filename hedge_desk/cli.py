@@ -16,7 +16,7 @@ from hedge_desk.artifacts import (
 )
 from hedge_desk.scheduler import ScheduledRunRequest, execute_scheduled_run
 from hedge_desk.data import validate_local_observation
-from hedge_desk.options import parse_option_snapshot
+from hedge_desk.options import parse_option_snapshot, scan_vertical_credit_spreads
 
 
 def main() -> None:
@@ -35,6 +35,11 @@ def main() -> None:
         "--validate-option-snapshot",
         action="store_true",
         help="also enforce the canonical option snapshot schema",
+    )
+    parser.add_argument(
+        "--scan-vertical-spreads",
+        action="store_true",
+        help="enumerate admissible verticals from a validated option snapshot",
     )
     parser.add_argument(
         "--decision-cutoff",
@@ -119,6 +124,8 @@ def main() -> None:
         except ValueError as exc:
             parser.error(str(exc))
         output = json_value(result)
+        if args.scan_vertical_spreads and not args.validate_option_snapshot:
+            parser.error("--scan-vertical-spreads requires --validate-option-snapshot")
         if args.validate_option_snapshot:
             if result.artifact.payload_kind != "option_chain":
                 parser.error(
@@ -139,6 +146,9 @@ def main() -> None:
                     quote.contract_id for quote in snapshot.option_quotes
                 ],
             }
+            if args.scan_vertical_spreads:
+                scan = scan_vertical_credit_spreads(snapshot, cutoff)
+                output["vertical_spread_scan"] = json_value(scan)
         print(json.dumps(output, indent=2))
         if not result.gate.admissible:
             raise SystemExit(2)

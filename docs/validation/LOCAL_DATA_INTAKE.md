@@ -28,6 +28,7 @@ python3 -m hedge_desk.cli \
   --validate-data-envelope snapshot.envelope.json \
   --payload /private/path/snapshot.json \
   --validate-option-snapshot \
+  --scan-vertical-spreads \
   --decision-cutoff 2026-08-22T08:00:02-07:00 \
   --max-age-seconds 120
 ```
@@ -42,3 +43,7 @@ With `--validate-option-snapshot`, the payload must use schema version
 times must include offsets, option and underlying symbols/sources must agree,
 contracts must be unique, and unknown fields are rejected. The command outputs
 only structural metadata and contract IDs—not the licensed quote payload.
+
+`--scan-vertical-spreads` enumerates all executable-side defined-risk vertical
+pairs under the checked-in liquidity and timing policy. It does not select a
+best trade, estimate probability, calculate Risk of Ruin, or authorize a trade.

@@ -49,11 +49,15 @@ class CliTests(unittest.TestCase):
                 sys.executable, "-m", "hedge_desk.cli",
                 "--validate-data-envelope", str(envelope),
                 "--payload", str(payload), "--validate-option-snapshot",
+                "--scan-vertical-spreads",
                 "--decision-cutoff", "2026-08-21T12:00:00Z",
             ], check=True, capture_output=True, text=True)
             output = json.loads(result.stdout)
             self.assertEqual(output["option_snapshot"]["contract_count"], 1)
             self.assertEqual(output["option_snapshot"]["symbol"], "TEST")
+            self.assertEqual(
+                output["vertical_spread_scan"]["disposition"], "NO_TRADE"
+            )
             self.assertNotIn('"bid": "2.00"', result.stdout)
 
     def test_local_data_intake_cli_validates_without_copying_payload(self) -> None:
