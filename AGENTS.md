@@ -9,6 +9,17 @@
 - Financial-model changes require reference cases and independent review.
 - An agent may implement and test a change but may not approve its own
   risk-control change for release.
+- Agents and agentic workflows must never calculate, estimate, infer, modify, or
+  substitute the authoritative Risk of Ruin value. RoR is produced only by a
+  separately versioned deterministic software component developed and validated
+  through conventional software V&V. Agents may consume its immutable result.
+- Agent-proposed inputs are not validated risk inputs. The deterministic risk
+  engine accepts only data that has passed its non-agentic schema, provenance,
+  freshness, and validation controls.
+- Portfolio-risk methodology must cite its primary research basis and validated
+  reference cases. Work attributed to David P. Swensen or Robert J. Shiller must
+  be tied to an exact source and must not be converted into a formula by an
+  agent's interpretation alone.
 
 ## GitHub CLI collaboration
 
@@ -21,3 +32,6 @@
   or material non-public information in issues, comments, commits, or logs.
 - Agents may comment on and review each other's work, but risk-control and
   financial-model changes require independent authorized approval before merge.
+- This project is intended to be public open source. Treat every issue, pull
+  request, commit, artifact, and log as public; never upload restricted source
+  material unless its license permits public redistribution.

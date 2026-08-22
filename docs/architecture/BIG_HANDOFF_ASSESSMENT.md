@@ -20,6 +20,39 @@ The locked design constraints are accepted as architectural invariants:
   parameters, and intermediate values to reproduce its result;
 - risk-control changes require reference cases and independent review.
 
+### Risk of Ruin trust boundary
+
+The authoritative RoR number is outside the agentic calculation boundary. It is
+produced only by a deterministic risk-engine component built with conventional
+software engineering and independent verification and validation (V&V).
+
+Agents and agentic orchestration may not:
+
+- calculate, estimate, infer, interpolate, or replace RoR;
+- create authoritative RoR inputs from prose or model judgment;
+- modify the engine result, threshold, version, parameters, or intermediates;
+- treat an unavailable, invalid, stale, or unverifiable result as a pass.
+
+Agents may read an immutable, versioned calculation artifact after its inputs
+have passed non-agentic validation, explain the artifact, and route its existing
+`PASS`, `REDUCE`, or `REJECT` status. The system fails closed when the risk
+engine or its validation evidence is unavailable.
+
+### Research and validation basis
+
+Portfolio-risk policy and reference models will be grounded in exact primary
+sources, including applicable work by David P. Swensen and Robert J. Shiller,
+plus a user-supplied validation corpus. Attribution alone is not a model
+specification: every implemented rule or formula must identify the exact source,
+the interpretation adopted, assumptions, units, applicability limits, and
+locked numerical reference cases. Independent V&V is required before a model
+can affect a risk gate.
+
+The repository is intended to be public open source. Source documents may be
+committed only when their licenses allow public redistribution. Otherwise the
+repository will retain citations, checksums, metadata, and derived test fixtures
+that are legally redistributable, while protected originals remain outside Git.
+
 ## Baseline verification
 
 Run from `/Users/user/Documents/Codex` with Python 3.13.1:
@@ -125,6 +158,11 @@ revision leakage, and survivorship bias.
   typed artifacts with formulas, versions, parameters, and intermediates.
 - Validate every financial model against locked reference cases before it can be
   used by a gate.
+- Create a research traceability matrix mapping each portfolio-risk requirement
+  to exact Swensen/Shiller or other primary sources, implementation requirements,
+  assumptions, tests, and independent V&V evidence.
+- Keep the authoritative risk-engine package free of LLM/agent dependencies and
+  expose only a typed, fail-closed request/result contract to orchestration.
 
 Gate: same snapshot + version + parameters produces byte-stable serialized
 calculation results within an explicitly defined serialization format.

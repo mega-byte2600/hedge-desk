@@ -6,14 +6,17 @@ and verification evidence belong in GitHub.
 
 ## Human setup
 
-Install and authenticate GitHub CLI, then create the private repository:
+Install and authenticate GitHub CLI, then create the public open-source
+repository:
 
 ```bash
 gh auth login
-gh repo create hedge-desk --private --source=. --remote=origin --push
+gh repo create hedge-desk --public --source=. --remote=origin --push
 ```
 
-Change `--private` only after an explicit decision to publish the project.
+Before publishing, verify that the tree contains no credentials, account data,
+licensed datasets, material non-public information, or source documents that
+cannot legally be redistributed.
 
 ## Start an agent task
 
@@ -72,4 +75,3 @@ Only an authorized human records final approval for risk-control changes and any
 future execution capability. A GitHub approval does not itself constitute trade
 authorization; trade authorization must be stored in the application's audit
 contract for the specific proposed trade.
-
