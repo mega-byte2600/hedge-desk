@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 from hedge_desk.compliance.account_gate import account_gate
 from hedge_desk.domain import Account, Decision, DecisionStatus, TradeCandidate
@@ -20,7 +21,7 @@ def evaluate_candidate(
     candidate: TradeCandidate,
     evaluated_at: datetime,
     policy: RiskPolicy = RiskPolicy(),
-    risk_inputs: ValidatedRiskInputs | None = None,
+    risk_inputs: Optional[ValidatedRiskInputs] = None,
 ) -> Decision:
     """Create a deterministic paper-only decision with auditable reasons."""
     if risk_inputs is None:
