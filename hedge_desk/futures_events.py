@@ -48,6 +48,30 @@ class FuturesEventEvaluation:
     environment: str = "paper"
 
 
+@dataclass(frozen=True)
+class FuturesEventCandidate:
+    contract: FuturesContractSnapshot
+    event: FuturesEventInputs
+
+
+@dataclass(frozen=True)
+class RankedFuturesEvent:
+    rank: int
+    event_id: str
+    contract_id: str
+    event_type: PhysicalEventType
+    residual_edge_per_contract: Decimal
+    trade_authorized: bool = False
+
+
+@dataclass(frozen=True)
+class FuturesUniverseEvaluation:
+    disposition: str
+    candidates: Tuple[RankedFuturesEvent, ...]
+    rejected_events: Tuple[Tuple[str, Tuple[str, ...]], ...]
+    trade_authorized: bool = False
+
+
 def _valid_hash(value: str) -> bool:
     try:
         return len(value) == 64 and int(value, 16) >= 0
@@ -113,4 +137,50 @@ def evaluate_futures_event(
         "EVENT_RESEARCH_CANDIDATE" if not reason_codes else "NO_TRADE",
         reason_codes,
         residual,
+    )
+
+
+def evaluate_futures_universe(
+    candidates: Tuple[FuturesEventCandidate, ...],
+    decision_time: datetime,
+    minimum_edge_buffer: Decimal,
+    minimum_daily_volume: int = 1000,
+) -> FuturesUniverseEvaluation:
+    if not candidates:
+        raise ValueError("futures event universe cannot be empty")
+    identities = [item.event.event_id for item in candidates]
+    if any(not item for item in identities) or len(identities) != len(set(identities)):
+        raise ValueError("futures event identities must be unique and nonempty")
+    admitted = []
+    rejected = []
+    for item in sorted(candidates, key=lambda value: value.event.event_id):
+        result = evaluate_futures_event(
+            item.contract,
+            item.event,
+            decision_time,
+            minimum_edge_buffer,
+            minimum_daily_volume,
+        )
+        if result.reason_codes:
+            rejected.append((item.event.event_id, result.reason_codes))
+        else:
+            admitted.append((item, result))
+    ordered = sorted(
+        admitted,
+        key=lambda value: (-value[1].residual_edge_per_contract, value[0].event.event_id),
+    )
+    ranked = tuple(
+        RankedFuturesEvent(
+            rank,
+            item.event.event_id,
+            item.contract.contract_id,
+            item.event.event_type,
+            result.residual_edge_per_contract,
+        )
+        for rank, (item, result) in enumerate(ordered, start=1)
+    )
+    return FuturesUniverseEvaluation(
+        "EVENT_RESEARCH_CANDIDATES" if ranked else "NO_TRADE",
+        ranked,
+        tuple(rejected),
     )

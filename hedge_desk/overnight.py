@@ -56,9 +56,11 @@ from hedge_desk.dividends import (
 )
 from hedge_desk.futures_events import (
     FuturesContractSnapshot,
+    FuturesEventCandidate,
     FuturesEventInputs,
     PhysicalEventType,
     evaluate_futures_event,
+    evaluate_futures_universe,
 )
 from hedge_desk.options import (
     build_candidate_control_handoffs,
@@ -407,6 +409,24 @@ def _futures_event_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
     result = evaluate_futures_event(
         contract, event, evaluated_at, Decimal("300")
     )
+    universe = evaluate_futures_universe(
+        (
+            FuturesEventCandidate(contract, event),
+            FuturesEventCandidate(
+                contract,
+                FuturesEventInputs(
+                    "synthetic-weather-priced",
+                    PhysicalEventType.EXTREME_WEATHER,
+                    evaluated_at - timedelta(minutes=3),
+                    evaluated_at - timedelta(minutes=1),
+                    Decimal("700"), Decimal("600"), Decimal("50"),
+                    Decimal("25"), Decimal("25"), "8" * 64, "9" * 64,
+                ),
+            ),
+        ),
+        evaluated_at,
+        Decimal("300"),
+    )
     layers = (
         LayerEvaluation(
             EvaluationLayer.OBSERVED,
@@ -416,6 +436,9 @@ def _futures_event_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                 "source": "synthetic_fixture",
                 "event_type": event.event_type.value,
                 "residual_edge_per_contract": str(result.residual_edge_per_contract),
+                "universe_candidate_count": str(len(universe.candidates)),
+                "universe_rejected_count": str(len(universe.rejected_events)),
+                "top_ranked_event": universe.candidates[0].event_id,
             },
             (
                 contract.source_artifact_sha256,
@@ -432,6 +455,7 @@ def _futures_event_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
             {
                 "disposition": result.disposition,
                 "trade_authorized": str(result.trade_authorized).lower(),
+                "universe_trade_authorized": str(universe.trade_authorized).lower(),
             },
         ),
         LayerEvaluation(

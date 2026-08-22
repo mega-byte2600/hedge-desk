@@ -94,7 +94,16 @@ class OvernightEvaluationTests(unittest.TestCase):
         )
         futures = evaluations[5]
         self.assertEqual(futures.project_id, "event-futures-desk")
+        self.assertEqual(futures.layers[0].metrics["universe_candidate_count"], "1")
+        self.assertEqual(futures.layers[0].metrics["universe_rejected_count"], "1")
+        self.assertEqual(
+            futures.layers[0].metrics["top_ranked_event"],
+            "synthetic-shipping-disruption",
+        )
         self.assertEqual(futures.layers[2].metrics["trade_authorized"], "false")
+        self.assertEqual(
+            futures.layers[2].metrics["universe_trade_authorized"], "false"
+        )
         self.assertEqual(futures.layers[4].status, EvaluationStatus.BLOCKED)
 
     def test_morning_report_is_explicitly_paper_and_reconciles(self) -> None:

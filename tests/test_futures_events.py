@@ -5,9 +5,11 @@ import unittest
 
 from hedge_desk.futures_events import (
     FuturesContractSnapshot,
+    FuturesEventCandidate,
     FuturesEventInputs,
     PhysicalEventType,
     evaluate_futures_event,
+    evaluate_futures_universe,
 )
 
 
@@ -28,6 +30,32 @@ def event():
 
 
 class FuturesEventTests(unittest.TestCase):
+    def test_universe_ranks_residual_edge_and_never_authorizes(self) -> None:
+        stronger = replace(
+            event(), event_id="shipping-strong",
+            event_type=PhysicalEventType.SHIPPING_DISRUPTION,
+            modeled_gross_impact_per_contract=Decimal("1200"),
+        )
+        result = evaluate_futures_universe(
+            (
+                FuturesEventCandidate(contract(), event()),
+                FuturesEventCandidate(contract(), stronger),
+            ),
+            NOW,
+            Decimal("300"),
+        )
+        self.assertEqual(result.candidates[0].event_id, "shipping-strong")
+        self.assertFalse(result.trade_authorized)
+        self.assertTrue(all(not item.trade_authorized for item in result.candidates))
+
+    def test_universe_returns_no_trade_when_events_are_priced(self) -> None:
+        priced = replace(event(), curve_priced_impact_per_contract=Decimal("900"))
+        result = evaluate_futures_universe(
+            (FuturesEventCandidate(contract(), priced),), NOW, Decimal("100")
+        )
+        self.assertEqual(result.disposition, "NO_TRADE")
+        self.assertIn("EVENT_EDGE_BELOW_SAFETY_BUFFER", result.rejected_events[0][1])
+
     def test_residual_event_edge_is_cost_and_curve_aware_but_research_only(self) -> None:
         result = evaluate_futures_event(contract(), event(), NOW, Decimal("300"))
         self.assertEqual(result.residual_edge_per_contract, Decimal("400"))
