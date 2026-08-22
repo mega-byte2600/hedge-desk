@@ -67,6 +67,17 @@ class PaperWorkflowTests(unittest.TestCase):
         with self.assertRaisesRegex(PermissionError, "integrity check failed"):
             execute_paper_open(changed_plan, FIXTURE_AS_OF)
 
+    def test_changed_risk_source_artifact_invalidates_plan(self) -> None:
+        plan = approve_paper_trade(build_reference_plan(), "captain", FIXTURE_AS_OF)
+        changed_risk = replace(
+            plan.risk_decision,
+            risk_source_artifact_sha256="f" * 64,
+        )
+        with self.assertRaisesRegex(PermissionError, "integrity check failed"):
+            execute_paper_open(
+                replace(plan, risk_decision=changed_risk), FIXTURE_AS_OF
+            )
+
     def test_changed_compliance_artifact_invalidates_plan(self) -> None:
         plan = approve_paper_trade(build_reference_plan(), "captain", FIXTURE_AS_OF)
         changed_compliance = replace(

@@ -180,6 +180,7 @@ def _calculate_plan_hash(
             risk_decision.risk_model_id,
             risk_decision.risk_model_version,
             risk_decision.risk_input_sha256,
+            risk_decision.risk_source_artifact_sha256,
             risk_decision.portfolio_snapshot_sha256,
             compliance_decision.candidate_id,
             compliance_decision.account_id,

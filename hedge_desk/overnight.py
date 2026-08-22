@@ -405,6 +405,7 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             "candidate_handoff_count": str(len(handoffs)),
             "handoff_next_action": handoffs[0].next_action,
             "handoff_trade_authorized": str(handoffs[0].trade_authorized).lower(),
+            "handoff_calculation_artifact": handoffs[0].calculation_sha256,
         },
         (FIXTURE_ID, handoffs[0].handoff_sha256),
     )
@@ -416,6 +417,7 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
         {
             "risk_artifact": plan.plan_hash,
             "risk_input_artifact": plan.risk_decision.risk_input_sha256,
+            "risk_source_artifact": plan.risk_decision.risk_source_artifact_sha256,
             "risk_of_ruin": str(plan.risk_decision.risk_of_ruin_after),
             "risk_model_id": plan.risk_decision.risk_model_id,
             "risk_model_version": plan.risk_decision.risk_model_version,

@@ -84,6 +84,7 @@ class Decision:
     risk_model_id: str
     risk_model_version: str
     risk_input_sha256: str
+    risk_source_artifact_sha256: str
     portfolio_snapshot_sha256: str
 
     def __post_init__(self) -> None:
@@ -93,6 +94,8 @@ class Decision:
             raise ValueError("risk model identity and version are required")
         if len(self.risk_input_sha256) != 64:
             raise ValueError("risk input artifact hash is required")
+        if len(self.risk_source_artifact_sha256) != 64:
+            raise ValueError("risk source artifact hash is required")
         if len(self.portfolio_snapshot_sha256) != 64:
             raise ValueError("risk portfolio snapshot hash is required")
         if self.status is DecisionStatus.BLOCKED and not self.reason_codes:

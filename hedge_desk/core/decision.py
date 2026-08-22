@@ -62,5 +62,6 @@ def evaluate_candidate(
         risk_model_id=RISK_MODEL_ID,
         risk_model_version=RISK_MODEL_VERSION,
         risk_input_sha256=risk_inputs.artifact_sha256,
+        risk_source_artifact_sha256=risk_inputs.source_artifact_sha256,
         portfolio_snapshot_sha256=risk_inputs.portfolio_snapshot_sha256,
     )

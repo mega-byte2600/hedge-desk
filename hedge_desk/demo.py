@@ -18,6 +18,8 @@ from hedge_desk.options import (
     VerticalCreditSpread,
     calculate_vertical_credit_spread,
     OptionSnapshot,
+    build_candidate_control_handoffs,
+    scan_vertical_credit_spreads,
 )
 from hedge_desk.paper import (
     approve_paper_trade,
@@ -32,7 +34,7 @@ FIXTURE_ID = "overnight-premium-reference-v1"
 FIXTURE_AS_OF = datetime(2026, 7, 28, 20, 0, tzinfo=timezone.utc)
 FIXTURE_OPTION_SOURCE_ID = "synthetic-option-chain"
 FIXTURE_OPTION_PAYLOAD_SHA256 = sha256(
-    b"TEST-95-90-PUT-CREDIT|2026-07-28T20:00:00Z"
+    b"TEST260821P00095000--TEST260821P00090000|2026-07-28T20:00:00Z"
 ).hexdigest()
 
 
@@ -111,7 +113,7 @@ def build_reference_plan() -> Any:
     long_quote = quotes_by_id["TEST260821P00090000"]
     spread = calculate_vertical_credit_spread(
         VerticalCreditSpread(
-            spread_id="TEST-95-90-PUT-CREDIT",
+            spread_id="TEST260821P00095000--TEST260821P00090000",
             short_leg=short_quote,
             long_leg=long_quote,
             underlying_quote=snapshot.underlying_quote,
@@ -142,13 +144,17 @@ def build_reference_plan() -> Any:
         invalidation="Reject outside the frozen fixture and validated inputs.",
     )
     compliance_decision = evaluate_paper_compliance(account, candidate, FIXTURE_AS_OF)
+    scan = scan_vertical_credit_spreads(snapshot, FIXTURE_AS_OF)
+    handoffs = build_candidate_control_handoffs(scan)
+    if len(handoffs) != 1 or handoffs[0].candidate_id != candidate.candidate_id:
+        raise ValueError("reference candidate handoff is incomplete")
     risk_inputs = build_validated_risk_inputs(
         candidate.candidate_id,
         candidate.max_loss,
         candidate.expected_win,
         candidate.win_probability,
         FIXTURE_AS_OF,
-        sha256(FIXTURE_ID.encode()).hexdigest(),
+        handoffs[0].calculation_sha256,
         compliance_decision.portfolio_snapshot_sha256,
         Decimal("0"),
         "classic-vv-fixture-validator",

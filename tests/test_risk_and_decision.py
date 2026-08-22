@@ -91,6 +91,7 @@ class RiskAndDecisionTests(unittest.TestCase):
         )
         self.assertEqual(decision.status, DecisionStatus.RISK_PASS)
         self.assertEqual(decision.reason_codes, ())
+        self.assertEqual(decision.risk_source_artifact_sha256, "a" * 64)
 
     def test_decision_is_deterministic(self) -> None:
         trade = make_candidate()
