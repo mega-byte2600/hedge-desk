@@ -82,3 +82,66 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
         reasons.append("PROHIBITED_PERFORMANCE_CLAIM")
     reason_codes = tuple(sorted(set(reasons)))
     return PublicationDecision(not reason_codes, reason_codes)
+
+
+def render_morning_markdown(report: Mapping[str, Any]) -> str:
+    """Render a concise human control report only after publication validation."""
+    decision = validate_report(report)
+    if not decision.publishable:
+        raise ValueError(
+            "morning report is not publishable: " + ",".join(decision.reason_codes)
+        )
+    summary = report["summary"]
+    war_games = report["war_games"]
+    war_summary = war_games["summary"]
+    premium = war_summary["premium_fixed_trade"]
+    metrics = premium["descriptive_metrics"]
+    projects = report["projects"]
+    lines = [
+        "# Hedge Desk Morning Evaluation",
+        "",
+        f"Generated: {report['generated_at']}",
+        "",
+        "## Actual status",
+        "",
+        f"- Real money P&L: ${report['real_money_pnl']}",
+        f"- Real trades executed: {report['real_trades_executed']}",
+        "- Environment: PAPER / HYPOTHETICAL",
+        "- Live orders enabled: false",
+        "",
+        "## Project evaluation",
+        "",
+        "| Project | Disposition |",
+        "|---|---|",
+    ]
+    lines.extend(
+        f"| {project['project_id']} | {project['disposition']} |"
+        for project in projects
+    )
+    lines.extend(
+        [
+            "",
+            "## Synthetic war games",
+            "",
+            f"- Total declared scenarios: {war_summary['total_scenario_count']}",
+            f"- NO_TRADE controls: {war_summary['no_trade_control_count']}",
+            f"- Premium profitable stresses: {premium['profitable_scenarios']}",
+            f"- Premium losing stresses: {premium['losing_scenarios']}",
+            f"- Premium synthetic total P&L: ${metrics['total_pnl']}",
+            f"- Premium synthetic maximum drawdown: ${metrics['maximum_drawdown']}",
+            f"- Premium synthetic expected shortfall: ${metrics['expected_shortfall']}",
+            f"- Inference status: {metrics['inference_status']}",
+            "",
+            "## Control verification",
+            "",
+            f"- Data batch: {report['data_batch']['status']}",
+            f"- Chronological replay valid: {str(report['chronological_replay']['valid']).lower()}",
+            f"- Audit chain valid: {str(report['audit_chain']['valid']).lower()}",
+            f"- Report SHA-256: `{report['report_sha256']}`",
+            "",
+            "## Limitations",
+            "",
+        ]
+    )
+    lines.extend(f"- {limitation}" for limitation in report["limitations"])
+    return "\n".join(lines) + "\n"

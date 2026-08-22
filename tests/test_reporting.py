@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import unittest
 
 from hedge_desk.overnight import build_morning_report
-from hedge_desk.reporting import finalize_report, validate_report
+from hedge_desk.reporting import finalize_report, render_morning_markdown, validate_report
 
 
 NOW = datetime(2026, 8, 21, 12, 0, tzinfo=timezone.utc)
@@ -49,6 +49,19 @@ class ReportingTests(unittest.TestCase):
         report["data_batch"]["status"] = "INCOMPLETE"
         report = finalize_report(report)
         self.assertIn("DATA_BATCH_NOT_READY", validate_report(report).reason_codes)
+
+    def test_human_markdown_leads_with_actual_zero_money_status(self) -> None:
+        markdown = render_morning_markdown(build_morning_report(NOW))
+        self.assertIn("Real money P&L: $0", markdown)
+        self.assertIn("Real trades executed: 0", markdown)
+        self.assertIn("Premium synthetic total P&L: $-848.00", markdown)
+        self.assertIn("NO_TRADE controls: 7", markdown)
+
+    def test_unpublishable_report_cannot_be_rendered(self) -> None:
+        report = build_morning_report(NOW)
+        report["environment"] = "live"
+        with self.assertRaises(ValueError):
+            render_morning_markdown(report)
 
 
 if __name__ == "__main__":

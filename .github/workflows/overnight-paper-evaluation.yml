@@ -29,6 +29,8 @@ jobs:
         run: python -m hedge_desk.cli --overnight-report > morning-report.json
       - name: Produce complete synthetic war games
         run: python -m hedge_desk.cli --war-games > war-games.json
+      - name: Produce human morning control report
+        run: python -m hedge_desk.cli --morning-markdown > morning-report.md
       - name: Validate report safety boundary
         run: |
           python -c 'import json; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); assert d["summary"]["projects_evaluated"] == 5; assert validate_report(d).publishable'
@@ -37,6 +39,7 @@ jobs:
           name: paper-morning-evaluation-${{ github.run_id }}
           path: |
             morning-report.json
+            morning-report.md
             war-games.json
           retention-days: 30
           if-no-files-found: error

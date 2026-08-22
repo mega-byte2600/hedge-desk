@@ -7,10 +7,16 @@ from hedge_desk.demo import run_reference_demo
 from hedge_desk.overnight import current_morning_report
 from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.wargames import build_war_game_report
+from hedge_desk.reporting import render_morning_markdown
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--morning-markdown",
+        action="store_true",
+        help="render the validated paper morning evaluation as Markdown",
+    )
     parser.add_argument(
         "--war-games",
         action="store_true",
@@ -42,6 +48,9 @@ def main() -> None:
         return
     if args.overnight_report:
         print(json.dumps(current_morning_report(), indent=2))
+        return
+    if args.morning_markdown:
+        print(render_morning_markdown(current_morning_report()), end="")
         return
     if args.war_games:
         print(json.dumps(build_war_game_report(), indent=2))
