@@ -1,6 +1,7 @@
 """Deterministic paper-only overnight evaluation and morning report."""
 
 from datetime import datetime, timezone
+import os
 from typing import Any, Dict, Tuple
 
 from hedge_desk.data import DataArtifact, validate_data_artifact
@@ -191,9 +192,13 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
     return (premium,) + inactive + (_model_lab_evaluation(FIXTURE_AS_OF),)
 
 
-def build_morning_report(generated_at: datetime) -> Dict[str, Any]:
+def build_morning_report(
+    generated_at: datetime, code_commit: str = "LOCAL_UNSPECIFIED"
+) -> Dict[str, Any]:
     if generated_at.tzinfo is None:
         raise ValueError("report timestamp must be timezone-aware")
+    if not code_commit:
+        raise ValueError("report code commit identity is required")
     evaluations = evaluate_reference_projects()
     human_review = sum(
         evaluation.disposition is Disposition.HUMAN_REVIEW
@@ -205,6 +210,7 @@ def build_morning_report(generated_at: datetime) -> Dict[str, Any]:
     report = {
         "report_type": "paper_hypothetical_morning_evaluation",
         "runner_version": OVERNIGHT_RUNNER_VERSION,
+        "code_commit": code_commit,
         "generated_at": generated_at.isoformat(),
         "environment": "paper",
         "complete": True,
@@ -233,4 +239,7 @@ def build_morning_report(generated_at: datetime) -> Dict[str, Any]:
 
 
 def current_morning_report() -> Dict[str, Any]:
-    return build_morning_report(datetime.now(timezone.utc))
+    return build_morning_report(
+        datetime.now(timezone.utc),
+        os.environ.get("HEDGE_DESK_CODE_COMMIT", "LOCAL_UNSPECIFIED"),
+    )

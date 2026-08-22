@@ -40,6 +40,8 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
         reasons.append("REPORT_HASH_INVALID")
     if report.get("report_type") != "paper_hypothetical_morning_evaluation":
         reasons.append("HYPOTHETICAL_LABEL_REQUIRED")
+    if not isinstance(report.get("code_commit"), str) or not report.get("code_commit"):
+        reasons.append("CODE_COMMIT_MISSING")
     if report.get("environment") != "paper" or report.get("live_orders_enabled") is not False:
         reasons.append("PAPER_ONLY_BOUNDARY_REQUIRED")
     if report.get("real_money_pnl") != "0" or report.get("real_trades_executed") != 0:
@@ -265,6 +267,7 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
         "# Hedge Desk Morning Evaluation",
         "",
         f"Generated: {report['generated_at']}",
+        f"Code commit: `{report['code_commit']}`",
         "",
         "## Actual status",
         "",

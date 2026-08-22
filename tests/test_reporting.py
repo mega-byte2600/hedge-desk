@@ -31,6 +31,12 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn("REAL_PERFORMANCE_CLAIM_BLOCKED", validate_report(report).reason_codes)
 
+    def test_missing_code_commit_is_publication_blocked(self) -> None:
+        report = build_morning_report(NOW)
+        report["code_commit"] = ""
+        report = finalize_report(report)
+        self.assertIn("CODE_COMMIT_MISSING", validate_report(report).reason_codes)
+
     def test_prohibited_promotional_claim_is_blocked(self) -> None:
         report = build_morning_report(NOW)
         report["marketing_claim"] = "Guaranteed profit"
@@ -87,6 +93,7 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("BIG proposal (agent research)", markdown)
         self.assertIn("finite-capital-ruin-approximation 0.1.0-unvalidated", markdown)
         self.assertIn("Validated risk-input artifact", markdown)
+        self.assertIn("Code commit: `LOCAL_UNSPECIFIED`", markdown)
         self.assertIn("Earnings option-arm synthetic total: $-312.00", markdown)
         self.assertIn("Arbitrage gated-policy synthetic total: $45", markdown)
         self.assertIn("Dividend shares-arm synthetic total: $-1083.00", markdown)
