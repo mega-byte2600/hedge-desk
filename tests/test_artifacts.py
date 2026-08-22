@@ -3,7 +3,10 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from hedge_desk.artifacts import build_artifact_bundle_manifest
+from hedge_desk.artifacts import (
+    build_artifact_bundle_manifest,
+    verify_artifact_bundle_manifest,
+)
 
 
 class ArtifactBundleTests(unittest.TestCase):
@@ -21,6 +24,11 @@ class ArtifactBundleTests(unittest.TestCase):
             two.write_text("changed\n", encoding="utf-8")
             changed = build_artifact_bundle_manifest((one, two))
             self.assertNotEqual(forward["bundle_sha256"], changed["bundle_sha256"])
+            self.assertTrue(verify_artifact_bundle_manifest(changed, root) == ())
+            two.write_text("tampered\n", encoding="utf-8")
+            reasons = verify_artifact_bundle_manifest(changed, root)
+            self.assertIn("BUNDLE_FILE_HASH_INVALID:two.md", reasons)
+            self.assertIn("BUNDLE_FILE_SIZE_INVALID:two.md", reasons)
 
     def test_missing_or_duplicate_artifact_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -33,6 +33,8 @@ jobs:
         run: python -m hedge_desk.cli --morning-markdown --report-input morning-report.json > morning-report.md
       - name: Build content-addressed artifact bundle
         run: python -m hedge_desk.cli --bundle-manifest morning-report.json morning-report.md war-games.json > bundle-manifest.json
+      - name: Verify artifact bundle from disk
+        run: python -m hedge_desk.cli --verify-bundle-manifest bundle-manifest.json
       - name: Validate report safety boundary
         run: |
           python -c 'import json; from pathlib import Path; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); w=json.load(open("war-games.json")); b=json.load(open("bundle-manifest.json")); m=Path("morning-report.md").read_text(); assert d["summary"]["projects_evaluated"] == 5; assert validate_report(d).publishable; assert d["report_sha256"] in m; assert d["war_games"] == w; assert len(b["bundle_sha256"]) == 64; assert len(b["files"]) == 3'

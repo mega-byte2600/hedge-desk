@@ -9,7 +9,10 @@ from hedge_desk.overnight import current_morning_report
 from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.wargames import build_war_game_report
 from hedge_desk.reporting import render_morning_markdown
-from hedge_desk.artifacts import build_artifact_bundle_manifest
+from hedge_desk.artifacts import (
+    build_artifact_bundle_manifest,
+    verify_artifact_bundle_manifest,
+)
 
 
 def main() -> None:
@@ -54,7 +57,20 @@ def main() -> None:
         metavar="FILE",
         help="emit a canonical SHA-256 manifest for artifact files",
     )
+    parser.add_argument(
+        "--verify-bundle-manifest",
+        metavar="FILE",
+        help="verify an artifact bundle manifest against files beside it",
+    )
     args = parser.parse_args()
+    if args.verify_bundle_manifest:
+        manifest_path = Path(args.verify_bundle_manifest)
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        reasons = verify_artifact_bundle_manifest(manifest, manifest_path.parent)
+        print(json.dumps({"valid": not reasons, "reason_codes": list(reasons)}, indent=2))
+        if reasons:
+            raise SystemExit(1)
+        return
     if args.bundle_manifest:
         manifest = build_artifact_bundle_manifest(
             tuple(Path(item) for item in args.bundle_manifest)
