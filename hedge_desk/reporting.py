@@ -131,9 +131,16 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
     ):
         reasons.append("WAR_GAME_DISCLOSURE_INVALID")
     manifest = war_games.get("fixture_manifest", {}) if isinstance(war_games, dict) else {}
+    war_summary = war_games.get("summary", {}) if isinstance(war_games, dict) else {}
+    manifest_ids = manifest.get("scenario_ids", ()) if isinstance(manifest, dict) else ()
     if (
         not isinstance(manifest, dict)
-        or manifest.get("scenario_count") != 36
+        or not isinstance(war_summary, dict)
+        or not isinstance(manifest_ids, list)
+        or manifest.get("scenario_count") != len(manifest_ids)
+        or manifest.get("scenario_count") != war_summary.get("total_scenario_count")
+        or len(set(manifest_ids)) != len(manifest_ids)
+        or war_summary.get("scenario_count_by_mvp", {}).get("compliance-controls") != 3
         or not isinstance(manifest.get("fixture_sha256"), str)
         or len(manifest.get("fixture_sha256", "")) != 64
     ):

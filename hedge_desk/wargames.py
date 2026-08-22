@@ -1,6 +1,6 @@
 """Deterministic, synthetic war games for paper strategy evaluation."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import timedelta
 from decimal import Decimal
 from hashlib import sha256
@@ -29,6 +29,12 @@ from hedge_desk.models import (
     ResearchVote,
     evaluate_research_quorum,
 )
+from hedge_desk.backoffice import (
+    BackOfficeStatus,
+    evaluate_compliance_policy,
+    validate_compliance_policy_artifact,
+)
+from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
 
 
 WAR_GAME_VERSION = "premium-spread-war-games-1.0.0"
@@ -138,6 +144,12 @@ class ModelGovernanceWarGame:
     quant_label: ResearchLabel
     ai_label: ResearchLabel
     ai_license: str = "Apache-2.0"
+
+
+@dataclass(frozen=True)
+class ComplianceWarGame:
+    scenario_id: str
+    attack: str
 
 
 PREMIUM_WAR_GAMES: Tuple[PremiumWarGame, ...] = (
@@ -303,6 +315,40 @@ MODEL_GOVERNANCE_WAR_GAMES: Tuple[ModelGovernanceWarGame, ...] = (
         ResearchLabel.POSITIVE, "proprietary",
     ),
 )
+
+
+COMPLIANCE_WAR_GAMES: Tuple[ComplianceWarGame, ...] = (
+    ComplianceWarGame("live-environment-request", "LIVE_ENVIRONMENT"),
+    ComplianceWarGame("compliance-artifact-tamper", "HASH_TAMPER"),
+    ComplianceWarGame("agent-compliance-pass-override", "PASS_OVERRIDE"),
+)
+
+
+def _reference_account(options_approved: bool = True) -> Account:
+    return Account(
+        "paper-individual-001",
+        AccountType.INDIVIDUAL,
+        Decimal("100000"),
+        Decimal("50000"),
+        options_approved=options_approved,
+    )
+
+
+def _reference_candidate(plan: Any) -> TradeCandidate:
+    return TradeCandidate(
+        plan.risk_decision.candidate_id,
+        "TEST",
+        ProductType.DEFINED_RISK_OPTION,
+        plan.spread.quantity,
+        plan.spread.net_credit,
+        plan.spread.maximum_loss,
+        plan.spread.net_credit,
+        Decimal("0.85"),
+        FIXTURE_AS_OF,
+        Decimal("100000000"),
+        "Synthetic compliance war-game candidate.",
+        "Reject outside the frozen compliance fixture.",
+    )
 
 
 def run_premium_war_games() -> Tuple[PremiumWarGameResult, ...]:
@@ -535,6 +581,39 @@ def run_model_governance_war_games() -> Tuple[Dict[str, Any], ...]:
     return tuple(results)
 
 
+def run_compliance_war_games() -> Tuple[Dict[str, Any], ...]:
+    plan = build_reference_plan()
+    results = []
+    for scenario in COMPLIANCE_WAR_GAMES:
+        decision = evaluate_compliance_policy(
+            account=_reference_account(),
+            candidate=_reference_candidate(plan),
+            evaluated_at=FIXTURE_AS_OF,
+            environment="live" if scenario.attack == "LIVE_ENVIRONMENT" else "paper",
+        )
+        if scenario.attack == "HASH_TAMPER":
+            decision = replace(decision, artifact_sha256="f" * 64)
+        elif scenario.attack == "PASS_OVERRIDE":
+            blocked = evaluate_compliance_policy(
+                _reference_account(options_approved=False),
+                _reference_candidate(plan),
+                FIXTURE_AS_OF,
+            )
+            decision = replace(blocked, status=BackOfficeStatus.PASS)
+        reasons = validate_compliance_policy_artifact(decision)
+        if decision.status is BackOfficeStatus.BLOCK:
+            reasons = tuple(sorted(set(reasons + decision.reason_codes)))
+        results.append(
+            {
+                "scenario_id": scenario.scenario_id,
+                "disposition": "NO_TRADE",
+                "reason_codes": list(reasons),
+                "human_override_allowed": False,
+            }
+        )
+    return tuple(results)
+
+
 def build_war_game_manifest() -> Dict[str, Any]:
     """Content-address every declared scenario input using canonical JSON."""
     fixtures = {
@@ -546,6 +625,7 @@ def build_war_game_manifest() -> Dict[str, Any]:
         "lifecycle": json_value(LIFECYCLE_WAR_GAMES),
         "futures_events": json_value(FUTURES_EVENT_WAR_GAMES),
         "model_governance": json_value(MODEL_GOVERNANCE_WAR_GAMES),
+        "compliance_controls": json_value(COMPLIANCE_WAR_GAMES),
     }
     scenario_ids = [
         scenario["scenario_id"]
@@ -579,6 +659,7 @@ def build_war_game_report() -> Dict[str, Any]:
     lifecycle = run_lifecycle_war_games()
     futures_events = run_futures_event_war_games()
     model_governance = run_model_governance_war_games()
+    compliance_controls = run_compliance_war_games()
     pnls = tuple(result.net_pnl for result in results)
     wins = sum(result.profitable for result in results)
     premium_metrics = evaluate_pnl_series(pnls)
@@ -620,6 +701,7 @@ def build_war_game_report() -> Dict[str, Any]:
         + sum(item["disposition"] == "NO_TRADE" for item in execution)
         + sum(item["disposition"] == "NO_TRADE" for item in futures_events)
         + sum(item["disposition"] == "NO_TRADE" for item in model_governance)
+        + sum(item["disposition"] == "NO_TRADE" for item in compliance_controls)
     )
     report = {
         "report_type": "synthetic_hypothetical_war_games",
@@ -635,6 +717,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 + len(lifecycle)
                 + len(futures_events)
                 + len(model_governance)
+                + len(compliance_controls)
             ),
             "scenario_count_by_mvp": {
                 "overnight-premium-desk": len(results),
@@ -645,6 +728,7 @@ def build_war_game_report() -> Dict[str, Any]:
                 "lifecycle-controls": len(lifecycle),
                 "event-futures-desk": len(futures_events),
                 "open-quant-ai-model-lab": len(model_governance),
+                "compliance-controls": len(compliance_controls),
             },
             "no_trade_control_count": no_trade_controls,
             "premium_fixed_trade": {
@@ -671,6 +755,7 @@ def build_war_game_report() -> Dict[str, Any]:
         "lifecycle_controls": lifecycle,
         "futures_events": futures_events,
         "model_governance": model_governance,
+        "compliance_controls": compliance_controls,
         "limitations": [
             "These are deterministic synthetic stresses, not historical or live results.",
             "A profitable scenario does not establish strategy expectancy.",
