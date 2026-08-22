@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 177 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 181 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
@@ -66,6 +66,8 @@ python3 -m hedge_desk.cli --morning-markdown
   contain no probability or Risk of Ruin and cannot authorize a trade.
 - AST-enforced trust boundaries confining RoR calculation and validated risk
   input construction, and rejecting broker/network clients from paper runtime.
+- a non-overridable, content-addressed paper-to-live release gate; current
+  status is `LIVE_RELEASE_BLOCKED` until every required evidence artifact exists.
 
 ## Blocks before forward paper validation or live production
 

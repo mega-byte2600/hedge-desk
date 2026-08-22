@@ -118,6 +118,14 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn("DATA_BATCH_NOT_READY", validate_report(report).reason_codes)
 
+    def test_human_cannot_relabel_live_release_as_authorized(self) -> None:
+        report = build_morning_report(NOW)
+        report["release_readiness"]["live_transition_authorized"] = True
+        report = finalize_report(report)
+        self.assertIn(
+            "LIVE_RELEASE_DISCLOSURE_INVALID", validate_report(report).reason_codes
+        )
+
     def test_human_markdown_leads_with_actual_zero_money_status(self) -> None:
         markdown = render_morning_markdown(build_morning_report(NOW))
         self.assertIn("Real money P&L: $0", markdown)
@@ -130,6 +138,8 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("finite-capital-ruin-approximation 0.1.0-unvalidated", markdown)
         self.assertIn("Validated risk-input artifact", markdown)
         self.assertIn("Code commit: `LOCAL_UNSPECIFIED`", markdown)
+        self.assertIn("Live release status: LIVE_RELEASE_BLOCKED", markdown)
+        self.assertIn("Live transition authorized: false", markdown)
         self.assertIn("Earnings option-arm synthetic total: $-312.00", markdown)
         self.assertIn("Arbitrage gated-policy synthetic total: $45", markdown)
         self.assertIn("Dividend shares-arm synthetic total: $-1083.00", markdown)

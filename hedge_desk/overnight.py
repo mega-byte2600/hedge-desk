@@ -51,6 +51,7 @@ from hedge_desk.options import (
     build_candidate_control_handoffs,
     scan_vertical_credit_spreads,
 )
+from hedge_desk.release import build_reference_release_readiness
 
 
 OVERNIGHT_RUNNER_VERSION = "1.0.0"
@@ -504,6 +505,7 @@ def build_morning_report(
         "audit_chain": build_audit_evaluation(),
         "stat_evaluation": build_stat_evaluation(),
         "portfolio_stress": build_portfolio_stress_report(),
+        "release_readiness": json_value(build_reference_release_readiness()),
     }
     return finalize_report(report)
 

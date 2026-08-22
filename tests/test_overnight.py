@@ -81,6 +81,10 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertFalse(report["live_orders_enabled"])
         self.assertEqual(report["real_money_pnl"], "0")
         self.assertEqual(report["real_trades_executed"], 0)
+        self.assertEqual(
+            report["release_readiness"]["status"], "LIVE_RELEASE_BLOCKED"
+        )
+        self.assertFalse(report["release_readiness"]["live_transition_authorized"])
         self.assertEqual(report["code_commit"], "LOCAL_UNSPECIFIED")
         self.assertEqual(report["portfolio_stress"]["scenario_count"], 5)
         self.assertEqual(report["portfolio_stress"]["real_money_pnl"], "0")

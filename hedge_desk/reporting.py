@@ -9,6 +9,7 @@ from hedge_desk.data import validate_serialized_batch_manifest
 from hedge_desk.replay import validate_replay_evaluation
 from hedge_desk.wargames import validate_war_game_report
 from hedge_desk.portfolio_stress import validate_portfolio_stress_report
+from hedge_desk.release import validate_serialized_release_readiness
 
 
 PROHIBITED_PERFORMANCE_CLAIMS = (
@@ -210,6 +211,19 @@ def validate_report(report: Mapping[str, Any]) -> PublicationDecision:
             stress_reference_reasons = ("PORTFOLIO_STRESS_SCHEMA_INVALID",)
         if stress_reference_reasons:
             reasons.append("PORTFOLIO_STRESS_DISCLOSURE_INVALID")
+    release_readiness = report.get("release_readiness", {})
+    release_reasons = (
+        validate_serialized_release_readiness(release_readiness)
+        if isinstance(release_readiness, dict)
+        else ("LIVE_RELEASE_SCHEMA_INVALID",)
+    )
+    if (
+        release_reasons
+        or release_readiness.get("current_environment") != "paper"
+        or release_readiness.get("live_transition_authorized") is not False
+        or release_readiness.get("human_override_allowed") is not False
+    ):
+        reasons.append("LIVE_RELEASE_DISCLOSURE_INVALID")
     serialized = json.dumps(report, sort_keys=True).lower()
     if any(claim in serialized for claim in PROHIBITED_PERFORMANCE_CLAIMS):
         reasons.append("PROHIBITED_PERFORMANCE_CLAIM")
@@ -300,6 +314,7 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
     arbitrage_metrics = war_summary["arbitrage_policy_metrics"]
     dividend_metrics = war_summary["dividend_fixed_arm_metrics"]
     portfolio_stress = report["portfolio_stress"]
+    release_readiness = report["release_readiness"]
     stress_metrics = portfolio_stress["descriptive_metrics"]
     projects = report["projects"]
     premium_project = next(
@@ -368,6 +383,9 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
             f"- Data batch: {report['data_batch']['status']}",
             f"- Chronological replay valid: {str(report['chronological_replay']['valid']).lower()}",
             f"- Audit chain valid: {str(report['audit_chain']['valid']).lower()}",
+            f"- Live release status: {release_readiness['status']}",
+            f"- Live transition authorized: {str(release_readiness['live_transition_authorized']).lower()}",
+            f"- Unsatisfied live-release requirements: {len(release_readiness['reason_codes'])}",
             f"- Report SHA-256: `{report['report_sha256']}`",
             "",
             "## Limitations",
