@@ -9,6 +9,7 @@ from hedge_desk.overnight import current_morning_report
 from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.wargames import build_war_game_report
 from hedge_desk.reporting import render_morning_markdown
+from hedge_desk.artifacts import build_artifact_bundle_manifest
 
 
 def main() -> None:
@@ -47,7 +48,19 @@ def main() -> None:
         "--report-input",
         help="render --morning-markdown from this exact finalized JSON report",
     )
+    parser.add_argument(
+        "--bundle-manifest",
+        nargs="+",
+        metavar="FILE",
+        help="emit a canonical SHA-256 manifest for artifact files",
+    )
     args = parser.parse_args()
+    if args.bundle_manifest:
+        manifest = build_artifact_bundle_manifest(
+            tuple(Path(item) for item in args.bundle_manifest)
+        )
+        print(json.dumps(manifest, indent=2))
+        return
     if args.projects:
         print(json.dumps([project.__dict__ for project in MVP_PROJECTS], indent=2))
         return

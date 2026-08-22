@@ -31,9 +31,11 @@ jobs:
         run: python -m hedge_desk.cli --war-games > war-games.json
       - name: Produce human morning control report
         run: python -m hedge_desk.cli --morning-markdown --report-input morning-report.json > morning-report.md
+      - name: Build content-addressed artifact bundle
+        run: python -m hedge_desk.cli --bundle-manifest morning-report.json morning-report.md war-games.json > bundle-manifest.json
       - name: Validate report safety boundary
         run: |
-          python -c 'import json; from pathlib import Path; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); m=Path("morning-report.md").read_text(); assert d["summary"]["projects_evaluated"] == 5; assert validate_report(d).publishable; assert d["report_sha256"] in m'
+          python -c 'import json; from pathlib import Path; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); w=json.load(open("war-games.json")); b=json.load(open("bundle-manifest.json")); m=Path("morning-report.md").read_text(); assert d["summary"]["projects_evaluated"] == 5; assert validate_report(d).publishable; assert d["report_sha256"] in m; assert d["war_games"] == w; assert len(b["bundle_sha256"]) == 64; assert len(b["files"]) == 3'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: paper-morning-evaluation-${{ github.run_id }}
@@ -41,5 +43,6 @@ jobs:
             morning-report.json
             morning-report.md
             war-games.json
+            bundle-manifest.json
           retention-days: 30
           if-no-files-found: error
