@@ -31,6 +31,25 @@ def history():
 
 
 class DividendTests(unittest.TestCase):
+    def test_nonfinite_payout_or_cape_cannot_rank(self) -> None:
+        bad_history = DividendCompanyHistory(
+            "BAD",
+            tuple(
+                replace(item, dividends_per_share=Decimal("Infinity"))
+                if index == 0 else item
+                for index, item in enumerate(history())
+            ),
+        )
+        with self.assertRaisesRegex(ValueError, "finite"):
+            evaluate_dividend_history(bad_history.observations, NOW)
+        with self.assertRaisesRegex(ValueError, "finite"):
+            evaluate_dividend_cape_universe((
+                DividendCapeInput(
+                    DividendCompanyHistory("BAD", history()),
+                    CapeObservation("BAD", Decimal("NaN"), NOW, NOW, "a" * 64),
+                ),
+            ), NOW)
+
     def test_cape_overlay_rewards_distribution_efficiency_and_lower_valuation(self) -> None:
         evaluation = evaluate_dividend_cape_universe((
             DividendCapeInput(

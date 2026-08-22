@@ -43,6 +43,24 @@ class DividendUniversePolicy:
     maximum_dividend_cuts: int = 0
     minimum_net_shareholder_yield: Decimal = Decimal("0")
 
+    def __post_init__(self) -> None:
+        values = (
+            self.maximum_average_payout_ratio,
+            self.minimum_net_shareholder_yield,
+        )
+        if any(
+            not isinstance(value, Decimal) or not value.is_finite()
+            for value in values
+        ):
+            raise ValueError("dividend policy values must be finite Decimals")
+        if (
+            self.maximum_average_payout_ratio <= 0
+            or self.minimum_net_shareholder_yield < 0
+            or type(self.maximum_dividend_cuts) is not int
+            or self.maximum_dividend_cuts < 0
+        ):
+            raise ValueError("dividend universe policy is invalid")
+
 
 @dataclass(frozen=True)
 class DividendRankedCandidate:
@@ -101,7 +119,7 @@ class DividendCapeEvaluation:
 
 def _valid_hash(value: str) -> bool:
     try:
-        return len(value) == 64 and int(value, 16) >= 0
+        return isinstance(value, str) and len(value) == 64 and int(value, 16) > 0
     except ValueError:
         return False
 
@@ -112,6 +130,23 @@ def evaluate_dividend_history(
 ) -> DividendResearchResult:
     if decision_time.tzinfo is None:
         raise ValueError("decision timestamp must be timezone-aware")
+    numeric_values = tuple(
+        value
+        for item in observations
+        for value in (
+            item.dividends_per_share,
+            item.earnings_per_share,
+            item.average_share_price,
+            item.buybacks,
+            item.issuance,
+            item.market_cap,
+        )
+    )
+    if any(
+        not isinstance(value, Decimal) or not value.is_finite()
+        for value in numeric_values
+    ):
+        raise ValueError("dividend numeric inputs must be finite Decimals")
     reasons = []
     if len(observations) != 10:
         reasons.append("TEN_YEAR_HISTORY_REQUIRED")
@@ -178,12 +213,6 @@ def evaluate_dividend_universe(
     symbols = [item.symbol for item in histories]
     if any(not symbol for symbol in symbols) or len(symbols) != len(set(symbols)):
         raise ValueError("dividend universe symbols must be unique and nonempty")
-    if (
-        policy.maximum_average_payout_ratio <= 0
-        or policy.maximum_dividend_cuts < 0
-        or policy.minimum_net_shareholder_yield < 0
-    ):
-        raise ValueError("dividend universe policy is invalid")
     admitted = []
     rejected = []
     for company in sorted(histories, key=lambda item: item.symbol):
@@ -253,6 +282,12 @@ def evaluate_dividend_cape_universe(
     """Combine ten-year distributions with PIT CAPE; research ranking only."""
     if not inputs:
         raise ValueError("dividend CAPE universe cannot be empty")
+    if any(
+        not isinstance(item.cape.cape_ratio, Decimal)
+        or not item.cape.cape_ratio.is_finite()
+        for item in inputs
+    ):
+        raise ValueError("CAPE inputs must be finite Decimals")
     symbols = [item.history.symbol for item in inputs]
     if len(symbols) != len(set(symbols)):
         raise ValueError("dividend CAPE universe symbols must be unique")

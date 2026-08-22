@@ -68,7 +68,7 @@ class EarningsUniverseEvaluation:
 
 def _valid_hash(value: str) -> bool:
     try:
-        return len(value) == 64 and int(value, 16) >= 0
+        return isinstance(value, str) and len(value) == 64 and int(value, 16) > 0
     except ValueError:
         return False
 
@@ -81,6 +81,19 @@ def evaluate_earnings_surprise(
 ) -> EarningsSurpriseResult:
     if decision_time.tzinfo is None:
         raise ValueError("decision timestamp must be timezone-aware")
+    if type(minimum_analyst_count) is not int or minimum_analyst_count <= 0:
+        raise ValueError("minimum analyst count must be a positive integer")
+    numeric_values = (
+        consensus.eps_consensus,
+        consensus.revenue_consensus,
+        release.eps_actual,
+        release.revenue_actual,
+    )
+    if any(
+        not isinstance(value, Decimal) or not value.is_finite()
+        for value in numeric_values
+    ):
+        raise ValueError("earnings numeric inputs must be finite Decimals")
     reasons = []
     if consensus.as_of.tzinfo is None or release.published_at.tzinfo is None or release.received_at.tzinfo is None:
         reasons.append("EARNINGS_TIMESTAMP_NOT_TIMEZONE_AWARE")

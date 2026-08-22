@@ -16,6 +16,14 @@ NOW = datetime(2026, 8, 21, 20, 0, tzinfo=timezone.utc)
 
 
 class EarningsTests(unittest.TestCase):
+    def test_nonfinite_consensus_or_actual_cannot_rank(self) -> None:
+        with self.assertRaisesRegex(ValueError, "finite"):
+            evaluate_earnings_surprise(
+                replace(self.consensus, eps_consensus=Decimal("Infinity")),
+                self.release,
+                NOW,
+            )
+
     def setUp(self) -> None:
         self.consensus = EarningsConsensus(
             "TEST", "2026Q2", Decimal("1.00"), Decimal("1000"), 8,
