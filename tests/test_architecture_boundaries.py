@@ -87,6 +87,27 @@ class ArchitectureBoundaryTests(unittest.TestCase):
         self.assertEqual(offenders, [])
         self.assertFalse((PACKAGE_ROOT / "broker").exists())
 
+    def test_stat_inference_cannot_become_trade_or_control_authority(self) -> None:
+        authority_paths = {
+            PACKAGE_ROOT / "core" / "decision.py",
+            PACKAGE_ROOT / "paper" / "workflow.py",
+            PACKAGE_ROOT / "release.py",
+            PACKAGE_ROOT / "backoffice" / "compliance.py",
+            PACKAGE_ROOT / "backoffice" / "portfolio.py",
+        }
+        offenders = []
+        for path in authority_paths:
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                modules = []
+                if isinstance(node, ast.Import):
+                    modules = [alias.name for alias in node.names]
+                elif isinstance(node, ast.ImportFrom) and node.module:
+                    modules = [node.module]
+                if any(module == "hedge_desk.stat_inference" for module in modules):
+                    offenders.append(str(path.relative_to(REPOSITORY_ROOT)))
+        self.assertEqual(offenders, [])
+
 
 if __name__ == "__main__":
     unittest.main()
