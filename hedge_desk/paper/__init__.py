@@ -15,6 +15,7 @@ from .workflow import (
     execute_paper_open,
     evaluate_paper_fill,
     evaluate_paper_lifecycle,
+    evaluate_plan_lifecycle,
 )
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "execute_paper_open",
     "evaluate_paper_fill",
     "evaluate_paper_lifecycle",
+    "evaluate_plan_lifecycle",
 ]

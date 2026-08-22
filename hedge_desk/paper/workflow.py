@@ -144,6 +144,10 @@ def _calculate_plan_hash(
             spread.calculated_at.isoformat(),
             ",".join(spread.input_contract_ids),
             ",".join(timestamp.isoformat() for timestamp in spread.quote_timestamps),
+            spread.expiration_date.isoformat(),
+            str(spread.days_to_expiration),
+            str(spread.planned_exit_days_before_expiration),
+            spread.planned_exit_date.isoformat(),
             str(spread.quantity),
             str(spread.contract_multiplier),
             str(spread.width_per_share),
@@ -360,6 +364,31 @@ def evaluate_paper_fill(
         available_combo_size,
         current_net_credit,
         checked_at,
+    )
+
+
+def evaluate_plan_lifecycle(
+    plan: PaperTradePlan,
+    checked_at: datetime,
+    short_leg_in_the_money: bool,
+    ex_dividend_before_expiration: bool,
+    assignment_notice_received: bool,
+    contract_adjustment_pending: bool,
+    settlement_terms_confirmed: bool,
+) -> PaperLifecycleCheck:
+    """Derive exit and expiration state from the immutable approved plan dates."""
+    _assert_plan_integrity(plan)
+    if checked_at.tzinfo is None:
+        raise ValueError("lifecycle timestamp must be timezone-aware")
+    return evaluate_paper_lifecycle(
+        checked_at,
+        planned_exit_reached=checked_at.date() >= plan.spread.planned_exit_date,
+        expiration_reached=checked_at.date() >= plan.spread.expiration_date,
+        short_leg_in_the_money=short_leg_in_the_money,
+        ex_dividend_before_expiration=ex_dividend_before_expiration,
+        assignment_notice_received=assignment_notice_received,
+        contract_adjustment_pending=contract_adjustment_pending,
+        settlement_terms_confirmed=settlement_terms_confirmed,
     )
 
 

@@ -1,7 +1,7 @@
 """Executable-side economics for defined-risk vertical credit spreads."""
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Tuple
@@ -52,6 +52,7 @@ class VerticalCreditSpread:
     quantity: int
     commission_per_contract: Decimal
     quote_tolerance_seconds: int = 2
+    planned_exit_days_before_expiration: int = 7
 
     def __post_init__(self) -> None:
         if not self.spread_id or self.quantity <= 0:
@@ -60,6 +61,8 @@ class VerticalCreditSpread:
             raise ValueError("commission cannot be negative")
         if self.quote_tolerance_seconds < 0:
             raise ValueError("quote tolerance cannot be negative")
+        if self.planned_exit_days_before_expiration <= 0:
+            raise ValueError("planned exit offset must be positive")
 
 
 @dataclass(frozen=True)
@@ -70,6 +73,10 @@ class VerticalSpreadCalculation:
     calculated_at: datetime
     input_contract_ids: Tuple[str, str]
     quote_timestamps: Tuple[datetime, datetime]
+    expiration_date: date
+    days_to_expiration: int
+    planned_exit_days_before_expiration: int
+    planned_exit_date: date
     quantity: int
     contract_multiplier: int
     width_per_share: Decimal
@@ -111,6 +118,12 @@ def calculate_vertical_credit_spread(
         raise ValueError("spread leg quotes are not timestamp-compatible")
     if calculated_at < short.quoted_at or calculated_at < long.quoted_at:
         raise ValueError("calculation cannot precede quote availability")
+    days_to_expiration = (short.expiration - calculated_at.date()).days
+    if days_to_expiration <= spread.planned_exit_days_before_expiration:
+        raise ValueError("candidate has reached its planned pre-expiration exit window")
+    planned_exit_date = short.expiration - timedelta(
+        days=spread.planned_exit_days_before_expiration
+    )
     if spread.quantity > min(short.bid_size, long.ask_size):
         raise ValueError("spread quantity exceeds executable displayed size")
 
@@ -152,6 +165,10 @@ def calculate_vertical_credit_spread(
         calculated_at=calculated_at,
         input_contract_ids=(short.contract_id, long.contract_id),
         quote_timestamps=(short.quoted_at, long.quoted_at),
+        expiration_date=short.expiration,
+        days_to_expiration=days_to_expiration,
+        planned_exit_days_before_expiration=spread.planned_exit_days_before_expiration,
+        planned_exit_date=planned_exit_date,
         quantity=spread.quantity,
         contract_multiplier=CONTRACT_MULTIPLIER,
         width_per_share=width,

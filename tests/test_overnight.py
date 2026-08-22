@@ -20,6 +20,10 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertEqual(evaluations[0].disposition, Disposition.HUMAN_REVIEW)
         self.assertEqual(evaluations[0].layers[-1].status, EvaluationStatus.PENDING)
         self.assertTrue(all(item.disposition is Disposition.NO_TRADE for item in evaluations[1:]))
+        self.assertEqual(evaluations[0].layers[0].metrics["days_to_expiration"], "24")
+        self.assertEqual(
+            evaluations[0].layers[0].metrics["planned_exit_date"], "2026-08-14"
+        )
 
     def test_morning_report_is_explicitly_paper_and_reconciles(self) -> None:
         report = build_morning_report(NOW)

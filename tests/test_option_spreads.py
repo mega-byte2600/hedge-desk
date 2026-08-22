@@ -54,6 +54,10 @@ class OptionSpreadTests(unittest.TestCase):
         self.assertEqual(result.net_credit, Decimal("118.70"))
         self.assertEqual(result.maximum_loss, Decimal("381.30"))
         self.assertEqual(result.break_even, Decimal("93.813"))
+        self.assertEqual(result.days_to_expiration, 24)
+        self.assertEqual(result.expiration_date, date(2026, 8, 21))
+        self.assertEqual(result.planned_exit_days_before_expiration, 7)
+        self.assertEqual(result.planned_exit_date, date(2026, 8, 14))
         self.assertEqual(result.return_on_risk, Decimal("118.70") / Decimal("381.30"))
 
     def test_misaligned_quote_timestamps_fail_closed(self) -> None:
@@ -73,6 +77,20 @@ class OptionSpreadTests(unittest.TestCase):
         expensive_hedge = replace(self.long, ask=Decimal("2.00"))
         with self.assertRaisesRegex(ValueError, "positive credit"):
             self.calculate(long_leg=expensive_hedge)
+
+    def test_new_candidate_at_planned_exit_window_fails_closed(self) -> None:
+        with self.assertRaisesRegex(ValueError, "planned pre-expiration exit"):
+            calculate_vertical_credit_spread(
+                VerticalCreditSpread(
+                    "spread-1",
+                    self.short,
+                    self.long,
+                    1,
+                    Decimal("0.65"),
+                    planned_exit_days_before_expiration=24,
+                ),
+                NOW,
+            )
 
 
 if __name__ == "__main__":

@@ -86,6 +86,8 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             "net_credit": str(plan.spread.net_credit),
             "maximum_loss": str(plan.spread.maximum_loss),
             "break_even": str(plan.spread.break_even),
+            "days_to_expiration": str(plan.spread.days_to_expiration),
+            "planned_exit_date": plan.spread.planned_exit_date.isoformat(),
         },
         (artifact.artifact_id,),
     )

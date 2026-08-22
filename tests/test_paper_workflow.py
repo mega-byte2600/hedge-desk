@@ -16,6 +16,7 @@ from hedge_desk.paper import (
     execute_paper_open,
     evaluate_paper_fill,
     evaluate_paper_lifecycle,
+    evaluate_plan_lifecycle,
 )
 
 
@@ -206,6 +207,25 @@ class PaperWorkflowTests(unittest.TestCase):
             result.reason_codes,
             ("CONTRACT_ADJUSTMENT_PENDING", "SETTLEMENT_TERMS_UNCONFIRMED"),
         )
+
+    def test_plan_dates_drive_exit_and_expiration_actions(self) -> None:
+        plan = build_reference_plan()
+        before = evaluate_plan_lifecycle(
+            plan, FIXTURE_AS_OF, False, False, False, False, True
+        )
+        self.assertEqual(before.action, "MONITOR")
+        exit_day = evaluate_plan_lifecycle(
+            plan,
+            FIXTURE_AS_OF + timedelta(days=17),
+            False, False, False, False, True,
+        )
+        self.assertEqual(exit_day.action, "CLOSE_REVIEW_REQUIRED")
+        expiration = evaluate_plan_lifecycle(
+            plan,
+            FIXTURE_AS_OF + timedelta(days=24),
+            False, False, False, False, True,
+        )
+        self.assertEqual(expiration.action, "EXPIRATION_RECONCILIATION_REQUIRED")
 
     def test_paper_close_pnl_is_deterministic(self) -> None:
         plan = build_reference_plan()
