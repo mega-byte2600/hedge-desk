@@ -10,7 +10,7 @@ from typing import Any, Dict, Mapping, Tuple
 from .compliance import BackOfficeStatus
 
 
-PAPER_RECONCILIATION_VERSION = "paper-back-office-reconciliation-1.0.0"
+PAPER_RECONCILIATION_VERSION = "paper-back-office-reconciliation-1.1.0"
 
 
 @dataclass(frozen=True)
@@ -23,6 +23,7 @@ class PaperReconciliation:
     unresolved_fill_count: int
     unresolved_lifecycle_count: int
     reconciled_at: datetime
+    lifecycle_artifact_sha256: str
     environment: str
     status: BackOfficeStatus
     reason_codes: Tuple[str, ...]
@@ -47,6 +48,7 @@ def evaluate_paper_reconciliation(
     unresolved_lifecycle_count: int,
     reconciled_at: datetime,
     environment: str = "paper",
+    lifecycle_artifact_sha256: str = "",
 ) -> PaperReconciliation:
     """Reconcile a frozen paper ledger without granting execution authority."""
     if reconciled_at.tzinfo is None:
@@ -62,6 +64,8 @@ def evaluate_paper_reconciliation(
     reasons = []
     if not _valid_hash(plan_sha256):
         reasons.append("RECONCILIATION_PLAN_HASH_INVALID")
+    if lifecycle_artifact_sha256 and not _valid_hash(lifecycle_artifact_sha256):
+        reasons.append("LIFECYCLE_ARTIFACT_HASH_INVALID")
     if not _valid_hash(internal_positions_sha256) or not _valid_hash(
         broker_positions_sha256
     ):
@@ -85,6 +89,7 @@ def evaluate_paper_reconciliation(
         "internal_cash": str(internal_cash),
         "internal_positions_sha256": internal_positions_sha256,
         "live_release_evidence_eligible": False,
+        "lifecycle_artifact_sha256": lifecycle_artifact_sha256,
         "plan_sha256": plan_sha256,
         "reason_codes": list(reason_codes),
         "reconciled_at": reconciled_at.isoformat(),
@@ -105,6 +110,7 @@ def evaluate_paper_reconciliation(
         unresolved_fill_count,
         unresolved_lifecycle_count,
         reconciled_at,
+        lifecycle_artifact_sha256,
         environment,
         status,
         reason_codes,
@@ -124,6 +130,7 @@ def serialize_paper_reconciliation(value: PaperReconciliation) -> Dict[str, Any]
         "unresolved_fill_count": value.unresolved_fill_count,
         "unresolved_lifecycle_count": value.unresolved_lifecycle_count,
         "reconciled_at": value.reconciled_at.isoformat(),
+        "lifecycle_artifact_sha256": value.lifecycle_artifact_sha256,
         "environment": value.environment,
         "status": value.status.value,
         "reason_codes": list(value.reason_codes),
@@ -148,6 +155,7 @@ def validate_serialized_paper_reconciliation(
             value["unresolved_lifecycle_count"],
             datetime.fromisoformat(str(value["reconciled_at"])),
             str(value["environment"]),
+            str(value["lifecycle_artifact_sha256"]),
         )
         expected = serialize_paper_reconciliation(rebuilt)
     except (ArithmeticError, KeyError, TypeError, ValueError):

@@ -340,6 +340,7 @@ class PaperWorkflowTests(unittest.TestCase):
         self.assertEqual(closed.exit_commission, Decimal("1.30"))
         self.assertEqual(closed.realized_pnl, Decimal("77.40"))
         self.assertEqual(len(closed.exit_evaluation_sha256), 64)
+        self.assertEqual(len(closed.close_sha256), 64)
 
     def test_paper_close_rejects_tampered_open_or_wrong_plan(self) -> None:
         plan = build_reference_plan()

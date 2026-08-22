@@ -45,6 +45,13 @@ class BackOfficeReconciliationTests(unittest.TestCase):
         self.assertEqual(len(result.artifact_sha256), 64)
         self.assertEqual(result, reconcile())
 
+    def test_completed_lifecycle_hash_is_bound_and_validated(self) -> None:
+        result = reconcile(lifecycle_artifact_sha256="c" * 64)
+        self.assertIs(result.status, BackOfficeStatus.PASS)
+        self.assertEqual(result.lifecycle_artifact_sha256, "c" * 64)
+        blocked = reconcile(lifecycle_artifact_sha256="bad")
+        self.assertIn("LIFECYCLE_ARTIFACT_HASH_INVALID", blocked.reason_codes)
+
     def test_cash_position_and_exception_mismatches_block_together(self) -> None:
         result = reconcile(
             broker_positions_sha256="c" * 64,

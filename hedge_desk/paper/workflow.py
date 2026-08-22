@@ -78,6 +78,7 @@ class PaperClose:
     exit_commission: Decimal
     realized_pnl: Decimal
     exit_evaluation_sha256: str
+    close_sha256: str
     environment: str = "paper"
 
 
@@ -502,6 +503,17 @@ def close_paper_trade(
         event_escalation_required,
         exit_policy,
     )
+    close_payload = "|".join((
+        opened.plan_id,
+        opened.plan_hash,
+        closed_at.isoformat(),
+        str(exit_evaluation.executable_close_debit),
+        str(exit_evaluation.close_commission),
+        str(exit_evaluation.marked_pnl),
+        exit_evaluation.artifact_sha256,
+        "paper",
+    ))
+    close_sha256 = sha256(close_payload.encode("utf-8")).hexdigest()
     return PaperClose(
         plan_id=opened.plan_id,
         plan_hash=opened.plan_hash,
@@ -510,4 +522,5 @@ def close_paper_trade(
         exit_commission=exit_evaluation.close_commission,
         realized_pnl=exit_evaluation.marked_pnl,
         exit_evaluation_sha256=exit_evaluation.artifact_sha256,
+        close_sha256=close_sha256,
     )
