@@ -365,6 +365,7 @@ def build_control_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
         reconciliation = report["back_office_reconciliation"]
         cadence = report["premium_cadence"]
         allocation = report["strategic_allocation"]
+        premium_timing = report["war_games"]["premium_timing"]
     except (KeyError, TypeError) as exc:
         raise ValueError("morning report control fields invalid") from exc
     return {
@@ -388,6 +389,10 @@ def build_control_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
             "new_entry_evaluation_allowed"
         ],
         "premium_monitoring_allowed": cadence["monitoring_allowed"],
+        "premium_exit_review_scenarios": sum(
+            item["exit_policy_action"] == "CLOSE_REVIEW_REQUIRED"
+            for item in premium_timing
+        ),
         "strategic_allocation_admissible": allocation["admissible"],
         "strategic_allocation_policy_version": allocation["version"],
         "strategic_allocation_ror_calculated": allocation[
@@ -484,6 +489,7 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
     release_readiness = report["release_readiness"]
     reconciliation = report["back_office_reconciliation"]
     cadence = report["premium_cadence"]
+    premium_timing = war_games["premium_timing"]
     stress_metrics = portfolio_stress["descriptive_metrics"]
     projects = report["projects"]
     premium_project = next(
@@ -558,6 +564,8 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
             "- Premium new-entry evaluation allowed: "
             f"{str(cadence['new_entry_evaluation_allowed']).lower()}",
             f"- Premium monitoring allowed: {str(cadence['monitoring_allowed']).lower()}",
+            "- Premium exit-policy review scenarios: "
+            f"{sum(item['exit_policy_action'] == 'CLOSE_REVIEW_REQUIRED' for item in premium_timing)}",
             f"- Live release status: {release_readiness['status']}",
             f"- Live transition authorized: {str(release_readiness['live_transition_authorized']).lower()}",
             f"- Unsatisfied live-release requirements: {len(release_readiness['reason_codes'])}",

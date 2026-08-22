@@ -42,6 +42,7 @@ class ReportingTests(unittest.TestCase):
         self.assertFalse(summary["paper_reconciliation_live_release_eligible"])
         self.assertTrue(summary["premium_new_entry_evaluation_allowed"])
         self.assertTrue(summary["premium_monitoring_allowed"])
+        self.assertEqual(summary["premium_exit_review_scenarios"], 3)
         self.assertTrue(summary["strategic_allocation_admissible"])
         self.assertEqual(
             summary["strategic_allocation_policy_version"],
