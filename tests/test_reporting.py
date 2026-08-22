@@ -38,6 +38,8 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(summary["synthetic_stress_total_pnl"], "-9936.00")
         self.assertEqual(summary["release_status"], "LIVE_RELEASE_BLOCKED")
         self.assertFalse(summary["live_transition_authorized"])
+        self.assertEqual(summary["paper_back_office_reconciliation"], "pass")
+        self.assertFalse(summary["paper_reconciliation_live_release_eligible"])
 
         report["real_money_pnl"] = "1"
         report = finalize_report(report)
@@ -193,6 +195,8 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("Code commit: `LOCAL_UNSPECIFIED`", markdown)
         self.assertIn("Live release status: LIVE_RELEASE_BLOCKED", markdown)
         self.assertIn("Live transition authorized: false", markdown)
+        self.assertIn("Paper Back Office reconciliation: pass", markdown)
+        self.assertIn("Paper reconciliation live-release eligible: false", markdown)
         self.assertIn("Earnings option-arm synthetic total: $-312.00", markdown)
         self.assertIn("Arbitrage gated-policy synthetic total: $45", markdown)
         self.assertIn("Dividend shares-arm synthetic total: $-1083.00", markdown)
@@ -215,6 +219,29 @@ class ReportingTests(unittest.TestCase):
         report = finalize_report(report)
         self.assertIn(
             "PORTFOLIO_STRESS_DISCLOSURE_INVALID",
+            validate_report(report).reason_codes,
+        )
+
+    def test_rehashed_back_office_reconciliation_tamper_is_blocked(self) -> None:
+        report = build_morning_report(NOW)
+        report["back_office_reconciliation"]["broker_cash"] = "999"
+        report = finalize_report(report)
+        self.assertIn(
+            "BACK_OFFICE_RECONCILIATION_INVALID",
+            validate_report(report).reason_codes,
+        )
+
+    def test_rehashed_reconciliation_lineage_tamper_is_blocked(self) -> None:
+        report = build_morning_report(NOW)
+        premium = report["projects"][0]
+        compliance = next(
+            layer for layer in premium["layers"]
+            if layer["layer"] == "DETERMINISTIC_COMPLIANCE"
+        )
+        compliance["metrics"]["paper_reconciliation_artifact"] = "f" * 64
+        report = finalize_report(report)
+        self.assertIn(
+            "BACK_OFFICE_RECONCILIATION_LINEAGE_MISMATCH",
             validate_report(report).reason_codes,
         )
 

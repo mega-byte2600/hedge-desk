@@ -19,6 +19,13 @@ from .portfolio import (
     evaluate_portfolio_gate,
     evaluate_drawdown_circuit_breaker,
 )
+from .reconciliation import (
+    PAPER_RECONCILIATION_VERSION,
+    PaperReconciliation,
+    evaluate_paper_reconciliation,
+    serialize_paper_reconciliation,
+    validate_serialized_paper_reconciliation,
+)
 
 __all__ = [
     "BACK_OFFICE_POLICY_VERSION",
@@ -36,4 +43,9 @@ __all__ = [
     "PositionExposure",
     "evaluate_portfolio_gate",
     "evaluate_drawdown_circuit_breaker",
+    "PAPER_RECONCILIATION_VERSION",
+    "PaperReconciliation",
+    "evaluate_paper_reconciliation",
+    "serialize_paper_reconciliation",
+    "validate_serialized_paper_reconciliation",
 ]

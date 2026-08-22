@@ -32,6 +32,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(summary["real_trades_executed"], 0)
         self.assertEqual(summary["war_game_scenarios"], 57)
         self.assertFalse(summary["live_transition_authorized"])
+        self.assertEqual(summary["paper_back_office_reconciliation"], "pass")
+        self.assertFalse(summary["paper_reconciliation_live_release_eligible"])
 
     def test_run_health_cli_verifies_fresh_paper_artifacts(self) -> None:
         now = datetime(2026, 8, 22, 9, 0, tzinfo=timezone.utc)

@@ -6,7 +6,7 @@ no demonstrated real-money profit.
 
 ## Current evidence
 
-- `python3 -m unittest discover -s tests -v`: 247 deterministic tests pass
+- `python3 -m unittest discover -s tests -v`: 254 deterministic tests pass
   locally.
 - GitHub CI tests Python 3.9, 3.11, and 3.13 on every push.
 - GitHub's scheduled paper evaluation runs every 15 minutes and uploads the
@@ -49,6 +49,9 @@ python3 -m hedge_desk.cli --morning-markdown
 - version-bound RoR golden vectors plus an independent rational-arithmetic
   oracle; these verify implementation but do not validate the model for live use;
 - separate versioned deterministic compliance, risk, and Back Office artifacts;
+- paper Back Office reconciliation binds the exact plan, internal/broker
+  position hashes, cash ledgers, fill exceptions, and lifecycle exceptions; a
+  passing paper artifact is explicitly ineligible as live-release evidence;
 - compliance artifacts bound to a canonical FINRA/SEC/CFTC/OCC regulatory
   traceability hash; all live-counsel approval flags remain false;
 - paper options-account evidence for broker approval, timestamped disclosure

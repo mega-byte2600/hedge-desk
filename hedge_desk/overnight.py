@@ -28,7 +28,11 @@ from hedge_desk.evaluation import (
     ProjectEvaluation,
 )
 from hedge_desk.paper import HumanAuthorizationStatus, MachineRiskStatus
-from hedge_desk.backoffice import BackOfficeStatus
+from hedge_desk.backoffice import (
+    BackOfficeStatus,
+    evaluate_paper_reconciliation,
+    serialize_paper_reconciliation,
+)
 from hedge_desk.projects import MVP_PROJECTS, validate_project_registry
 from hedge_desk.wargames import build_war_game_report
 from hedge_desk.replay import build_replay_evaluation
@@ -706,20 +710,44 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             strategic_allocation.artifact_sha256,
         ),
     )
-    compliance_pass = plan.compliance_decision.status is BackOfficeStatus.PASS
+    reconciliation = evaluate_paper_reconciliation(
+        plan.plan_hash,
+        plan.compliance_decision.portfolio_snapshot_sha256,
+        plan.compliance_decision.portfolio_snapshot_sha256,
+        Decimal("100000"),
+        Decimal("100000"),
+        0,
+        0,
+        FIXTURE_AS_OF,
+    )
+    compliance_pass = (
+        plan.compliance_decision.status is BackOfficeStatus.PASS
+        and reconciliation.status is BackOfficeStatus.PASS
+    )
     compliance = LayerEvaluation(
         EvaluationLayer.DETERMINISTIC_COMPLIANCE,
         EvaluationStatus.PASS if compliance_pass else EvaluationStatus.BLOCKED,
-        plan.compliance_decision.reason_codes,
+        tuple(sorted(set(
+            plan.compliance_decision.reason_codes + reconciliation.reason_codes
+        ))),
         {
             "policy_version": plan.compliance_decision.policy_version,
             "regulatory_traceability_sha256": (
                 plan.compliance_decision.policy_decision.regulatory_traceability_sha256
             ),
+            "paper_reconciliation_status": reconciliation.status.value,
+            "paper_reconciliation_artifact": reconciliation.artifact_sha256,
+            "paper_reconciliation_positions_artifact": (
+                reconciliation.internal_positions_sha256
+            ),
+            "paper_reconciliation_live_release_eligible": str(
+                reconciliation.live_release_evidence_eligible
+            ).lower(),
         },
         (
             plan.plan_hash,
             plan.compliance_decision.policy_decision.regulatory_traceability_sha256,
+            reconciliation.artifact_sha256,
         ),
     )
     human_pending = plan.authorization.status is HumanAuthorizationStatus.PENDING
@@ -792,6 +820,22 @@ def build_morning_report(
         "war_games": build_war_game_report(),
         "chronological_replay": build_replay_evaluation(),
         "audit_chain": build_audit_evaluation(),
+        "back_office_reconciliation": serialize_paper_reconciliation(
+            evaluate_paper_reconciliation(
+                evaluations[0].layers[3].metrics["risk_artifact"],
+                evaluations[0].layers[4].metrics[
+                    "paper_reconciliation_positions_artifact"
+                ],
+                evaluations[0].layers[4].metrics[
+                    "paper_reconciliation_positions_artifact"
+                ],
+                Decimal("100000"),
+                Decimal("100000"),
+                0,
+                0,
+                FIXTURE_AS_OF,
+            )
+        ),
         "stat_evaluation": build_stat_evaluation(),
         "portfolio_stress": build_portfolio_stress_report(),
         "release_readiness": json_value(build_reference_release_readiness()),

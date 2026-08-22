@@ -10,6 +10,7 @@ from hedge_desk.replay import validate_replay_evaluation
 from hedge_desk.wargames import validate_war_game_report
 from hedge_desk.portfolio_stress import validate_portfolio_stress_report
 from hedge_desk.projects import MVP_PROJECTS
+from hedge_desk.backoffice import validate_serialized_paper_reconciliation
 from hedge_desk.release import validate_serialized_release_readiness
 
 
@@ -77,6 +78,39 @@ def _validate_report_unchecked(report: Mapping[str, Any]) -> PublicationDecision
         project_summary_valid = False
     if not project_summary_valid:
         reasons.append("PROJECT_SUMMARY_INVALID")
+    reconciliation = report.get("back_office_reconciliation", {})
+    reconciliation_reasons = (
+        validate_serialized_paper_reconciliation(reconciliation)
+        if isinstance(reconciliation, dict)
+        else ("BACK_OFFICE_RECONCILIATION_SCHEMA_INVALID",)
+    )
+    if reconciliation_reasons:
+        reasons.append("BACK_OFFICE_RECONCILIATION_INVALID")
+    elif isinstance(projects, list):
+        premium = next(
+            (
+                item for item in projects
+                if isinstance(item, dict)
+                and item.get("project_id") == "overnight-premium-desk"
+            ),
+            None,
+        )
+        try:
+            compliance_layer = next(
+                layer for layer in premium["layers"]
+                if layer["layer"] == "DETERMINISTIC_COMPLIANCE"
+            )
+            reconciliation_bound = (
+                compliance_layer["metrics"]["paper_reconciliation_artifact"]
+                == reconciliation["artifact_sha256"]
+                and reconciliation["artifact_sha256"]
+                in compliance_layer["artifact_refs"]
+                and reconciliation["live_release_evidence_eligible"] is False
+            )
+        except (KeyError, StopIteration, TypeError):
+            reconciliation_bound = False
+        if not reconciliation_bound:
+            reasons.append("BACK_OFFICE_RECONCILIATION_LINEAGE_MISMATCH")
     replay = report.get("chronological_replay", {})
     replay_validation_reasons = (
         validate_replay_evaluation(replay) if isinstance(replay, dict) else ()
@@ -270,6 +304,7 @@ def build_control_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
         stress = report["portfolio_stress"]
         release = report["release_readiness"]
         report_summary = report["summary"]
+        reconciliation = report["back_office_reconciliation"]
     except (KeyError, TypeError) as exc:
         raise ValueError("morning report control fields invalid") from exc
     return {
@@ -285,6 +320,10 @@ def build_control_summary(report: Mapping[str, Any]) -> Dict[str, Any]:
         "no_trade_controls": war_summary["no_trade_control_count"],
         "portfolio_stress_scenarios": stress["scenario_count"],
         "synthetic_stress_total_pnl": stress["descriptive_metrics"]["total_pnl"],
+        "paper_back_office_reconciliation": reconciliation["status"],
+        "paper_reconciliation_live_release_eligible": reconciliation[
+            "live_release_evidence_eligible"
+        ],
         "release_status": release["status"],
         "live_transition_authorized": release["live_transition_authorized"],
     }
@@ -374,6 +413,7 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
     dividend_metrics = war_summary["dividend_fixed_arm_metrics"]
     portfolio_stress = report["portfolio_stress"]
     release_readiness = report["release_readiness"]
+    reconciliation = report["back_office_reconciliation"]
     stress_metrics = portfolio_stress["descriptive_metrics"]
     projects = report["projects"]
     premium_project = next(
@@ -442,6 +482,9 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
             f"- Data batch: {report['data_batch']['status']}",
             f"- Chronological replay valid: {str(report['chronological_replay']['valid']).lower()}",
             f"- Audit chain valid: {str(report['audit_chain']['valid']).lower()}",
+            f"- Paper Back Office reconciliation: {reconciliation['status']}",
+            "- Paper reconciliation live-release eligible: "
+            f"{str(reconciliation['live_release_evidence_eligible']).lower()}",
             f"- Live release status: {release_readiness['status']}",
             f"- Live transition authorized: {str(release_readiness['live_transition_authorized']).lower()}",
             f"- Unsatisfied live-release requirements: {len(release_readiness['reason_codes'])}",

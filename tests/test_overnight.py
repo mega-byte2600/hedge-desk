@@ -73,6 +73,20 @@ class OvernightEvaluationTests(unittest.TestCase):
             len(evaluations[0].layers[4].metrics["regulatory_traceability_sha256"]),
             64,
         )
+        self.assertEqual(
+            evaluations[0].layers[4].metrics["paper_reconciliation_status"],
+            "pass",
+        )
+        self.assertEqual(
+            evaluations[0].layers[4].metrics[
+                "paper_reconciliation_live_release_eligible"
+            ],
+            "false",
+        )
+        self.assertEqual(
+            len(evaluations[0].layers[4].metrics["paper_reconciliation_artifact"]),
+            64,
+        )
         model_lab = evaluations[4]
         self.assertEqual(model_lab.project_id, "open-quant-ai-model-lab")
         self.assertEqual(
