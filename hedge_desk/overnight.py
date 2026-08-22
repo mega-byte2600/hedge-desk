@@ -8,6 +8,7 @@ from typing import Any, Dict, Tuple
 
 from hedge_desk.data import DataArtifact, validate_data_artifact
 from hedge_desk.data import SourceBatchResult, SourceBatchStatus, build_batch_manifest
+from hedge_desk.data import NewsObservation, NewsTransport, evaluate_news_batch
 from hedge_desk.data.contracts import sha256_text
 from hedge_desk.demo import (
     FIXTURE_AS_OF,
@@ -436,6 +437,24 @@ def _dividend_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
 
 
 def _futures_event_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
+    news = evaluate_news_batch(
+        (
+            NewsObservation(
+                "synthetic-shipping-news",
+                "synthetic-public-agency",
+                "https://example.com/synthetic/shipping-event",
+                "repository-synthetic-fixture",
+                NewsTransport.PUBLIC_AGENCY_FEED,
+                evaluated_at - timedelta(minutes=3),
+                evaluated_at - timedelta(minutes=2),
+                "d" * 64,
+                True,
+                True,
+            ),
+        ),
+        evaluated_at,
+        300,
+    )
     contract = FuturesContractSnapshot(
         "CASH-SETTLED-SYNTHETIC-FUT", 5000, Decimal("5000"), False, True,
         "5" * 64,
@@ -481,6 +500,10 @@ def _futures_event_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                 "universe_candidate_count": str(len(universe.candidates)),
                 "universe_rejected_count": str(len(universe.rejected_events)),
                 "top_ranked_event": universe.candidates[0].event_id,
+                "news_evidence_admissible": str(news.admissible).lower(),
+                "news_research_evidence_only": str(
+                    news.research_evidence_only
+                ).lower(),
             },
             (
                 contract.source_artifact_sha256,
@@ -498,6 +521,7 @@ def _futures_event_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
                 "disposition": result.disposition,
                 "trade_authorized": str(result.trade_authorized).lower(),
                 "universe_trade_authorized": str(universe.trade_authorized).lower(),
+                "news_trade_authorized": str(news.trade_authorized).lower(),
             },
         ),
         LayerEvaluation(

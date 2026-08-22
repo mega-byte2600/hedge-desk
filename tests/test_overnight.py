@@ -133,9 +133,18 @@ class OvernightEvaluationTests(unittest.TestCase):
             futures.layers[0].metrics["top_ranked_event"],
             "synthetic-shipping-disruption",
         )
+        self.assertEqual(
+            futures.layers[0].metrics["news_evidence_admissible"], "true"
+        )
+        self.assertEqual(
+            futures.layers[0].metrics["news_research_evidence_only"], "true"
+        )
         self.assertEqual(futures.layers[2].metrics["trade_authorized"], "false")
         self.assertEqual(
             futures.layers[2].metrics["universe_trade_authorized"], "false"
+        )
+        self.assertEqual(
+            futures.layers[2].metrics["news_trade_authorized"], "false"
         )
         self.assertEqual(futures.layers[4].status, EvaluationStatus.BLOCKED)
 
