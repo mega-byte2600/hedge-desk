@@ -1,4 +1,5 @@
 import unittest
+from itertools import product
 
 from hedge_desk.demo import json_value
 from hedge_desk.release import (
@@ -12,6 +13,25 @@ from hedge_desk.release import (
 
 
 class ReleaseReadinessTests(unittest.TestCase):
+    def test_every_release_evidence_combination_preserves_separate_authorization(self) -> None:
+        combinations = 0
+        for flags in product((False, True), repeat=len(REQUIRED_RELEASE_EVIDENCE)):
+            evidence = tuple(
+                ReleaseEvidence(requirement_id, satisfied, "a" * 64)
+                for requirement_id, satisfied in zip(REQUIRED_RELEASE_EVIDENCE, flags)
+            )
+            result = evaluate_live_release_readiness(evidence)
+            combinations += 1
+            expected = (
+                ReleaseStatus.READY_FOR_SEPARATE_AUTHORIZATION
+                if all(flags)
+                else ReleaseStatus.BLOCKED
+            )
+            self.assertIs(result.status, expected)
+            self.assertFalse(result.human_override_allowed)
+            self.assertFalse(result.live_transition_authorized)
+        self.assertEqual(combinations, 512)
+
     def test_current_reference_is_blocked_and_not_human_overridable(self) -> None:
         result = build_reference_release_readiness()
         self.assertIs(result.status, ReleaseStatus.BLOCKED)
