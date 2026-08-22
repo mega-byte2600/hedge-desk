@@ -37,6 +37,10 @@ jobs:
         run: python -m compileall -q hedge_desk tests
       - name: Verify GitHub Actions are pinned to immutable SHAs
         run: python -c 'from pathlib import Path; from hedge_desk.supply_chain import validate_github_action_pins; root=Path(".github/workflows"); reasons=validate_github_action_pins(tuple(root.glob("*.yml")) + tuple(root.glob("*.yaml"))); assert not reasons, reasons'
+      - name: Verify strict STAT outcome intake remains non-authoritative
+        run: |
+          python -m hedge_desk.cli --evaluate-directional-outcomes examples/directional-outcomes.synthetic.json > stat-evaluation.json
+          python -c 'import json; d=json.load(open("stat-evaluation.json")); assert d["label"] == "STAT"; assert d["evaluation"]["inference_status"] == "INSUFFICIENT_SAMPLE"; assert d["evaluation"]["trade_authorized"] is False'
 
       - name: Run deterministic unit and integration tests
         run: |

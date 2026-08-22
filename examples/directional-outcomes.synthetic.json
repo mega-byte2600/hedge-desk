@@ -1,0 +1,15 @@
+{
+  "schema_version": "directional-outcomes-1.1.0",
+  "dataset_sha256": "0d1422e81de98a0f74839188c3f30b0b3e417cf49ee6524ae65e840e6d955e28",
+  "source_id": "synthetic-resolved-outcomes",
+  "model_id": "stat-directional-fixture",
+  "model_version": "1.0.0",
+  "observations": [
+    {"observation_id": "fixture-0", "outcome": true},
+    {"observation_id": "fixture-1", "outcome": true},
+    {"observation_id": "fixture-2", "outcome": true},
+    {"observation_id": "fixture-3", "outcome": false},
+    {"observation_id": "fixture-4", "outcome": true},
+    {"observation_id": "fixture-5", "outcome": false}
+  ]
+}

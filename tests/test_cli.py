@@ -16,6 +16,20 @@ from datetime import datetime, timezone
 
 
 class CliTests(unittest.TestCase):
+    def test_committed_directional_fixture_is_content_bound_and_insufficient(self) -> None:
+        result = subprocess.run(
+            [sys.executable, "-m", "hedge_desk.cli",
+             "--evaluate-directional-outcomes",
+             str(Path(__file__).resolve().parents[1] / "examples" /
+                 "directional-outcomes.synthetic.json")],
+            capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        output = json.loads(result.stdout)
+        self.assertEqual(output["label"], "STAT")
+        self.assertEqual(output["evaluation"]["inference_status"], "INSUFFICIENT_SAMPLE")
+        self.assertFalse(output["evaluation"]["trade_authorized"])
+
     def test_directional_inference_cli_rejects_hash_mismatch_and_duplicate_ids(self) -> None:
         base = {
             "schema_version": "directional-outcomes-1.1.0",
