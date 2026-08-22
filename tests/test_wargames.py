@@ -26,8 +26,8 @@ class PremiumWarGameTests(unittest.TestCase):
     def test_all_declared_scenarios_are_reported(self) -> None:
         report = build_war_game_report()
         self.assertTrue(report["all_declared_scenarios_included"])
-        self.assertEqual(report["summary"]["total_scenario_count"], 57)
-        self.assertEqual(report["summary"]["no_trade_control_count"], 31)
+        self.assertEqual(report["summary"]["total_scenario_count"], 60)
+        self.assertEqual(report["summary"]["no_trade_control_count"], 34)
         premium = report["summary"]["premium_fixed_trade"]
         self.assertEqual(premium["profitable_scenarios"], 1)
         self.assertEqual(premium["losing_scenarios"], 4)
@@ -36,7 +36,7 @@ class PremiumWarGameTests(unittest.TestCase):
             premium["descriptive_metrics"]["inference_status"],
             "INSUFFICIENT_SYNTHETIC_SAMPLE",
         )
-        self.assertEqual(report["fixture_manifest"]["scenario_count"], 57)
+        self.assertEqual(report["fixture_manifest"]["scenario_count"], 60)
         self.assertEqual(len(report["fixture_manifest"]["fixture_sha256"]), 64)
         self.assertEqual(len(report["war_game_report_sha256"]), 64)
         summary = report["summary"]
@@ -55,7 +55,7 @@ class PremiumWarGameTests(unittest.TestCase):
 
     def test_fixture_manifest_is_reproducible(self) -> None:
         self.assertEqual(build_war_game_manifest(), build_war_game_manifest())
-        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 57)
+        self.assertEqual(len(set(build_war_game_manifest()["scenario_ids"])), 60)
 
     def test_strategic_allocation_stresses_block_concentration_and_bad_weights(self) -> None:
         results = {
@@ -159,6 +159,22 @@ class PremiumWarGameTests(unittest.TestCase):
             "RELEASE_REQUIREMENT_UNSATISFIED:BACK_OFFICE_RECONCILIATION_CERTIFIED",
             blocked["reason_codes"],
         )
+
+    def test_back_office_reconciliation_mismatches_are_declared_no_trade_games(self) -> None:
+        results = {
+            item["scenario_id"]: item for item in run_compliance_war_games()
+        }
+        expected = {
+            "back-office-cash-ledger-mismatch": "CASH_LEDGER_MISMATCH",
+            "back-office-position-ledger-mismatch": "POSITION_LEDGER_MISMATCH",
+            "back-office-unresolved-lifecycle-exception": (
+                "UNRESOLVED_LIFECYCLE_EXCEPTIONS"
+            ),
+        }
+        for scenario_id, reason in expected.items():
+            self.assertEqual(results[scenario_id]["disposition"], "NO_TRADE")
+            self.assertFalse(results[scenario_id]["human_override_allowed"])
+            self.assertIn(reason, results[scenario_id]["reason_codes"])
 
     def test_lifecycle_events_require_explicit_operational_actions(self) -> None:
         results = {item["scenario_id"]: item for item in run_lifecycle_war_games()}

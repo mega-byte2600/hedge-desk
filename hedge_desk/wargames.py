@@ -37,6 +37,7 @@ from hedge_desk.models import (
 )
 from hedge_desk.backoffice import (
     BackOfficeStatus,
+    evaluate_paper_reconciliation,
     evaluate_compliance_policy,
     validate_compliance_policy_artifact,
 )
@@ -374,6 +375,11 @@ COMPLIANCE_WAR_GAMES: Tuple[ComplianceWarGame, ...] = (
     ComplianceWarGame(
         "front-office-without-back-office-release", "MISSING_BACK_OFFICE_RELEASE"
     ),
+    ComplianceWarGame("back-office-cash-ledger-mismatch", "CASH_MISMATCH"),
+    ComplianceWarGame("back-office-position-ledger-mismatch", "POSITION_MISMATCH"),
+    ComplianceWarGame(
+        "back-office-unresolved-lifecycle-exception", "LIFECYCLE_EXCEPTION"
+    ),
 )
 
 
@@ -682,6 +688,28 @@ def run_compliance_war_games() -> Tuple[Dict[str, Any], ...]:
     plan = build_reference_plan()
     results = []
     for scenario in COMPLIANCE_WAR_GAMES:
+        if scenario.attack in {
+            "CASH_MISMATCH", "POSITION_MISMATCH", "LIFECYCLE_EXCEPTION"
+        }:
+            position_hash = plan.compliance_decision.portfolio_snapshot_sha256
+            reconciliation = evaluate_paper_reconciliation(
+                plan.plan_hash,
+                position_hash,
+                "f" * 64 if scenario.attack == "POSITION_MISMATCH" else position_hash,
+                Decimal("100000"),
+                Decimal("99999.99") if scenario.attack == "CASH_MISMATCH"
+                else Decimal("100000"),
+                0,
+                1 if scenario.attack == "LIFECYCLE_EXCEPTION" else 0,
+                FIXTURE_AS_OF,
+            )
+            results.append({
+                "scenario_id": scenario.scenario_id,
+                "disposition": "NO_TRADE",
+                "reason_codes": list(reconciliation.reason_codes),
+                "human_override_allowed": False,
+            })
+            continue
         if scenario.attack == "MISSING_BACK_OFFICE_RELEASE":
             release = evaluate_live_release_readiness(tuple(
                 ReleaseEvidence(

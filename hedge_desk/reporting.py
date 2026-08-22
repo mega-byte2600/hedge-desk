@@ -220,7 +220,7 @@ def _validate_report_unchecked(report: Mapping[str, Any]) -> PublicationDecision
         or manifest.get("scenario_count") != len(manifest_ids)
         or manifest.get("scenario_count") != war_summary.get("total_scenario_count")
         or len(set(manifest_ids)) != len(manifest_ids)
-        or war_summary.get("scenario_count_by_mvp", {}).get("compliance-controls") != 6
+        or war_summary.get("scenario_count_by_mvp", {}).get("compliance-controls") != 9
         or war_summary.get("scenario_count_by_mvp", {}).get("candidate-pipeline-controls") != 4
         or not isinstance(manifest.get("fixture_sha256"), str)
         or len(manifest.get("fixture_sha256", "")) != 64
