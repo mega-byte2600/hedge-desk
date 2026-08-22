@@ -41,13 +41,15 @@ jobs:
         run: |
           python -m hedge_desk.cli --audit-journal audit-journal.jsonl > audit-journal-status.json
           python -m hedge_desk.cli --verify-audit-journal audit-journal.jsonl > audit-journal-verification.json
+      - name: Verify latest paper run operational health
+        run: python -m hedge_desk.cli --verify-run-health . --maximum-run-age-seconds 900 > operational-health.json
       - name: Build content-addressed artifact bundle
-        run: python -m hedge_desk.cli --bundle-manifest morning-report.json morning-report.md run-receipt.json war-games.json audit-journal.jsonl audit-journal-status.json audit-journal-verification.json > bundle-manifest.json
+        run: python -m hedge_desk.cli --bundle-manifest morning-report.json morning-report.md run-receipt.json war-games.json audit-journal.jsonl audit-journal-status.json audit-journal-verification.json operational-health.json > bundle-manifest.json
       - name: Verify artifact bundle from disk
         run: python -m hedge_desk.cli --verify-bundle-manifest bundle-manifest.json
       - name: Validate report safety boundary
         run: |
-          python -c 'import json, os; from pathlib import Path; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); w=json.load(open("war-games.json")); r=json.load(open("run-receipt.json")); b=json.load(open("bundle-manifest.json")); a=json.load(open("audit-journal-verification.json")); m=Path("morning-report.md").read_text(); assert d["summary"]["projects_evaluated"] == 6; assert validate_report(d).publishable; assert d["code_commit"] == os.environ["GITHUB_SHA"]; assert d["report_sha256"] in m; assert d["war_games"] == w; assert r["status"] == "COMPLETE"; assert r["report_sha256"] == d["report_sha256"]; assert a["valid"] is True; assert a["event_count"] == 7; assert len(b["bundle_sha256"]) == 64; assert len(b["files"]) == 7'
+          python -c 'import json, os; from pathlib import Path; from hedge_desk.reporting import validate_report; d=json.load(open("morning-report.json")); w=json.load(open("war-games.json")); r=json.load(open("run-receipt.json")); b=json.load(open("bundle-manifest.json")); a=json.load(open("audit-journal-verification.json")); h=json.load(open("operational-health.json")); m=Path("morning-report.md").read_text(); assert d["summary"]["projects_evaluated"] == 6; assert validate_report(d).publishable; assert d["code_commit"] == os.environ["GITHUB_SHA"]; assert d["report_sha256"] in m; assert d["war_games"] == w; assert r["status"] == "COMPLETE"; assert r["report_sha256"] == d["report_sha256"]; assert a["valid"] is True; assert a["event_count"] == 7; assert h["status"] == "HEALTHY_PAPER"; assert h["live_authorized"] is False; assert len(b["bundle_sha256"]) == 64; assert len(b["files"]) == 8'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: paper-morning-evaluation-${{ github.run_id }}
@@ -59,6 +61,7 @@ jobs:
             audit-journal.jsonl
             audit-journal-status.json
             audit-journal-verification.json
+            operational-health.json
             bundle-manifest.json
           retention-days: 30
           if-no-files-found: error

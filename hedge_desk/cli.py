@@ -2,8 +2,9 @@
 
 import argparse
 import json
+import os
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 from hedge_desk.demo import json_value, run_reference_demo
 from hedge_desk.overnight import current_morning_report
@@ -16,6 +17,7 @@ from hedge_desk.artifacts import (
 )
 from hedge_desk.audit import build_reference_audit
 from hedge_desk.audit_store import initialize_audit_journal, read_audit_journal
+from hedge_desk.operational_health import evaluate_paper_run_health
 from hedge_desk.scheduler import (
     ScheduledRunRequest,
     execute_scheduled_run,
@@ -37,6 +39,21 @@ from hedge_desk.options import (
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--verify-run-health",
+        metavar="DIRECTORY",
+        help="verify latest report, receipt, journal, freshness, and paper boundary",
+    )
+    parser.add_argument(
+        "--maximum-run-age-seconds",
+        type=int,
+        default=900,
+        help="maximum report age used by --verify-run-health",
+    )
+    parser.add_argument(
+        "--health-evaluated-at",
+        help="optional injected ISO-8601 clock for reproducible health checks",
+    )
     parser.add_argument(
         "--audit-journal",
         metavar="FILE",
@@ -153,6 +170,33 @@ def main() -> None:
         help="stable run identity required with --scheduled-receipt",
     )
     args = parser.parse_args()
+    if args.verify_run_health:
+        root = Path(args.verify_run_health)
+        try:
+            report = json.loads((root / "morning-report.json").read_text(encoding="utf-8"))
+            receipt = json.loads((root / "run-receipt.json").read_text(encoding="utf-8"))
+            journal = read_audit_journal(root / "audit-journal.jsonl")
+            evaluated_at = (
+                datetime.fromisoformat(args.health_evaluated_at.replace("Z", "+00:00"))
+                if args.health_evaluated_at
+                else datetime.now(timezone.utc)
+            )
+            result = evaluate_paper_run_health(
+                report,
+                receipt,
+                len(journal),
+                journal[-1].event_hash if journal else "0" * 64,
+                evaluated_at,
+                args.maximum_run_age_seconds,
+                os.environ.get("HEDGE_DESK_CODE_COMMIT", report.get("code_commit", "")),
+            )
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+            print(json.dumps({"status": "BLOCKED", "reason_codes": [str(exc).split(":", 1)[0]]}, indent=2))
+            raise SystemExit(1)
+        print(json.dumps(json_value(result), indent=2))
+        if result.status != "HEALTHY_PAPER":
+            raise SystemExit(1)
+        return
     if args.verify_audit_journal:
         try:
             chain = read_audit_journal(Path(args.verify_audit_journal))

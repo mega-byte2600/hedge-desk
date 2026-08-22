@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -7,10 +8,39 @@ import unittest
 from hashlib import sha256
 
 from hedge_desk.overnight import build_morning_report
+from hedge_desk.demo import json_value
+from hedge_desk.audit import build_reference_audit
+from hedge_desk.audit_store import initialize_audit_journal
+from hedge_desk.scheduler import ScheduledRunRequest, execute_scheduled_run
 from datetime import datetime, timezone
 
 
 class CliTests(unittest.TestCase):
+    def test_run_health_cli_verifies_fresh_paper_artifacts(self) -> None:
+        now = datetime(2026, 8, 22, 9, 0, tzinfo=timezone.utc)
+        commit = "a" * 40
+        report = build_morning_report(now, commit)
+        receipt = json_value(execute_scheduled_run(
+            ScheduledRunRequest("cli-health", now), (), lambda _: report
+        )[-1])
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "morning-report.json").write_text(json.dumps(report), encoding="utf-8")
+            (root / "run-receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+            initialize_audit_journal(root / "audit-journal.jsonl", build_reference_audit())
+            result = subprocess.run(
+                [
+                    sys.executable, "-m", "hedge_desk.cli", "--verify-run-health",
+                    str(root), "--health-evaluated-at", "2026-08-22T09:15:00Z",
+                    "--maximum-run-age-seconds", "900",
+                ],
+                check=True, capture_output=True, text=True,
+                env={**os.environ, "HEDGE_DESK_CODE_COMMIT": commit},
+            )
+        output = json.loads(result.stdout)
+        self.assertEqual(output["status"], "HEALTHY_PAPER")
+        self.assertFalse(output["live_authorized"])
+
     def test_audit_journal_cli_creates_once_and_verifies(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "audit.jsonl"
