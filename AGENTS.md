@@ -44,7 +44,7 @@
 - Matrix/Hermes can receive sanitized project status and task instructions.
 - Matrix/Hermes must not receive Schwab secrets, OAuth tokens, API keys, account identifiers, or licensed/private payloads.
 - Agent learning is append-only and paper-outcome based.
-- ChatGPT Project context is bridged through repo docs and project sources; Codex and ChatGPT histories are separate.
+- Do not commit ChatGPT chat history, raw prompts, private project instructions, copied conversation transcripts, or Matrix room transcripts to GitHub.
 
 ## GitHub CLI collaboration
 
