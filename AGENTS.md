@@ -30,6 +30,22 @@
   be tied to an exact source and must not be converted into a formula by an
   agent's interpretation alone.
 
+## Method Stack
+
+- Series 7 / FINRA / SEC: compliance and product-rule layer.
+- Graham / Buffett / Burry / Shiller: valuation and mispricing layer.
+- Hull / ML options papers: derivatives pricing, volatility, bid/ask, and premium research layer.
+- Trader Vic: timing and market-structure layer.
+- Risk of Ruin: portfolio survival layer.
+
+## Hermes / Matrix
+
+- Hermes is the self-hosted Matrix messenger interface for coordinating agents.
+- Matrix/Hermes can receive sanitized project status and task instructions.
+- Matrix/Hermes must not receive Schwab secrets, OAuth tokens, API keys, account identifiers, or licensed/private payloads.
+- Agent learning is append-only and paper-outcome based.
+- ChatGPT Project context is bridged through repo docs and project sources; Codex and ChatGPT histories are separate.
+
 ## GitHub CLI collaboration
 
 - Use GitHub issues as the durable task queue and pull requests as the unit of
