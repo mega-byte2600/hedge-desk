@@ -26,8 +26,20 @@ from hedge_desk.options import (
 from hedge_desk.paper import (
     approve_paper_trade,
     close_paper_trade,
+    calculate_proposed_plan_hash,
     create_paper_trade_plan,
     execute_paper_open,
+)
+from hedge_desk.yellow_sheet import (
+    CrossMarketContext,
+    EvidenceObservation,
+    InvalidationCondition,
+    TradeAction,
+    TradeLogicRule,
+    YellowSheetRiskContext,
+    YELLOW_SHEET_POLICY_VERSION,
+    YELLOW_SHEET_SCHEMA_VERSION,
+    build_yellow_sheet,
 )
 from hedge_desk.risk import build_validated_risk_inputs
 
@@ -193,7 +205,7 @@ def build_reference_plan() -> Any:
         OptionType.PUT,
         short_quote.strike,
     )
-    return create_paper_trade_plan(
+    plan_arguments = dict(
         plan_id=FIXTURE_ID,
         spread=spread,
         risk_decision=decision,
@@ -202,6 +214,67 @@ def build_reference_plan() -> Any:
         created_at=FIXTURE_AS_OF,
         approval_expires_at=FIXTURE_AS_OF + timedelta(minutes=15),
     )
+    plan_hash = calculate_proposed_plan_hash(
+        execution_quote_max_age_seconds=120,
+        control_artifact_max_age_seconds=120,
+        **plan_arguments,
+    )
+    evidence_hash = sha256(b"synthetic-yellow-sheet-evidence").hexdigest()
+    sheet = build_yellow_sheet(
+        schema_version=YELLOW_SHEET_SCHEMA_VERSION,
+        yellow_sheet_id="ys-overnight-premium-reference-v1",
+        version=1,
+        candidate_id=candidate.candidate_id,
+        plan_hash=plan_hash,
+        interest="Synthetic liquid option premium was observed in the frozen fixture.",
+        hypothesis="Executable premium compensates the defined maximum loss in this synthetic case.",
+        investigation=(
+            "Compared executable option prices, liquidity, event timing, rates, credit, volatility, and alternative no-trade explanations.",
+        ),
+        evidence=(EvidenceObservation(
+            "The synchronized executable quotes produce positive net credit and bounded loss.",
+            True, FIXTURE_OPTION_SOURCE_ID, FIXTURE_AS_OF,
+            evidence_hash, "vertical-credit-spread-1.0.0",
+        ),),
+        trade_logic=tuple(
+            TradeLogicRule(action, condition) for action, condition in (
+                (TradeAction.BUY, "Buy only when an independently approved plan requires a long leg."),
+                (TradeAction.SELL, "Sell only as the short leg of the exact approved defined-risk spread."),
+                (TradeAction.HOLD, "Hold pending separate risk, compliance, and human authorization."),
+                (TradeAction.REDUCE, "Reduce when a deterministic exposure or exit control requires it."),
+                (TradeAction.NO_TRADE, "Do not trade if any evidence, risk, compliance, liquidity, hash, or authorization gate fails."),
+            )
+        ),
+        invalidation=(InvalidationCondition(
+            "Quotes, event calendar, economics, or control artifacts differ from the bound plan.",
+            False, FIXTURE_AS_OF, evidence_hash,
+        ),),
+        cross_market_context=CrossMarketContext(
+            "Synthetic fixture; no adverse bond/yield signal asserted.",
+            "Synthetic fixture; curve context recorded but no inference made.",
+            "Synthetic fixture; credit-spread context recorded but no inference made.",
+            "Underlying quote is synchronized with both option legs.",
+            "Executable option prices are used; no volatility forecast is inferred.",
+            "Not material to this synthetic equity-option fixture.",
+            "Not material to this synthetic USD fixture.",
+            "Displayed size, volume, open interest, and bid/ask controls passed.",
+        ),
+        risk_context=YellowSheetRiskContext(
+            str(spread.quantity), str(spread.maximum_loss),
+            "Bound to the independently validated portfolio snapshot.",
+            "Executable-side liquidity controls passed.",
+            "Bound to deterministic symbol and aggregate concentration gates.",
+            risk_inputs.artifact_sha256,
+            decision.risk_model_id + "@" + decision.risk_model_version,
+        ),
+        decision_rationale="This exact defined-risk paper proposal is presented because synchronized executable quotes, bounded loss, liquidity, and event controls support human review; it does not authorize execution.",
+        input_hashes=tuple(sorted((evidence_hash, risk_inputs.artifact_sha256, handoffs[0].calculation_sha256))),
+        policy_version=YELLOW_SHEET_POLICY_VERSION,
+        model_version="synthetic-rationale-fixture-1.0.0",
+        created_at=FIXTURE_AS_OF,
+        prior_yellow_sheet_version=None,
+    )
+    return create_paper_trade_plan(**plan_arguments, yellow_sheet=sheet)
 
 
 def run_reference_demo(approve: bool = False, human_id: str = "") -> Dict[str, Any]:

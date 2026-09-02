@@ -68,9 +68,23 @@ explicit decision point and cannot override risk or compliance blocks.
 The system evaluates every trade candidate through independent gates:
 
 1. source provenance, entitlement, point-in-time, and schema validation;
-2. account/product eligibility and deterministic compliance policy;
-3. portfolio exposure and conventional economic-risk controls;
-4. exact-plan human authorization for paper execution.
+2. a versioned, content-addressed Yellow Sheet explaining **WHY** the exact
+   candidate and plan are proposed;
+3. account/product eligibility and deterministic compliance policy;
+4. portfolio exposure and conventional economic-risk controls;
+5. exact-plan human authorization for paper execution.
+
+The mandatory lifecycle is:
+
+`Interest → Hypothesis → Investigation → Evidence → Yellow Sheet → Proposed Trade → Deterministic Risk/RoR → Compliance → Human Authorization → Execution`
+
+**NO YELLOW SHEET = NO TRADE.** Missing, incomplete, stale, invalidated, or
+hash-mismatched sheets produce an explicit `NO_TRADE` disposition. A human
+cannot override that outcome. Each plan holds exactly one active sheet version;
+revisions identify the immediately prior version and require a new artifact
+hash. AI may research, synthesize, and challenge the sheet, but cannot turn it
+into an execution-authorizing decision. Risk/RoR, compliance, audit, and human
+authorization remain separate deterministic boundaries.
 
 No future live transition can pass unless an independently hashed Back Office
 reconciliation certification is present. Front Office, risk, compliance, human
@@ -84,6 +98,7 @@ order to a broker.
 ```bash
 python -m hedge_desk.cli
 python -m hedge_desk.cli --approve --human-id captain
+python -m hedge_desk.cli --yellow-sheet-rationale
 python -m hedge_desk.cli --projects
 python -m hedge_desk.cli --overnight-report
 python -m hedge_desk.cli --war-games
@@ -98,6 +113,8 @@ python -m coverage run -m unittest discover -s tests -v && python -m coverage re
 The default command stops at `human_authorization_required`. The second command
 simulates a named human approval and paper-only open/close against a frozen
 synthetic fixture; it does not connect to a broker or market-data vendor.
+`--yellow-sheet-rationale` prints the candidate, exact plan hash, active sheet
+identity/version, gate result, and plain-English WHY without granting authority.
 
 The overnight report evaluates every registered MVP through separately labeled
 `OBSERVED`, `STAT`, `BIG`, `DETERMINISTIC_RISK`,
@@ -121,6 +138,40 @@ counts, combined synthetic stress result, and live-release status.
 CI enforces at least 80% branch coverage over the complete `hedge_desk`
 package. The measured baseline includes CLI code even though subprocess-driven
 CLI tests are not attributed to the parent coverage process.
+
+## Self-hosted Hermes, Schwab read-only, and iOS
+
+Hermes runs independently as a local supervised service. Verify it with
+`hermes doctor` and `hermes gateway status`; Hedge Desk sends no brokerage
+credentials or account payloads to Hermes.
+
+The dependency-free backend serves the Objective-C MVP at `127.0.0.1:8765`.
+Its Schwab boundary supports OAuth readiness, authorization callback/token
+storage, and GET-only account-number retrieval. It defines no order operation,
+rejects every POST with HTTP 405, stores tokens only at an ignored local path
+with mode `0600`, and returns `orders_blocked: true` throughout.
+
+Configure credentials locally, never in Git:
+
+```bash
+export SCHWAB_CLIENT_ID='configured-in-your-Schwab-developer-app'
+export SCHWAB_CLIENT_SECRET='configured-locally'
+export SCHWAB_REDIRECT_URI='http://127.0.0.1:8765/api/schwab/callback'
+./scripts/start_ios_backend.sh
+open http://127.0.0.1:8765/api/schwab/authorize
+```
+
+The Schwab developer app must use the exact same callback URL. A physical
+iPhone cannot reach the Mac through `127.0.0.1`; set
+`HEDGE_DESK_API_BASE_URL` in Xcode to a trusted HTTPS backend or the Mac's
+trusted-LAN address for development. The Release default is intentionally
+nonfunctional until replaced with the operator's HTTPS host.
+
+The buildable project is at `ios/HedgeDeskObjC.xcodeproj` and includes an
+original app icon, privacy manifest, configurable API URL, and explicit backend
+error states. TestFlight/App Store upload still requires the account owner to
+select their Apple Developer team, register the final bundle identifier, supply
+the production HTTPS backend and required listing URLs, and authorize submission.
 
 ## Safety boundary
 

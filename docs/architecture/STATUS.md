@@ -44,6 +44,17 @@ python3 -m hedge_desk.cli --morning-markdown
 
 ## Implemented control boundaries
 
+- mandatory typed Yellow Sheets with canonical JSON-compatible fields for
+  interest, hypothesis, investigated relationships and alternatives, sourced
+  timestamped evidence, all five deterministic actions (`BUY`, `SELL`, `HOLD`,
+  `REDUCE`, `NO_TRADE`), invalidation, cross-market context, risk context, and
+  plain-English rationale;
+- exact candidate/plan-hash binding, canonical artifact hashes, sequential
+  revision lineage, freshness checks, and a `YELLOW_SHEET` event that uses the
+  existing tamper-evident audit chain;
+- fail-closed Yellow Sheet checks at proposal, authorization, fill, and paper
+  execution; invalidation or any missing/stale/mismatched content is explicit
+  `NO_TRADE` and cannot be human-overridden;
 - synchronized option-leg and underlying quotes;
 - executable-side option pricing, displayed size, open interest, volume, and
   bid/ask liquidity gates;

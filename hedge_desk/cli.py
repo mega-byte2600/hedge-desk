@@ -154,6 +154,11 @@ def main() -> None:
         help="simulate an explicit human approval for this frozen paper fixture",
     )
     parser.add_argument(
+        "--yellow-sheet-rationale",
+        action="store_true",
+        help="show the active Yellow Sheet WHY and gate result for each candidate",
+    )
+    parser.add_argument(
         "--human-id",
         default="",
         help="required human identity when --approve is supplied",
@@ -461,6 +466,19 @@ def main() -> None:
         parser.error("--report-input requires --morning-markdown")
     if args.war_games:
         print(json.dumps(build_war_game_report(), indent=2))
+        return
+    if args.yellow_sheet_rationale:
+        plan = run_reference_demo(False, "")["plan"]
+        sheet = plan["yellow_sheet"]
+        print(json.dumps({
+            "candidate_id": plan["risk_decision"]["candidate_id"],
+            "plan_hash": plan["plan_hash"],
+            "yellow_sheet_id": sheet["yellow_sheet_id"],
+            "yellow_sheet_version": sheet["version"],
+            "disposition": plan["proposal_disposition"],
+            "reason_codes": plan["yellow_sheet_gate"]["reason_codes"],
+            "why": sheet["decision_rationale"],
+        }, indent=2))
         return
     if args.approve and not args.human_id.strip():
         parser.error("--human-id is required with --approve")

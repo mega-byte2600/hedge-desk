@@ -14,7 +14,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"Hedge Desk";
-    self.api = [[HedgeDeskAPI alloc] initWithBaseURL:@"http://127.0.0.1:8765"];
+    NSString *baseURL = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"HedgeDeskAPIBaseURL"];
+    self.api = [[HedgeDeskAPI alloc] initWithBaseURL:baseURL ?: @"http://127.0.0.1:8765"];
     self.sections = @[@"Safety", @"Schwab", @"Dividend Desk", @"Earnings Desk"];
     self.rows = [@{
         @"Safety": @[@"Loading backend status..."],
@@ -32,6 +33,12 @@
 
 - (void)refreshDesk {
     [self.api fetchStatus:^(NSDictionary *payload, NSError *error) {
+        if (error) {
+            self.rows[@"Safety"] = @[[NSString stringWithFormat:@"Backend unavailable: %@", error.localizedDescription]];
+            [self.tableView reloadData];
+            [self.refreshControl endRefreshing];
+            return;
+        }
         NSDictionary *schwab = payload[@"schwab"];
         NSString *mode = payload[@"mode"] ?: @"unknown";
         NSString *orders = [schwab[@"orders_blocked"] boolValue] ? @"orders blocked" : @"ORDER RISK";
@@ -41,6 +48,11 @@
     }];
 
     [self.api fetchSchwabReadiness:^(NSDictionary *payload, NSError *error) {
+        if (error) {
+            self.rows[@"Schwab"] = @[@"Read-only connection unavailable"];
+            [self.tableView reloadData];
+            return;
+        }
         NSString *client = [payload[@"client_id_configured"] boolValue] ? @"client id ready" : @"client id missing";
         NSString *secret = [payload[@"client_secret_configured"] boolValue] ? @"secret ready" : @"secret missing";
         NSString *auth = [payload[@"ready_for_authorization_url"] boolValue] ? @"ready for auth" : @"not ready";
