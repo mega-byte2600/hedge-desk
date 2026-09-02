@@ -16,6 +16,17 @@ from datetime import datetime, timezone
 
 
 class CliTests(unittest.TestCase):
+    def test_cli_shows_yellow_sheet_rationale_for_candidate(self) -> None:
+        result = subprocess.run(
+            [sys.executable, "-m", "hedge_desk.cli", "--yellow-sheet-rationale"],
+            check=True, capture_output=True, text=True,
+        )
+        output = json.loads(result.stdout)
+        self.assertEqual(output["disposition"], "HOLD")
+        self.assertEqual(output["reason_codes"], [])
+        self.assertTrue(output["yellow_sheet_id"])
+        self.assertTrue(output["why"])
+
     def test_committed_directional_fixture_is_content_bound_and_insufficient(self) -> None:
         result = subprocess.run(
             [sys.executable, "-m", "hedge_desk.cli",
