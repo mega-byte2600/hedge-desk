@@ -28,7 +28,7 @@ Working locally:
 cd /Users/cebu/Documents/BIG
 python3 -m unittest discover -s tests -v
 python3 -m hedge_desk.demo
-python3 -m hedge_desk.server
+python3 -m hedge_desk.schwab_server
 ```
 
 Open:
