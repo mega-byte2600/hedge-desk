@@ -251,7 +251,7 @@ class OvernightEvaluationTests(unittest.TestCase):
         self.assertTrue(report["chronological_replay"]["valid"])
         self.assertTrue(report["audit_chain"]["valid"])
         self.assertTrue(report["audit_chain"]["complete_lineage"])
-        self.assertEqual(report["audit_chain"]["event_count"], 7)
+        self.assertEqual(report["audit_chain"]["event_count"], 8)
         self.assertEqual(
             report["chronological_replay"]["events"][-1]["kind"], "HUMAN_PENDING"
         )

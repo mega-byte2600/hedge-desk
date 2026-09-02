@@ -68,9 +68,23 @@ explicit decision point and cannot override risk or compliance blocks.
 The system evaluates every trade candidate through independent gates:
 
 1. source provenance, entitlement, point-in-time, and schema validation;
-2. account/product eligibility and deterministic compliance policy;
-3. portfolio exposure and conventional economic-risk controls;
-4. exact-plan human authorization for paper execution.
+2. a versioned, content-addressed Yellow Sheet explaining **WHY** the exact
+   candidate and plan are proposed;
+3. account/product eligibility and deterministic compliance policy;
+4. portfolio exposure and conventional economic-risk controls;
+5. exact-plan human authorization for paper execution.
+
+The mandatory lifecycle is:
+
+`Interest → Hypothesis → Investigation → Evidence → Yellow Sheet → Proposed Trade → Deterministic Risk/RoR → Compliance → Human Authorization → Execution`
+
+**NO YELLOW SHEET = NO TRADE.** Missing, incomplete, stale, invalidated, or
+hash-mismatched sheets produce an explicit `NO_TRADE` disposition. A human
+cannot override that outcome. Each plan holds exactly one active sheet version;
+revisions identify the immediately prior version and require a new artifact
+hash. AI may research, synthesize, and challenge the sheet, but cannot turn it
+into an execution-authorizing decision. Risk/RoR, compliance, audit, and human
+authorization remain separate deterministic boundaries.
 
 No future live transition can pass unless an independently hashed Back Office
 reconciliation certification is present. Front Office, risk, compliance, human
@@ -84,6 +98,7 @@ order to a broker.
 ```bash
 python -m hedge_desk.cli
 python -m hedge_desk.cli --approve --human-id captain
+python -m hedge_desk.cli --yellow-sheet-rationale
 python -m hedge_desk.cli --projects
 python -m hedge_desk.cli --overnight-report
 python -m hedge_desk.cli --war-games
@@ -98,6 +113,8 @@ python -m coverage run -m unittest discover -s tests -v && python -m coverage re
 The default command stops at `human_authorization_required`. The second command
 simulates a named human approval and paper-only open/close against a frozen
 synthetic fixture; it does not connect to a broker or market-data vendor.
+`--yellow-sheet-rationale` prints the candidate, exact plan hash, active sheet
+identity/version, gate result, and plain-English WHY without granting authority.
 
 The overnight report evaluates every registered MVP through separately labeled
 `OBSERVED`, `STAT`, `BIG`, `DETERMINISTIC_RISK`,

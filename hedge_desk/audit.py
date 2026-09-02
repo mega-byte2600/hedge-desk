@@ -244,6 +244,13 @@ def build_reference_audit() -> Tuple[AuditEvent, ...]:
     for event, component_version, policy_version in zip(
         reference_pending_replay(), component_versions, policy_versions
     ):
+        if event.kind.value == "CANDIDATE_CREATED":
+            from hedge_desk.yellow_sheet import append_yellow_sheet_audit_event
+
+            chain = append_yellow_sheet_audit_event(
+                chain, plan.yellow_sheet, "reference-overnight-run"
+            )
+            prior_output = plan.yellow_sheet.artifact_sha256
         try:
             output_hash = (
                 event.artifact_id
