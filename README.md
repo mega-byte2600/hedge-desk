@@ -139,6 +139,40 @@ CI enforces at least 80% branch coverage over the complete `hedge_desk`
 package. The measured baseline includes CLI code even though subprocess-driven
 CLI tests are not attributed to the parent coverage process.
 
+## Self-hosted Hermes, Schwab read-only, and iOS
+
+Hermes runs independently as a local supervised service. Verify it with
+`hermes doctor` and `hermes gateway status`; Hedge Desk sends no brokerage
+credentials or account payloads to Hermes.
+
+The dependency-free backend serves the Objective-C MVP at `127.0.0.1:8765`.
+Its Schwab boundary supports OAuth readiness, authorization callback/token
+storage, and GET-only account-number retrieval. It defines no order operation,
+rejects every POST with HTTP 405, stores tokens only at an ignored local path
+with mode `0600`, and returns `orders_blocked: true` throughout.
+
+Configure credentials locally, never in Git:
+
+```bash
+export SCHWAB_CLIENT_ID='configured-in-your-Schwab-developer-app'
+export SCHWAB_CLIENT_SECRET='configured-locally'
+export SCHWAB_REDIRECT_URI='http://127.0.0.1:8765/api/schwab/callback'
+./scripts/start_ios_backend.sh
+open http://127.0.0.1:8765/api/schwab/authorize
+```
+
+The Schwab developer app must use the exact same callback URL. A physical
+iPhone cannot reach the Mac through `127.0.0.1`; set
+`HEDGE_DESK_API_BASE_URL` in Xcode to a trusted HTTPS backend or the Mac's
+trusted-LAN address for development. The Release default is intentionally
+nonfunctional until replaced with the operator's HTTPS host.
+
+The buildable project is at `ios/HedgeDeskObjC.xcodeproj` and includes an
+original app icon, privacy manifest, configurable API URL, and explicit backend
+error states. TestFlight/App Store upload still requires the account owner to
+select their Apple Developer team, register the final bundle identifier, supply
+the production HTTPS backend and required listing URLs, and authorize submission.
+
 ## Safety boundary
 
 - No broker adapter exists.
