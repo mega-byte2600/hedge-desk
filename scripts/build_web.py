@@ -2,6 +2,7 @@
 import argparse
 import json
 import sys
+import shutil
 from dataclasses import asdict
 from pathlib import Path
 
@@ -38,4 +39,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     report = json.loads(args.report.read_text()) if args.report else current_morning_report()
     export_report(report, args.output)
+    if args.output.resolve() == (ROOT / "web").resolve():
+        distribution = ROOT / "dist"
+        distribution.mkdir(exist_ok=True)
+        for filename in ("index.html", "styles.css", "app.js", "core.mjs", "report.json"):
+            shutil.copyfile(ROOT / "web" / filename, distribution / filename)
     print("Validated console report exported to", args.output)
