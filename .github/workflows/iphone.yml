@@ -1,0 +1,29 @@
+name: iPhone build
+on:
+  pull_request:
+    paths:
+      - 'ios/TradeDesk/**'
+      - '.github/workflows/iphone.yml'
+permissions:
+  contents: read
+concurrency:
+  group: iphone-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ios:
+    name: Native iPhone build and launch
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Build for iPhone without signing
+        run: xcodebuild -project ios/TradeDesk/TradeDesk.xcodeproj -scheme TradeDesk -sdk iphoneos -configuration Debug -derivedDataPath /tmp/tradedesk-device CODE_SIGNING_ALLOWED=NO build
+      - name: Build simulator
+        run: xcodebuild -project ios/TradeDesk/TradeDesk.xcodeproj -scheme TradeDesk -sdk iphonesimulator -configuration Debug -derivedDataPath /tmp/tradedesk-simulator CODE_SIGNING_ALLOWED=NO build
+      - name: Launch in iPhone simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for group in d["devices"].values() for x in group if "iPhone" in x["name"] and x["state"]=="Shutdown"))')
+          xcrun simctl boot "$DEVICE_ID"
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+          xcrun simctl install "$DEVICE_ID" /tmp/tradedesk-simulator/Build/Products/Debug-iphonesimulator/TradeDesk.app
+          xcrun simctl launch "$DEVICE_ID" com.megabyte2600.tradedesk
