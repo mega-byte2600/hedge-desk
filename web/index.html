@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101820"><meta name="description" content="Trade Desk paper research console. Inspect six research desks, deterministic control reports, scenario results, and research notes.">
+  <title>Trade Desk | Research Console</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23101820'/%3E%3Cpath d='M14 18h36v8H36v25h-8V26H14z' fill='%23c7ed8b'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to workspace</a>
+<aside class="sidebar">
+  <a class="brand" href="#overview"><span class="brandmark">T</span><span>TRADE DESK<small>RESEARCH CONSOLE</small></span></a>
+  <div class="workspace-label">WORKSPACE <span>01</span></div>
+  <nav aria-label="Workspace">
+    <a href="#overview" data-nav="overview"><span>▦</span> Overview</a>
+    <a href="#desks" data-nav="desks"><span>▤</span> Research desks <b>6</b></a>
+    <a href="#scenarios" data-nav="scenarios"><span>◈</span> Scenario lab</a>
+    <a href="#controls" data-nav="controls"><span>⊞</span> Controls & evidence</a>
+    <a href="#journal" data-nav="journal"><span>▧</span> Yellow Sheets</a>
+  </nav>
+  <div class="sidebar-bottom"><div class="mode">PAPER RESEARCH</div><p>Human judgment.<br>Deterministic controls.</p><a href="https://github.com/mega-byte2600/hedge-desk" target="_blank" rel="noopener">GitHub repository ↗</a></div>
+</aside>
+<div class="shell">
+  <header class="topbar"><span>Workspace <span class="muted">/</span> <strong id="breadcrumb">Overview</strong></span><span class="top-status">Synthetic fixtures <span class="separator">/</span> Live orders disabled</span></header>
+  <main id="main" tabindex="-1"><div class="loading">Loading validated research report…</div></main>
+  <footer><span>TRADE DESK <span class="muted">/ Research build</span></span><span id="reportstamp">Report loading</span></footer>
+</div>
+<dialog id="detail"><div id="detail-content"></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript>This research console requires JavaScript. Enable it to inspect the report.</noscript>
+</body></html>

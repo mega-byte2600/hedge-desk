@@ -35,6 +35,12 @@ jobs:
 
       - name: Compile every Python module
         run: python -m compileall -q hedge_desk tests
+      - name: Verify static research console
+        if: matrix.python-version == '3.11'
+        run: |
+          python scripts/build_web.py
+          node --check web/app.js
+          node --test web/core.test.mjs
       - name: Verify GitHub Actions are pinned to immutable SHAs
         run: python -c 'from pathlib import Path; from hedge_desk.supply_chain import validate_github_action_pins; root=Path(".github/workflows"); reasons=validate_github_action_pins(tuple(root.glob("*.yml")) + tuple(root.glob("*.yaml"))); assert not reasons, reasons'
       - name: Verify strict STAT outcome intake remains non-authoritative

@@ -81,6 +81,14 @@ order to a broker.
 
 ## Run
 
+### Web console
+
+Run `python scripts/build_web.py`, then
+`python -m http.server 8080 --directory web --bind 127.0.0.1` and open
+`http://localhost:8080`. The console displays validated synthetic report
+snapshots, desk controls, scenario evidence and browser-local research notes.
+See [web console instructions](web/README.md) for exports and verification.
+
 ```bash
 python -m hedge_desk.cli
 python -m hedge_desk.cli --approve --human-id captain
