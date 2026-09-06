@@ -1,0 +1,2083 @@
+{
+  "schema_version": "desk-console-1",
+  "report": {
+    "report_type": "paper_hypothetical_morning_evaluation",
+    "runner_version": "1.0.0",
+    "code_commit": "ff40bf21dc01f91a5b18419aa0b0c13c7bdb3a9e",
+    "generated_at": "2026-09-06T19:31:52.442631+00:00",
+    "environment": "paper",
+    "complete": true,
+    "live_orders_enabled": false,
+    "real_money_pnl": "0",
+    "real_trades_executed": 0,
+    "summary": {
+      "projects_evaluated": 6,
+      "human_review": 1,
+      "no_trade": 5
+    },
+    "limitations": [
+      "Synthetic fixtures only; no current market opportunity is claimed.",
+      "Hypothetical paper output is not investment advice or a performance guarantee.",
+      "Research-only foundations correctly return NO_TRADE without validated risk inputs."
+    ],
+    "projects": [
+      {
+        "project_id": "overnight-premium-desk",
+        "evaluated_at": "2026-07-28T20:00:00+00:00",
+        "disposition": "HUMAN_REVIEW",
+        "layers": [
+          {
+            "layer": "OBSERVED",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "synthetic": "true",
+              "net_credit": "118.70",
+              "maximum_loss": "381.30",
+              "break_even": "93.813",
+              "days_to_expiration": "24",
+              "planned_exit_date": "2026-08-14",
+              "event_calendar_complete_through": "2026-08-21",
+              "enumerated_vertical_pairs": "1",
+              "admissible_vertical_pairs": "1",
+              "underlying_universe_candidate_count": "2",
+              "top_ranked_underlying": "STRONG",
+              "underlying_ranking_basis": "executable_credit_to_defined_maximum_loss"
+            },
+            "artifact_refs": [
+              "synthetic-option-chain-v1",
+              "9321612d856ff4c6587aa4fe2bf2cfdaf1eb7ebd6bffef6c52815bef6f414dbd",
+              "b133a8cfbc2f872fbe4bdabbb66a41cf4f462546b4e4e518a2333b05a709b72d"
+            ]
+          },
+          {
+            "layer": "STAT",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "REFERENCE_ECONOMICS_ONLY"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "BIG",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "proposal": "defined-risk synthetic put credit spread",
+              "candidate_handoff_count": "1",
+              "handoff_next_action": "VALIDATED_RISK_INPUT_REQUIRED",
+              "handoff_trade_authorized": "false",
+              "handoff_calculation_artifact": "7cf81486003839df683af5285b181fbb8e3c3eccee154edb7e59fc4cf8a5f034",
+              "underlying_universe_probability_inferred": "false",
+              "underlying_universe_trade_authorized": "false",
+              "monthly_new_entry_evaluation_allowed": "true",
+              "continuous_monitoring_allowed": "true",
+              "cadence_trade_authorized": "false",
+              "cadence_artifact": "13f5d4a18a7e7fb6ff80851b460dac10c2f0d42edd034bee88a541c9890f47a3"
+            },
+            "artifact_refs": [
+              "overnight-premium-reference-v1",
+              "88380e15d3aae280501e5d147f4b325a3b50ffcb80a9297b2ee961c5be50d360",
+              "13f5d4a18a7e7fb6ff80851b460dac10c2f0d42edd034bee88a541c9890f47a3"
+            ]
+          },
+          {
+            "layer": "DETERMINISTIC_RISK",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "risk_artifact": "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+              "risk_input_artifact": "d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0",
+              "risk_source_artifact": "7cf81486003839df683af5285b181fbb8e3c3eccee154edb7e59fc4cf8a5f034",
+              "risk_of_ruin": "0",
+              "risk_model_id": "finite-capital-ruin-approximation",
+              "risk_model_version": "0.1.0-unvalidated",
+              "strategic_allocation_admissible": "true",
+              "strategic_allocation_artifact": "8aaea2aac701e0b8d764d1c37b8280ff3356089d6143cee1cabbd1bbe86c80d7",
+              "strategic_allocation_cape": "35",
+              "strategic_allocation_trade_authorized": "false"
+            },
+            "artifact_refs": [
+              "d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0",
+              "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+              "8aaea2aac701e0b8d764d1c37b8280ff3356089d6143cee1cabbd1bbe86c80d7"
+            ]
+          },
+          {
+            "layer": "DETERMINISTIC_COMPLIANCE",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "policy_version": "paper-options-1.0.0",
+              "regulatory_traceability_sha256": "59ce814853cb548f9bfd8b5133320ee1ca4e9c53d89d3506a86b11afbe0817e3",
+              "paper_reconciliation_status": "pass",
+              "paper_reconciliation_artifact": "a5b8897448968eff387ffeac02b067dc533be792de8969e59b9eecd713c2f67e",
+              "paper_reconciliation_positions_artifact": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "paper_reconciliation_live_release_eligible": "false"
+            },
+            "artifact_refs": [
+              "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+              "59ce814853cb548f9bfd8b5133320ee1ca4e9c53d89d3506a86b11afbe0817e3",
+              "a5b8897448968eff387ffeac02b067dc533be792de8969e59b9eecd713c2f67e"
+            ]
+          },
+          {
+            "layer": "HUMAN",
+            "status": "PENDING",
+            "reason_codes": [
+              "HUMAN_AUTHORIZATION_REQUIRED"
+            ],
+            "metrics": {},
+            "artifact_refs": [
+              "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30"
+            ]
+          }
+        ]
+      },
+      {
+        "project_id": "earnings-event-desk",
+        "evaluated_at": "2026-07-28T20:00:00+00:00",
+        "disposition": "NO_TRADE",
+        "layers": [
+          {
+            "layer": "OBSERVED",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "source": "synthetic_fixture",
+              "eps_surprise_fraction": "0.1",
+              "revenue_surprise_fraction": "0.02",
+              "surprise_alignment": "BOTH_POSITIVE",
+              "universe_candidate_count": "2",
+              "universe_rejected_count": "1",
+              "top_ranked_event": "stronger-aligned",
+              "locked_experiment_arm": "EQUITY",
+              "experiment_plan_sha256": "3b009630f65ac9f734aba0448527d85bf1ed9073bd3052d4ebec8220217f839d"
+            },
+            "artifact_refs": [
+              "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            ]
+          },
+          {
+            "layer": "STAT",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "OUT_OF_SAMPLE_REACTION_MODEL_ABSENT"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "BIG",
+            "status": "BLOCKED",
+            "reason_codes": [
+              "PRICE_REACTION_NOT_OBSERVED"
+            ],
+            "metrics": {
+              "directional_trade_authorized": "false",
+              "universe_directional_trade_authorized": "false",
+              "experiment_trade_authorized": "false"
+            },
+            "artifact_refs": []
+          },
+          {
+            "layer": "DETERMINISTIC_RISK",
+            "status": "BLOCKED",
+            "reason_codes": [
+              "AUTHORITATIVE_RISK_INPUT_ABSENT"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "DETERMINISTIC_COMPLIANCE",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "RESEARCH_ONLY_NO_TRADE"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "HUMAN",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "RESEARCH_ONLY_NO_TRADE"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          }
+        ]
+      },
+      {
+        "project_id": "arbitrage-observer",
+        "evaluated_at": "2026-07-28T20:00:00+00:00",
+        "disposition": "NO_TRADE",
+        "layers": [
+          {
+            "layer": "OBSERVED",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "source": "synthetic_fixture",
+              "executable_entry_cashflow": "-10.0",
+              "net_edge": "75.0",
+              "universe_candidate_count": "1",
+              "top_ranked_package": "synthetic-parity-strong"
+            },
+            "artifact_refs": [
+              "1111111111111111111111111111111111111111111111111111111111111111",
+              "2222222222222222222222222222222222222222222222222222222222222222",
+              "3333333333333333333333333333333333333333333333333333333333333333",
+              "4444444444444444444444444444444444444444444444444444444444444444"
+            ]
+          },
+          {
+            "layer": "STAT",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "SYNTHETIC_IDENTITY_CHECK_ONLY"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "BIG",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "disposition": "NET_EDGE_RESEARCH_CANDIDATE",
+              "trade_authorized": "false",
+              "universe_trade_authorized": "false"
+            },
+            "artifact_refs": []
+          },
+          {
+            "layer": "DETERMINISTIC_RISK",
+            "status": "BLOCKED",
+            "reason_codes": [
+              "AUTHORITATIVE_RISK_INPUT_ABSENT"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "DETERMINISTIC_COMPLIANCE",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "RESEARCH_ONLY_NO_TRADE"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "HUMAN",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "RESEARCH_ONLY_NO_TRADE"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          }
+        ]
+      },
+      {
+        "project_id": "dividend-opportunity-desk",
+        "evaluated_at": "2026-07-28T20:00:00+00:00",
+        "disposition": "NO_TRADE",
+        "layers": [
+          {
+            "layer": "OBSERVED",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "source": "synthetic_fixture",
+              "ten_year_average_dividend_yield": "0.029",
+              "ten_year_average_payout_ratio": "0.3625",
+              "ten_year_average_net_shareholder_yield": "0.0365",
+              "dividend_cut_count": "0",
+              "universe_candidate_count": "2",
+              "top_ranked_symbol": "TEST-EFFICIENT",
+              "ranking_basis": "ten_year_yield_per_payout_ratio",
+              "cape_candidate_count": "2",
+              "cape_top_ranked_symbol": "TEST-EFFICIENT",
+              "cape_ranking_basis": "yield_per_payout_ratio_divided_by_cape"
+            },
+            "artifact_refs": [
+              "1111111111111111111111111111111111111111111111111111111111111111",
+              "2222222222222222222222222222222222222222222222222222222222222222",
+              "3333333333333333333333333333333333333333333333333333333333333333",
+              "4444444444444444444444444444444444444444444444444444444444444444",
+              "5555555555555555555555555555555555555555555555555555555555555555",
+              "6666666666666666666666666666666666666666666666666666666666666666",
+              "7777777777777777777777777777777777777777777777777777777777777777",
+              "8888888888888888888888888888888888888888888888888888888888888888",
+              "9999999999999999999999999999999999999999999999999999999999999999",
+              "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ]
+          },
+          {
+            "layer": "STAT",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "CROSS_SECTIONAL_OUT_OF_SAMPLE_MODEL_ABSENT"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "BIG",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "long_call_cash_dividend_entitlement": "0",
+              "trade_authorized": "false",
+              "universe_trade_authorized": "false",
+              "cape_trade_authorized": "false"
+            },
+            "artifact_refs": []
+          },
+          {
+            "layer": "DETERMINISTIC_RISK",
+            "status": "BLOCKED",
+            "reason_codes": [
+              "AUTHORITATIVE_RISK_INPUT_ABSENT"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "DETERMINISTIC_COMPLIANCE",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "RESEARCH_ONLY_NO_TRADE"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "HUMAN",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "RESEARCH_ONLY_NO_TRADE"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          }
+        ]
+      },
+      {
+        "project_id": "open-quant-ai-model-lab",
+        "evaluated_at": "2026-07-28T20:00:00+00:00",
+        "disposition": "NO_TRADE",
+        "layers": [
+          {
+            "layer": "OBSERVED",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "source": "synthetic_fixture",
+              "otc_delayed_aggregate_admissible": "true",
+              "otc_average_shares_per_trade": "100",
+              "otc_live_hidden_order_visibility": "false"
+            },
+            "artifact_refs": [
+              "ai-synthetic-model-v1",
+              "quant-synthetic-model-v1",
+              "1111111111111111111111111111111111111111111111111111111111111111"
+            ]
+          },
+          {
+            "layer": "STAT",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "RESEARCH_LABELS_ONLY"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "BIG",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "disposition": "RESEARCH_HYPOTHESIS_ONLY",
+              "label": "POSITIVE",
+              "authoritative_risk_input": "false",
+              "quant_training_manifest_admissible": "true",
+              "ai_training_manifest_admissible": "true",
+              "training_trade_authorized": "false",
+              "purged_split_admissible": "true",
+              "purged_split_artifact": "2cf2a8f52c7d1ce782bc8eb694e7ef8fca902ddecec196c6658422e1bfa1b795",
+              "purged_split_authoritative_risk_input": "false",
+              "purged_split_trade_authorized": "false",
+              "otc_directional_signal_authorized": "false"
+            },
+            "artifact_refs": [
+              "ai-synthetic-model-v1",
+              "quant-synthetic-model-v1",
+              "2cf2a8f52c7d1ce782bc8eb694e7ef8fca902ddecec196c6658422e1bfa1b795"
+            ]
+          },
+          {
+            "layer": "DETERMINISTIC_RISK",
+            "status": "BLOCKED",
+            "reason_codes": [
+              "AUTHORITATIVE_RISK_INPUT_ABSENT"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "DETERMINISTIC_COMPLIANCE",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "RESEARCH_ONLY_NO_TRADE"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "HUMAN",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "RESEARCH_ONLY_NO_TRADE"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          }
+        ]
+      },
+      {
+        "project_id": "event-futures-desk",
+        "evaluated_at": "2026-07-28T20:00:00+00:00",
+        "disposition": "NO_TRADE",
+        "layers": [
+          {
+            "layer": "OBSERVED",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "source": "synthetic_fixture",
+              "event_type": "SHIPPING_DISRUPTION",
+              "residual_edge_per_contract": "400",
+              "universe_candidate_count": "1",
+              "universe_rejected_count": "1",
+              "top_ranked_event": "synthetic-shipping-disruption",
+              "news_evidence_admissible": "true",
+              "news_research_evidence_only": "true"
+            },
+            "artifact_refs": [
+              "5555555555555555555555555555555555555555555555555555555555555555",
+              "6666666666666666666666666666666666666666666666666666666666666666",
+              "7777777777777777777777777777777777777777777777777777777777777777"
+            ]
+          },
+          {
+            "layer": "STAT",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "OUT_OF_SAMPLE_EVENT_MODEL_ABSENT"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "BIG",
+            "status": "PASS",
+            "reason_codes": [],
+            "metrics": {
+              "disposition": "EVENT_RESEARCH_CANDIDATE",
+              "trade_authorized": "false",
+              "universe_trade_authorized": "false",
+              "news_trade_authorized": "false"
+            },
+            "artifact_refs": []
+          },
+          {
+            "layer": "DETERMINISTIC_RISK",
+            "status": "BLOCKED",
+            "reason_codes": [
+              "FUTURES_RISK_AND_MARGIN_ARTIFACT_ABSENT"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "DETERMINISTIC_COMPLIANCE",
+            "status": "BLOCKED",
+            "reason_codes": [
+              "FUTURES_PAPER_RESEARCH_ONLY"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          },
+          {
+            "layer": "HUMAN",
+            "status": "NOT_REQUIRED",
+            "reason_codes": [
+              "RESEARCH_ONLY_NO_TRADE"
+            ],
+            "metrics": {},
+            "artifact_refs": []
+          }
+        ]
+      }
+    ],
+    "data_batch": {
+      "batch_id": "synthetic-reference-batch-v1",
+      "status": "READY_FOR_RESEARCH",
+      "required_sources": [
+        "synthetic-arbitrage-legs",
+        "synthetic-corporate-events",
+        "synthetic-dividend-history",
+        "synthetic-earnings-consensus",
+        "synthetic-earnings-release",
+        "synthetic-futures-contract",
+        "synthetic-futures-event",
+        "synthetic-model-governance",
+        "synthetic-off-exchange",
+        "synthetic-option-chain",
+        "synthetic-underlying-quote"
+      ],
+      "source_results": [
+        {
+          "source_id": "synthetic-arbitrage-legs",
+          "status": "PASS",
+          "artifact_sha256": "8de0e9fd88e9e840239abc5b02ce4f86f1cbe9e8dfec9bf52cd7fa8e8848ba63",
+          "reason_codes": []
+        },
+        {
+          "source_id": "synthetic-corporate-events",
+          "status": "PASS",
+          "artifact_sha256": "0e19ecbb9e915ce7d58813d70465f1c5c1991b973ea2b52bc0aa27a8cffa0984",
+          "reason_codes": []
+        },
+        {
+          "source_id": "synthetic-dividend-history",
+          "status": "PASS",
+          "artifact_sha256": "7875eddb6ad8c99eba98914ad85115539aaa54ff69a14ab94689db4b69b3d1f7",
+          "reason_codes": []
+        },
+        {
+          "source_id": "synthetic-earnings-consensus",
+          "status": "PASS",
+          "artifact_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "reason_codes": []
+        },
+        {
+          "source_id": "synthetic-earnings-release",
+          "status": "PASS",
+          "artifact_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "reason_codes": []
+        },
+        {
+          "source_id": "synthetic-futures-contract",
+          "status": "PASS",
+          "artifact_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+          "reason_codes": []
+        },
+        {
+          "source_id": "synthetic-futures-event",
+          "status": "PASS",
+          "artifact_sha256": "a5058308bc4731c042059a99f09a5ecdc8a83bf034585838e36e3635a4263a0c",
+          "reason_codes": []
+        },
+        {
+          "source_id": "synthetic-model-governance",
+          "status": "PASS",
+          "artifact_sha256": "cba4ac46b26f83a686181670cac70ab5b951cc1cd5c13f5e0d13685c73f99abc",
+          "reason_codes": []
+        },
+        {
+          "source_id": "synthetic-off-exchange",
+          "status": "PASS",
+          "artifact_sha256": "0000000000000000000000000000000000000000000000000000000000000001",
+          "reason_codes": []
+        },
+        {
+          "source_id": "synthetic-option-chain",
+          "status": "PASS",
+          "artifact_sha256": "9321612d856ff4c6587aa4fe2bf2cfdaf1eb7ebd6bffef6c52815bef6f414dbd",
+          "reason_codes": []
+        },
+        {
+          "source_id": "synthetic-underlying-quote",
+          "status": "PASS",
+          "artifact_sha256": "3ad34454e817ae23dbcfee97cd00e0c421e49771bddbcc372beaf4d7fd3b68ee",
+          "reason_codes": []
+        }
+      ],
+      "source_policy_sha256": "d2552f961fadb25919e356e2a2596e1cd771aa90e91a3b0cc70dec881d2a688b",
+      "prior_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "reason_codes": [],
+      "manifest_sha256": "875f4f0bfbc2f07bea439a4b84e606b5cc87084fb2b337cf1d1d9b6e0794e190"
+    },
+    "war_games": {
+      "report_type": "synthetic_hypothetical_war_games",
+      "version": "premium-spread-war-games-1.0.0",
+      "environment": "paper",
+      "source": "synthetic_fixture",
+      "all_declared_scenarios_included": true,
+      "fixture_manifest": {
+        "schema_version": "war-game-fixtures-1.0.0",
+        "scenario_count": 73,
+        "scenario_ids": [
+          "favorable-decay",
+          "no-edge-after-costs",
+          "iv-shock",
+          "gap-through-width",
+          "assignment-operations",
+          "surprise-followthrough",
+          "positive-surprise-iv-crush",
+          "headline-beat-guidance-reversal",
+          "net-edge-survives",
+          "one-tick-erased-by-costs",
+          "stale-fourth-leg",
+          "insufficient-depth",
+          "settlement-mismatch",
+          "normal-dividend-entitlement",
+          "special-dividend",
+          "dividend-cut",
+          "yield-trap",
+          "approved-terms-available",
+          "stale-entry-quote",
+          "partial-combo-size",
+          "approved-credit-unavailable",
+          "contract-adjustment-pending",
+          "normal-monitoring",
+          "planned-pre-expiration-exit",
+          "ex-dividend-early-assignment-risk",
+          "assignment-notice",
+          "expiration-reconciliation",
+          "unconfirmed-settlement-terms",
+          "weather-surprise-edge-survives",
+          "weather-event-already-priced",
+          "shipping-basis-erases-edge",
+          "physical-delivery-contract-disabled",
+          "war-event-evidence-arrives-late",
+          "quant-ai-agree-research-only",
+          "quant-ai-disagree",
+          "ai-artifact-license-blocked",
+          "model-train-validation-overlap",
+          "model-future-test-lookahead",
+          "model-split-hash-collision",
+          "live-environment-request",
+          "compliance-artifact-tamper",
+          "agent-compliance-pass-override",
+          "options-disclosure-missing",
+          "options-disclosure-after-candidate",
+          "front-office-without-back-office-release",
+          "back-office-cash-ledger-mismatch",
+          "back-office-position-ledger-mismatch",
+          "back-office-unresolved-lifecycle-exception",
+          "timing-21-dte",
+          "timing-8-dte",
+          "timing-planned-exit-7-dte",
+          "timing-adverse-1-dte",
+          "timing-expiration",
+          "cadence-monthly-window-open",
+          "cadence-same-month-blocked",
+          "cadence-future-ledger-entry",
+          "exit-stale-quotes",
+          "exit-contract-substitution",
+          "exit-unsynchronized-legs",
+          "audit-event-mutation",
+          "audit-event-deletion",
+          "audit-zero-output-hash",
+          "scheduler-forged-prior-receipt",
+          "candidate-awaits-validated-risk",
+          "candidate-thin-market",
+          "candidate-handoff-economics-tamper",
+          "candidate-front-office-authorization",
+          "underlying-executable-ranking",
+          "underlying-thin-market-no-trade",
+          "underlying-closed-session-no-trade",
+          "allocation-diversified-high-cape",
+          "allocation-concentrated-high-cape",
+          "allocation-weights-malformed"
+        ],
+        "fixture_sha256": "e9b8b65363e90a91ae462ec6f8d1c5ef2b73d7a447b0e1c3ffa8272b952a877e"
+      },
+      "summary": {
+        "total_scenario_count": 73,
+        "scenario_count_by_mvp": {
+          "overnight-premium-desk": 5,
+          "earnings-event-desk": 3,
+          "arbitrage-observer": 5,
+          "dividend-opportunity-desk": 4,
+          "execution-controls": 5,
+          "lifecycle-controls": 6,
+          "event-futures-desk": 5,
+          "open-quant-ai-model-lab": 6,
+          "compliance-controls": 9,
+          "premium-timing-controls": 5,
+          "candidate-pipeline-controls": 4,
+          "option-universe-controls": 3,
+          "strategic-allocation-controls": 3,
+          "premium-cadence-controls": 3,
+          "premium-exit-attack-controls": 3,
+          "audit-attack-controls": 3,
+          "scheduler-attack-controls": 1
+        },
+        "no_trade_control_count": 46,
+        "premium_fixed_trade": {
+          "profitable_scenarios": 1,
+          "losing_scenarios": 4,
+          "mean_pnl": "-169.60",
+          "worst_pnl": "-407.60",
+          "best_pnl": "77.40",
+          "descriptive_metrics": {
+            "sample_size": 5,
+            "total_pnl": "-848.00",
+            "mean_pnl": "-169.60",
+            "median_pnl": "-132.60",
+            "win_rate": "0.2",
+            "profit_factor": "0.08363950724011238383401772207",
+            "maximum_drawdown": "925.40",
+            "expected_shortfall": "-407.60",
+            "expected_shortfall_confidence": "0.80",
+            "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE"
+          },
+          "sequence_label": "declared_synthetic_stress_order_not_time_series",
+          "statistical_significance_computed": false
+        },
+        "earnings_fixed_arm_metrics": {
+          "EQUITY": {
+            "sample_size": 3,
+            "total_pnl": "-22",
+            "mean_pnl": "-7.333333333333333333333333333",
+            "median_pnl": "6",
+            "win_rate": "0.6666666666666666666666666667",
+            "profit_factor": "0.65625",
+            "maximum_drawdown": "64",
+            "expected_shortfall": "-64",
+            "expected_shortfall_confidence": "0.80",
+            "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE"
+          },
+          "DEFINED_RISK_OPTION": {
+            "sample_size": 3,
+            "total_pnl": "-312.00",
+            "mean_pnl": "-104.00",
+            "median_pnl": "-204.00",
+            "win_rate": "0.3333333333333333333333333333",
+            "profit_factor": "0.3187772925764192139737991266",
+            "maximum_drawdown": "458.00",
+            "expected_shortfall": "-254.00",
+            "expected_shortfall_confidence": "0.80",
+            "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE"
+          },
+          "HEDGED_EQUITY": {
+            "sample_size": 3,
+            "total_pnl": "-5",
+            "mean_pnl": "-1.666666666666666666666666667",
+            "median_pnl": "0",
+            "win_rate": "0.3333333333333333333333333333",
+            "profit_factor": "0.8",
+            "maximum_drawdown": "25",
+            "expected_shortfall": "-25",
+            "expected_shortfall_confidence": "0.80",
+            "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE"
+          },
+          "NO_TRADE": {
+            "sample_size": 3,
+            "total_pnl": "0",
+            "mean_pnl": "0",
+            "median_pnl": "0",
+            "win_rate": "0",
+            "profit_factor": "Infinity",
+            "maximum_drawdown": "0",
+            "expected_shortfall": "0",
+            "expected_shortfall_confidence": "0.80",
+            "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE"
+          }
+        },
+        "arbitrage_policy_metrics": {
+          "sample_size": 5,
+          "total_pnl": "45",
+          "mean_pnl": "9",
+          "median_pnl": "0",
+          "win_rate": "0.2",
+          "profit_factor": "Infinity",
+          "maximum_drawdown": "0",
+          "expected_shortfall": "0",
+          "expected_shortfall_confidence": "0.80",
+          "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE"
+        },
+        "dividend_fixed_arm_metrics": {
+          "SHARES": {
+            "sample_size": 4,
+            "total_pnl": "-1083.00",
+            "mean_pnl": "-270.75",
+            "median_pnl": "50.00",
+            "win_rate": "0.5",
+            "profit_factor": "0.3530465949820788530465949821",
+            "maximum_drawdown": "1674.00",
+            "expected_shortfall": "-1479.00",
+            "expected_shortfall_confidence": "0.80",
+            "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE"
+          },
+          "LONG_CALL": {
+            "sample_size": 4,
+            "total_pnl": "-310.00",
+            "mean_pnl": "-77.50",
+            "median_pnl": "-130.00",
+            "win_rate": "0.25",
+            "profit_factor": "0.3186813186813186813186813187",
+            "maximum_drawdown": "455.00",
+            "expected_shortfall": "-195.00",
+            "expected_shortfall_confidence": "0.80",
+            "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE"
+          },
+          "NO_TRADE": {
+            "sample_size": 4,
+            "total_pnl": "0",
+            "mean_pnl": "0",
+            "median_pnl": "0",
+            "win_rate": "0",
+            "profit_factor": "Infinity",
+            "maximum_drawdown": "0",
+            "expected_shortfall": "0",
+            "expected_shortfall_confidence": "0.80",
+            "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE"
+          }
+        },
+        "premium_timing_metrics": {
+          "sample_size": 5,
+          "total_pnl": "-593.00",
+          "mean_pnl": "-118.60",
+          "median_pnl": "17.40",
+          "win_rate": "0.6",
+          "profit_factor": "0.2042404723564143853998926463",
+          "maximum_drawdown": "745.20",
+          "expected_shortfall": "-382.60",
+          "expected_shortfall_confidence": "0.80",
+          "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE"
+        }
+      },
+      "premium": [
+        {
+          "scenario_id": "favorable-decay",
+          "description": "Premium contracts before the planned exit.",
+          "entry_credit": "118.70",
+          "exit_debit": "40.00",
+          "exit_commission": "1.30",
+          "additional_operational_cost": "0",
+          "net_pnl": "77.40",
+          "profitable": true,
+          "maximum_loss_reference": "381.30"
+        },
+        {
+          "scenario_id": "no-edge-after-costs",
+          "description": "Gross spread value is unchanged and commissions create a loss.",
+          "entry_credit": "118.70",
+          "exit_debit": "120.00",
+          "exit_commission": "1.30",
+          "additional_operational_cost": "0",
+          "net_pnl": "-2.60",
+          "profitable": false,
+          "maximum_loss_reference": "381.30"
+        },
+        {
+          "scenario_id": "iv-shock",
+          "description": "Implied volatility expands and the spread becomes more expensive.",
+          "entry_credit": "118.70",
+          "exit_debit": "250.00",
+          "exit_commission": "1.30",
+          "additional_operational_cost": "0",
+          "net_pnl": "-132.60",
+          "profitable": false,
+          "maximum_loss_reference": "381.30"
+        },
+        {
+          "scenario_id": "gap-through-width",
+          "description": "Underlying gaps through both strikes and the spread approaches full width.",
+          "entry_credit": "118.70",
+          "exit_debit": "500.00",
+          "exit_commission": "1.30",
+          "additional_operational_cost": "0",
+          "net_pnl": "-382.60",
+          "profitable": false,
+          "maximum_loss_reference": "381.30"
+        },
+        {
+          "scenario_id": "assignment-operations",
+          "description": "Adverse move plus synthetic assignment and operational handling cost.",
+          "entry_credit": "118.70",
+          "exit_debit": "500.00",
+          "exit_commission": "1.30",
+          "additional_operational_cost": "25.00",
+          "net_pnl": "-407.60",
+          "profitable": false,
+          "maximum_loss_reference": "381.30"
+        }
+      ],
+      "earnings": [
+        {
+          "scenario_id": "surprise-followthrough",
+          "equity_net_pnl": "36",
+          "option_net_pnl": "146.00",
+          "hedged_equity_net_pnl": "20",
+          "no_trade_net_pnl": "0",
+          "best_hindsight_arm": "DEFINED_RISK_OPTION"
+        },
+        {
+          "scenario_id": "positive-surprise-iv-crush",
+          "equity_net_pnl": "6",
+          "option_net_pnl": "-204.00",
+          "hedged_equity_net_pnl": "0",
+          "no_trade_net_pnl": "0",
+          "best_hindsight_arm": "EQUITY"
+        },
+        {
+          "scenario_id": "headline-beat-guidance-reversal",
+          "equity_net_pnl": "-64",
+          "option_net_pnl": "-254.00",
+          "hedged_equity_net_pnl": "-25",
+          "no_trade_net_pnl": "0",
+          "best_hindsight_arm": "NO_TRADE"
+        }
+      ],
+      "arbitrage": [
+        {
+          "scenario_id": "net-edge-survives",
+          "gross_edge": "80",
+          "net_edge": "45",
+          "disposition": "NET_EDGE_CANDIDATE",
+          "reason_codes": ""
+        },
+        {
+          "scenario_id": "one-tick-erased-by-costs",
+          "gross_edge": "20",
+          "net_edge": "-6",
+          "disposition": "NO_TRADE",
+          "reason_codes": "EDGE_BELOW_SAFETY_BUFFER"
+        },
+        {
+          "scenario_id": "stale-fourth-leg",
+          "gross_edge": "100",
+          "net_edge": "65",
+          "disposition": "NO_TRADE",
+          "reason_codes": "QUOTES_NOT_SYNCHRONIZED"
+        },
+        {
+          "scenario_id": "insufficient-depth",
+          "gross_edge": "200",
+          "net_edge": "165",
+          "disposition": "NO_TRADE",
+          "reason_codes": "INSUFFICIENT_DEPTH"
+        },
+        {
+          "scenario_id": "settlement-mismatch",
+          "gross_edge": "100",
+          "net_edge": "65",
+          "disposition": "NO_TRADE",
+          "reason_codes": "SETTLEMENT_MISMATCH"
+        }
+      ],
+      "dividend": [
+        {
+          "scenario_id": "normal-dividend-entitlement",
+          "share_net_pnl": "296",
+          "call_net_pnl": "145.00",
+          "call_dividend_received": "0",
+          "no_trade_net_pnl": "0",
+          "best_hindsight_arm": "SHARES"
+        },
+        {
+          "scenario_id": "special-dividend",
+          "share_net_pnl": "295",
+          "call_net_pnl": "-105",
+          "call_dividend_received": "0",
+          "no_trade_net_pnl": "0",
+          "best_hindsight_arm": "SHARES"
+        },
+        {
+          "scenario_id": "dividend-cut",
+          "share_net_pnl": "-195.00",
+          "call_net_pnl": "-155.00",
+          "call_dividend_received": "0",
+          "no_trade_net_pnl": "0",
+          "best_hindsight_arm": "NO_TRADE"
+        },
+        {
+          "scenario_id": "yield-trap",
+          "share_net_pnl": "-1479.00",
+          "call_net_pnl": "-195.00",
+          "call_dividend_received": "0",
+          "no_trade_net_pnl": "0",
+          "best_hindsight_arm": "NO_TRADE"
+        }
+      ],
+      "execution_controls": [
+        {
+          "scenario_id": "approved-terms-available",
+          "disposition": "READY_FOR_PAPER_OPEN",
+          "reason_codes": []
+        },
+        {
+          "scenario_id": "stale-entry-quote",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "STALE_QUOTE"
+          ]
+        },
+        {
+          "scenario_id": "partial-combo-size",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "INSUFFICIENT_COMBO_SIZE"
+          ]
+        },
+        {
+          "scenario_id": "approved-credit-unavailable",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "APPROVED_CREDIT_NOT_AVAILABLE"
+          ]
+        },
+        {
+          "scenario_id": "contract-adjustment-pending",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "CONTRACT_ADJUSTMENT_PENDING"
+          ]
+        }
+      ],
+      "lifecycle_controls": [
+        {
+          "scenario_id": "normal-monitoring",
+          "action": "MONITOR",
+          "reason_codes": []
+        },
+        {
+          "scenario_id": "planned-pre-expiration-exit",
+          "action": "CLOSE_REVIEW_REQUIRED",
+          "reason_codes": [
+            "PLANNED_EXIT_REACHED"
+          ]
+        },
+        {
+          "scenario_id": "ex-dividend-early-assignment-risk",
+          "action": "CLOSE_REVIEW_REQUIRED",
+          "reason_codes": [
+            "EARLY_ASSIGNMENT_RISK"
+          ]
+        },
+        {
+          "scenario_id": "assignment-notice",
+          "action": "ASSIGNMENT_RECONCILIATION_REQUIRED",
+          "reason_codes": [
+            "ASSIGNMENT_NOTICE_RECEIVED"
+          ]
+        },
+        {
+          "scenario_id": "expiration-reconciliation",
+          "action": "EXPIRATION_RECONCILIATION_REQUIRED",
+          "reason_codes": [
+            "EXPIRATION_REACHED"
+          ]
+        },
+        {
+          "scenario_id": "unconfirmed-settlement-terms",
+          "action": "BLOCK_AND_ESCALATE",
+          "reason_codes": [
+            "SETTLEMENT_TERMS_UNCONFIRMED"
+          ]
+        }
+      ],
+      "futures_events": [
+        {
+          "scenario_id": "weather-surprise-edge-survives",
+          "event_type": "EXTREME_WEATHER",
+          "residual_edge_per_contract": "400",
+          "disposition": "EVENT_RESEARCH_CANDIDATE",
+          "reason_codes": [],
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "weather-event-already-priced",
+          "event_type": "EXTREME_WEATHER",
+          "residual_edge_per_contract": "0",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "EVENT_EDGE_BELOW_SAFETY_BUFFER"
+          ],
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "shipping-basis-erases-edge",
+          "event_type": "SHIPPING_DISRUPTION",
+          "residual_edge_per_contract": "-50",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "EVENT_EDGE_BELOW_SAFETY_BUFFER"
+          ],
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "physical-delivery-contract-disabled",
+          "event_type": "SHIPPING_DISRUPTION",
+          "residual_edge_per_contract": "400",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "PHYSICAL_DELIVERY_DISABLED"
+          ],
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "war-event-evidence-arrives-late",
+          "event_type": "WAR_GEOPOLITICAL",
+          "residual_edge_per_contract": "400",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "EVENT_NOT_POINT_IN_TIME"
+          ],
+          "trade_authorized": false
+        }
+      ],
+      "model_governance": [
+        {
+          "scenario_id": "quant-ai-agree-research-only",
+          "disposition": "RESEARCH_HYPOTHESIS_ONLY",
+          "label": "POSITIVE",
+          "reason_codes": [],
+          "authoritative_risk_input": false,
+          "split_artifact_sha256": "56a2e4c1568386f3979afc74be865c2a61827c3218f788c2b7f52575a430c5a3",
+          "split_trade_authorized": false
+        },
+        {
+          "scenario_id": "quant-ai-disagree",
+          "disposition": "NO_TRADE",
+          "label": "ABSTAIN",
+          "reason_codes": [
+            "RESEARCH_TEAMS_DISAGREE"
+          ],
+          "authoritative_risk_input": false,
+          "split_artifact_sha256": "56a2e4c1568386f3979afc74be865c2a61827c3218f788c2b7f52575a430c5a3",
+          "split_trade_authorized": false
+        },
+        {
+          "scenario_id": "ai-artifact-license-blocked",
+          "disposition": "NO_TRADE",
+          "label": "ABSTAIN",
+          "reason_codes": [
+            "OPEN_LICENSE_REQUIRED"
+          ],
+          "authoritative_risk_input": false,
+          "split_artifact_sha256": "56a2e4c1568386f3979afc74be865c2a61827c3218f788c2b7f52575a430c5a3",
+          "split_trade_authorized": false
+        },
+        {
+          "scenario_id": "model-train-validation-overlap",
+          "disposition": "NO_TRADE",
+          "label": "POSITIVE",
+          "reason_codes": [
+            "TRAIN_VALIDATION_PURGE_VIOLATION"
+          ],
+          "authoritative_risk_input": false,
+          "split_artifact_sha256": "11d4bb57e09815ce760c89d9f9f850119963099e170287b2eff8b16a4046cd97",
+          "split_trade_authorized": false
+        },
+        {
+          "scenario_id": "model-future-test-lookahead",
+          "disposition": "NO_TRADE",
+          "label": "POSITIVE",
+          "reason_codes": [
+            "MODEL_SPLIT_POINT_IN_TIME_VIOLATION"
+          ],
+          "authoritative_risk_input": false,
+          "split_artifact_sha256": "e0a3370d02e5f195ce2139bcc2b25ccf4e47cd047299ebb77eba53fbc04aa8e8",
+          "split_trade_authorized": false
+        },
+        {
+          "scenario_id": "model-split-hash-collision",
+          "disposition": "NO_TRADE",
+          "label": "POSITIVE",
+          "reason_codes": [
+            "MODEL_SPLIT_HASH_COLLISION"
+          ],
+          "authoritative_risk_input": false,
+          "split_artifact_sha256": "e635e53d6ce7b9ccbcdf14716821acb631af556cbcec7d601bc0de3acb6ffd61",
+          "split_trade_authorized": false
+        }
+      ],
+      "compliance_controls": [
+        {
+          "scenario_id": "live-environment-request",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "PAPER_ONLY_VIOLATION"
+          ],
+          "human_override_allowed": false
+        },
+        {
+          "scenario_id": "compliance-artifact-tamper",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "COMPLIANCE_ARTIFACT_HASH_MISMATCH"
+          ],
+          "human_override_allowed": false
+        },
+        {
+          "scenario_id": "agent-compliance-pass-override",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "COMPLIANCE_ARTIFACT_HASH_MISMATCH",
+            "COMPLIANCE_STATUS_INCONSISTENT"
+          ],
+          "human_override_allowed": false
+        },
+        {
+          "scenario_id": "options-disclosure-missing",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "OPTIONS_DISCLOSURE_ACKNOWLEDGEMENT_REQUIRED"
+          ],
+          "human_override_allowed": false
+        },
+        {
+          "scenario_id": "options-disclosure-after-candidate",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "OPTIONS_DISCLOSURE_ACKNOWLEDGED_AFTER_CANDIDATE"
+          ],
+          "human_override_allowed": false
+        },
+        {
+          "scenario_id": "front-office-without-back-office-release",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "RELEASE_REQUIREMENT_UNSATISFIED:BACK_OFFICE_RECONCILIATION_CERTIFIED"
+          ],
+          "human_override_allowed": false
+        },
+        {
+          "scenario_id": "back-office-cash-ledger-mismatch",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "CASH_LEDGER_MISMATCH"
+          ],
+          "human_override_allowed": false
+        },
+        {
+          "scenario_id": "back-office-position-ledger-mismatch",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "POSITION_LEDGER_MISMATCH"
+          ],
+          "human_override_allowed": false
+        },
+        {
+          "scenario_id": "back-office-unresolved-lifecycle-exception",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "UNRESOLVED_LIFECYCLE_EXCEPTIONS"
+          ],
+          "human_override_allowed": false
+        }
+      ],
+      "premium_timing": [
+        {
+          "scenario_id": "timing-21-dte",
+          "days_before_expiration": 21,
+          "executable_exit_debit": "100.00",
+          "exit_commission": "1.30",
+          "net_pnl_if_closed": "17.40",
+          "lifecycle_action": "MONITOR",
+          "reason_codes": [],
+          "exit_policy_action": "MONITOR",
+          "exit_policy_reason_codes": [],
+          "exit_policy_artifact": "71c724a8af1fde57c19d8f2010aeaceda49702214479ae8a63088f0f6b159323",
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "timing-8-dte",
+          "days_before_expiration": 8,
+          "executable_exit_debit": "60.00",
+          "exit_commission": "1.30",
+          "net_pnl_if_closed": "57.40",
+          "lifecycle_action": "MONITOR",
+          "reason_codes": [],
+          "exit_policy_action": "MONITOR",
+          "exit_policy_reason_codes": [],
+          "exit_policy_artifact": "7f1bb3b201c5cb8c947c95f85577ea8f0557a5c11335ea0775e43ef407acf060",
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "timing-planned-exit-7-dte",
+          "days_before_expiration": 7,
+          "executable_exit_debit": "40.00",
+          "exit_commission": "1.30",
+          "net_pnl_if_closed": "77.40",
+          "lifecycle_action": "CLOSE_REVIEW_REQUIRED",
+          "reason_codes": [
+            "PLANNED_EXIT_REACHED"
+          ],
+          "exit_policy_action": "CLOSE_REVIEW_REQUIRED",
+          "exit_policy_reason_codes": [
+            "PLANNED_EXIT_WINDOW_REACHED",
+            "PROFIT_CAPTURE_TARGET_REACHED"
+          ],
+          "exit_policy_artifact": "380289667fdf788abe69a22b46e82449165bea87e4466acd3dd97b533096f4cb",
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "timing-adverse-1-dte",
+          "days_before_expiration": 1,
+          "executable_exit_debit": "480.00",
+          "exit_commission": "1.30",
+          "net_pnl_if_closed": "-362.60",
+          "lifecycle_action": "CLOSE_REVIEW_REQUIRED",
+          "reason_codes": [
+            "PLANNED_EXIT_REACHED"
+          ],
+          "exit_policy_action": "CLOSE_REVIEW_REQUIRED",
+          "exit_policy_reason_codes": [
+            "LOSS_REVIEW_THRESHOLD_REACHED",
+            "PLANNED_EXIT_WINDOW_REACHED"
+          ],
+          "exit_policy_artifact": "6ac6ae063ad16faeefb898de0475f1271fd2dda4de1d4fd62b59dcd745c83caf",
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "timing-expiration",
+          "days_before_expiration": 0,
+          "executable_exit_debit": "500.00",
+          "exit_commission": "1.30",
+          "net_pnl_if_closed": "-382.60",
+          "lifecycle_action": "EXPIRATION_RECONCILIATION_REQUIRED",
+          "reason_codes": [
+            "EXPIRATION_REACHED"
+          ],
+          "exit_policy_action": "CLOSE_REVIEW_REQUIRED",
+          "exit_policy_reason_codes": [
+            "LOSS_REVIEW_THRESHOLD_REACHED",
+            "PLANNED_EXIT_WINDOW_REACHED"
+          ],
+          "exit_policy_artifact": "70a22d4b46c154bfbea2f627545e3c52365c1cb514dc89f825a4ae99715ba183",
+          "trade_authorized": false
+        }
+      ],
+      "candidate_pipeline": [
+        {
+          "scenario_id": "candidate-awaits-validated-risk",
+          "disposition": "NO_TRADE",
+          "scan_disposition": "CANDIDATES_FOR_CONTROL_PIPELINE",
+          "reason_codes": [
+            "VALIDATED_RISK_INPUT_REQUIRED"
+          ],
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "candidate-thin-market",
+          "disposition": "NO_TRADE",
+          "scan_disposition": "NO_TRADE",
+          "reason_codes": [
+            "NO_ADMISSIBLE_CANDIDATE"
+          ],
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "candidate-handoff-economics-tamper",
+          "disposition": "NO_TRADE",
+          "scan_disposition": "CANDIDATES_FOR_CONTROL_PIPELINE",
+          "reason_codes": [
+            "HANDOFF_HASH_MISMATCH"
+          ],
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "candidate-front-office-authorization",
+          "disposition": "NO_TRADE",
+          "scan_disposition": "CANDIDATES_FOR_CONTROL_PIPELINE",
+          "reason_codes": [
+            "HANDOFF_HASH_MISMATCH",
+            "UNTRUSTED_TRADE_AUTHORIZATION"
+          ],
+          "trade_authorized": false
+        }
+      ],
+      "option_universe": [
+        {
+          "scenario_id": "underlying-executable-ranking",
+          "disposition": "RESEARCH_CANDIDATES_FOR_CONTROL_PIPELINE",
+          "candidate_count": 2,
+          "top_ranked_underlying": "STRONG",
+          "rejected_underlyings": [],
+          "probability_inferred": false,
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "underlying-thin-market-no-trade",
+          "disposition": "NO_TRADE",
+          "candidate_count": 0,
+          "top_ranked_underlying": null,
+          "rejected_underlyings": [
+            [
+              "TEST",
+              [
+                "VOLUME_BELOW_POLICY"
+              ]
+            ]
+          ],
+          "probability_inferred": false,
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "underlying-closed-session-no-trade",
+          "disposition": "NO_TRADE",
+          "candidate_count": 0,
+          "top_ranked_underlying": null,
+          "rejected_underlyings": [
+            [
+              "TEST",
+              [
+                "MARKET_NOT_OPEN"
+              ]
+            ]
+          ],
+          "probability_inferred": false,
+          "trade_authorized": false
+        }
+      ],
+      "strategic_allocation": [
+        {
+          "scenario_id": "allocation-diversified-high-cape",
+          "disposition": "RESEARCH_CONTROL_PASS",
+          "reason_codes": [],
+          "artifact_sha256": "8aaea2aac701e0b8d764d1c37b8280ff3356089d6143cee1cabbd1bbe86c80d7",
+          "risk_of_ruin_calculated": false,
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "allocation-concentrated-high-cape",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "ALLOCATION_DIVERSIFICATION_INSUFFICIENT",
+            "ASSET_CLASS_CONCENTRATION_LIMIT",
+            "HIGH_CAPE_US_EQUITY_CONCENTRATION"
+          ],
+          "artifact_sha256": "cb194b860e88986750c7e2a0d82d4ec9f3a000299725dfe7baee9a1d83cc9fe6",
+          "risk_of_ruin_calculated": false,
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "allocation-weights-malformed",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "ALLOCATION_DIVERSIFICATION_INSUFFICIENT",
+            "ALLOCATION_WEIGHTS_DO_NOT_SUM_TO_ONE",
+            "ASSET_CLASS_CONCENTRATION_LIMIT"
+          ],
+          "artifact_sha256": "370ae33fee16776b5925148e6646195d4f2b46a7e299d405a7bd773f5154a98f",
+          "risk_of_ruin_calculated": false,
+          "trade_authorized": false
+        }
+      ],
+      "premium_cadence": [
+        {
+          "scenario_id": "cadence-monthly-window-open",
+          "disposition": "NEW_ENTRY_RESEARCH_WINDOW",
+          "monitoring_allowed": true,
+          "trade_authorized": false,
+          "reason_codes": [],
+          "artifact_sha256": "13f5d4a18a7e7fb6ff80851b460dac10c2f0d42edd034bee88a541c9890f47a3"
+        },
+        {
+          "scenario_id": "cadence-same-month-blocked",
+          "disposition": "NO_TRADE",
+          "monitoring_allowed": true,
+          "trade_authorized": false,
+          "reason_codes": [
+            "MINIMUM_ENTRY_INTERVAL_NOT_REACHED",
+            "MONTHLY_NEW_ENTRY_ALREADY_EVALUATED"
+          ],
+          "artifact_sha256": "5b6469fdd38dc29fa8a8a0dadb61ec3b9eba59b39db358360a7303b19beef720"
+        },
+        {
+          "scenario_id": "cadence-future-ledger-entry",
+          "disposition": "NO_TRADE",
+          "monitoring_allowed": true,
+          "trade_authorized": false,
+          "reason_codes": [
+            "LAST_ENTRY_FROM_FUTURE",
+            "MINIMUM_ENTRY_INTERVAL_NOT_REACHED",
+            "MONTHLY_NEW_ENTRY_ALREADY_EVALUATED"
+          ],
+          "artifact_sha256": "4c04aa671115add45019de9a0cead31e62739ec84b5ae7bd359f591c28d86a14"
+        }
+      ],
+      "premium_exit_attacks": [
+        {
+          "scenario_id": "exit-stale-quotes",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "EXIT_QUOTE_STALE"
+          ],
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "exit-contract-substitution",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "EXIT_CONTRACT_MISMATCH"
+          ],
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "exit-unsynchronized-legs",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "EXIT_QUOTE_DESYNCHRONIZED"
+          ],
+          "trade_authorized": false
+        }
+      ],
+      "audit_attacks": [
+        {
+          "scenario_id": "audit-event-mutation",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "AUDIT_EVENT_HASH_INVALID"
+          ],
+          "audit_valid": false,
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "audit-event-deletion",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "AUDIT_INPUT_LINEAGE_INVALID",
+            "AUDIT_PREVIOUS_HASH_INVALID",
+            "AUDIT_SEQUENCE_INVALID"
+          ],
+          "audit_valid": false,
+          "trade_authorized": false
+        },
+        {
+          "scenario_id": "audit-zero-output-hash",
+          "disposition": "NO_TRADE",
+          "reason_codes": [
+            "AUDIT_EVENT_HASH_INVALID",
+            "AUDIT_INPUT_LINEAGE_INVALID",
+            "AUDIT_OUTPUT_HASH_INVALID"
+          ],
+          "audit_valid": false,
+          "trade_authorized": false
+        }
+      ],
+      "scheduler_attacks": [
+        {
+          "scenario_id": "scheduler-forged-prior-receipt",
+          "disposition": "NO_TRADE",
+          "scheduler_status": "FAILED_CLOSED",
+          "reason_codes": [
+            "PRIOR_RECEIPT_INVALID"
+          ],
+          "trade_authorized": false
+        }
+      ],
+      "limitations": [
+        "These are deterministic synthetic stresses, not historical or live results.",
+        "A profitable scenario does not establish strategy expectancy.",
+        "Assignment cost is a declared synthetic reserve, not a broker quote."
+      ],
+      "war_game_report_sha256": "00e8d4211aecc57fb3de703fde9847b55e09f032c7d1ea6a213912fc6015d2af"
+    },
+    "chronological_replay": {
+      "environment": "paper",
+      "valid": true,
+      "reason_codes": [],
+      "events": [
+        {
+          "kind": "SOURCE_PUBLISHED",
+          "event_time": "2026-07-28T20:00:00+00:00",
+          "received_time": "2026-07-28T20:00:00+00:00",
+          "artifact_id": "synthetic-option-chain-v1"
+        },
+        {
+          "kind": "SYSTEM_RECEIVED",
+          "event_time": "2026-07-28T20:00:01+00:00",
+          "received_time": "2026-07-28T20:00:01+00:00",
+          "artifact_id": "synthetic-option-chain-v1"
+        },
+        {
+          "kind": "VALIDATION_COMPLETE",
+          "event_time": "2026-07-28T20:00:02+00:00",
+          "received_time": "2026-07-28T20:00:02+00:00",
+          "artifact_id": "9321612d856ff4c6587aa4fe2bf2cfdaf1eb7ebd6bffef6c52815bef6f414dbd"
+        },
+        {
+          "kind": "CANDIDATE_CREATED",
+          "event_time": "2026-07-28T20:00:03+00:00",
+          "received_time": "2026-07-28T20:00:03+00:00",
+          "artifact_id": "TEST260821P00095000--TEST260821P00090000"
+        },
+        {
+          "kind": "RISK_COMPLETE",
+          "event_time": "2026-07-28T20:00:04+00:00",
+          "received_time": "2026-07-28T20:00:04+00:00",
+          "artifact_id": "d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0"
+        },
+        {
+          "kind": "COMPLIANCE_COMPLETE",
+          "event_time": "2026-07-28T20:00:05+00:00",
+          "received_time": "2026-07-28T20:00:05+00:00",
+          "artifact_id": "c067b6af9ecee4d51c6970df41cda15df5e81a4cab04826e62a4405d732dbb6c"
+        },
+        {
+          "kind": "HUMAN_PENDING",
+          "event_time": "2026-07-28T20:00:06+00:00",
+          "received_time": "2026-07-28T20:00:06+00:00",
+          "artifact_id": "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30"
+        }
+      ]
+    },
+    "audit_chain": {
+      "version": "audit-chain-1.1.0",
+      "valid": true,
+      "reason_codes": [],
+      "event_count": 7,
+      "complete_lineage": true,
+      "head_hash": "f396be738966ee22dd01de20d783e65274d1907b77cfb7ccbcef210625ff92d9",
+      "events": [
+        {
+          "sequence": 1,
+          "run_id": "reference-overnight-run",
+          "stage": "SOURCE_PUBLISHED",
+          "occurred_at": "2026-07-28T20:00:00+00:00",
+          "artifact_id": "synthetic-option-chain-v1",
+          "candidate_id": "TEST260821P00095000--TEST260821P00090000",
+          "input_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "output_sha256": "815accb9f1c848c59c7fd441648a44267ca5e338cbb01de6a014bf6b853af6dc",
+          "component_version": "source-fixture-1.0.0",
+          "policy_version": "paper-source-policy-1.0.0",
+          "reason_codes": [],
+          "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "event_hash": "379e4bc36463a36459ad869b9014e7c8c931ee8fe0a7d5a504cda90014797d28"
+        },
+        {
+          "sequence": 2,
+          "run_id": "reference-overnight-run",
+          "stage": "SYSTEM_RECEIVED",
+          "occurred_at": "2026-07-28T20:00:01+00:00",
+          "artifact_id": "synthetic-option-chain-v1",
+          "candidate_id": "TEST260821P00095000--TEST260821P00090000",
+          "input_sha256": "815accb9f1c848c59c7fd441648a44267ca5e338cbb01de6a014bf6b853af6dc",
+          "output_sha256": "815accb9f1c848c59c7fd441648a44267ca5e338cbb01de6a014bf6b853af6dc",
+          "component_version": "intake-1.0.0",
+          "policy_version": "paper-source-policy-1.0.0",
+          "reason_codes": [],
+          "previous_hash": "379e4bc36463a36459ad869b9014e7c8c931ee8fe0a7d5a504cda90014797d28",
+          "event_hash": "ffd4534471bd86d79e952d8ec0efcb2cffcfe5d70680d12a68380307754257a9"
+        },
+        {
+          "sequence": 3,
+          "run_id": "reference-overnight-run",
+          "stage": "VALIDATION_COMPLETE",
+          "occurred_at": "2026-07-28T20:00:02+00:00",
+          "artifact_id": "9321612d856ff4c6587aa4fe2bf2cfdaf1eb7ebd6bffef6c52815bef6f414dbd",
+          "candidate_id": "TEST260821P00095000--TEST260821P00090000",
+          "input_sha256": "815accb9f1c848c59c7fd441648a44267ca5e338cbb01de6a014bf6b853af6dc",
+          "output_sha256": "9321612d856ff4c6587aa4fe2bf2cfdaf1eb7ebd6bffef6c52815bef6f414dbd",
+          "component_version": "data-contract-1.0.0",
+          "policy_version": "paper-source-policy-1.0.0",
+          "reason_codes": [],
+          "previous_hash": "ffd4534471bd86d79e952d8ec0efcb2cffcfe5d70680d12a68380307754257a9",
+          "event_hash": "54f7f3bc541ae55452bcfd975a64ececebf547fa43844db076560937c31707f4"
+        },
+        {
+          "sequence": 4,
+          "run_id": "reference-overnight-run",
+          "stage": "CANDIDATE_CREATED",
+          "occurred_at": "2026-07-28T20:00:03+00:00",
+          "artifact_id": "TEST260821P00095000--TEST260821P00090000",
+          "candidate_id": "TEST260821P00095000--TEST260821P00090000",
+          "input_sha256": "9321612d856ff4c6587aa4fe2bf2cfdaf1eb7ebd6bffef6c52815bef6f414dbd",
+          "output_sha256": "0c68de59a7103cb8d42b2300f7b8473ea12e1ed0ea6c3c25291b670dfca186e3",
+          "component_version": "vertical-credit-spread-1.0.0",
+          "policy_version": "paper-options-1.0.0",
+          "reason_codes": [],
+          "previous_hash": "54f7f3bc541ae55452bcfd975a64ececebf547fa43844db076560937c31707f4",
+          "event_hash": "d329b14f4674254b06b8e7a9e088fcd53bd3c865da1b66c3d3a363aee3bae76b"
+        },
+        {
+          "sequence": 5,
+          "run_id": "reference-overnight-run",
+          "stage": "RISK_COMPLETE",
+          "occurred_at": "2026-07-28T20:00:04+00:00",
+          "artifact_id": "d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0",
+          "candidate_id": "TEST260821P00095000--TEST260821P00090000",
+          "input_sha256": "0c68de59a7103cb8d42b2300f7b8473ea12e1ed0ea6c3c25291b670dfca186e3",
+          "output_sha256": "d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0",
+          "component_version": "0.1.0-unvalidated",
+          "policy_version": "paper-risk-1.0.0",
+          "reason_codes": [],
+          "previous_hash": "d329b14f4674254b06b8e7a9e088fcd53bd3c865da1b66c3d3a363aee3bae76b",
+          "event_hash": "99096213d2fd13e91536ccc3f0881c21d1c719e20621f342a1175ce6bc7efa1b"
+        },
+        {
+          "sequence": 6,
+          "run_id": "reference-overnight-run",
+          "stage": "COMPLIANCE_COMPLETE",
+          "occurred_at": "2026-07-28T20:00:05+00:00",
+          "artifact_id": "c067b6af9ecee4d51c6970df41cda15df5e81a4cab04826e62a4405d732dbb6c",
+          "candidate_id": "TEST260821P00095000--TEST260821P00090000",
+          "input_sha256": "d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0",
+          "output_sha256": "c067b6af9ecee4d51c6970df41cda15df5e81a4cab04826e62a4405d732dbb6c",
+          "component_version": "paper-securities-1.0.0",
+          "policy_version": "paper-securities-1.0.0",
+          "reason_codes": [],
+          "previous_hash": "99096213d2fd13e91536ccc3f0881c21d1c719e20621f342a1175ce6bc7efa1b",
+          "event_hash": "e15e27682e5962aa92e0c1f33d8e838cc0392cefe672bd52a23ff8cd28d2cc4c"
+        },
+        {
+          "sequence": 7,
+          "run_id": "reference-overnight-run",
+          "stage": "HUMAN_PENDING",
+          "occurred_at": "2026-07-28T20:00:06+00:00",
+          "artifact_id": "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+          "candidate_id": "TEST260821P00095000--TEST260821P00090000",
+          "input_sha256": "c067b6af9ecee4d51c6970df41cda15df5e81a4cab04826e62a4405d732dbb6c",
+          "output_sha256": "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+          "component_version": "human-authorization-1.0.0",
+          "policy_version": "paper-human-checkpoint-1.0.0",
+          "reason_codes": [],
+          "previous_hash": "e15e27682e5962aa92e0c1f33d8e838cc0392cefe672bd52a23ff8cd28d2cc4c",
+          "event_hash": "f396be738966ee22dd01de20d783e65274d1907b77cfb7ccbcef210625ff92d9"
+        }
+      ]
+    },
+    "back_office_reconciliation": {
+      "version": "paper-back-office-reconciliation-1.1.0",
+      "plan_sha256": "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+      "internal_positions_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "broker_positions_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "internal_cash": "100000",
+      "broker_cash": "100000",
+      "unresolved_fill_count": 0,
+      "unresolved_lifecycle_count": 0,
+      "reconciled_at": "2026-07-28T20:00:00+00:00",
+      "lifecycle_artifact_sha256": "",
+      "environment": "paper",
+      "status": "pass",
+      "reason_codes": [],
+      "live_release_evidence_eligible": false,
+      "artifact_sha256": "a5b8897448968eff387ffeac02b067dc533be792de8969e59b9eecd713c2f67e"
+    },
+    "premium_cadence": {
+      "version": "monthly-premium-cadence-1.0.0",
+      "evaluated_at": "2026-07-28T20:00:00+00:00",
+      "last_new_entry_at": "2026-06-28T20:00:00+00:00",
+      "minimum_days_between_entries": 21,
+      "cadence_timezone": "America/New_York",
+      "new_entry_evaluation_allowed": true,
+      "monitoring_allowed": true,
+      "reason_codes": [],
+      "artifact_sha256": "13f5d4a18a7e7fb6ff80851b460dac10c2f0d42edd034bee88a541c9890f47a3",
+      "trade_authorized": false
+    },
+    "strategic_allocation": {
+      "version": "diversification-cape-policy-1.0.0",
+      "weights": [
+        {
+          "asset_class": "CASH",
+          "weight": "0.10"
+        },
+        {
+          "asset_class": "FIXED_INCOME",
+          "weight": "0.25"
+        },
+        {
+          "asset_class": "INTERNATIONAL_EQUITY",
+          "weight": "0.20"
+        },
+        {
+          "asset_class": "REAL_ASSET",
+          "weight": "0.20"
+        },
+        {
+          "asset_class": "US_EQUITY",
+          "weight": "0.25"
+        }
+      ],
+      "cape_ratio": "35",
+      "policy": {
+        "minimum_distinct_asset_classes": 4,
+        "maximum_single_asset_class_weight": "0.40",
+        "high_cape_threshold": "30",
+        "high_cape_us_equity_maximum": "0.30"
+      },
+      "admissible": true,
+      "reason_codes": [],
+      "us_equity_weight": "0.25",
+      "largest_asset_class_weight": "0.25",
+      "risk_of_ruin_calculated": false,
+      "trade_authorized": false,
+      "artifact_sha256": "8aaea2aac701e0b8d764d1c37b8280ff3356089d6143cee1cabbd1bbe86c80d7"
+    },
+    "stat_evaluation": {
+      "label": "STAT",
+      "evaluator_version": "calibration-evaluator-1.0.0",
+      "sample_size": 6,
+      "brier_score": "0.23",
+      "mean_predicted_probability": "0.5",
+      "observed_event_rate": "0.5",
+      "alpha": "0.005",
+      "confidence_level": "0.95",
+      "confidence_interval_alpha": "0.05",
+      "alpha_semantics": "hypothesis_test_significance_threshold",
+      "confidence_level_semantics": "separate_interval_coverage_target",
+      "inference_status": "INSUFFICIENT_SAMPLE",
+      "p_value": null,
+      "confidence_interval": null,
+      "source": "synthetic_fixture"
+    },
+    "portfolio_stress": {
+      "report_type": "synthetic_hypothetical_portfolio_stress",
+      "version": "combined-mvp-capital-path-1.0.0",
+      "source": "synthetic_fixture",
+      "sequence_label": "declared_stress_order_not_historical_time_series",
+      "starting_capital": "100000",
+      "maximum_drawdown_fraction": "0.05",
+      "scenario_count": 5,
+      "fixture_sha256": "a6b36a7ebf094a54812a21cfa83aa43051c23eb9c64b379b9aa78e9df020cdac",
+      "scenarios": [
+        {
+          "scenario_id": "quiet-decay",
+          "net_pnl_by_project": {
+            "arbitrage-observer": "0",
+            "dividend-opportunity-desk": "21",
+            "earnings-event-desk": "0",
+            "event-futures-desk": "0",
+            "overnight-premium-desk": "77.40"
+          },
+          "combined_net_pnl": "98.40",
+          "ending_capital": "100098.40",
+          "drawdown": "0.00",
+          "disposition": "WITHIN_SYNTHETIC_LIMIT",
+          "reason_codes": []
+        },
+        {
+          "scenario_id": "equity-gap-and-volatility-shock",
+          "net_pnl_by_project": {
+            "arbitrage-observer": "0",
+            "dividend-opportunity-desk": "-1455",
+            "earnings-event-desk": "-608",
+            "event-futures-desk": "-500",
+            "overnight-premium-desk": "-382.60"
+          },
+          "combined_net_pnl": "-2945.60",
+          "ending_capital": "97152.80",
+          "drawdown": "2945.60",
+          "disposition": "WITHIN_SYNTHETIC_LIMIT",
+          "reason_codes": []
+        },
+        {
+          "scenario_id": "false-arbitrage-and-stale-market",
+          "net_pnl_by_project": {
+            "arbitrage-observer": "-285",
+            "dividend-opportunity-desk": "0",
+            "earnings-event-desk": "0",
+            "event-futures-desk": "0",
+            "overnight-premium-desk": "-132.60"
+          },
+          "combined_net_pnl": "-417.60",
+          "ending_capital": "96735.20",
+          "drawdown": "3363.20",
+          "disposition": "WITHIN_SYNTHETIC_LIMIT",
+          "reason_codes": []
+        },
+        {
+          "scenario_id": "dividend-cut-correlation",
+          "net_pnl_by_project": {
+            "arbitrage-observer": "0",
+            "dividend-opportunity-desk": "-1205",
+            "earnings-event-desk": "-308",
+            "event-futures-desk": "-300",
+            "overnight-premium-desk": "-202.60"
+          },
+          "combined_net_pnl": "-2015.60",
+          "ending_capital": "94719.60",
+          "drawdown": "5378.80",
+          "disposition": "FREEZE_NEW_RISK",
+          "reason_codes": [
+            "DRAWDOWN_LIMIT_BREACHED"
+          ]
+        },
+        {
+          "scenario_id": "all-signals-crowded-exit",
+          "net_pnl_by_project": {
+            "arbitrage-observer": "-485",
+            "dividend-opportunity-desk": "-1655",
+            "earnings-event-desk": "-808",
+            "event-futures-desk": "-1300",
+            "overnight-premium-desk": "-407.60"
+          },
+          "combined_net_pnl": "-4655.60",
+          "ending_capital": "90064.00",
+          "drawdown": "10034.40",
+          "disposition": "FREEZE_NEW_RISK",
+          "reason_codes": [
+            "DRAWDOWN_LIMIT_BREACHED"
+          ]
+        }
+      ],
+      "descriptive_metrics": {
+        "sample_size": 5,
+        "total_pnl": "-9936.00",
+        "mean_pnl": "-1987.20",
+        "median_pnl": "-2015.60",
+        "win_rate": "0.2",
+        "profit_factor": "0.009806266443434585027505381488",
+        "maximum_drawdown": "10034.40",
+        "expected_shortfall": "-4655.60",
+        "expected_shortfall_confidence": "0.80",
+        "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE"
+      },
+      "inference_status": "INSUFFICIENT_SYNTHETIC_SAMPLE",
+      "real_money_pnl": "0",
+      "stress_report_sha256": "cc8d1e435c37bdf8808d09aa3b6720fb2cd898d4d3b71177ff3a6bc3fc309439"
+    },
+    "release_readiness": {
+      "gate_version": "live-release-gate-1.2.0",
+      "current_environment": "paper",
+      "target_environment": "live",
+      "status": "LIVE_RELEASE_BLOCKED",
+      "reason_codes": [
+        "RELEASE_REQUIREMENT_UNSATISFIED:BACK_OFFICE_RECONCILIATION_CERTIFIED",
+        "RELEASE_REQUIREMENT_UNSATISFIED:BROKER_ORDER_ADAPTER_CERTIFIED",
+        "RELEASE_REQUIREMENT_UNSATISFIED:EXTERNAL_AUDIT_DURABILITY_VERIFIED",
+        "RELEASE_REQUIREMENT_UNSATISFIED:KILL_SWITCH_AND_DR_TESTED",
+        "RELEASE_REQUIREMENT_UNSATISFIED:LICENSED_POINT_IN_TIME_DATA_VERIFIED",
+        "RELEASE_REQUIREMENT_UNSATISFIED:MODEL_VV_APPROVED",
+        "RELEASE_REQUIREMENT_UNSATISFIED:REGULATORY_COUNSEL_SIGNOFF",
+        "RELEASE_REQUIREMENT_UNSATISFIED:REGULATORY_TRACEABILITY_VERIFIED",
+        "RELEASE_REQUIREMENT_UNSATISFIED:ROR_CONVENTIONAL_VV_APPROVED"
+      ],
+      "evidence": [
+        {
+          "requirement_id": "BACK_OFFICE_RECONCILIATION_CERTIFIED",
+          "satisfied": false,
+          "evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "requirement_id": "BROKER_ORDER_ADAPTER_CERTIFIED",
+          "satisfied": false,
+          "evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "requirement_id": "EXTERNAL_AUDIT_DURABILITY_VERIFIED",
+          "satisfied": false,
+          "evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "requirement_id": "KILL_SWITCH_AND_DR_TESTED",
+          "satisfied": false,
+          "evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "requirement_id": "LICENSED_POINT_IN_TIME_DATA_VERIFIED",
+          "satisfied": false,
+          "evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "requirement_id": "MODEL_VV_APPROVED",
+          "satisfied": false,
+          "evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "requirement_id": "REGULATORY_COUNSEL_SIGNOFF",
+          "satisfied": false,
+          "evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "requirement_id": "REGULATORY_TRACEABILITY_VERIFIED",
+          "satisfied": false,
+          "evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "requirement_id": "ROR_CONVENTIONAL_VV_APPROVED",
+          "satisfied": false,
+          "evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "human_override_allowed": false,
+      "live_transition_authorized": false,
+      "artifact_sha256": "9cc2c210afb346587dc3890a87ff3f7570f2ecdf9f1e547145948a0f2f63fa61"
+    },
+    "report_sha256": "e8285f86aca2046e6228d15d4d3d53bec98521b2d13c6211161c4aea1b390546"
+  },
+  "summary": {
+    "report_type": "paper_morning_control_summary",
+    "code_commit": "ff40bf21dc01f91a5b18419aa0b0c13c7bdb3a9e",
+    "report_sha256": "e8285f86aca2046e6228d15d4d3d53bec98521b2d13c6211161c4aea1b390546",
+    "projects_evaluated": 6,
+    "human_review": 1,
+    "no_trade_projects": 5,
+    "real_money_pnl": "0",
+    "real_trades_executed": 0,
+    "war_game_scenarios": 73,
+    "no_trade_controls": 46,
+    "portfolio_stress_scenarios": 5,
+    "synthetic_stress_total_pnl": "-9936.00",
+    "paper_back_office_reconciliation": "pass",
+    "paper_reconciliation_live_release_eligible": false,
+    "premium_new_entry_evaluation_allowed": true,
+    "premium_monitoring_allowed": true,
+    "premium_exit_review_scenarios": 3,
+    "strategic_allocation_admissible": true,
+    "strategic_allocation_policy_version": "diversification-cape-policy-1.0.0",
+    "strategic_allocation_ror_calculated": false,
+    "release_status": "LIVE_RELEASE_BLOCKED",
+    "live_transition_authorized": false
+  },
+  "registry": [
+    {
+      "number": 1,
+      "project_id": "overnight-premium-desk",
+      "name": "Overnight Premium Desk",
+      "status": "working_foundation",
+      "objective": "Research defined-risk option premium opportunities with timed exits."
+    },
+    {
+      "number": 2,
+      "project_id": "earnings-event-desk",
+      "name": "Earnings Event Desk",
+      "status": "working_foundation",
+      "objective": "Compare equity, defined-risk option, hedged-equity, and no-trade arms."
+    },
+    {
+      "number": 3,
+      "project_id": "arbitrage-observer",
+      "name": "European Index Box/Parity Observer",
+      "status": "working_foundation",
+      "objective": "Observe executable parity and box dislocations after all costs."
+    },
+    {
+      "number": 4,
+      "project_id": "dividend-opportunity-desk",
+      "name": "Dividend Opportunity Desk",
+      "status": "working_foundation",
+      "objective": "Rank sustainable dividend opportunities and compare shares, options, and no trade."
+    },
+    {
+      "number": 5,
+      "project_id": "open-quant-ai-model-lab",
+      "name": "Open Quant/AI Model Lab",
+      "status": "working_foundation",
+      "objective": "Run independent Quant and AI research teams with reproducible open artifacts."
+    },
+    {
+      "number": 6,
+      "project_id": "event-futures-desk",
+      "name": "Weather/War/Logistics Futures Event Desk",
+      "status": "working_foundation",
+      "objective": "Compare validated physical-event surprise with curve pricing, basis, roll, and costs."
+    }
+  ],
+  "morning_markdown": "# Hedge Desk Morning Evaluation\n\nGenerated: 2026-09-06T19:31:52.442631+00:00\nCode commit: `ff40bf21dc01f91a5b18419aa0b0c13c7bdb3a9e`\n\n## Actual status\n\n- Real money P&L: $0\n- Real trades executed: 0\n- Environment: PAPER / HYPOTHETICAL\n- Live orders enabled: false\n\n## Project evaluation\n\n| Project | Disposition |\n|---|---|\n| overnight-premium-desk | HUMAN_REVIEW |\n| earnings-event-desk | NO_TRADE |\n| arbitrage-observer | NO_TRADE |\n| dividend-opportunity-desk | NO_TRADE |\n| open-quant-ai-model-lab | NO_TRADE |\n| event-futures-desk | NO_TRADE |\n\n## Synthetic war games\n\n- Total declared scenarios: 73\n- NO_TRADE controls: 46\n- Premium profitable stresses: 1\n- Premium losing stresses: 4\n- Premium synthetic total P&L: $-848.00\n- Premium synthetic maximum drawdown: $925.40\n- Premium synthetic expected shortfall: $-407.60\n- Earnings equity-arm synthetic total: $-22\n- Earnings option-arm synthetic total: $-312.00\n- Earnings hedged-arm synthetic total: $-5\n- Arbitrage gated-policy synthetic total: $45\n- Dividend shares-arm synthetic total: $-1083.00\n- Dividend call-arm synthetic total: $-310.00\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n- STAT Brier score: 0.23\n- STAT inference: INSUFFICIENT_SAMPLE\n- STAT p-value: None\n- STAT 95% CI: None\n- BIG proposal (agent research): defined-risk synthetic put credit spread\n- Deterministic risk model: finite-capital-ruin-approximation 0.1.0-unvalidated\n- Validated risk-input artifact: `d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0`\n\n## Combined-MVP capital stress\n\n- Synthetic scenarios: 5\n- Starting synthetic capital: $100000\n- Synthetic total P&L: $-9936.00\n- Synthetic maximum drawdown: $10034.40\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n\n## Control verification\n\n- Data batch: READY_FOR_RESEARCH\n- Chronological replay valid: true\n- Audit chain valid: true\n- Paper Back Office reconciliation: pass\n- Paper reconciliation live-release eligible: false\n- Premium new-entry evaluation allowed: true\n- Premium monitoring allowed: true\n- Premium exit-policy review scenarios: 3\n- Live release status: LIVE_RELEASE_BLOCKED\n- Live transition authorized: false\n- Unsatisfied live-release requirements: 9\n- Report SHA-256: `e8285f86aca2046e6228d15d4d3d53bec98521b2d13c6211161c4aea1b390546`\n\n## Limitations\n\n- Synthetic fixtures only; no current market opportunity is claimed.\n- Hypothetical paper output is not investment advice or a performance guarantee.\n- Research-only foundations correctly return NO_TRADE without validated risk inputs.\n"
+}
