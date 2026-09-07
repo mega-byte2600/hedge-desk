@@ -28,6 +28,18 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn('mailto:michael.bolton.ph@dartmouth.edu', acknowledgements)
         self.assertIn('https://github.com/mega-byte2600/hedge-desk', acknowledgements)
 
+    def test_public_brand_and_copy_stay_launch_safe(self):
+        index = (WEB / "index.html").read_text(encoding="utf-8")
+        professional = (WEB / "professional.js").read_text(encoding="utf-8")
+        combined = index + professional
+
+        self.assertIn('emporion-institutional-seal.svg', combined)
+        self.assertIn('Independent research platform', combined)
+        self.assertNotIn('AI-native', combined)
+        self.assertNotIn('brandmark', combined)
+        self.assertNotIn('Controls & evidence', combined)
+        self.assertNotIn('function controlsBlock()', professional)
+
 
 if __name__ == "__main__":
     unittest.main()
