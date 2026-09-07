@@ -3,18 +3,19 @@ function currentRoute() {
 }
 
 const deskMethods = [
-  ['Overnight Premium', 'Defined-risk premium after liquidity, volatility, event, and executable-spread checks.'],
-  ['Earnings Event', 'Point-in-time expectations, confirmed events, release evidence, and post-event reaction.'],
-  ['Box / Parity Observer', 'Parity and box relationships after spreads, fees, settlement, and financing.'],
-  ['Dividend Opportunity', 'Payout durability, cash generation, shareholder yield, and valuation.'],
-  ['Global Quant & AI Research Lab', 'Global finance-AI, ML, datasets, benchmarks, and reproducible model evaluation.'],
-  ['Futures Event', 'Physical events, futures curves, liquidity, and contract specifications.']
+  ['Overnight Premium', 'Defined-risk premium after liquidity, volatility, event, and executable-spread checks.', 'DATA INTEGRATION'],
+  ['Earnings Event', 'Point-in-time expectations, confirmed events, release evidence, and post-event reaction.', 'DATA INTEGRATION'],
+  ['Box / Parity Observer', 'Parity and box relationships after spreads, fees, settlement, and financing.', 'DATA INTEGRATION'],
+  ['Dividend Opportunity', 'Payout durability, cash generation, shareholder yield, and valuation.', 'DATA INTEGRATION'],
+  ['Global Quant & AI Research Lab', 'Global finance-AI, ML, datasets, benchmarks, and reproducible model evaluation.', 'DATA INTEGRATION'],
+  ['Futures Event', 'Physical events, futures curves, liquidity, and contract specifications.', 'DATA INTEGRATION'],
+  ['Bonds & Rates', 'Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress anchor cross-asset research.', 'ARCHITECTURE ONLY']
 ];
 
 function applyBrand() {
   document.title = 'Emporion | Markets · Intelligence · Discipline';
   const meta = document.querySelector('meta[name="description"]');
-  if (meta) meta.content = 'Emporion is an independent market research and decision-support platform with six specialized research workflows, scenario analysis, Yellow Sheets, and human review. A Bolton Investment Group (BIG) Project.';
+  if (meta) meta.content = 'Emporion is an independent market research and decision-support platform with a seven-desk research architecture, scenario analysis, Yellow Sheets, and human review. A Bolton Investment Group (BIG) Project.';
 
   const icon = document.querySelector('link[rel="icon"]');
   if (icon) icon.href = './emporion-institutional-seal.svg';
@@ -29,7 +30,7 @@ function applyBrand() {
     const mode = sidebarBottom.querySelector('.mode');
     if (mode) mode.textContent = 'RESEARCH PLATFORM';
     const p = sidebarBottom.querySelector('p');
-    if (p) p.innerHTML = 'Six research workflows.<br>Structured decision support.';
+    if (p) p.innerHTML = 'Seven research desks.<br>Six evaluated workflows.';
   }
 
   const footerBrand = document.querySelector('footer > span:first-child');
@@ -45,7 +46,8 @@ function statusStrip() {
       <div class="ws-tape">
         <span><b>EMPORION</b></span>
         <span><b>MODE</b> RESEARCH</span>
-        <span><b>WORKFLOWS</b> SIX DESKS</span>
+        <span><b>DESKS</b> SEVEN</span>
+        <span><b>EVALUATED</b> SIX</span>
         <span><b>DECISION</b> HUMAN REVIEW</span>
         <a href="./README_PUBLIC.md" download>README ↓</a>
       </div>
@@ -63,7 +65,7 @@ function overviewBlock() {
       </div>
       <div class="ws-desk-list">
         <div class="ws-list-head"><span>Research desk</span><span>Operating state</span></div>
-        ${deskMethods.map(([name]) => `<div class="ws-list-row"><strong>${name}</strong><span class="ws-state">DATA INTEGRATION</span></div>`).join('')}
+        ${deskMethods.map(([name,,state]) => `<div class="ws-list-row"><strong>${name}</strong><span class="ws-state">${state}</span></div>`).join('')}
       </div>
     </section>`;
 }
@@ -72,12 +74,12 @@ function desksBlock() {
   if (currentRoute() !== 'desks') return '';
   return `
     <section class="ws-operational ws-desk-methods" aria-label="Research desk methods">
-      ${deskMethods.map(([name, method], index) => `
+      ${deskMethods.map(([name, method, state], index) => `
         <article>
           <div class="ws-label">DESK 0${index + 1}</div>
           <h2>${name}</h2>
           <p>${method}</p>
-          <span class="ws-state">DATA INTEGRATION</span>
+          <span class="ws-state">${state}</span>
         </article>`).join('')}
     </section>`;
 }
