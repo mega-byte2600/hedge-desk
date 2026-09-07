@@ -13,19 +13,22 @@ from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.reporting import build_control_summary, render_morning_markdown, validate_report
 from hedge_desk.data import PWB_DAILY_NEWS_DATASET
 from hedge_desk.candidates import build_candidate_feed
+from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
 
 
 def export_report(report, destination):
     decision = validate_report(report)
     if not decision.publishable:
         raise ValueError("Report rejected: " + ", ".join(decision.reason_codes))
+    candidate_feed = build_candidate_feed()
     payload = {
         "schema_version": "desk-console-1",
         "report": report,
         "summary": build_control_summary(report),
         "registry": [asdict(project) for project in MVP_PROJECTS],
         "morning_markdown": render_morning_markdown(report),
-        "candidate_feed": build_candidate_feed(),
+        "candidate_feed": candidate_feed,
+        "risk_dashboard": build_candidate_risk_dashboard(candidate_feed),
         "owner": {
             "display_name": "mbolton",
             "linkedin_url": "https://www.linkedin.com/in/bolton-2600/",

@@ -8,6 +8,7 @@ from urllib.request import Request, urlopen
 from wsgiref.simple_server import make_server
 
 from hedge_desk.candidates import build_candidate_feed
+from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
@@ -39,6 +40,8 @@ def application(environ, start_response):
         return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _supabase_status()})
     if path == "/api/candidates":
         return _json(start_response, build_candidate_feed())
+    if path == "/api/risk-dashboard":
+        return _json(start_response, build_candidate_risk_dashboard())
     if path == "/api/about":
         return _json(start_response, {"display_name": "mbolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
     relative = "index.html" if path in ("/", "") else path.lstrip("/")

@@ -26,3 +26,13 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status, '200 OK')
         self.assertEqual(len({row['desk_id'] for row in payload['candidates']}), 6)
         self.assertTrue(all(not row['trade_authorized'] for row in payload['candidates']))
+
+    def test_risk_dashboard_is_paper_only(self):
+        status, payload = self.request('/api/risk-dashboard')
+
+        self.assertEqual(status, '200 OK')
+        self.assertEqual(payload['mode'], 'PAPER_RESEARCH_ONLY')
+        self.assertFalse(payload['live_orders_enabled'])
+        self.assertEqual(payload['trade_authorized_count'], 0)
+        self.assertGreaterEqual(payload['desk_count'], 6)
+        self.assertTrue(payload['executive_actions'])
