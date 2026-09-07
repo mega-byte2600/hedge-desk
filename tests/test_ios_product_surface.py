@@ -27,6 +27,8 @@ class IOSProductSurfaceTests(unittest.TestCase):
         self.assertIn('expected.union(["bonds-rates-desk"])', store)
         self.assertIn('decoded.registry.count == architecture.count', store)
         self.assertIn('report.projects.count == expected.count', store)
+        self.assertIn('decodeIfPresent([RegistryDesk].self', store)
+        self.assertIn('RegistryDesk.defaultArchitecture', store)
 
     def test_product_positioning_asset_captures_open_user_owned_model(self):
         positioning = (ROOT / "docs" / "PRODUCT_POSITIONING_AND_MEASUREMENT.md").read_text(encoding="utf-8")

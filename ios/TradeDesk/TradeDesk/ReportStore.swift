@@ -6,6 +6,16 @@ struct DeskEnvelope: Decodable {
     let report: DeskReport
     let registry: [RegistryDesk]
     let morning_markdown: String
+
+    enum CodingKeys: String, CodingKey { case schema_version, report, registry, morning_markdown }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schema_version = try container.decode(String.self, forKey: .schema_version)
+        report = try container.decode(DeskReport.self, forKey: .report)
+        morning_markdown = try container.decode(String.self, forKey: .morning_markdown)
+        registry = try container.decodeIfPresent([RegistryDesk].self, forKey: .registry) ?? RegistryDesk.defaultArchitecture
+    }
 }
 struct RegistryDesk: Decodable, Identifiable {
     var id: String { project_id }
@@ -14,6 +24,16 @@ struct RegistryDesk: Decodable, Identifiable {
     let name: String
     let status: String
     let objective: String
+
+    static let defaultArchitecture: [RegistryDesk] = [
+        RegistryDesk(number: 1, project_id: "overnight-premium-desk", name: "Overnight Premium Desk", status: "working_foundation", objective: "Research defined-risk option premium opportunities with timed exits."),
+        RegistryDesk(number: 2, project_id: "earnings-event-desk", name: "Earnings Event Desk", status: "working_foundation", objective: "Compare equity, defined-risk option, hedged-equity, and no-trade arms."),
+        RegistryDesk(number: 3, project_id: "arbitrage-observer", name: "European Index Box/Parity Observer", status: "working_foundation", objective: "Observe executable parity and box dislocations after all costs."),
+        RegistryDesk(number: 4, project_id: "dividend-opportunity-desk", name: "Dividend Opportunity Desk", status: "working_foundation", objective: "Rank sustainable dividend opportunities and compare shares, options, and no trade."),
+        RegistryDesk(number: 5, project_id: "open-quant-ai-model-lab", name: "Open Quant/AI Model Lab", status: "working_foundation", objective: "Run independent Quant and AI research teams with reproducible open artifacts."),
+        RegistryDesk(number: 6, project_id: "event-futures-desk", name: "Weather/War/Logistics Futures Event Desk", status: "working_foundation", objective: "Compare validated physical-event surprise with curve pricing, basis, roll, and costs."),
+        RegistryDesk(number: 7, project_id: "bonds-rates-desk", name: "Bonds and Rates Desk", status: "architecture_only", objective: "Anchor cross-asset research in Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress.")
+    ]
 }
 struct DeskReport: Decodable {
     let generated_at: String
