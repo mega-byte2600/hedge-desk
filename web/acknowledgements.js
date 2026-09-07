@@ -3,36 +3,20 @@ function currentRoute() {
 }
 
 function acknowledgementBlock() {
-  const route = currentRoute();
-  if (!['journal', 'about'].includes(route)) return;
-  const main = document.querySelector('#main');
-  const head = main?.querySelector('.page-head');
-  if (!main || !head || document.querySelector('#campbell-acknowledgement')) return;
+  if (currentRoute() !== 'about') return;
+  const inspirations = document.querySelector('.ws-inspiration');
+  if (!inspirations || inspirations.querySelector('#campbell-acknowledgement')) return;
 
-  const section = document.createElement('section');
+  const section = document.createElement('div');
   section.id = 'campbell-acknowledgement';
-  section.className = 'panel campbell-ack';
+  section.className = 'campbell-ack';
   section.setAttribute('aria-label', 'Special acknowledgement');
   section.innerHTML = `
-    <div class="panel-head">
-      <div>
-        <div class="eyebrow">SPECIAL ACKNOWLEDGEMENT</div>
-        <h2>William Campbell, Ph.D.</h2>
-        <p>University of Wyoming MBA Program</p>
-      </div>
-    </div>
-    <div class="panel-body">
-      <p>Emporion gratefully acknowledges Dr. Campbell for sharing professional trade-desk perspective and feedback that helped shape the discipline behind the Yellow Sheet and Trade Log: document why a position is entered, define the plan before capital is committed, record why it is exited, and review what was learned.</p>
-      <p class="small">Acknowledgement reflects educational mentorship and feedback. It does not imply endorsement, sponsorship, investment advice, or responsibility for Emporion's models, controls, research outputs, or investment results.</p>
-    </div>`;
-
-  if (route === 'journal') {
-    const loop = document.querySelector('#yellow-sheet-feedback-loop');
-    (loop || head).insertAdjacentElement('afterend', section);
-  } else {
-    const capital = document.querySelector('.ws-capital');
-    (capital || head).insertAdjacentElement('afterend', section);
-  }
+    <div class="ws-label">SPECIAL ACKNOWLEDGEMENT</div>
+    <p><strong>William Campbell, Ph.D. · University of Wyoming MBA Program</strong></p>
+    <p>Emporion gratefully acknowledges Dr. Campbell for professional trade-desk perspective and feedback that helped shape the discipline behind the Yellow Sheet and Trade Log: document why a position is entered, define the plan before capital is committed, record why it is exited, and review what was learned.</p>
+    <p class="ws-inspiration-note">Educational mentorship and feedback only. This acknowledgement does not imply endorsement, sponsorship, investment advice, or responsibility for Emporion's research, controls, or results.</p>`;
+  inspirations.appendChild(section);
 }
 
 function installStyle() {
@@ -40,11 +24,9 @@ function installStyle() {
   const style = document.createElement('style');
   style.id = 'campbell-ack-style';
   style.textContent = `
-    .campbell-ack{margin:0 0 27px;border-left:3px solid #101820}
-    .campbell-ack .panel-head{background:#fafbfc}
-    .campbell-ack .panel-head h2{margin-top:7px}
-    .campbell-ack .panel-head p{margin-top:5px}
-    .campbell-ack .panel-body>p:first-child{max-width:940px;line-height:1.65}
+    .campbell-ack{margin-top:18px;padding-top:18px;border-top:1px solid #e1e6e9}
+    .campbell-ack p{max-width:980px}
+    .campbell-ack p:last-child{margin-bottom:0}
   `;
   document.head.appendChild(style);
 }
@@ -60,7 +42,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const main = document.querySelector('main');
   if (main) {
     const observer = new MutationObserver(() => {
-      if (!document.querySelector('#campbell-acknowledgement')) requestAnimationFrame(renderAcknowledgement);
+      if (currentRoute() === 'about' && !document.querySelector('#campbell-acknowledgement')) requestAnimationFrame(renderAcknowledgement);
     });
     observer.observe(main, {childList:true, subtree:true});
   }
