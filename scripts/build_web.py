@@ -13,6 +13,7 @@ from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.reporting import build_control_summary, render_morning_markdown, validate_report
 from hedge_desk.data import PWB_DAILY_NEWS_DATASET
 from hedge_desk.candidates import build_candidate_feed
+from hedge_desk.ape_demo import build_ape_pfac_demo
 
 
 def export_report(report, destination):
@@ -26,6 +27,7 @@ def export_report(report, destination):
         "registry": [asdict(project) for project in MVP_PROJECTS],
         "morning_markdown": render_morning_markdown(report),
         "candidate_feed": build_candidate_feed(),
+        "ape_pfac_demo": build_ape_pfac_demo(),
         "owner": {
             "display_name": "mbolton",
             "linkedin_url": "https://www.linkedin.com/in/bolton-2600/",
@@ -66,7 +68,17 @@ if __name__ == "__main__":
     if args.output.resolve() == (ROOT / "web").resolve():
         distribution = ROOT / "dist"
         distribution.mkdir(exist_ok=True)
-        for filename in ("index.html", "styles.css", "app.js", "core.mjs", "professional.js", "report.json"):
+        for filename in (
+            "index.html",
+            "styles.css",
+            "app.js",
+            "core.mjs",
+            "professional.js",
+            "report.json",
+            "ape.html",
+            "ape.css",
+            "ape.js",
+        ):
             shutil.copyfile(ROOT / "web" / filename, distribution / filename)
         shutil.copyfile(ROOT / "README_PUBLIC.md", distribution / "README_PUBLIC.md")
     print("Validated console report exported to", args.output)
