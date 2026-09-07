@@ -1,0 +1,41 @@
+name: Open Data Scout
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+      - name: Run open dataset scout
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m hedge_desk.data_scout
+      - name: Validate discovery artifact
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/data-scout.json')
+          d=json.loads(p.read_text())
+          assert d['purpose']=='OPEN_PUBLIC_DATASET_DISCOVERY_ONLY'
+          assert d['commercial_use_assumed'] is False
+          assert isinstance(d['candidates'], list)
+          print('dataset candidates:', len(d['candidates']))
+          for row in d['candidates'][:20]:
+              print(row['repo'], row['license_spdx'], row['commercial_use_status'])
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: open-data-scout
+          path: artifacts/data-scout.json
+          retention-days: 14
