@@ -1,4 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
-  <title id="title">Emporion Institutional Seal</title>
-  <desc id="desc">Classical winged-helmet profile framed by a Greek key medallion in gold.</desc>
-  <image width="256" height="256" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAEAAElEQVR42uz9B5hUZba3jv9x3b1VtYqqKq...
+<title id="title">Emporion Institutional Seal</title>
+<desc id="desc">Gold classical winged-helmet profile within a Greek-key inspired institutional medallion.</desc>
+<defs>
+  <radialGradient id="bg" cx="42%" cy="35%" r="75%"><stop offset="0" stop-color="#122238"/><stop offset="1" stop-color="#07111f"/></radialGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d59a"/><stop offset=".42" stop-color="#d1a65e"/><stop offset="1" stop-color="#9b6c2e"/></linearGradient>
+  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.2" stdDeviation="1.1" flood-color="#000" flood-opacity=".45"/></filter>
+  <g id="key"><path d="M116 15h24v6h-18v7h12v6h-18V22h-6v18h30V10h-30v6z" fill="url(#gold)"/></g>
+</defs>
+<circle cx="128" cy="128" r="124" fill="url(#bg)"/><circle cx="128" cy="128" r="118" fill="none" stroke="url(#gold)" stroke-width="3"/><circle cx="128" cy="128" r="99" fill="none" stroke="#d1a65e" stroke-width="2"/>
+<g opacity=".98"><use href="#key" transform="rotate(0 128 128)"/><use href="#key" transform="rotate(30 128 128)"/><use href="#key" transform="rotate(60 128 128)"/><use href="#key" transform="rotate(90 128 128)"/><use href="#key" transform="rotate(120 128 128)"/><use href="#key" transform="rotate(150 128 128)"/><use href="#key" transform="rotate(180 128 128)"/><use href="#key" transform="rotate(210 128 128)"/><use href="#key" transform="rotate(240 128 128)"/><use href="#key" transform="rotate(270 128 128)"/><use href="#key" transform="rotate(300 128 128)"/><use href="#key" transform="rotate(330 128 128)"/></g>
+<g filter="url(#soft)"><path d="M109 84c20-15 50-15 68-2 8 6 12 14 14 24 2 10-1 17-5 23-4 6-6 12-4 18 2 6 7 9 12 12 3 2 3 5 0 7-4 3-10 4-15 4-1 7-5 12-10 16-7 5-14 5-22 3-7-2-12-1-16 4-5 6-6 13-6 20H87c2-17 8-31 19-42 5-5 7-10 6-17-2-9-7-17-8-27-2-17 1-31 5-43z" fill="url(#gold)"/><path d="M157 113c8-2 16 0 22 4-8 1-15 2-21 6 5 2 9 5 12 9-8-3-15-4-22-1 5 4 8 9 9 15-7-6-13-10-21-10" fill="none" stroke="#553719" stroke-width="3" stroke-linecap="round"/><path d="M169 145c4 1 7 2 10 4-4 1-7 1-10 0" fill="#553719"/><path d="M168 160c5 2 10 2 15 0" fill="none" stroke="#553719" stroke-width="2.2" stroke-linecap="round"/></g>
+<path d="M83 111c16-25 37-40 65-45 23-4 45 0 67 13-12 10-25 17-41 20-24 5-49 4-74 4-7 0-13 3-17 8z" fill="url(#gold)" stroke="#6e461f" stroke-width="2"/><path d="M81 111c35 7 74 7 116-2-22 14-47 20-77 18-16-1-29-6-39-16z" fill="#8f5f29" opacity=".45"/>
+<g fill="url(#gold)" stroke="#6e461f" stroke-width="1.4"><path d="M105 82c-23-24-42-37-59-39 15 10 26 22 34 37-18-15-35-21-51-20 19 8 34 18 45 31-17-8-32-10-44-5 22 7 40 15 54 25 8-6 15-15 21-29z"/><path d="M79 61c10 3 18 9 25 17M63 68c12 3 22 9 30 17M55 82c12 1 23 5 33 12" fill="none" stroke="#7a4e22" stroke-width="2"/></g>
+<g fill="none" stroke="#6e461f" stroke-width="2.2" stroke-linecap="round"><path d="M122 153c-11 8-16 17-14 27M126 160c-8 9-10 18-6 27M132 166c-4 7-4 15-1 21"/></g>
+</svg>
