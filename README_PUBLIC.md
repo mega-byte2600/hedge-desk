@@ -32,12 +32,6 @@ A Yellow Sheet is the internal investment-thesis and diligence record for a rese
 
 The longer-term vision may include a disciplined group of capital partners in which mbolton acts in a sponsor or GP role and qualified partners evaluate opportunities as prospective LPs. In that context, Yellow Sheets provide a common diligence language and an auditable research trail. They are not subscription documents and do not themselves create, market, or authorize an investment.
 
-## Special acknowledgement
-
-Emporion gratefully acknowledges **William Campbell, Ph.D.**, of the **University of Wyoming MBA Program**, for sharing professional trade-desk perspective and feedback that helped shape the discipline behind the Yellow Sheet and Trade Log: document why a position is entered, define the plan before capital is committed, record why it is exited, and review what was learned.
-
-This acknowledgement reflects educational mentorship and feedback. It does not imply endorsement, sponsorship, investment advice, or responsibility for Emporion's models, controls, research outputs, or investment results.
-
 ## Research and investing inspirations
 
 Emporion reflects ideas and disciplines that have influenced mbolton's approach to markets, research, and risk, including the public work of the **High-Flyer / DeepSeek team**, **Warren Buffett**, **Benjamin Graham**, and **Ray Dalio / Bridgewater Associates**.
