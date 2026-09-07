@@ -23,6 +23,8 @@ class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
     """Keep the deployment dependency-light while allowing concurrent reads."""
 
     daemon_threads = True
+    block_on_close = False
+    request_queue_size = 256
 
 
 _cache_lock = Lock()
@@ -114,7 +116,7 @@ def _supabase_status():
 def _dispatch(environ, start_response):
     path = environ.get("PATH_INFO", "/")
     if path == "/api/health":
-        return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _supabase_status()})
+        return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _cached("supabase-status", _supabase_status)})
     if path == "/api/candidates":
         return _json(start_response, _cached("candidates", build_candidate_feed))
     if path == "/api/risk-dashboard":
