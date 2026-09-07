@@ -22,6 +22,12 @@ class PublicWebSurfaceTests(unittest.TestCase):
         build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
         self.assertIn('"public-surface.js"', build)
 
+    def test_about_page_includes_public_contributor_contact(self):
+        acknowledgements = (WEB / "acknowledgements.js").read_text(encoding="utf-8")
+        self.assertIn('CONTRIBUTE / CONTACT', acknowledgements)
+        self.assertIn('mailto:michael.bolton.ph@dartmouth.edu', acknowledgements)
+        self.assertIn('https://github.com/mega-byte2600/hedge-desk', acknowledgements)
+
 
 if __name__ == "__main__":
     unittest.main()
