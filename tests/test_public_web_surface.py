@@ -59,6 +59,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
     def test_seven_desk_architecture_is_public_and_packaged(self):
         index = (WEB / "index.html").read_text(encoding="utf-8")
         architecture = (WEB / "desk-architecture.js").read_text(encoding="utf-8")
+        professional = (WEB / "professional.js").read_text(encoding="utf-8")
         build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
 
         self.assertIn('Research desks <b>7</b>', index)
@@ -68,6 +69,12 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn('DESK 07 · MACRO ANCHOR', architecture)
         self.assertIn('Architecture only', architecture)
         self.assertIn('No evaluated signal is published for this desk yet.', architecture)
+        self.assertIn("['Bonds & Rates'", professional)
+        self.assertIn('Seven research desks.<br>Six evaluated workflows.', professional)
+        self.assertIn('<b>DESKS</b> SEVEN', professional)
+        self.assertIn('<b>EVALUATED</b> SIX', professional)
+        self.assertNotIn('Six research workflows.<br>Structured decision support.', professional)
+        self.assertNotIn('<b>WORKFLOWS</b> SIX DESKS', professional)
 
 
 if __name__ == "__main__":
