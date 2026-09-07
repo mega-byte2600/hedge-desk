@@ -76,6 +76,7 @@ if __name__ == "__main__":
             "yellow-sheet.js",
             "acknowledgements.js",
             "brand-logo.js",
+            "ui-polish.js",
             "emporion-mark.svg",
             "report.json",
         ):
