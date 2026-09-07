@@ -1,7 +1,8 @@
 """Discover public/open finance datasets and research repositories.
 
-This module is discovery-only. It does not download restricted datasets, bypass
-licenses, or treat repository availability as permission for commercial use.
+Discovery is data-first and bond-first. This module does not download restricted
+payloads, bypass licenses, or treat repository visibility as commercial-use
+permission. Model training and trade execution are intentionally out of scope.
 """
 
 from __future__ import annotations
@@ -18,6 +19,18 @@ from urllib.request import Request, urlopen
 
 
 DEFAULT_QUERIES = (
+    # mbolton priority: bonds/rates first because fixed income anchors discounting,
+    # financing, macro regime, relative value, and cross-asset research.
+    "treasury bond dataset yield curve rates",
+    "fixed income bond dataset yields spreads",
+    "sovereign bond dataset global yields",
+    "corporate bond dataset credit spreads TRACE",
+    "municipal bond dataset yields",
+    "mortgage backed securities dataset MBS",
+    "repo rates dataset SOFR secured financing",
+    "interest rate swaps dataset OIS swap curve",
+    "Treasury auction dataset debt issuance",
+    "central bank rates yield curve dataset",
     "finance dataset trading language:Python",
     "financial markets dataset hedge fund",
     "options dataset volatility surface",
@@ -27,8 +40,6 @@ DEFAULT_QUERIES = (
     "financial news dataset",
     "SEC filings dataset finance",
     "macro economics dataset trading",
-    "treasury yield dataset market",
-    "central bank dataset markets",
     "DeepSeek finance dataset",
     "FinGPT dataset finance",
     "financial sentiment dataset huggingface",
@@ -45,25 +56,37 @@ LICENSE_ALLOWLIST = {
 
 DATA_HINTS = re.compile(
     r"\b(dataset|data set|csv|parquet|jsonl|hugging ?face|kaggle|wrds|crsp|compustat|ibes|"
-    r"optionmetrics|taq|sec|edgar|fred|treasury|futures|options|earnings|filings|news)\b",
+    r"optionmetrics|taq|sec|edgar|fred|treasury|bond|bonds|yield|curve|trace|sofr|repo|swap|ois|"
+    r"futures|options|earnings|filings|news)\b",
     re.IGNORECASE,
 )
 
 ASSET_PATTERNS = {
+    "FIXED_INCOME_RATES": re.compile(r"\b(treasur|bond|bonds|yield curve|rates?|fixed income|sofr|repo|swap|ois)\b", re.I),
+    "CREDIT": re.compile(r"\b(corporate bond|credit spread|high yield|investment grade|trace|default|cds)\b", re.I),
+    "MUNICIPALS": re.compile(r"\b(municipal|muni|msrb)\b", re.I),
+    "MBS_STRUCTURED": re.compile(r"\b(mbs|mortgage.backed|agency mbs|cmbs|abs|structured credit)\b", re.I),
+    "SOVEREIGN": re.compile(r"\b(sovereign|government bond|gilt|bund|jgb|treasur)\b", re.I),
     "EQUITIES": re.compile(r"\b(equity|equities|stock|stocks|shares?)\b", re.I),
     "OPTIONS": re.compile(r"\b(option|options|volatility|vol surface|implied volatility)\b", re.I),
     "FUTURES_COMMODITIES": re.compile(r"\b(futures?|commodit|oil|gas|wheat|corn|gold)\b", re.I),
-    "FIXED_INCOME_RATES": re.compile(r"\b(treasur|bond|yield curve|rates?|fixed income)\b", re.I),
     "MACRO": re.compile(r"\b(macro|econom|inflation|gdp|employment|central bank|fred)\b", re.I),
     "FILINGS_FUNDAMENTALS": re.compile(r"\b(sec|edgar|filings?|fundamental|earnings|10-k|10-q)\b", re.I),
     "NEWS_NLP": re.compile(r"\b(news|sentiment|nlp|language|headline)\b", re.I),
 }
 
 REGION_PATTERNS = {
-    "AMERICAS": re.compile(r"\b(us|u\.s\.|usa|american|sec|edgar|fred|nasdaq|nyse|canada|brazil)\b", re.I),
-    "EUROPE": re.compile(r"\b(europe|european|eu|uk|britain|germany|france|ecb|eurostat|london)\b", re.I),
-    "ASIA_PACIFIC": re.compile(r"\b(china|chinese|japan|korea|india|singapore|hong kong|asia|australia|deepseek)\b", re.I),
+    "AMERICAS": re.compile(r"\b(us|u\.s\.|usa|american|sec|edgar|fred|treasury|sofr|trace|nasdaq|nyse|canada|brazil)\b", re.I),
+    "EUROPE": re.compile(r"\b(europe|european|eu|uk|britain|germany|france|ecb|eurostat|gilt|bund|london)\b", re.I),
+    "ASIA_PACIFIC": re.compile(r"\b(china|chinese|japan|jgb|korea|india|singapore|hong kong|asia|australia|deepseek)\b", re.I),
 }
+
+BOND_PRIORITY_PATTERNS = (
+    re.compile(r"\b(treasur|government bond|sovereign|yield curve)\b", re.I),
+    re.compile(r"\b(corporate bond|credit spread|trace|cds)\b", re.I),
+    re.compile(r"\b(sofr|repo|swap|ois|secured financing)\b", re.I),
+    re.compile(r"\b(municipal|muni|msrb|mbs|mortgage.backed)\b", re.I),
+)
 
 
 @dataclass(frozen=True)
@@ -81,6 +104,7 @@ class DatasetCandidate:
     query: str
     asset_classes: tuple[str, ...] = ()
     regions: tuple[str, ...] = ()
+    bond_priority: bool = False
     discovery_score: int = 0
 
 
@@ -88,11 +112,17 @@ def _classify(text: str, patterns: dict[str, re.Pattern]) -> tuple[str, ...]:
     return tuple(name for name, pattern in patterns.items() if pattern.search(text))
 
 
-def _score(*, dataset_signal: bool, open_license: bool, stars: int, asset_classes: tuple[str, ...], regions: tuple[str, ...]) -> int:
+def _is_bond_priority(text: str) -> bool:
+    return any(pattern.search(text) for pattern in BOND_PRIORITY_PATTERNS)
+
+
+def _score(*, dataset_signal: bool, open_license: bool, stars: int, asset_classes: tuple[str, ...], regions: tuple[str, ...], bond_priority: bool) -> int:
     score = 0
     if dataset_signal:
-        score += 45
+        score += 35
     if open_license:
+        score += 20
+    if bond_priority:
         score += 25
     score += min(stars, 1000) // 50
     score += min(len(asset_classes) * 3, 12)
@@ -129,6 +159,7 @@ def search_github(query: str, *, token: str | None = None, per_page: int = 20) -
         dataset_signal = bool(DATA_HINTS.search(combined))
         asset_classes = _classify(combined, ASSET_PATTERNS)
         regions = _classify(combined, REGION_PATTERNS)
+        bond_priority = _is_bond_priority(combined)
         stars = int(item.get("stargazers_count") or 0)
         if open_license:
             commercial = "OPEN_LICENSE_REVIEW_STILL_REQUIRED"
@@ -151,12 +182,14 @@ def search_github(query: str, *, token: str | None = None, per_page: int = 20) -
                 query=query,
                 asset_classes=asset_classes,
                 regions=regions,
+                bond_priority=bond_priority,
                 discovery_score=_score(
                     dataset_signal=dataset_signal,
                     open_license=open_license,
                     stars=stars,
                     asset_classes=asset_classes,
                     regions=regions,
+                    bond_priority=bond_priority,
                 ),
             )
         )
@@ -178,14 +211,17 @@ def discover(queries: Iterable[str] = DEFAULT_QUERIES, *, token: str | None = No
             errors.append({"query": query, "error": type(exc).__name__})
     ranked = sorted(
         seen.values(),
-        key=lambda x: (x.discovery_score, x.dataset_signal, x.open_license, x.stars, x.updated_at),
+        key=lambda x: (x.bond_priority, x.discovery_score, x.dataset_signal, x.open_license, x.stars, x.updated_at),
         reverse=True,
     )
     return {
-        "schema_version": "hedge-desk-data-scout-1.1.0",
+        "schema_version": "hedge-desk-data-scout-1.2.0",
         "purpose": "OPEN_PUBLIC_DATASET_DISCOVERY_ONLY",
+        "builder": "mbolton",
+        "priority": "BONDS_RATES_CREDIT_FIRST",
         "commercial_use_assumed": False,
-        "ranking_note": "Discovery score prioritizes dataset signal, permissive-license metadata, relevance breadth, and repository adoption; it is not a legal or data-quality approval.",
+        "model_training_enabled": False,
+        "ranking_note": "Bond/rates/credit datasets are deliberately prioritized, followed by dataset signal, permissive-license metadata, relevance breadth, and repository adoption. Discovery is not legal or data-quality approval.",
         "candidates": [asdict(x) for x in ranked],
         "errors": errors,
     }
