@@ -9,13 +9,16 @@ from wsgiref.simple_server import make_server
 
 from hedge_desk.candidates import build_candidate_feed
 
-ROOT = Path(__file__).resolve().parents[1]
-WEB = ROOT / "dist"
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+DEPLOY_ROOT = Path.cwd()
+WEB = DEPLOY_ROOT / "dist" if (DEPLOY_ROOT / "dist").is_dir() else PACKAGE_ROOT / "dist"
+
 
 def _json(start_response, payload, status="200 OK"):
     body = json.dumps(payload).encode("utf-8")
     start_response(status, [("Content-Type", "application/json"), ("Content-Length", str(len(body))), ("Cache-Control", "no-store")])
     return [body]
+
 
 def _supabase_status():
     url = os.getenv("SUPABASE_URL", "").rstrip("/")
@@ -28,6 +31,7 @@ def _supabase_status():
             return {"configured": True, "reachable": 200 <= response.status < 500}
     except Exception:
         return {"configured": True, "reachable": False}
+
 
 def application(environ, start_response):
     path = environ.get("PATH_INFO", "/")
@@ -43,15 +47,19 @@ def application(environ, start_response):
         return _json(start_response, {"error": "not_found"}, "404 Not Found")
     if not target.is_file():
         target = WEB / "index.html"
+    if not target.is_file():
+        return _json(start_response, {"error": "web_assets_missing"}, "503 Service Unavailable")
     body = target.read_bytes()
     content_type = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
     start_response("200 OK", [("Content-Type", content_type), ("Content-Length", str(len(body)))])
     return [body]
 
+
 def main():
     port = int(os.getenv("PORT", "8765"))
     with make_server("0.0.0.0", port, application) as server:
         server.serve_forever()
+
 
 if __name__ == "__main__":
     main()
