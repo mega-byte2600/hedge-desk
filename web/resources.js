@@ -65,7 +65,7 @@ function renderResources() {
     delete main.dataset.resourcePage;
     return;
   }
-  if (main.dataset.resourcePage === 'true') return;
+  if (main.querySelector('.resource-page-root')) return;
   main.dataset.resourcePage = 'true';
   installResourceStyles();
   document.querySelectorAll('[data-nav]').forEach(link => {
@@ -75,7 +75,7 @@ function renderResources() {
   });
   const breadcrumb = document.getElementById('breadcrumb');
   if (breadcrumb) breadcrumb.textContent = 'Research resources';
-  main.innerHTML = `
+  main.innerHTML = `<div class="resource-page-root">
     <div class="page-head"><div><h1>Research resources</h1><p class="subtitle">Institutional sources, market infrastructure, and selected research tools used to orient Emporion research.</p></div></div>
     <div class="notice resource-intro"><strong>PRIMARY-SOURCE FIRST</strong><span>For rates, bonds, policy, filings, and macro data, start with the institution that produces or administers the underlying information.</span></div>
     ${RESOURCE_GROUPS.map(group => `
@@ -83,7 +83,8 @@ function renderResources() {
         <div class="resource-section-head"><h2>${group.title}</h2><p>${group.note}</p></div>
         <div class="resource-grid">${resourceCards(group)}</div>
       </section>`).join('')}
-    <div class="resource-disclaimer">External resources are provided for research convenience. Inclusion does not imply affiliation, endorsement, sponsorship, or that Emporion relies on any source for investment advice or trade authorization.</div>`;
+    <div class="resource-disclaimer">External resources are provided for research convenience. Inclusion does not imply affiliation, endorsement, sponsorship, or that Emporion relies on any source for investment advice or trade authorization.</div>
+  </div>`;
 }
 
 window.addEventListener('hashchange', () => requestAnimationFrame(renderResources));
