@@ -32,6 +32,12 @@ A Yellow Sheet is the internal investment-thesis and diligence record for a rese
 
 The longer-term vision may include a disciplined group of capital partners in which mbolton acts in a sponsor or GP role and qualified partners evaluate opportunities as prospective LPs. In that context, Yellow Sheets provide a common diligence language and an auditable research trail. They are not subscription documents and do not themselves create, market, or authorize an investment.
 
+## Research and investing inspirations
+
+Hedge Desk reflects ideas and disciplines that have influenced mbolton's approach to markets, research, and risk, including the public work of the **High-Flyer / DeepSeek team**, **Warren Buffett**, **Benjamin Graham**, and **Ray Dalio / Bridgewater Associates**.
+
+These references are **inspirations, not acknowledgements of personal involvement**. mbolton does not claim any affiliation with, endorsement from, sponsorship by, or personal relationship with these people or organizations. Hedge Desk does not claim to represent their views, reproduce proprietary strategies or systems, or imply comparable investment results.
+
 ## Capital-formation boundary
 
 This public console is a research and engineering demonstration. It is not an offer to sell securities, a solicitation of an offer to buy securities, an invitation to subscribe to a fund, or investment advice. Viewing, writing, or exporting a Yellow Sheet is not an indication of interest or a commitment of capital.
