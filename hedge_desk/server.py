@@ -4,8 +4,9 @@ import json
 import mimetypes
 import os
 from pathlib import Path
+from socketserver import ThreadingMixIn
 from urllib.request import Request, urlopen
-from wsgiref.simple_server import make_server
+from wsgiref.simple_server import WSGIServer, make_server
 
 from hedge_desk.candidates import build_candidate_feed
 from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
@@ -15,10 +16,31 @@ DEPLOY_ROOT = Path.cwd()
 WEB = DEPLOY_ROOT / "dist" if (DEPLOY_ROOT / "dist").is_dir() else PACKAGE_ROOT / "dist"
 
 
+class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
+    """Keep the deployment dependency-light while allowing concurrent reads."""
+
+    daemon_threads = True
+
+
 def _json(start_response, payload, status="200 OK"):
     body = json.dumps(payload).encode("utf-8")
-    start_response(status, [("Content-Type", "application/json"), ("Content-Length", str(len(body))), ("Cache-Control", "no-store")])
+    start_response(
+        status,
+        [
+            ("Content-Type", "application/json"),
+            ("Content-Length", str(len(body))),
+            ("Cache-Control", "no-store"),
+        ],
+    )
     return [body]
+
+
+def _static_cache_control(target):
+    """Cache immutable-ish assets briefly while keeping HTML immediately fresh."""
+
+    if target.suffix.lower() in {".css", ".js", ".mjs", ".svg", ".png", ".jpg", ".jpeg", ".webp"}:
+        return "public, max-age=300, stale-while-revalidate=600"
+    return "no-cache"
 
 
 def _supabase_status():
@@ -54,13 +76,20 @@ def application(environ, start_response):
         return _json(start_response, {"error": "web_assets_missing"}, "503 Service Unavailable")
     body = target.read_bytes()
     content_type = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
-    start_response("200 OK", [("Content-Type", content_type), ("Content-Length", str(len(body)))])
+    start_response(
+        "200 OK",
+        [
+            ("Content-Type", content_type),
+            ("Content-Length", str(len(body))),
+            ("Cache-Control", _static_cache_control(target)),
+        ],
+    )
     return [body]
 
 
 def main():
     port = int(os.getenv("PORT", "8765"))
-    with make_server("0.0.0.0", port, application) as server:
+    with make_server("0.0.0.0", port, application, server_class=ThreadingWSGIServer) as server:
         server.serve_forever()
 
 
