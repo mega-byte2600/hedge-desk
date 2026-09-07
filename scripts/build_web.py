@@ -82,6 +82,7 @@ if __name__ == "__main__":
             "brand-logo.js",
             "ui-polish.js",
             "resources.js",
+            "desk-architecture.js",
             "emporion-institutional-seal.svg",
             "report.json",
         ):
