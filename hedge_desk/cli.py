@@ -5,7 +5,9 @@ import json
 import os
 from pathlib import Path
 from datetime import datetime, timezone
+from datetime import timedelta
 from hashlib import sha256
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from hedge_desk.demo import json_value, run_reference_demo
 from hedge_desk.overnight import current_morning_report
@@ -30,6 +32,8 @@ from hedge_desk.data import (
     evaluate_options_data_stack,
     parse_data_stack_manifest,
     validate_local_observation,
+    evaluate_pwb_daily_news,
+    load_pwb_daily_news,
 )
 from hedge_desk.options import (
     build_candidate_control_handoffs,
@@ -42,6 +46,21 @@ from hedge_desk.options import (
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--pwb-news-summary",
+        action="store_true",
+        help="load licensed All-Daily-News and emit derived symbol evidence only",
+    )
+    parser.add_argument(
+        "--pwb-source-timezone",
+        help="reviewed IANA timezone for vendor rows that lack an offset",
+    )
+    parser.add_argument(
+        "--pwb-publication-embargo-hours",
+        type=int,
+        default=24,
+        help="conservative availability delay for PWB news (default: 24)",
+    )
     parser.add_argument(
         "--evaluate-directional-outcomes",
         metavar="FILE",
@@ -188,6 +207,24 @@ def main() -> None:
         help="stable run identity required with --scheduled-receipt",
     )
     args = parser.parse_args()
+    if args.pwb_news_summary:
+        try:
+            if not args.pwb_source_timezone:
+                raise ValueError("--pwb-source-timezone is required")
+            if args.pwb_publication_embargo_hours < 0:
+                raise ValueError("--pwb-publication-embargo-hours must be nonnegative")
+            result = evaluate_pwb_daily_news(
+                load_pwb_daily_news(),
+                license_id=os.environ.get("PWB_NEWS_LICENSE_ID", ""),
+                evaluated_at=datetime.now(timezone.utc),
+                source_timezone=ZoneInfo(args.pwb_source_timezone),
+                publication_embargo=timedelta(hours=args.pwb_publication_embargo_hours),
+                maximum_age_seconds=args.max_age_seconds,
+            )
+        except (RuntimeError, ValueError, ZoneInfoNotFoundError) as exc:
+            parser.error(str(exc))
+        print(json.dumps(json_value(result), indent=2))
+        return
     if args.evaluate_directional_outcomes:
         try:
             payload = json.loads(

@@ -10,8 +10,12 @@ requires-python = ">=3.9"
 
 [project.scripts]
 hedge-desk = "hedge_desk.cli:main"
+hedge-desk-web = "hedge_desk.server:main"
 
 [project.optional-dependencies]
+news = [
+  "pwb-toolbox",
+]
 test = [
   "coverage[toml]==7.10.7; python_version < '3.10'",
   "coverage==7.15.4; python_version >= '3.10'",

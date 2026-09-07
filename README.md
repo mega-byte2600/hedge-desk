@@ -19,6 +19,12 @@ MVP matrix, war-game coverage, and known production blockers.
 See the [sub-$100 data stack](docs/validation/SUB_100_DATA_STACK.md) and
 [local data intake contract](docs/validation/LOCAL_DATA_INTAKE.md) before
 supplying licensed snapshots.
+The [news evidence boundary](docs/validation/NEWS_EVIDENCE.md) includes a
+licensed, point-in-time adapter for Papers With Backtest `All-Daily-News` that
+emits hashed symbol-sentiment features without retaining vendor text.
+The [High-Flyer and DeepSeek research inventory](docs/research/high_flyer/README.md)
+provides Astra with a validated official-source catalog, license boundaries,
+desk mappings, and a bounded local-model evaluation handoff.
 
 ## Build culture: the 80/20 hacker rule
 
@@ -81,6 +87,14 @@ order to a broker.
 
 ## Run
 
+### Web console
+
+Run `python scripts/build_web.py`, then
+`python -m http.server 8080 --directory web --bind 127.0.0.1` and open
+`http://localhost:8080`. The console displays validated synthetic report
+snapshots, desk controls, scenario evidence and browser-local research notes.
+See [web console instructions](web/README.md) for exports and verification.
+
 ```bash
 python -m hedge_desk.cli
 python -m hedge_desk.cli --approve --human-id captain
@@ -91,6 +105,7 @@ python -m hedge_desk.cli --morning-markdown
 python -m hedge_desk.cli --control-summary --report-input morning-report.json
 python -m hedge_desk.cli --validate-data-stack examples/data-stack.synthetic.json
 python -m hedge_desk.cli --validate-option-universe-manifest examples/option-universe.synthetic.json
+python -m hedge_desk.cli --pwb-news-summary --pwb-source-timezone UTC --max-age-seconds 172800
 python -m unittest discover -s tests -v
 python -m coverage run -m unittest discover -s tests -v && python -m coverage report
 ```
