@@ -33,7 +33,7 @@ class WebMvpContractTests(unittest.TestCase):
         status, _, body = self._call("/api/about")
         payload = json.loads(body)
         self.assertEqual(status, "200 OK")
-        self.assertEqual(payload["display_name"], "Bolton")
+        self.assertEqual(payload["display_name"], "mbolton")
         self.assertEqual(payload["linkedin_url"], "https://www.linkedin.com/in/bolton-2600/")
 
     def test_candidate_feed_matches_golden_master(self):
