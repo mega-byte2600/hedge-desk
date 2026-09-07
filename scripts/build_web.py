@@ -12,6 +12,7 @@ from hedge_desk.overnight import current_morning_report
 from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.reporting import build_control_summary, render_morning_markdown, validate_report
 from hedge_desk.data import PWB_DAILY_NEWS_DATASET
+from hedge_desk.candidates import build_candidate_feed
 
 
 def export_report(report, destination):
@@ -24,6 +25,11 @@ def export_report(report, destination):
         "summary": build_control_summary(report),
         "registry": [asdict(project) for project in MVP_PROJECTS],
         "morning_markdown": render_morning_markdown(report),
+        "candidate_feed": build_candidate_feed(),
+        "owner": {
+            "display_name": "Bolton",
+            "linkedin_url": "https://www.linkedin.com/in/bolton-2600/",
+        },
         "research_data_sources": [
             {
                 "source_id": "papers-with-backtest",

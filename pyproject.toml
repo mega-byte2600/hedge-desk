@@ -10,6 +10,7 @@ requires-python = ">=3.9"
 
 [project.scripts]
 hedge-desk = "hedge_desk.cli:main"
+hedge-desk-web = "hedge_desk.server:main"
 
 [project.optional-dependencies]
 news = [
