@@ -25,10 +25,22 @@ jobs:
         run: xcodebuild -project ios/TradeDesk/TradeDesk.xcodeproj -scheme TradeDesk -sdk iphoneos -configuration Debug -derivedDataPath /tmp/tradedesk-device CODE_SIGNING_ALLOWED=NO build
       - name: Build simulator
         run: xcodebuild -project ios/TradeDesk/TradeDesk.xcodeproj -scheme TradeDesk -sdk iphonesimulator -configuration Debug -derivedDataPath /tmp/tradedesk-simulator CODE_SIGNING_ALLOWED=NO build
-      - name: Launch in iPhone simulator
+      - name: Launch in iPhone simulator and capture preview
         run: |
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for group in d["devices"].values() for x in group if "iPhone" in x["name"] and x["state"]=="Shutdown"))')
           xcrun simctl boot "$DEVICE_ID"
           xcrun simctl bootstatus "$DEVICE_ID" -b
           xcrun simctl install "$DEVICE_ID" /tmp/tradedesk-simulator/Build/Products/Debug-iphonesimulator/TradeDesk.app
           xcrun simctl launch "$DEVICE_ID" com.megabyte2600.tradedesk
+          sleep 4
+          mkdir -p /tmp/emporion-ios-preview
+          xcrun simctl io "$DEVICE_ID" screenshot /tmp/emporion-ios-preview/emporion-home.png
+          cp -R /tmp/tradedesk-simulator/Build/Products/Debug-iphonesimulator/TradeDesk.app /tmp/emporion-ios-preview/Emporion.app
+          printf 'Commit: %s\nWorkflow: %s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" > /tmp/emporion-ios-preview/build.txt
+      - name: Upload iPhone simulator preview
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: emporion-ios-preview-${{ github.sha }}
+          path: /tmp/emporion-ios-preview
+          if-no-files-found: error
+          retention-days: 14
