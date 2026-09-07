@@ -56,6 +56,19 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn('https://finviz.com/', resources)
         self.assertIn('PRIMARY-SOURCE FIRST', resources)
 
+    def test_seven_desk_architecture_is_public_and_packaged(self):
+        index = (WEB / "index.html").read_text(encoding="utf-8")
+        architecture = (WEB / "desk-architecture.js").read_text(encoding="utf-8")
+        build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
+
+        self.assertIn('Research desks <b>7</b>', index)
+        self.assertIn('./desk-architecture.js', index)
+        self.assertIn('"desk-architecture.js"', build)
+        self.assertIn('Bonds &amp; Rates', architecture)
+        self.assertIn('DESK 07 · MACRO ANCHOR', architecture)
+        self.assertIn('Architecture only', architecture)
+        self.assertIn('No evaluated signal is published for this desk yet.', architecture)
+
 
 if __name__ == "__main__":
     unittest.main()
