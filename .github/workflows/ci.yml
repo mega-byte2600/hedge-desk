@@ -112,7 +112,7 @@ jobs:
           assert health['mode']=='paper'
           assert health['live_orders_enabled'] is False
           assert candidates==golden
-          assert about['display_name']=='Bolton'
+          assert about['display_name']=='mbolton'
           assert about['linkedin_url']=='https://www.linkedin.com/in/bolton-2600/'
           assert len({c['desk_id'] for c in candidates['candidates']})==6
           assert all(c['trade_authorized'] is False for c in candidates['candidates'])

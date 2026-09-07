@@ -40,7 +40,7 @@ def application(environ, start_response):
     if path == "/api/candidates":
         return _json(start_response, build_candidate_feed())
     if path == "/api/about":
-        return _json(start_response, {"display_name": "Bolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
+        return _json(start_response, {"display_name": "mbolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
     relative = "index.html" if path in ("/", "") else path.lstrip("/")
     target = (WEB / relative).resolve()
     if WEB.resolve() not in target.parents and target != WEB.resolve():

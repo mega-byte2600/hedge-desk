@@ -27,7 +27,7 @@ def export_report(report, destination):
         "morning_markdown": render_morning_markdown(report),
         "candidate_feed": build_candidate_feed(),
         "owner": {
-            "display_name": "Bolton",
+            "display_name": "mbolton",
             "linkedin_url": "https://www.linkedin.com/in/bolton-2600/",
         },
         "research_data_sources": [
@@ -66,6 +66,7 @@ if __name__ == "__main__":
     if args.output.resolve() == (ROOT / "web").resolve():
         distribution = ROOT / "dist"
         distribution.mkdir(exist_ok=True)
-        for filename in ("index.html", "styles.css", "app.js", "core.mjs", "report.json"):
+        for filename in ("index.html", "styles.css", "app.js", "core.mjs", "professional.js", "report.json"):
             shutil.copyfile(ROOT / "web" / filename, distribution / filename)
+        shutil.copyfile(ROOT / "README_PUBLIC.md", distribution / "README_PUBLIC.md")
     print("Validated console report exported to", args.output)
