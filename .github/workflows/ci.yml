@@ -24,60 +24,48 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-
       - name: Install package
         run: python -m pip install --disable-pip-version-check -e '.[test]'
-
       - name: Compile every Python module
         run: python -m compileall -q hedge_desk tests
-
       - name: Verify static research console
         if: matrix.python-version == '3.11'
         run: |
           python scripts/build_web.py
           node --check web/app.js
           node --test web/core.test.mjs
-
       - name: Verify GitHub Actions are pinned to immutable SHAs
         run: python -c 'from pathlib import Path; from hedge_desk.supply_chain import validate_github_action_pins; root=Path(".github/workflows"); reasons=validate_github_action_pins(tuple(root.glob("*.yml")) + tuple(root.glob("*.yaml"))); assert not reasons, reasons'
-
       - name: Verify strict STAT outcome intake remains non-authoritative
         run: |
           python -m hedge_desk.cli --evaluate-directional-outcomes examples/directional-outcomes.synthetic.json > stat-evaluation.json
           python -c 'import json; d=json.load(open("stat-evaluation.json")); assert d["label"] == "STAT"; assert d["evaluation"]["inference_status"] == "INSUFFICIENT_SAMPLE"; assert d["evaluation"]["trade_authorized"] is False'
-
       - name: Run deterministic unit and integration tests
         run: |
           python -m coverage run -m unittest discover -s tests -v
           python -m coverage report
-
       - name: Verify strict synthetic data entitlement manifest
         run: |
           python -m hedge_desk.cli --validate-data-stack examples/data-stack.synthetic.json > data-readiness.json
           python -c 'import json; d=json.load(open("data-readiness.json")); assert d["ready_for_internal_options_research"] is True; assert d["ready_for_live_production_data"] is False; assert d["live_production_reason_codes"] == ["COMMERCIAL_USE_PERMISSION_ABSENT", "REAL_TIME_NBBO_ABSENT"]; assert d["raw_payload_commit_allowed"] is False; assert d["total_monthly_cost"] == "80"'
-
       - name: Verify synthetic intake through calendar-bound handoff
         run: |
           python -m hedge_desk.cli --validate-data-envelope examples/options.snapshot.synthetic.envelope.json --payload examples/options.snapshot.synthetic.json --validate-option-snapshot --scan-vertical-spreads --market-session-evidence examples/market-session.synthetic.json --minimum-seconds-before-close 900 --decision-cutoff 2026-08-21T12:00:00Z --max-age-seconds 0 > intake-result.json
           python -c 'import json; d=json.load(open("intake-result.json")); assert d["gate"]["admissible"] is True; assert d["market_session_gate"]["admissible"] is True; assert len(d["control_handoffs"]) == 1; assert d["control_handoffs"][0]["trade_authorized"] is False; assert d["control_handoffs"][0]["next_action"] == "VALIDATED_RISK_INPUT_REQUIRED"'
           python -m hedge_desk.cli --validate-option-universe-manifest examples/option-universe.synthetic.json > universe-result.json
           python -c 'import json; d=json.load(open("universe-result.json")); assert d["source_count"] == 1; assert d["raw_payloads_copied"] is False; assert d["evaluation"]["probability_inferred"] is False; assert d["evaluation"]["trade_authorized"] is False; assert d["evaluation"]["candidates"][0]["next_action"] == "VALIDATED_RISK_INPUT_REQUIRED"'
-
       - name: Verify human-pending default
         run: |
           python -m hedge_desk.cli > pending.json
           python -c 'import json; d=json.load(open("pending.json")); assert d["mode"] == "paper"; assert d["next_action"] == "human_authorization_required"; assert "paper_open" not in d'
-
       - name: Verify authorized paper lifecycle
         run: |
           python -m hedge_desk.cli --approve --human-id ci-human > approved.json
           python -c 'import json; d=json.load(open("approved.json")); assert d["mode"] == "paper"; assert d["paper_open"]["environment"] == "paper"; assert d["paper_close"]["realized_pnl"] == "77.40"'
-
       - name: Assert no production broker adapter exists
         run: |
           test ! -e hedge_desk/broker
@@ -87,24 +75,18 @@ jobs:
     name: Golden Master + black-box + smoke
     runs-on: ubuntu-latest
     needs: test
-
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.11"
           cache: pip
-
       - name: Build production static assets
         run: python scripts/build_web.py
-
       - name: Install production package non-editable
         run: python -m pip install --disable-pip-version-check .
-
       - name: Golden Master contract test
         run: python -m unittest tests.test_web_mvp_contract -v
-
       - name: Launch production entry point
         run: |
           PORT=8765 SUPABASE_URL= SUPABASE_ANON_KEY= hedge-desk-web > /tmp/hedge-desk-web.log 2>&1 &
@@ -115,7 +97,6 @@ jobs:
           done
           cat /tmp/hedge-desk-web.log
           exit 1
-
       - name: Black-box functional API tests
         run: |
           curl --fail --silent http://127.0.0.1:8765/api/health > /tmp/health.json
@@ -123,7 +104,6 @@ jobs:
           curl --fail --silent http://127.0.0.1:8765/api/about > /tmp/about.json
           python - <<'PY'
           import json
-          from pathlib import Path
           health=json.load(open('/tmp/health.json'))
           candidates=json.load(open('/tmp/candidates.json'))
           about=json.load(open('/tmp/about.json'))
@@ -137,24 +117,20 @@ jobs:
           assert len({c['desk_id'] for c in candidates['candidates']})==6
           assert all(c['trade_authorized'] is False for c in candidates['candidates'])
           PY
-
       - name: Browser-path smoke test
         run: |
           curl --fail --silent --show-error http://127.0.0.1:8765/ > /tmp/index.html
           grep -qi '<html' /tmp/index.html
           curl --fail --silent --show-error http://127.0.0.1:8765/app.js > /tmp/app.js
           test -s /tmp/app.js
-
       - name: Negative-path safety tests
         run: |
-          code=$(curl --silent --output /tmp/traversal.json --write-out '%{http_code}' 'http://127.0.0.1:8765/../../etc/passwd')
+          code=$(curl --path-as-is --silent --output /tmp/traversal.json --write-out '%{http_code}' 'http://127.0.0.1:8765/%2e%2e/%2e%2e/etc/passwd')
           test "$code" = "404"
           ! grep -qi 'root:' /tmp/traversal.json
-
       - name: Dump server log on failure
         if: failure()
         run: cat /tmp/hedge-desk-web.log || true
-
       - name: Stop test server
         if: always()
         run: kill "$(cat /tmp/hedge-desk-web.pid)" 2>/dev/null || true
