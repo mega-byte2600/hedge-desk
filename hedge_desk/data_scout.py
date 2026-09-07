@@ -62,11 +62,11 @@ DATA_HINTS = re.compile(
 )
 
 ASSET_PATTERNS = {
-    "FIXED_INCOME_RATES": re.compile(r"\b(treasur|bond|bonds|yield curve|rates?|fixed income|sofr|repo|swap|ois)\b", re.I),
+    "FIXED_INCOME_RATES": re.compile(r"\b(treasur(?:y|ies)|bond|bonds|yield curve|rates?|fixed income|sofr|repo|swap|ois)\b", re.I),
     "CREDIT": re.compile(r"\b(corporate bond|credit spread|high yield|investment grade|trace|default|cds)\b", re.I),
     "MUNICIPALS": re.compile(r"\b(municipal|muni|msrb)\b", re.I),
     "MBS_STRUCTURED": re.compile(r"\b(mbs|mortgage.backed|agency mbs|cmbs|abs|structured credit)\b", re.I),
-    "SOVEREIGN": re.compile(r"\b(sovereign|government bond|gilt|bund|jgb|treasur)\b", re.I),
+    "SOVEREIGN": re.compile(r"\b(sovereign|government bond|gilt|bund|jgb|treasur(?:y|ies))\b", re.I),
     "EQUITIES": re.compile(r"\b(equity|equities|stock|stocks|shares?)\b", re.I),
     "OPTIONS": re.compile(r"\b(option|options|volatility|vol surface|implied volatility)\b", re.I),
     "FUTURES_COMMODITIES": re.compile(r"\b(futures?|commodit|oil|gas|wheat|corn|gold)\b", re.I),
@@ -82,7 +82,7 @@ REGION_PATTERNS = {
 }
 
 BOND_PRIORITY_PATTERNS = (
-    re.compile(r"\b(treasur|government bond|sovereign|yield curve)\b", re.I),
+    re.compile(r"\b(treasur(?:y|ies)|government bond|sovereign|yield curve)\b", re.I),
     re.compile(r"\b(corporate bond|credit spread|trace|cds)\b", re.I),
     re.compile(r"\b(sofr|repo|swap|ois|secured financing)\b", re.I),
     re.compile(r"\b(municipal|muni|msrb|mbs|mortgage.backed)\b", re.I),
