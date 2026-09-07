@@ -1,4 +1,4 @@
-"""Machine-readable registry for the Hedge Desk MVP program."""
+"""Machine-readable registries for the Hedge Desk MVP and product architecture."""
 
 from dataclasses import dataclass
 from enum import Enum
@@ -62,14 +62,20 @@ MVP_PROJECTS: Tuple[MvpProject, ...] = (
         ProjectStatus.WORKING_FOUNDATION,
         "Compare validated physical-event surprise with curve pricing, basis, roll, and costs.",
     ),
-    MvpProject(
-        7,
-        "bonds-rates-desk",
-        "Bonds and Rates Desk",
-        ProjectStatus.ARCHITECTURE_ONLY,
-        "Anchor cross-asset research in Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress.",
-    ),
 )
+
+BONDS_RATES_DESK = MvpProject(
+    7,
+    "bonds-rates-desk",
+    "Bonds and Rates Desk",
+    ProjectStatus.ARCHITECTURE_ONLY,
+    "Anchor cross-asset research in Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress.",
+)
+
+# Product-facing architecture can advance ahead of an evaluated engine path. Keeping
+# this separate from MVP_PROJECTS prevents an architecture-only desk from being
+# counted as an evaluated project in deterministic reports.
+DESK_ARCHITECTURE: Tuple[MvpProject, ...] = MVP_PROJECTS + (BONDS_RATES_DESK,)
 
 
 def validate_project_registry(
