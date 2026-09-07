@@ -69,6 +69,7 @@ if __name__ == "__main__":
         for filename in (
             "index.html",
             "styles.css",
+            "public-surface.js",
             "app.js",
             "core.mjs",
             "professional.js",
