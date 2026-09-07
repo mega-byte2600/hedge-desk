@@ -22,6 +22,13 @@ from .entitlements import (
     parse_data_stack_manifest,
 )
 from .news import NewsBatchGate, NewsObservation, NewsTransport, evaluate_news_batch
+from .pwb_news import (
+    PWB_DAILY_NEWS_DATASET,
+    PwbDailyNewsResult,
+    PwbSymbolNewsFeature,
+    evaluate_pwb_daily_news,
+    load_pwb_daily_news,
+)
 
 __all__ = [
     "DataArtifact", "DataGateResult", "validate_data_artifact",
@@ -33,4 +40,6 @@ __all__ = [
     "DATA_STACK_SCHEMA_VERSION", "DataReadinessResult", "DataSubscription",
     "evaluate_options_data_stack", "parse_data_stack_manifest",
     "NewsBatchGate", "NewsObservation", "NewsTransport", "evaluate_news_batch",
+    "PWB_DAILY_NEWS_DATASET", "PwbDailyNewsResult", "PwbSymbolNewsFeature",
+    "evaluate_pwb_daily_news", "load_pwb_daily_news",
 ]

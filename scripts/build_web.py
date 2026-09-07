@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT))
 from hedge_desk.overnight import current_morning_report
 from hedge_desk.projects import MVP_PROJECTS
 from hedge_desk.reporting import build_control_summary, render_morning_markdown, validate_report
+from hedge_desk.data import PWB_DAILY_NEWS_DATASET
 
 
 def export_report(report, destination):
@@ -23,6 +24,23 @@ def export_report(report, destination):
         "summary": build_control_summary(report),
         "registry": [asdict(project) for project in MVP_PROJECTS],
         "morning_markdown": render_morning_markdown(report),
+        "research_data_sources": [
+            {
+                "source_id": "papers-with-backtest",
+                "dataset": PWB_DAILY_NEWS_DATASET,
+                "status": "ADAPTER_READY",
+                "mode": "LICENSED_RESEARCH_ONLY",
+                "feeds": ["earnings-event-desk", "open-quant-ai-model-lab", "event-futures-desk"],
+                "controls": [
+                    "point-in-time embargo",
+                    "explicit source timezone",
+                    "entitlement identifier",
+                    "content hashes",
+                    "no vendor text retention",
+                    "no trade authorization",
+                ],
+            }
+        ],
     }
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
