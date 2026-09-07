@@ -8,6 +8,7 @@ from urllib.request import Request, urlopen
 from wsgiref.simple_server import make_server
 
 from hedge_desk.candidates import build_candidate_feed
+from hedge_desk.ape_demo import build_ape_pfac_demo
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
@@ -37,11 +38,15 @@ def application(environ, start_response):
     path = environ.get("PATH_INFO", "/")
     if path == "/api/health":
         return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _supabase_status()})
+    if path == "/api/ape":
+        return _json(start_response, build_ape_pfac_demo())
     if path == "/api/candidates":
         return _json(start_response, build_candidate_feed())
     if path == "/api/about":
         return _json(start_response, {"display_name": "mbolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
     relative = "index.html" if path in ("/", "") else path.lstrip("/")
+    if path == "/ape":
+        relative = "ape.html"
     target = (WEB / relative).resolve()
     if WEB.resolve() not in target.parents and target != WEB.resolve():
         return _json(start_response, {"error": "not_found"}, "404 Not Found")
