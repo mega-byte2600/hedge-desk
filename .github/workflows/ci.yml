@@ -117,12 +117,19 @@ jobs:
           assert len({c['desk_id'] for c in candidates['candidates']})==6
           assert all(c['trade_authorized'] is False for c in candidates['candidates'])
           PY
-      - name: Browser-path smoke test
+      - name: Browser-path and ETag smoke test
         run: |
           curl --fail --silent --show-error http://127.0.0.1:8765/ > /tmp/index.html
           grep -qi '<html' /tmp/index.html
-          curl --fail --silent --show-error http://127.0.0.1:8765/app.js > /tmp/app.js
+          curl --fail --silent --show-error -D /tmp/asset-headers.txt http://127.0.0.1:8765/app.js > /tmp/app.js
           test -s /tmp/app.js
+          etag=$(awk 'BEGIN{IGNORECASE=1} /^ETag:/ {sub(/\r$/, "", $2); print $2}' /tmp/asset-headers.txt)
+          test -n "$etag"
+          code=$(curl --silent --output /tmp/revalidated-body --write-out '%{http_code}' -H "If-None-Match: $etag" http://127.0.0.1:8765/app.js)
+          test "$code" = "304"
+          test ! -s /tmp/revalidated-body
+      - name: Concurrency performance gate
+        run: python scripts/load_test.py --base-url http://127.0.0.1:8765 --concurrency 25,50,100 --requests-per-level 200 --max-p95-ms 750 --max-error-rate 0.01 --output /tmp/load-test.json
       - name: Negative-path safety tests
         run: |
           code=$(curl --path-as-is --silent --output /tmp/traversal.json --write-out '%{http_code}' 'http://127.0.0.1:8765/%2e%2e/%2e%2e/etc/passwd')
