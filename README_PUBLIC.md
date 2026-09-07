@@ -1,6 +1,6 @@
-# Hedge Desk Research Console
+# Emporion Research Platform
 
-Hedge Desk is an independent, paper-only research platform built by **mbolton** to evaluate six specialized market research workflows with explicit evidence requirements, deterministic controls, and human review.
+**Emporion** is an independent, paper-only market research and decision platform built by **mbolton** as **A Bolton Investment Group (BIG) Project**. It evaluates six specialized research workflows with explicit evidence requirements, deterministic controls, Yellow Sheets, and human review.
 
 ## Goal
 
@@ -24,11 +24,11 @@ The current public MVP is **not connected to a real-time quote feed**. Therefore
 
 ## Research controls
 
-Every candidate remains non-authorized until required evidence is present and deterministic controls pass. The Yellow Sheet workflow records Interest → Hypothesis → Investigation → Evidence → Rule → Trade → Review. No Yellow Sheet means no trade. Portfolio survival / Risk of Ruin logic remains independent of LLM-generated research, and human authorization is required before any future live execution path.
+Every candidate remains non-authorized until required evidence is present and deterministic controls pass. The Yellow Sheet workflow records Candidate → Why Enter → Risk + Compliance → Human Decision → Trade Log → Why Exit → Post Trade Review → Research Feedback. No Yellow Sheet means no trade. Portfolio survival / Risk of Ruin logic remains independent of LLM-generated research, and human authorization is required before any future live execution path.
 
 ## What a Yellow Sheet is for
 
-A Yellow Sheet is the internal investment-thesis and diligence record for a research idea. It exists to force the idea into a testable form before capital is considered: what attracted attention, what hypothesis is being tested, which evidence supports or contradicts it, what would invalidate it, which rule would permit action, and what must be reviewed afterward.
+A Yellow Sheet is the internal investment-thesis and diligence record for a research idea. It exists to force the idea into a testable form before capital is considered: why the position should be entered, which evidence supports or contradicts the thesis, what would invalidate it, the planned exit or roll rule, why the position was ultimately exited, and what was learned afterward.
 
 The longer-term vision may include a disciplined group of capital partners in which mbolton acts in a sponsor or GP role and qualified partners evaluate opportunities as prospective LPs. In that context, Yellow Sheets provide a common diligence language and an auditable research trail. They are not subscription documents and do not themselves create, market, or authorize an investment.
 
@@ -40,9 +40,9 @@ This acknowledgement reflects educational mentorship and feedback. It does not i
 
 ## Research and investing inspirations
 
-Hedge Desk reflects ideas and disciplines that have influenced mbolton's approach to markets, research, and risk, including the public work of the **High-Flyer / DeepSeek team**, **Warren Buffett**, **Benjamin Graham**, and **Ray Dalio / Bridgewater Associates**.
+Emporion reflects ideas and disciplines that have influenced mbolton's approach to markets, research, and risk, including the public work of the **High-Flyer / DeepSeek team**, **Warren Buffett**, **Benjamin Graham**, and **Ray Dalio / Bridgewater Associates**.
 
-These references are **inspirations, not acknowledgements of personal involvement**. mbolton does not claim any affiliation with, endorsement from, sponsorship by, or personal relationship with these people or organizations. Hedge Desk does not claim to represent their views, reproduce proprietary strategies or systems, or imply comparable investment results.
+These references are **inspirations, not acknowledgements of personal involvement**. mbolton does not claim any affiliation with, endorsement from, sponsorship by, or personal relationship with these people or organizations. Emporion does not claim to represent their views, reproduce proprietary strategies or systems, or imply comparable investment results.
 
 ## Capital-formation boundary
 
