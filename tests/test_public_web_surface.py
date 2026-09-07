@@ -40,6 +40,22 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertNotIn('Controls & evidence', combined)
         self.assertNotIn('function controlsBlock()', professional)
 
+    def test_research_resources_page_is_public_and_packaged(self):
+        index = (WEB / "index.html").read_text(encoding="utf-8")
+        resources = (WEB / "resources.js").read_text(encoding="utf-8")
+        build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
+
+        self.assertIn('href="#resources"', index)
+        self.assertIn('data-nav="resources"', index)
+        self.assertIn('./resources.js', index)
+        self.assertIn('"resources.js"', build)
+        self.assertIn('https://www.newyorkfed.org/markets/reference-rates', resources)
+        self.assertIn('https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics', resources)
+        self.assertIn('https://www.sec.gov/search-filings', resources)
+        self.assertIn('https://www.earningswhispers.com/', resources)
+        self.assertIn('https://finviz.com/', resources)
+        self.assertIn('PRIMARY-SOURCE FIRST', resources)
+
 
 if __name__ == "__main__":
     unittest.main()
