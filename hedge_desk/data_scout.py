@@ -170,7 +170,9 @@ def discover(queries: Iterable[str] = DEFAULT_QUERIES, *, token: str | None = No
         try:
             for candidate in search_github(query, token=token):
                 current = seen.get(candidate.repo)
-                if current is None or candidate.discovery_score > current.discovery_score:
+                candidate_rank = (candidate.discovery_score, candidate.stars, candidate.updated_at)
+                current_rank = (current.discovery_score, current.stars, current.updated_at) if current else None
+                if current is None or candidate_rank > current_rank:
                     seen[candidate.repo] = candidate
         except Exception as exc:  # discovery must fail soft per query
             errors.append({"query": query, "error": type(exc).__name__})
