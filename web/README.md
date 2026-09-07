@@ -1,7 +1,7 @@
-# Trade Desk web console
+# Emporion web console
 
 Dependency-free, responsive operator website over the repository's existing
-paper research engine. Includes six desk views, all declared scenario records,
+paper research engine. Includes six research-desk views, declared scenario records,
 release requirements, provenance, JSON/Markdown downloads and browser-local
 Yellow Sheets. There are no trade authorization or order submission endpoints.
 
@@ -30,6 +30,11 @@ unvalidated model version; the web layer never calculates or changes it.
 Yellow Sheets are browser-local research notes, not authoritative audit records
 or human authorizations. Export notes before clearing browser storage or moving
 to another device. They are never sent to a server.
+
+## Brand
+
+Public presentation uses the Emporion Institutional Seal with the approved
+**Markets · Intelligence · Discipline** brand line and **A Bolton Investment Group (BIG) Project** attribution.
 
 ## Verify
 
