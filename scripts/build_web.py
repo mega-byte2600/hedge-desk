@@ -1,4 +1,4 @@
-"""Export an engine-validated synthetic report for the read-only web console."""
+"""Export the validated engine report and static Emporion web assets."""
 import argparse
 import json
 import sys
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     if args.output.resolve() == (ROOT / "web").resolve():
         distribution = ROOT / "dist"
         distribution.mkdir(exist_ok=True)
-        for filename in ("index.html", "styles.css", "app.js", "core.mjs", "professional.js", "report.json"):
+        for filename in ("index.html", "styles.css", "app.js", "core.mjs", "professional.js", "live.js", "report.json"):
             shutil.copyfile(ROOT / "web" / filename, distribution / filename)
         shutil.copyfile(ROOT / "README_PUBLIC.md", distribution / "README_PUBLIC.md")
     print("Validated console report exported to", args.output)

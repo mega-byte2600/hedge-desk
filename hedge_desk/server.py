@@ -1,4 +1,4 @@
-"""Minimal full-stack HTTP service for the paper-research web MVP."""
+"""Minimal full-stack HTTP service for the Emporion research web MVP."""
 
 import json
 import mimetypes
@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 from wsgiref.simple_server import make_server
 
-from hedge_desk.candidates import build_candidate_feed
+from hedge_desk.live_data import build_operational_candidate_feed
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
@@ -16,7 +16,14 @@ WEB = DEPLOY_ROOT / "dist" if (DEPLOY_ROOT / "dist").is_dir() else PACKAGE_ROOT 
 
 def _json(start_response, payload, status="200 OK"):
     body = json.dumps(payload).encode("utf-8")
-    start_response(status, [("Content-Type", "application/json"), ("Content-Length", str(len(body))), ("Cache-Control", "no-store")])
+    start_response(
+        status,
+        [
+            ("Content-Type", "application/json"),
+            ("Content-Length", str(len(body))),
+            ("Cache-Control", "no-store"),
+        ],
+    )
     return [body]
 
 
@@ -36,11 +43,45 @@ def _supabase_status():
 def application(environ, start_response):
     path = environ.get("PATH_INFO", "/")
     if path == "/api/health":
-        return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _supabase_status()})
+        return _json(
+            start_response,
+            {
+                "service": "hedge-desk-web",
+                "product": "Emporion",
+                "status": "ok",
+                "mode": "paper",
+                "research_only": True,
+                "live_orders_enabled": False,
+                "supabase": _supabase_status(),
+            },
+        )
     if path == "/api/candidates":
-        return _json(start_response, build_candidate_feed())
+        return _json(start_response, build_operational_candidate_feed())
+    if path == "/api/data":
+        payload = build_operational_candidate_feed()
+        return _json(
+            start_response,
+            {
+                "schema_version": payload["schema_version"],
+                "generated_at": payload["generated_at"],
+                "data_priority": payload["data_priority"],
+                "data_state": payload["data_state"],
+                "sources_available": payload["sources_available"],
+                "sources_total": payload["sources_total"],
+                "sources": payload["sources"],
+            },
+        )
     if path == "/api/about":
-        return _json(start_response, {"display_name": "mbolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
+        return _json(
+            start_response,
+            {
+                "product": "Emporion",
+                "tagline": "Markets · Intelligence · Discipline",
+                "parent": "Bolton Investment Group (BIG)",
+                "display_name": "mbolton",
+                "linkedin_url": "https://www.linkedin.com/in/bolton-2600/",
+            },
+        )
     relative = "index.html" if path in ("/", "") else path.lstrip("/")
     target = (WEB / relative).resolve()
     if WEB.resolve() not in target.parents and target != WEB.resolve():
