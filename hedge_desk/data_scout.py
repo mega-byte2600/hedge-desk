@@ -27,8 +27,11 @@ DEFAULT_QUERIES = (
     "financial news dataset",
     "SEC filings dataset finance",
     "macro economics dataset trading",
+    "treasury yield dataset market",
+    "central bank dataset markets",
     "DeepSeek finance dataset",
     "FinGPT dataset finance",
+    "financial sentiment dataset huggingface",
 )
 
 LICENSE_ALLOWLIST = {
@@ -46,6 +49,22 @@ DATA_HINTS = re.compile(
     re.IGNORECASE,
 )
 
+ASSET_PATTERNS = {
+    "EQUITIES": re.compile(r"\b(equity|equities|stock|stocks|shares?)\b", re.I),
+    "OPTIONS": re.compile(r"\b(option|options|volatility|vol surface|implied volatility)\b", re.I),
+    "FUTURES_COMMODITIES": re.compile(r"\b(futures?|commodit|oil|gas|wheat|corn|gold)\b", re.I),
+    "FIXED_INCOME_RATES": re.compile(r"\b(treasur|bond|yield curve|rates?|fixed income)\b", re.I),
+    "MACRO": re.compile(r"\b(macro|econom|inflation|gdp|employment|central bank|fred)\b", re.I),
+    "FILINGS_FUNDAMENTALS": re.compile(r"\b(sec|edgar|filings?|fundamental|earnings|10-k|10-q)\b", re.I),
+    "NEWS_NLP": re.compile(r"\b(news|sentiment|nlp|language|headline)\b", re.I),
+}
+
+REGION_PATTERNS = {
+    "AMERICAS": re.compile(r"\b(us|u\.s\.|usa|american|sec|edgar|fred|nasdaq|nyse|canada|brazil)\b", re.I),
+    "EUROPE": re.compile(r"\b(europe|european|eu|uk|britain|germany|france|ecb|eurostat|london)\b", re.I),
+    "ASIA_PACIFIC": re.compile(r"\b(china|chinese|japan|korea|india|singapore|hong kong|asia|australia|deepseek)\b", re.I),
+}
+
 
 @dataclass(frozen=True)
 class DatasetCandidate:
@@ -60,6 +79,25 @@ class DatasetCandidate:
     commercial_use_status: str
     discovered_at: str
     query: str
+    asset_classes: tuple[str, ...] = ()
+    regions: tuple[str, ...] = ()
+    discovery_score: int = 0
+
+
+def _classify(text: str, patterns: dict[str, re.Pattern]) -> tuple[str, ...]:
+    return tuple(name for name, pattern in patterns.items() if pattern.search(text))
+
+
+def _score(*, dataset_signal: bool, open_license: bool, stars: int, asset_classes: tuple[str, ...], regions: tuple[str, ...]) -> int:
+    score = 0
+    if dataset_signal:
+        score += 45
+    if open_license:
+        score += 25
+    score += min(stars, 1000) // 50
+    score += min(len(asset_classes) * 3, 12)
+    score += min(len(regions) * 2, 6)
+    return min(score, 100)
 
 
 def _github_json(url: str, token: str | None = None) -> dict:
@@ -86,9 +124,12 @@ def search_github(query: str, *, token: str | None = None, per_page: int = 20) -
         spdx = license_obj.get("spdx_id")
         desc = item.get("description") or ""
         name = item.get("full_name") or ""
-        combined = f"{name} {desc}"
+        combined = f"{name} {desc} {query}"
         open_license = bool(spdx and spdx.lower() in LICENSE_ALLOWLIST)
         dataset_signal = bool(DATA_HINTS.search(combined))
+        asset_classes = _classify(combined, ASSET_PATTERNS)
+        regions = _classify(combined, REGION_PATTERNS)
+        stars = int(item.get("stargazers_count") or 0)
         if open_license:
             commercial = "OPEN_LICENSE_REVIEW_STILL_REQUIRED"
         elif spdx:
@@ -100,7 +141,7 @@ def search_github(query: str, *, token: str | None = None, per_page: int = 20) -
                 repo=name,
                 url=item.get("html_url") or "",
                 description=desc,
-                stars=int(item.get("stargazers_count") or 0),
+                stars=stars,
                 updated_at=item.get("updated_at") or "",
                 license_spdx=spdx,
                 open_license=open_license,
@@ -108,6 +149,15 @@ def search_github(query: str, *, token: str | None = None, per_page: int = 20) -
                 commercial_use_status=commercial,
                 discovered_at=now,
                 query=query,
+                asset_classes=asset_classes,
+                regions=regions,
+                discovery_score=_score(
+                    dataset_signal=dataset_signal,
+                    open_license=open_license,
+                    stars=stars,
+                    asset_classes=asset_classes,
+                    regions=regions,
+                ),
             )
         )
     return out
@@ -120,19 +170,20 @@ def discover(queries: Iterable[str] = DEFAULT_QUERIES, *, token: str | None = No
         try:
             for candidate in search_github(query, token=token):
                 current = seen.get(candidate.repo)
-                if current is None or candidate.stars > current.stars:
+                if current is None or candidate.discovery_score > current.discovery_score:
                     seen[candidate.repo] = candidate
         except Exception as exc:  # discovery must fail soft per query
             errors.append({"query": query, "error": type(exc).__name__})
     ranked = sorted(
         seen.values(),
-        key=lambda x: (x.dataset_signal, x.open_license, x.stars, x.updated_at),
+        key=lambda x: (x.discovery_score, x.dataset_signal, x.open_license, x.stars, x.updated_at),
         reverse=True,
     )
     return {
-        "schema_version": "hedge-desk-data-scout-1.0.0",
+        "schema_version": "hedge-desk-data-scout-1.1.0",
         "purpose": "OPEN_PUBLIC_DATASET_DISCOVERY_ONLY",
         "commercial_use_assumed": False,
+        "ranking_note": "Discovery score prioritizes dataset signal, permissive-license metadata, relevance breadth, and repository adoption; it is not a legal or data-quality approval.",
         "candidates": [asdict(x) for x in ranked],
         "errors": errors,
     }
