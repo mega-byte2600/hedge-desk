@@ -62,6 +62,13 @@ MVP_PROJECTS: Tuple[MvpProject, ...] = (
         ProjectStatus.WORKING_FOUNDATION,
         "Compare validated physical-event surprise with curve pricing, basis, roll, and costs.",
     ),
+    MvpProject(
+        7,
+        "bonds-rates-desk",
+        "Bonds and Rates Desk",
+        ProjectStatus.ARCHITECTURE_ONLY,
+        "Anchor cross-asset research in Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress.",
+    ),
 )
 
 
