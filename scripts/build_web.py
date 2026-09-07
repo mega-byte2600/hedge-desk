@@ -77,7 +77,7 @@ if __name__ == "__main__":
             "acknowledgements.js",
             "brand-logo.js",
             "ui-polish.js",
-            "emporion-mark.svg",
+            "emporion-institutional-seal.svg",
             "report.json",
         ):
             shutil.copyfile(ROOT / "web" / filename, distribution / filename)
