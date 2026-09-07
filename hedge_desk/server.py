@@ -5,6 +5,8 @@ import mimetypes
 import os
 from pathlib import Path
 from socketserver import ThreadingMixIn
+from threading import Lock
+from time import monotonic, perf_counter
 from urllib.request import Request, urlopen
 from wsgiref.simple_server import WSGIServer, make_server
 
@@ -14,12 +16,24 @@ from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
 WEB = DEPLOY_ROOT / "dist" if (DEPLOY_ROOT / "dist").is_dir() else PACKAGE_ROOT / "dist"
+API_CACHE_SECONDS = max(0.0, float(os.getenv("EMPORION_API_CACHE_SECONDS", "15")))
 
 
 class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
     """Keep the deployment dependency-light while allowing concurrent reads."""
 
     daemon_threads = True
+
+
+_cache_lock = Lock()
+_api_cache = {}
+_metrics_lock = Lock()
+_request_metrics = {
+    "requests": 0,
+    "errors": 0,
+    "total_seconds": 0.0,
+    "max_seconds": 0.0,
+}
 
 
 def _json(start_response, payload, status="200 OK"):
@@ -43,6 +57,47 @@ def _static_cache_control(target):
     return "no-cache"
 
 
+def _etag_for(target):
+    stat = target.stat()
+    return f'W/"{stat.st_mtime_ns:x}-{stat.st_size:x}"'
+
+
+def _cached(key, builder):
+    if API_CACHE_SECONDS <= 0:
+        return builder()
+    now = monotonic()
+    with _cache_lock:
+        entry = _api_cache.get(key)
+        if entry and entry[0] > now:
+            return entry[1]
+        value = builder()
+        _api_cache[key] = (now + API_CACHE_SECONDS, value)
+        return value
+
+
+def _record_request(elapsed, status):
+    with _metrics_lock:
+        _request_metrics["requests"] += 1
+        if status >= 500:
+            _request_metrics["errors"] += 1
+        _request_metrics["total_seconds"] += elapsed
+        _request_metrics["max_seconds"] = max(_request_metrics["max_seconds"], elapsed)
+
+
+def performance_snapshot():
+    """Return process-local request timing counters for tests and operational inspection."""
+
+    with _metrics_lock:
+        requests = _request_metrics["requests"]
+        total = _request_metrics["total_seconds"]
+        return {
+            "requests": requests,
+            "errors": _request_metrics["errors"],
+            "mean_ms": round((total / requests) * 1000, 3) if requests else 0.0,
+            "max_ms": round(_request_metrics["max_seconds"] * 1000, 3),
+        }
+
+
 def _supabase_status():
     url = os.getenv("SUPABASE_URL", "").rstrip("/")
     key = os.getenv("SUPABASE_ANON_KEY", "")
@@ -56,14 +111,14 @@ def _supabase_status():
         return {"configured": True, "reachable": False}
 
 
-def application(environ, start_response):
+def _dispatch(environ, start_response):
     path = environ.get("PATH_INFO", "/")
     if path == "/api/health":
         return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _supabase_status()})
     if path == "/api/candidates":
-        return _json(start_response, build_candidate_feed())
+        return _json(start_response, _cached("candidates", build_candidate_feed))
     if path == "/api/risk-dashboard":
-        return _json(start_response, build_candidate_risk_dashboard())
+        return _json(start_response, _cached("risk-dashboard", build_candidate_risk_dashboard))
     if path == "/api/about":
         return _json(start_response, {"display_name": "mbolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
     relative = "index.html" if path in ("/", "") else path.lstrip("/")
@@ -74,17 +129,42 @@ def application(environ, start_response):
         target = WEB / "index.html"
     if not target.is_file():
         return _json(start_response, {"error": "web_assets_missing"}, "503 Service Unavailable")
-    body = target.read_bytes()
+
     content_type = mimetypes.guess_type(str(target))[0] or "application/octet-stream"
+    cache_control = _static_cache_control(target)
+    etag = _etag_for(target)
+    if environ.get("HTTP_IF_NONE_MATCH") == etag:
+        start_response("304 Not Modified", [("Cache-Control", cache_control), ("ETag", etag)])
+        return [b""]
+
+    body = target.read_bytes()
     start_response(
         "200 OK",
         [
             ("Content-Type", content_type),
             ("Content-Length", str(len(body))),
-            ("Cache-Control", _static_cache_control(target)),
+            ("Cache-Control", cache_control),
+            ("ETag", etag),
         ],
     )
     return [body]
+
+
+def application(environ, start_response):
+    started = perf_counter()
+    status_code = 500
+
+    def measured_start_response(status, headers, exc_info=None):
+        nonlocal status_code
+        status_code = int(status.split(" ", 1)[0])
+        if exc_info is None:
+            return start_response(status, headers)
+        return start_response(status, headers, exc_info)
+
+    try:
+        return _dispatch(environ, measured_start_response)
+    finally:
+        _record_request(perf_counter() - started, status_code)
 
 
 def main():
