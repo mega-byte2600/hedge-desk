@@ -1,9 +1,13 @@
+import hashlib
 import json
 import unittest
 from pathlib import Path
 
 from hedge_desk.candidates import build_candidate_feed
 from hedge_desk.server import application
+
+
+GOLDEN_CANDIDATE_FEED_BLOB_SHA = "5a81ad4ee99822a1c7370e78a8eb34d01d7ac3d3"
 
 
 class WebMvpContractTests(unittest.TestCase):
@@ -16,6 +20,21 @@ class WebMvpContractTests(unittest.TestCase):
 
         body = b"".join(application({"PATH_INFO": path}, start_response))
         return captured["status"], captured["headers"], body
+
+    def _golden_path(self):
+        return Path(__file__).parent / "golden" / "candidate_feed.json"
+
+    def _golden_payload(self):
+        return json.loads(self._golden_path().read_text())
+
+    def test_golden_master_fixture_is_content_locked(self):
+        raw = self._golden_path().read_bytes()
+        git_blob = hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw).hexdigest()
+        self.assertEqual(
+            git_blob,
+            GOLDEN_CANDIDATE_FEED_BLOB_SHA,
+            "Golden Master drift detected. Treat baseline changes as an explicit regression-baseline update.",
+        )
 
     def test_health_contract_is_paper_only(self):
         status, headers, body = self._call("/api/health")
@@ -37,8 +56,13 @@ class WebMvpContractTests(unittest.TestCase):
         self.assertEqual(payload["linkedin_url"], "https://www.linkedin.com/in/bolton-2600/")
 
     def test_candidate_feed_matches_golden_master(self):
-        golden = json.loads((Path(__file__).parent / "golden" / "candidate_feed.json").read_text())
-        self.assertEqual(build_candidate_feed(), golden)
+        self.assertEqual(build_candidate_feed(), self._golden_payload())
+
+    def test_black_box_candidate_api_matches_golden_master(self):
+        status, headers, body = self._call("/api/candidates")
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(headers["Content-Type"], "application/json")
+        self.assertEqual(json.loads(body), self._golden_payload())
 
     def test_candidate_contract_has_six_desks_and_tickers(self):
         payload = build_candidate_feed()
