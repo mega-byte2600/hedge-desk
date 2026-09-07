@@ -136,7 +136,7 @@ jobs:
           test "$code" = "304"
           test ! -s /tmp/revalidated-body
       - name: Concurrency performance gate
-        run: python scripts/load_test.py --base-url http://127.0.0.1:8765 --concurrency 25,50,100 --requests-per-level 200 --max-p95-ms 750 --max-error-rate 0.01 --output /tmp/load-test.json
+        run: python scripts/load_test.py --base-url http://127.0.0.1:8765 --concurrency 25,50,100 --requests-per-level 200 --max-p95-ms 400 --max-error-rate 0.01 --output /tmp/load-test.json
       - name: Negative-path safety regression
         run: |
           code=$(curl --path-as-is --silent --output /tmp/traversal.json --write-out '%{http_code}' 'http://127.0.0.1:8765/%2e%2e/%2e%2e/etc/passwd')
