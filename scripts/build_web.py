@@ -71,6 +71,7 @@ if __name__ == "__main__":
         distribution.mkdir(exist_ok=True)
         for filename in (
             "index.html",
+            "iphone-preview.html",
             "styles.css",
             "public-surface.js",
             "app.js",
