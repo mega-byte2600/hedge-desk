@@ -6,8 +6,13 @@ from hedge_desk import server
 
 class ServerPerformanceContractTests(unittest.TestCase):
     def setUp(self):
+        self._original_web = server.WEB
+        server.WEB = server.PACKAGE_ROOT / "web"
         with server._cache_lock:
             server._api_cache.clear()
+
+    def tearDown(self):
+        server.WEB = self._original_web
 
     def _request(self, path, headers=None):
         captured = {}
