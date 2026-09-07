@@ -1,7 +1,12 @@
 from dataclasses import replace
 import unittest
 
-from hedge_desk.projects import MVP_PROJECTS, ProjectStatus, validate_project_registry
+from hedge_desk.projects import (
+    DESK_ARCHITECTURE,
+    MVP_PROJECTS,
+    ProjectStatus,
+    validate_project_registry,
+)
 
 
 class ProjectRegistryTests(unittest.TestCase):
@@ -35,8 +40,11 @@ class ProjectRegistryTests(unittest.TestCase):
         self.assertEqual(futures.project_id, "event-futures-desk")
         self.assertEqual(futures.status, ProjectStatus.WORKING_FOUNDATION)
 
-    def test_seventh_mvp_is_bonds_and_rates_anchor(self) -> None:
-        bonds = MVP_PROJECTS[6]
+    def test_seventh_product_desk_is_bonds_and_rates_anchor(self) -> None:
+        validate_project_registry(DESK_ARCHITECTURE)
+        self.assertEqual(len(MVP_PROJECTS), 6)
+        self.assertEqual(len(DESK_ARCHITECTURE), 7)
+        bonds = DESK_ARCHITECTURE[6]
         self.assertEqual(bonds.number, 7)
         self.assertEqual(bonds.project_id, "bonds-rates-desk")
         self.assertEqual(bonds.status, ProjectStatus.ARCHITECTURE_ONLY)
