@@ -20,13 +20,16 @@ class WebExportTests(unittest.TestCase):
             result = json.loads((Path(folder) / 'report.json').read_text())
             self.assertEqual(result['report'], json.loads(json.dumps(self.report)))
             self.assertEqual(result['summary']['report_sha256'], self.report['report_sha256'])
-            self.assertEqual(len(result['registry']), 6)
+            self.assertEqual(len(result['report']['projects']), 6)
+            self.assertEqual(len(result['registry']), 7)
+            self.assertEqual(result['registry'][-1]['project_id'], 'bonds-rates-desk')
+            self.assertEqual(result['registry'][-1]['status'], 'architecture_only')
             self.assertFalse(result['report']['live_orders_enabled'])
             self.assertEqual(result['candidate_feed']['schema_version'], 'hedge-desk-candidates-1.0.0')
-            self.assertEqual(
-                {row['desk_id'] for row in result['candidate_feed']['candidates']},
-                {project['project_id'] for project in result['registry']},
-            )
+            evaluated_ids = {project['project_id'] for project in result['report']['projects']}
+            candidate_ids = {row['desk_id'] for row in result['candidate_feed']['candidates']}
+            self.assertEqual(candidate_ids, evaluated_ids)
+            self.assertNotIn('bonds-rates-desk', candidate_ids)
             self.assertTrue({'SPY', 'AAPL', 'SPX', 'KO', 'CL'}.issubset(
                 {row['symbol'] for row in result['candidate_feed']['candidates']}
             ))
