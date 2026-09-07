@@ -22,6 +22,16 @@ class WebExportTests(unittest.TestCase):
             self.assertEqual(result['summary']['report_sha256'], self.report['report_sha256'])
             self.assertEqual(len(result['registry']), 6)
             self.assertFalse(result['report']['live_orders_enabled'])
+            self.assertEqual(result['candidate_feed']['schema_version'], 'hedge-desk-candidates-1.0.0')
+            self.assertEqual(
+                {row['desk_id'] for row in result['candidate_feed']['candidates']},
+                {project['project_id'] for project in result['registry']},
+            )
+            self.assertTrue({'SPY', 'AAPL', 'SPX', 'KO', 'CL'}.issubset(
+                {row['symbol'] for row in result['candidate_feed']['candidates']}
+            ))
+            self.assertTrue(all(not row['trade_authorized'] for row in result['candidate_feed']['candidates']))
+            self.assertEqual(result['owner']['linkedin_url'], 'https://www.linkedin.com/in/bolton-2600/')
 
     def test_tampered_report_does_not_replace_published_snapshot(self):
         with tempfile.TemporaryDirectory() as folder:

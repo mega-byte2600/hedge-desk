@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: hedge-desk
+    runtime: python
+    plan: free
+    buildCommand: python scripts/build_web.py && pip install .
+    startCommand: hedge-desk-web
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
