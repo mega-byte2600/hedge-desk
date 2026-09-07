@@ -4,7 +4,16 @@ import SwiftUI
 struct DeskEnvelope: Decodable {
     let schema_version: String
     let report: DeskReport
+    let registry: [RegistryDesk]
     let morning_markdown: String
+}
+struct RegistryDesk: Decodable, Identifiable {
+    var id: String { project_id }
+    let number: Int
+    let project_id: String
+    let name: String
+    let status: String
+    let objective: String
 }
 struct DeskReport: Decodable {
     let generated_at: String
@@ -71,10 +80,10 @@ final class ReportStore: ObservableObject {
     @Published var source = "Bundled reference snapshot"
     @Published var rawReport = ""
     @Published var notesError: String?
-    private let reportURL = URL(string: "https://trade-desk-research.boltonmd13.chatgpt.site/report.json")!
+    private let reportURL = URL(string: "https://hedge-desk.onrender.com/report.json")!
     private var notesURL: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("TradeDesk", isDirectory: true).appendingPathComponent("yellow-sheets.json")
+            .appendingPathComponent("Emporion", isDirectory: true).appendingPathComponent("yellow-sheets.json")
     }
     init() {
         do {
@@ -94,10 +103,13 @@ final class ReportStore: ObservableObject {
         let decoded = try JSONDecoder().decode(DeskEnvelope.self, from: data)
         let report = decoded.report
         let expected: Set<String> = ["overnight-premium-desk", "earnings-event-desk", "arbitrage-observer", "dividend-opportunity-desk", "open-quant-ai-model-lab", "event-futures-desk"]
+        let architecture: Set<String> = expected.union(["bonds-rates-desk"])
         guard decoded.schema_version == "desk-console-1", report.environment == "paper",
               report.complete, !report.live_orders_enabled, report.real_money_pnl == "0",
               report.real_trades_executed == 0, report.projects.count == expected.count,
               Set(report.projects.map(\.id)) == expected,
+              decoded.registry.count == architecture.count,
+              Set(decoded.registry.map(\.id)) == architecture,
               report.projects.allSatisfy({ ["NO_TRADE", "HUMAN_REVIEW"].contains($0.disposition) }) else {
             throw ReportError.invalid("Unsupported report or paper-only boundary. No new decisions were loaded.")
         }
@@ -121,7 +133,6 @@ final class ReportStore: ObservableObject {
             }
         }
         let json = try JSONSerialization.data(withJSONObject: raw, options: [.prettyPrinted, .sortedKeys])
-        // Publish all display state only after complete parsing; no financial values are calculated here.
         envelope = decoded
         scenarios = rows
         rawReport = String(decoding: json, as: UTF8.self)
@@ -151,8 +162,7 @@ final class ReportStore: ObservableObject {
         guard [thesis, evidence, invalidation].allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.count <= 6000 }) else {
             throw ReportError.invalid("Complete each field using no more than 6,000 characters.")
         }
-        let note = ResearchNote(id: UUID(), createdAt: Date(), desk: desk, thesis: thesis, evidence: evidence,
-                                invalidation: invalidation, reportHash: report.report_sha256)
+        let note = ResearchNote(id: UUID(), createdAt: Date(), desk: desk, thesis: thesis, evidence: evidence, invalidation: invalidation, reportHash: report.report_sha256)
         let next = notes + [note]
         let bytes = try JSONEncoder().encode(next)
         try FileManager.default.createDirectory(at: notesURL.deletingLastPathComponent(), withIntermediateDirectories: true)

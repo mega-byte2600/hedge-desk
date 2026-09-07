@@ -11,7 +11,6 @@ struct TradeDeskApp: App {
                 NotesList().tabItem { Label("Yellow Sheets", systemImage: "note.text") }
                 ReportInfo().tabItem { Label("Report", systemImage: "doc.text.magnifyingglass") }
             }
-            .tint(Color(red: 0.29, green: 0.48, blue: 0.23))
             .environmentObject(store)
         }
     }
@@ -33,8 +32,10 @@ struct SnapshotBanner: View {
     @EnvironmentObject var store: ReportStore
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
-            Label("PAPER RESEARCH", systemImage: "shield.lefthalf.filled").font(.caption.weight(.bold))
-            Text("Synthetic fixtures. No live orders.").font(.subheadline)
+            Label("EMPORION · RESEARCH PLATFORM", systemImage: "shield.lefthalf.filled").font(.caption.weight(.bold))
+            Text("Markets · Intelligence · Discipline").font(.subheadline.weight(.semibold))
+            Text("Seven research desks · Six evaluated workflows").font(.caption).foregroundStyle(.secondary)
+            Text("Paper research by default. No live orders.").font(.caption).foregroundStyle(.secondary)
             Text(store.source).font(.caption).foregroundStyle(.secondary)
             if let error = store.error { Text(error).font(.caption).foregroundStyle(.red) }
         }.padding(.vertical, 5)
@@ -46,16 +47,26 @@ struct DeskList: View {
         NavigationStack {
             List {
                 Section { SnapshotBanner() }
-                if let report = store.envelope?.report {
+                if let envelope = store.envelope {
                     Section("Research desks") {
-                        ForEach(report.projects) { desk in
-                            NavigationLink {
-                                DeskDetail(desk: desk)
-                            } label: {
-                                VStack(alignment: .leading, spacing: 10) {
-                                    Text(desk.name).font(.headline)
-                                    StatusBadge(value: desk.disposition)
-                                }.padding(.vertical, 6)
+                        ForEach(envelope.registry.sorted(by: { $0.number < $1.number })) { registryDesk in
+                            if let desk = envelope.report.projects.first(where: { $0.id == registryDesk.id }) {
+                                NavigationLink {
+                                    DeskDetail(desk: desk)
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 7) {
+                                        Text(String(format: "Desk %02d", registryDesk.number)).font(.caption).foregroundStyle(.secondary)
+                                        Text(registryDesk.name).font(.headline)
+                                        StatusBadge(value: desk.disposition)
+                                    }.padding(.vertical, 5)
+                                }
+                            } else {
+                                VStack(alignment: .leading, spacing: 7) {
+                                    Text(String(format: "Desk %02d", registryDesk.number)).font(.caption).foregroundStyle(.secondary)
+                                    Text(registryDesk.name).font(.headline)
+                                    Text(registryDesk.objective).font(.caption).foregroundStyle(.secondary)
+                                    StatusBadge(value: "ARCHITECTURE ONLY")
+                                }.padding(.vertical, 5)
                             }
                         }
                     }
@@ -63,7 +74,7 @@ struct DeskList: View {
                     Text("No report available. Pull down to retry.")
                 }
             }
-            .navigationTitle("Trade Desk")
+            .navigationTitle("Emporion")
             .refreshable { await store.refresh() }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -228,6 +239,8 @@ struct ReportInfo: View {
                 if let envelope = store.envelope {
                     Section("Snapshot identity") {
                         LabeledContent("Exported", value: envelope.report.generated_at)
+                        LabeledContent("Research desks", value: String(envelope.registry.count))
+                        LabeledContent("Evaluated workflows", value: String(envelope.report.projects.count))
                         LabeledContent("Real trades", value: String(envelope.report.real_trades_executed))
                         LabeledContent("Live orders", value: "Disabled")
                         Text(envelope.report.report_sha256).font(.caption.monospaced()).textSelection(.enabled)
@@ -239,12 +252,12 @@ struct ReportInfo: View {
                     Section("Research limitations") { ForEach(envelope.report.limitations, id: \.self) { Text($0).font(.footnote) } }
                 }
                 Section {
-                    Link("Open website", destination: URL(string: "https://trade-desk-research.boltonmd13.chatgpt.site")!)
+                    Link("Open Emporion website", destination: URL(string: "https://hedge-desk.onrender.com")!)
                     Link("GitHub repository", destination: URL(string: "https://github.com/mega-byte2600/hedge-desk")!)
                     Text("Refresh downloads the published snapshot; it does not run the Python engine. Bundled data is available offline. This app performs no trading or financial calculations.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
-            }.navigationTitle("Report")
+            }.navigationTitle("Emporion Report")
         }
     }
 }
