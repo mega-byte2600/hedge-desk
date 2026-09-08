@@ -33,12 +33,47 @@ class PublicWebSurfaceTests(unittest.TestCase):
         professional = (WEB / "professional.js").read_text(encoding="utf-8")
         combined = index + professional
 
+        self.assertIn("Emporion", combined)
+        self.assertIn("Markets · Intelligence · Discipline", combined)
+        self.assertIn("A Bolton Investment Group (BIG) Project", combined)
         self.assertIn('emporion-institutional-seal.svg', combined)
         self.assertIn('Independent research platform', combined)
+        self.assertIn('RESEARCH PLATFORM', combined)
+        self.assertIn('Seven research desks.<br>Six evaluated workflows.', combined)
+        self.assertIn('<b>DESKS</b> SEVEN', combined)
+        self.assertIn('<b>EVALUATED</b> SIX', combined)
         self.assertNotIn('AI-native', combined)
         self.assertNotIn('brandmark', combined)
         self.assertNotIn('Controls & evidence', combined)
         self.assertNotIn('function controlsBlock()', professional)
+
+    def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
+        public_assets = [
+            WEB / "index.html",
+            WEB / "professional.js",
+            WEB / "resources.js",
+            WEB / "iphone-preview.html",
+        ]
+        combined = "\n".join(path.read_text(encoding="utf-8") for path in public_assets).lower()
+
+        forbidden_claims = [
+            "licensed advisor",
+            "investment adviser",
+            "advisory services",
+            "investment management services",
+            "accept capital",
+            "raise capital",
+            "limited partners",
+            "guaranteed returns",
+            "beats wall street",
+            "places live orders",
+            "executes live orders",
+            "automatically authorized to trade",
+            "turnkey live automation",
+        ]
+
+        for claim in forbidden_claims:
+            self.assertNotIn(claim, combined)
 
     def test_research_resources_page_is_public_and_packaged(self):
         index = (WEB / "index.html").read_text(encoding="utf-8")

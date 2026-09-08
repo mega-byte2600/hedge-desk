@@ -103,7 +103,7 @@ function aboutCapitalBlock() {
         <p><strong>High-Flyer / DeepSeek team</strong> · <strong>Warren Buffett</strong> · <strong>Benjamin Graham</strong> · <strong>Ray Dalio / Bridgewater Associates</strong></p>
         <p class="ws-inspiration-note">Inspirations only. No affiliation, endorsement, sponsorship, personal relationship, proprietary access, or claim of comparable results.</p>
       </div>
-      <p class="ws-legal">Emporion is an independent research and software project. This site does not offer investment management, accept capital, or provide investment advice.</p>
+      <p class="ws-legal">Emporion is an independent research and software project for structured market review. Users remain responsible for their own decisions, accounts, and implementation choices.</p>
     </section>`;
 }
 
