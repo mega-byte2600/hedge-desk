@@ -14,6 +14,11 @@ class IPhonePreviewSurfaceTests(unittest.TestCase):
         self.assertIn('Seven research desks · Six evaluated workflows', preview)
         self.assertIn('Bonds & Rates', preview)
         self.assertIn('Yellow Sheets', preview)
+        self.assertIn('data-tab="resources"', preview)
+        self.assertIn('PRIMARY-SOURCE FIRST', preview)
+        self.assertIn('New York Fed · Reference Rates', preview)
+        self.assertIn('SEC · EDGAR', preview)
+        self.assertIn('BLS · U.S. Bureau of Labor Statistics', preview)
         self.assertIn('Your choice. Your data. Your money.', preview)
         self.assertIn('"iphone-preview.html"', build)
 
