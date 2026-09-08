@@ -135,6 +135,23 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("Live order placement | Roadmap / not implemented", audit)
         self.assertIn("Turnkey automation | Roadmap / not implemented", audit)
 
+    def test_workspace_navigation_resets_scroll_without_duplicate_click_stickiness(self):
+        index = (WEB / "index.html").read_text(encoding="utf-8")
+        build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
+        stability = (WEB / "navigation-stability.js").read_text(encoding="utf-8")
+
+        self.assertIn("./navigation-stability.js", index)
+        self.assertIn('"navigation-stability.js"', build)
+        self.assertIn("const WORKSPACE_ROUTES = new Set", stability)
+        self.assertIn("'scenarios'", stability)
+        self.assertIn("'journal'", stability)
+        self.assertIn("'resources'", stability)
+        self.assertIn("function resetWorkspaceScroll()", stability)
+        self.assertIn("window.scrollTo({ top: 0, left: 0, behavior: 'auto' })", stability)
+        self.assertIn("main.focus({ preventScroll: true })", stability)
+        self.assertIn("currentRoute() === link.dataset.nav", stability)
+        self.assertIn("window.addEventListener('hashchange', resetWorkspaceScroll)", stability)
+
 
 if __name__ == "__main__":
     unittest.main()
