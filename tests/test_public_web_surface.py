@@ -137,6 +137,9 @@ class PublicWebSurfaceTests(unittest.TestCase):
 
     def test_candidate_page_explains_the_mvp_without_overclaiming_functionality(self):
         app = (WEB / "app.js").read_text(encoding="utf-8")
+        explainer = (WEB / "candidate-context.js").read_text(encoding="utf-8")
+        index = (WEB / "index.html").read_text(encoding="utf-8")
+        build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
 
         for fragment in [
             "Candidates are the research queue, not recommendations.",
@@ -149,13 +152,16 @@ class PublicWebSurfaceTests(unittest.TestCase):
             "Published paper snapshot",
             "does not authorize a trade",
         ]:
-            self.assertIn(fragment, app)
+            self.assertIn(fragment, explainer)
 
+        self.assertIn('./candidate-context.js', index)
+        self.assertIn('"candidate-context.js"', build)
+        self.assertLess(index.index('./app.js'), index.index('./candidate-context.js'))
         self.assertIn("Current market evidence and method scoring are not connected yet.", app)
         self.assertIn("Method-qualified picks','0'", app)
         self.assertIn("Trade authorization','0'", app)
-        self.assertNotIn("automatically executes", app.lower())
-        self.assertNotIn("live candidate scoring", app.lower())
+        self.assertNotIn("automatically executes", explainer.lower())
+        self.assertNotIn("live candidate scoring", explainer.lower())
 
     def test_workspace_navigation_resets_scroll_without_duplicate_click_stickiness(self):
         index = (WEB / "index.html").read_text(encoding="utf-8")
