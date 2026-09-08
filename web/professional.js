@@ -15,7 +15,7 @@ const deskMethods = [
 function applyBrand() {
   document.title = 'Emporion | Markets · Intelligence · Discipline';
   const meta = document.querySelector('meta[name="description"]');
-  if (meta) meta.content = 'Emporion is an independent market research and decision-support platform with a seven-desk research architecture, scenario analysis, Yellow Sheets, and human review. A Bolton Investment Group (BIG) Project.';
+  if (meta) meta.content = 'Emporion is an independent market research and decision-support platform with a seven-desk research architecture, scenario analysis, Yellow Sheets, deterministic portfolio-survival controls, and human review. A Bolton Investment Group (BIG) Project.';
 
   const icon = document.querySelector('link[rel="icon"]');
   if (icon) icon.href = './emporion-institutional-seal.svg';
@@ -48,6 +48,7 @@ function statusStrip() {
         <span><b>MODE</b> RESEARCH</span>
         <span><b>DESKS</b> SEVEN</span>
         <span><b>EVALUATED</b> SIX</span>
+        <span><b>RISK</b> INDEPENDENT GATE</span>
         <span><b>DECISION</b> HUMAN REVIEW</span>
         <a href="./README_PUBLIC.md" download>README ↓</a>
       </div>
@@ -60,16 +61,24 @@ function overviewBlock() {
     <section class="ws-operational ws-overview" aria-label="Research platform overview">
       <div class="ws-overview-grid">
         <article><div class="ws-label">PROBLEM</div><h2>Too much information, too little decision discipline.</h2><p>Emporion organizes market ideas so a user can move from curiosity to documented research without turning the site into a signal service.</p></article>
-        <article><div class="ws-label">PROMISE</div><h2>Bring your watchlist. Research it your way.</h2><p>Start from the symbols and questions you already care about, then use a repeatable process to examine evidence, scenarios, and thesis quality.</p></article>
+        <article><div class="ws-label">PROMISE</div><h2>Bring your watchlist. Research it your way.</h2><p>Start from the symbols and questions you already care about, then use a repeatable process to examine evidence, scenarios, thesis quality, and portfolio survival.</p></article>
         <article><div class="ws-label">OWNERSHIP</div><h2>Your choice. Your data. Your money.</h2><p>The default product is research oriented. Users remain responsible for their own decisions, accounts, data, and implementation choices.</p></article>
       </div>
       <div class="ws-process">
         <div class="ws-label">WHAT EMPORION DOES</div>
-        <div class="ws-process-line"><span>Candidate intake</span><i></i><span>Research desks</span><i></i><span>Scenario analysis</span><i></i><span>Yellow Sheets</span><i></i><span>Human review</span></div>
+        <div class="ws-process-line"><span>Candidate intake</span><i></i><span>Research desks</span><i></i><span>Scenario analysis</span><i></i><span>Yellow Sheets</span><i></i><span>Deterministic risk gate</span><i></i><span>Human review</span></div>
+      </div>
+      <div class="ws-ror" aria-label="Risk of Ruin and portfolio survival">
+        <div class="ws-label">RISK OF RUIN / PORTFOLIO SURVIVAL</div>
+        <div class="ws-ror-grid">
+          <article><h2>Survival before conviction.</h2><p>A strong thesis is not enough. Emporion treats Risk of Ruin as an independent portfolio-survival checkpoint between research and the final decision.</p></article>
+          <article><h3>Research informs. Risk constrains.</h3><p>The research thesis cannot override the risk gate. Position economics, maximum loss, portfolio state, and validated risk inputs remain separate from the Yellow Sheet narrative.</p></article>
+          <article><h3>Human review is still final.</h3><p>Human review comes after the risk state is known. A blocked risk or compliance state is not converted into approval by stronger conviction.</p></article>
+        </div>
       </div>
       <div class="ws-continuum" aria-label="Operating continuum">
-        <article><strong>Research only</strong><span>Inspect candidates, evidence, scenarios, and notes in a paper research workspace.</span></article>
-        <article><strong>Decision ready</strong><span>Turn a candidate into a structured packet with thesis, evidence, invalidation criteria, and risk state.</span></article>
+        <article><strong>Research only</strong><span>Inspect candidates, evidence, scenarios, notes, and risk state in a paper research workspace.</span></article>
+        <article><strong>Decision ready</strong><span>Turn a candidate into a structured packet with thesis, evidence, invalidation criteria, an independent portfolio-survival checkpoint, and human review.</span></article>
         <article><strong>User-controlled extension</strong><span>Open-source users may connect their own data and implementation layers outside the default site.</span></article>
       </div>
       <div class="ws-desk-list">
@@ -104,13 +113,13 @@ function aboutCapitalBlock() {
       <div class="ws-capital-grid">
         <article><h3>Data first</h3><p>Public, open, or properly licensed financial data supports the research workflows.</p></article>
         <article><h3>Quantitative research</h3><p>Specialized desks combine quantitative methods, AI and machine-learning research, source provenance, and repeatable evidence.</p></article>
-        <article><h3>Structured decisions</h3><p>Candidates are evaluated through defined research methods, scenarios, and documented decision criteria.</p></article>
-        <article><h3>Human judgment</h3><p>Emporion is designed to support research and decision-making. Human review remains central to the process.</p></article>
+        <article><h3>Structured decisions</h3><p>Candidates are evaluated through defined research methods, scenarios, documented decision criteria, and a separate portfolio-survival risk state.</p></article>
+        <article><h3>Human judgment</h3><p>Emporion is designed to support research and decision-making. Human review remains central, but it does not erase a blocked risk or compliance state.</p></article>
       </div>
       <div class="ws-inspiration">
         <div class="ws-label">RESEARCH & INVESTING INSPIRATIONS</div>
         <p><strong>High-Flyer / DeepSeek team</strong> · <strong>Warren Buffett</strong> · <strong>Benjamin Graham</strong> · <strong>Ray Dalio / Bridgewater Associates</strong></p>
-        <p class="ws-inspiration-note">Inspirations only. No affiliation, endorsement, sponsorship, personal relationship, proprietary access, or claim of comparable results.</p>
+        <p class="ws-inspiration-note">The design principle carried into Emporion is process over prediction: independent research, explicit downside discipline, challenge before commitment, and survival as a prerequisite for compounding. Inspirations only. No affiliation, endorsement, sponsorship, personal relationship, proprietary access, or claim of comparable results.</p>
       </div>
       <p class="ws-legal">Emporion is an independent research and software project for structured market review. Users remain responsible for their own decisions, accounts, and implementation choices.</p>
     </section>`;
@@ -128,6 +137,7 @@ function installStyle() {
     .brand small{font-size:8px!important;letter-spacing:.7px!important;line-height:1.35!important}
     .ws-overview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.ws-overview-grid article{padding:22px;border-right:1px solid #e6eaed}.ws-overview-grid article:last-child{border-right:0}.ws-overview-grid h2{font-size:18px;margin:8px 0}.ws-overview-grid p{font-size:12px;line-height:1.6;color:#596871;margin:0}
     .ws-process{padding:16px 20px;border-top:1px solid #e6eaed;background:#fafbfc}.ws-process-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:9px;font:11px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.45px;color:#34434c}.ws-process-line i{display:block;width:22px;height:1px;background:#b9c4cb}
+    .ws-ror{border-top:1px solid #e6eaed;background:#fff;padding:18px 20px}.ws-ror-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;margin:10px -20px -18px}.ws-ror-grid article{padding:18px 20px;border-top:1px solid #e6eaed;border-right:1px solid #e6eaed}.ws-ror-grid article:last-child{border-right:0}.ws-ror-grid h2,.ws-ror-grid h3{margin:0 0 8px}.ws-ror-grid h2{font-size:18px}.ws-ror-grid h3{font-size:13px}.ws-ror-grid p{font-size:12px;line-height:1.6;color:#596871;margin:0}
     .ws-continuum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #e6eaed}.ws-continuum article{padding:16px 20px;border-right:1px solid #e6eaed}.ws-continuum article:last-child{border-right:0}.ws-continuum strong{display:block;font-size:13px;margin-bottom:6px}.ws-continuum span{display:block;font-size:12px;line-height:1.55;color:#596871}
     .ws-desk-list{border-top:1px solid #e6eaed}.ws-list-head,.ws-list-row{display:grid;grid-template-columns:1fr 180px;align-items:center;padding:11px 18px;border-bottom:1px solid #eef1f3}.ws-list-head{font:10px 'IBM Plex Mono',monospace;letter-spacing:.7px;color:#74818a;text-transform:uppercase;background:#fafbfc}.ws-list-row:last-child{border-bottom:0}.ws-list-row strong{font-size:13px}.ws-state{font:10px 'IBM Plex Mono',monospace;letter-spacing:.45px;color:#52616a}
     .ws-desk-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ws-desk-methods article{padding:22px;border-right:1px solid #e6eaed;border-bottom:1px solid #e6eaed}.ws-desk-methods article:nth-child(2n){border-right:0}.ws-desk-methods article:nth-last-child(-n+2){border-bottom:0}.ws-desk-methods h2{font-size:16px;margin:8px 0}.ws-desk-methods p{font-size:12px;line-height:1.6;color:#596871;min-height:38px}
@@ -136,7 +146,7 @@ function installStyle() {
     .ws-inspiration{padding:18px 21px;border-top:1px solid #e6eaed;background:#fafbfc}.ws-inspiration p{font-size:12px;line-height:1.6;color:#53616a;margin:9px 0 0}.ws-inspiration-note{font-size:11px!important;color:#75818a!important}.ws-legal{margin:0;padding:14px 21px;background:#101820;color:#cbd4da;font-size:11px;line-height:1.55}
     body[data-route='overview'] #main>.notice,body[data-route='overview'] #main>.stats,body[data-route='overview'] #main>.split,body[data-route='overview'] #main>.lower{display:none}
     body[data-route='desks'] #main>.cards{display:none}
-    @media(max-width:800px){.ws-overview-grid,.ws-desk-methods,.ws-continuum{grid-template-columns:1fr}.ws-overview-grid article,.ws-desk-methods article,.ws-continuum article{border-right:0;border-bottom:1px solid #e6eaed}.ws-overview-grid article:last-child,.ws-desk-methods article:last-child,.ws-continuum article:last-child{border-bottom:0}.ws-list-head,.ws-list-row{grid-template-columns:1fr}.ws-state{margin-top:5px}.ws-process-line i{width:12px}}
+    @media(max-width:800px){.ws-overview-grid,.ws-desk-methods,.ws-continuum,.ws-ror-grid{grid-template-columns:1fr}.ws-overview-grid article,.ws-desk-methods article,.ws-continuum article,.ws-ror-grid article{border-right:0;border-bottom:1px solid #e6eaed}.ws-overview-grid article:last-child,.ws-desk-methods article:last-child,.ws-continuum article:last-child,.ws-ror-grid article:last-child{border-bottom:0}.ws-list-head,.ws-list-row{grid-template-columns:1fr}.ws-state{margin-top:5px}.ws-process-line i{width:12px}}
     @media(max-width:650px){.ws-capital-grid{grid-template-columns:1fr}.ws-capital-grid article{border-right:0;border-bottom:1px solid #e6eaed}.ws-capital-grid article:last-child{border-bottom:0}.ws-tape{gap:9px 14px}.ws-tape a{margin-left:0;width:100%}.ws-capital-head{align-items:flex-start;flex-direction:column}}
   `;
   document.head.appendChild(style);
