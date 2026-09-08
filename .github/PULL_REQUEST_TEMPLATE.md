@@ -1,21 +1,31 @@
-## Summary
+## Working increment
 
-## MVP Track
+- What runnable behavior changed?
+- What failed fast during development, and what was learned?
 
-- [ ] MVP 1 Risk/Compliance/Data Foundation
-- [ ] MVP 2 Dividend Premium/Capture Paper Desk
-- [ ] MVP 3 Earnings Event Paper Desk
+## Evidence
 
-## Money-System Safety
+- [ ] Deterministic unit tests added or updated
+- [ ] Full local test suite passes
+- [ ] CLI/integration path exercised
+- [ ] Failure paths tested
 
-- [ ] No live trading enabled
-- [ ] No agent order placement enabled
-- [ ] No secrets, tokens, account numbers, or licensed data committed
-- [ ] Risk/account/compliance behavior has tests
-- [ ] Source and delay labels are visible when market data is shown
+Paste commands and results:
 
-## Verification
+```text
 
-```bash
-python3 -m unittest discover -s tests -v
 ```
+
+## Control boundaries
+
+- [ ] Paper-only boundary remains intact
+- [ ] No agent order placement enabled
+- [ ] No agent-generated or agent-modified authoritative RoR
+- [ ] Human authorization remains explicit and hash-bound
+- [ ] Data provenance, as-of time, license, and redistribution status reviewed
+- [ ] No secrets, Schwab tokens, account data, licensed payloads, customer data, or MNPI committed
+
+## ADR trigger
+
+An ADR is included only if this changes a durable architecture, model, data,
+compliance, or risk-control decision. Link it here, or write `not required`:
