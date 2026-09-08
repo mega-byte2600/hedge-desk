@@ -144,6 +144,10 @@ class PublicWebSurfaceTests(unittest.TestCase):
         for fragment in [
             "Candidates are the research queue, not recommendations.",
             "HOW EMPORION TURNS A SYMBOL INTO A DECISION",
+            "Institutional-style trade decision workflow",
+            "Research the idea",
+            "Challenge the thesis",
+            "Decide with discipline",
             "Candidate intake",
             "Desk method",
             "Evidence qualification",
@@ -162,6 +166,8 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("Trade authorization','0'", app)
         self.assertNotIn("automatically executes", explainer.lower())
         self.assertNotIn("live candidate scoring", explainer.lower())
+        self.assertNotIn("guaranteed alpha", explainer.lower())
+        self.assertNotIn("generates alpha", explainer.lower())
 
     def test_workspace_navigation_resets_scroll_without_duplicate_click_stickiness(self):
         index = (WEB / "index.html").read_text(encoding="utf-8")
