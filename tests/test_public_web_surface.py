@@ -135,6 +135,28 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("Live order placement | Roadmap / not implemented", audit)
         self.assertIn("Turnkey automation | Roadmap / not implemented", audit)
 
+    def test_candidate_page_explains_the_mvp_without_overclaiming_functionality(self):
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+
+        for fragment in [
+            "Candidates are the research queue, not recommendations.",
+            "HOW EMPORION TURNS A SYMBOL INTO A DECISION",
+            "Candidate intake",
+            "Desk method",
+            "Evidence qualification",
+            "Scenario + Yellow Sheet",
+            "Human decision",
+            "Published paper snapshot",
+            "does not authorize a trade",
+        ]:
+            self.assertIn(fragment, app)
+
+        self.assertIn("Current market evidence and method scoring are not connected yet.", app)
+        self.assertIn("Method-qualified picks','0'", app)
+        self.assertIn("Trade authorization','0'", app)
+        self.assertNotIn("automatically executes", app.lower())
+        self.assertNotIn("live candidate scoring", app.lower())
+
     def test_workspace_navigation_resets_scroll_without_duplicate_click_stickiness(self):
         index = (WEB / "index.html").read_text(encoding="utf-8")
         build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
