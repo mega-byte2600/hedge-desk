@@ -6,6 +6,9 @@ Source of truth: `docs/PRODUCT_POSITIONING_AND_MEASUREMENT.md`.
 | --- | --- | --- |
 | Emporion brand and tagline | Implemented now | Emporion. Markets · Intelligence · Discipline. |
 | Research workspace | Implemented now | Independent research and decision-support platform. |
+| Risk of Ruin / portfolio survival | Implemented now | Survival before conviction. Risk of Ruin is an independent constraint on the decision process. |
+| North Star principle | Implemented now | Survive first. Compound second. |
+| Dr. Cooper attribution | Implemented now | Dr. Cooper helped bring the explicit Risk of Ruin discipline to the table. |
 | Seven research desks | Implemented now | Seven research desks. |
 | Six evaluated workflows | Implemented now | Six evaluated workflows. |
 | Candidate intake | Implemented now | Candidates enter specialized research desk workflows. |
