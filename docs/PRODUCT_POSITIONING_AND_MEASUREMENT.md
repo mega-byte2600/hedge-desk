@@ -22,6 +22,16 @@ Brand statement:
 
 **Your money should work as hard for you as you do for it.**
 
+Point of difference:
+
+**Risk of Ruin is not an afterthought. It is an independent constraint on every decision.**
+
+North Star principle:
+
+**Survive first. Compound second.**
+
+Dr. Cooper helped bring the explicit Risk of Ruin discipline to the table.
+
 The product must not imply guaranteed returns or that Emporion itself executes trades for users by default.
 
 ## User-controlled implementation modes
@@ -40,7 +50,7 @@ The problem is not lack of financial information. Users already have screeners, 
 
 Emporion's value is to move a user's own market ideas through a repeatable lifecycle:
 
-**Watchlist → Candidate → Research → Scenario → Yellow Sheet → Human decision → Outcome → Review → Learning**
+**Watchlist → Candidate → Research → Scenario → Yellow Sheet → Risk of Ruin gate → Human decision → Outcome → Review → Learning**
 
 The seven desks are capabilities inside this system, not seven unrelated products.
 
@@ -65,6 +75,7 @@ Shared contract:
 - candidate identity and desk identity
 - scenario terminology
 - Yellow Sheet lifecycle
+- explicit Risk of Ruin / portfolio-survival gate
 - source/provenance terminology
 - paper/research default boundary
 - production website and repository links
@@ -75,9 +86,11 @@ iOS emphasis: what changed, what needs attention, quick evidence review, Yellow 
 
 ## North Star and KPI framework
 
-North Star: **Weekly Researched Watchlist Decisions**.
+Product North Star principle: **Survive first. Compound second.**
 
-A qualified event is a user-originated watchlist symbol or candidate that is reviewed with research/evidence and results in a documented Yellow Sheet decision, no-decision, or updated thesis.
+Operating North Star metric: **Weekly Researched Watchlist Decisions**.
+
+A qualified event is a user-originated watchlist symbol or candidate that is reviewed with research/evidence, passes through the independent portfolio-survival risk state, and results in a documented Yellow Sheet decision, no-decision, or updated thesis.
 
 Supporting KPIs:
 
@@ -87,6 +100,7 @@ Supporting KPIs:
 - Percent of researched candidates with a Yellow Sheet
 - Percent of Yellow Sheets with evidence
 - Percent of Yellow Sheets with explicit invalidation criteria
+- Percent of decision-ready candidates with completed Risk of Ruin review
 - Cross-desk coverage per watchlist
 - Weekly active researchers
 - Week 1, Week 4, and Week 12 researcher retention
@@ -115,6 +129,7 @@ Web and iOS should use the same event vocabulary:
 - yellow_sheet_started
 - yellow_sheet_completed
 - invalidation_added
+- risk_of_ruin_reviewed
 - decision_recorded
 - post_trade_review_completed
 - resource_opened
@@ -128,10 +143,11 @@ Do not place thesis text, position details, account data, brokerage credentials,
 
 ## Marketing hierarchy
 
-Emporion should compete on decision process, not claim to win the information-volume race.
+Emporion should compete on disciplined decision process, not claim to win the information-volume race.
 
 Positioning hierarchy:
 
+- Survival first: Risk of Ruin is an independent gate, not a footnote to conviction.
 - Open: inspect, modify, extend, and self-host.
 - Bring your own: watchlist, data, models, rules, broker integration.
 - Structured: candidates, research desks, scenarios, Yellow Sheets, deterministic gates.
