@@ -7,11 +7,15 @@ function renameLabel(control, text) {
   const label = control?.closest('label');
   if (!label) return;
   const node = [...label.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
-  if (node) node.textContent = text;
+  if (node && node.textContent !== text) node.textContent = text;
 }
 
 function addField(before, html) {
   if (before) before.insertAdjacentHTML('beforebegin', html);
+}
+
+function setText(node, value) {
+  if (node && node.textContent !== value) node.textContent = value;
 }
 
 function enhanceForm() {
@@ -26,9 +30,9 @@ function enhanceForm() {
   renameLabel(thesis, 'Why Enter / Investment Thesis');
   renameLabel(evidence, 'Evidence / Catalyst');
   renameLabel(invalidation, 'What Would Prove Me Wrong?');
-  thesis.placeholder = 'Why does this position deserve capital now?';
-  evidence.placeholder = 'What point in time evidence and catalysts support the thesis?';
-  invalidation.placeholder = 'What fact, price action, event, or management change invalidates the thesis?';
+  if (thesis.placeholder !== 'Why does this position deserve capital now?') thesis.placeholder = 'Why does this position deserve capital now?';
+  if (evidence.placeholder !== 'What point in time evidence and catalysts support the thesis?') evidence.placeholder = 'What point in time evidence and catalysts support the thesis?';
+  if (invalidation.placeholder !== 'What fact, price action, event, or management change invalidates the thesis?') invalidation.placeholder = 'What fact, price action, event, or management change invalidates the thesis?';
 
   addField(thesis?.closest('label'), `
     <div class="ys-inline-grid">
@@ -53,9 +57,9 @@ function enhanceForm() {
     </details>`);
 
   const submit = form.querySelector('button[type="submit"]');
-  if (submit) submit.textContent = 'Save Yellow Sheet';
+  setText(submit, 'Save Yellow Sheet');
   const note = submit?.nextElementSibling;
-  if (note) note.textContent = 'Bound to the displayed report hash. The Yellow Sheet records judgment; it never overrides deterministic risk or compliance controls.';
+  setText(note, 'Bound to the displayed report hash. The Yellow Sheet records judgment; it never overrides deterministic risk or compliance controls.');
 }
 
 function lifecyclePanel() {
@@ -82,18 +86,18 @@ function lifecyclePanel() {
 function enhanceHeadings() {
   const heading = document.querySelector('#main .page-head h1');
   const subtitle = document.querySelector('#main .page-head .subtitle');
-  if (heading) heading.textContent = 'Yellow Sheets + Trade Log';
-  if (subtitle) subtitle.textContent = 'Why enter. What would prove the thesis wrong. Why exit. What did we learn.';
+  setText(heading, 'Yellow Sheets + Trade Log');
+  setText(subtitle, 'Why enter. What would prove the thesis wrong. Why exit. What did we learn.');
 
   const panels = document.querySelectorAll('#main .journal-layout > .panel');
   const firstTitle = panels[0]?.querySelector('.panel-head h2');
   const firstSub = panels[0]?.querySelector('.panel-head p');
   const secondTitle = panels[1]?.querySelector('.panel-head h2');
   const secondSub = panels[1]?.querySelector('.panel-head p');
-  if (firstTitle) firstTitle.textContent = 'New Yellow Sheet';
-  if (firstSub) firstSub.textContent = 'Pre trade thesis first. Closeout when the paper position exits.';
-  if (secondTitle) secondTitle.textContent = 'Trade Log / Yellow Sheet History';
-  if (secondSub) secondSub.textContent = secondSub.textContent.replace('saved notes', 'lifecycle records').replace('saved note', 'lifecycle record');
+  setText(firstTitle, 'New Yellow Sheet');
+  setText(firstSub, 'Pre trade thesis first. Closeout when the paper position exits.');
+  setText(secondTitle, 'Trade Log / Yellow Sheet History');
+  if (secondSub) setText(secondSub, secondSub.textContent.replace('saved notes', 'lifecycle records').replace('saved note', 'lifecycle record'));
 }
 
 function enhanceSavedNotes() {

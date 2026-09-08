@@ -12,27 +12,32 @@ const subtitles = {
   about: 'Emporion research platform, governance, and project background.'
 };
 
+function setText(node, value) {
+  if (node && node.textContent !== value) node.textContent = value;
+}
+
 function polishCopy() {
   const current = route();
   const subtitle = document.querySelector('#main .page-head .subtitle');
-  if (subtitle && subtitles[current]) subtitle.textContent = subtitles[current];
+  if (subtitle && subtitles[current]) setText(subtitle, subtitles[current]);
 
   if (current === 'about') {
     const about = document.querySelector('.about-card');
     if (about) {
       const eyebrow = about.querySelector('.eyebrow');
-      if (eyebrow) eyebrow.textContent = 'FOUNDER / BUILDER';
+      setText(eyebrow, 'FOUNDER / BUILDER');
       const paragraphs = about.querySelectorAll('p');
-      if (paragraphs[0]) paragraphs[0].textContent = 'Emporion is an independent, paper-only market research and decision platform built around six specialized research workflows, explicit evidence requirements, deterministic controls, and human judgment.';
-      if (paragraphs[1]) paragraphs[1].textContent = 'Research automation remains separate from deterministic portfolio-survival controls. Live trading and fully autonomous execution are outside the current MVP.';
+      setText(paragraphs[0], 'Emporion is an independent, paper-only market research and decision platform built around six specialized research workflows, explicit evidence requirements, deterministic controls, and human judgment.');
+      setText(paragraphs[1], 'Research automation remains separate from deterministic portfolio-survival controls. Live trading and fully autonomous execution are outside the current MVP.');
     }
   }
 
   document.querySelectorAll('#main .subtitle').forEach(node => {
-    node.textContent = node.textContent
+    const next = node.textContent
       .replace('Your desk, before the next decision.', subtitles.overview)
       .replace('Inspect each workflow, its evidence, and what stops the next decision.', subtitles.desks)
       .replace('The builder behind Trade Desk Research.', subtitles.about);
+    setText(node, next);
   });
 }
 

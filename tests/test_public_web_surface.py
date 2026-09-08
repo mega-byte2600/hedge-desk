@@ -152,6 +152,20 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("currentRoute() === link.dataset.nav", stability)
         self.assertIn("window.addEventListener('hashchange', resetWorkspaceScroll)", stability)
 
+    def test_workspace_router_and_enhancers_do_not_lock_after_scenario_lab(self):
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+        polish = (WEB / "ui-polish.js").read_text(encoding="utf-8")
+        yellow = (WEB / "yellow-sheet.js").read_text(encoding="utf-8")
+
+        self.assertIn("resources:'Research resources'", app)
+        self.assertIn("function resources()", app)
+        self.assertIn("journal,resources,about", app)
+        self.assertIn("function setText(node, value)", polish)
+        self.assertIn("node.textContent !== value", polish)
+        self.assertIn("function setText(node, value)", yellow)
+        self.assertIn("node.textContent !== value", yellow)
+        self.assertIn("if (secondSub) setText(secondSub", yellow)
+
 
 if __name__ == "__main__":
     unittest.main()
