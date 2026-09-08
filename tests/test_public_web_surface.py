@@ -111,6 +111,30 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertNotIn('Six research workflows.<br>Structured decision support.', professional)
         self.assertNotIn('<b>WORKFLOWS</b> SIX DESKS', professional)
 
+    def test_homepage_marketing_hierarchy_is_process_first(self):
+        professional = (WEB / "professional.js").read_text(encoding="utf-8")
+        audit = (ROOT / "docs" / "EMPORION_MARKETING_CLAIM_AUDIT.md").read_text(encoding="utf-8")
+
+        for fragment in [
+            "Too much information, too little decision discipline.",
+            "Bring your watchlist. Research it your way.",
+            "Your choice. Your data. Your money.",
+            "Candidate intake",
+            "Research desks",
+            "Scenario analysis",
+            "Yellow Sheets",
+            "Human review",
+            "Research only",
+            "Decision ready",
+            "User-controlled extension",
+        ]:
+            self.assertIn(fragment, professional)
+
+        self.assertIn("Watchlist import or connection | Roadmap / not implemented", audit)
+        self.assertIn("Broker connection | Extension point", audit)
+        self.assertIn("Live order placement | Roadmap / not implemented", audit)
+        self.assertIn("Turnkey automation | Roadmap / not implemented", audit)
+
 
 if __name__ == "__main__":
     unittest.main()

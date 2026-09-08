@@ -59,9 +59,18 @@ function overviewBlock() {
   return `
     <section class="ws-operational ws-overview" aria-label="Research platform overview">
       <div class="ws-overview-grid">
-        <article><div class="ws-label">RESEARCH FOCUS</div><h2>Bonds / Rates / Credit</h2><p>Treasury curves and auctions, sovereign debt, credit spreads, SOFR and repo, swaps and OIS, municipals, and structured fixed income are first in the acquisition queue.</p></article>
-        <article><div class="ws-label">MARKET DATA</div><h2>Integrating</h2><p>Research views are being connected to sourced financial data with clear provider and timestamp information.</p></article>
-        <article><div class="ws-label">DECISION PROCESS</div><h2>Human review</h2><p>Research workflows surface candidates and supporting analysis for structured human review.</p></article>
+        <article><div class="ws-label">PROBLEM</div><h2>Too much information, too little decision discipline.</h2><p>Emporion organizes market ideas so a user can move from curiosity to documented research without turning the site into a signal service.</p></article>
+        <article><div class="ws-label">PROMISE</div><h2>Bring your watchlist. Research it your way.</h2><p>Start from the symbols and questions you already care about, then use a repeatable process to examine evidence, scenarios, and thesis quality.</p></article>
+        <article><div class="ws-label">OWNERSHIP</div><h2>Your choice. Your data. Your money.</h2><p>The default product is research oriented. Users remain responsible for their own decisions, accounts, data, and implementation choices.</p></article>
+      </div>
+      <div class="ws-process">
+        <div class="ws-label">WHAT EMPORION DOES</div>
+        <div class="ws-process-line"><span>Candidate intake</span><i></i><span>Research desks</span><i></i><span>Scenario analysis</span><i></i><span>Yellow Sheets</span><i></i><span>Human review</span></div>
+      </div>
+      <div class="ws-continuum" aria-label="Operating continuum">
+        <article><strong>Research only</strong><span>Inspect candidates, evidence, scenarios, and notes in a paper research workspace.</span></article>
+        <article><strong>Decision ready</strong><span>Turn a candidate into a structured packet with thesis, evidence, invalidation criteria, and risk state.</span></article>
+        <article><strong>User-controlled extension</strong><span>Open-source users may connect their own data and implementation layers outside the default site.</span></article>
       </div>
       <div class="ws-desk-list">
         <div class="ws-list-head"><span>Research desk</span><span>Operating state</span></div>
@@ -118,6 +127,8 @@ function installStyle() {
     .ws-label{font:10px 'IBM Plex Mono',monospace;color:#74818a;letter-spacing:1px;font-weight:500}
     .brand small{font-size:8px!important;letter-spacing:.7px!important;line-height:1.35!important}
     .ws-overview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.ws-overview-grid article{padding:22px;border-right:1px solid #e6eaed}.ws-overview-grid article:last-child{border-right:0}.ws-overview-grid h2{font-size:18px;margin:8px 0}.ws-overview-grid p{font-size:12px;line-height:1.6;color:#596871;margin:0}
+    .ws-process{padding:16px 20px;border-top:1px solid #e6eaed;background:#fafbfc}.ws-process-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:9px;font:11px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.45px;color:#34434c}.ws-process-line i{display:block;width:22px;height:1px;background:#b9c4cb}
+    .ws-continuum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #e6eaed}.ws-continuum article{padding:16px 20px;border-right:1px solid #e6eaed}.ws-continuum article:last-child{border-right:0}.ws-continuum strong{display:block;font-size:13px;margin-bottom:6px}.ws-continuum span{display:block;font-size:12px;line-height:1.55;color:#596871}
     .ws-desk-list{border-top:1px solid #e6eaed}.ws-list-head,.ws-list-row{display:grid;grid-template-columns:1fr 180px;align-items:center;padding:11px 18px;border-bottom:1px solid #eef1f3}.ws-list-head{font:10px 'IBM Plex Mono',monospace;letter-spacing:.7px;color:#74818a;text-transform:uppercase;background:#fafbfc}.ws-list-row:last-child{border-bottom:0}.ws-list-row strong{font-size:13px}.ws-state{font:10px 'IBM Plex Mono',monospace;letter-spacing:.45px;color:#52616a}
     .ws-desk-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ws-desk-methods article{padding:22px;border-right:1px solid #e6eaed;border-bottom:1px solid #e6eaed}.ws-desk-methods article:nth-child(2n){border-right:0}.ws-desk-methods article:nth-last-child(-n+2){border-bottom:0}.ws-desk-methods h2{font-size:16px;margin:8px 0}.ws-desk-methods p{font-size:12px;line-height:1.6;color:#596871;min-height:38px}
     .ws-capital-head{padding:19px 21px;border-bottom:1px solid #e6eaed;display:flex;align-items:center;justify-content:space-between;gap:18px}.ws-capital-head h2{margin-top:7px}.ws-brandline{margin:6px 0 0;font:10px 'IBM Plex Mono',monospace;letter-spacing:.6px;color:#6d7a83}.ws-boundary{font:10px 'IBM Plex Mono',monospace;letter-spacing:.7px;background:#f3f5f6;border:1px solid #d8dfe3;padding:7px 9px;border-radius:3px;color:#58666f;white-space:nowrap}
@@ -125,7 +136,7 @@ function installStyle() {
     .ws-inspiration{padding:18px 21px;border-top:1px solid #e6eaed;background:#fafbfc}.ws-inspiration p{font-size:12px;line-height:1.6;color:#53616a;margin:9px 0 0}.ws-inspiration-note{font-size:11px!important;color:#75818a!important}.ws-legal{margin:0;padding:14px 21px;background:#101820;color:#cbd4da;font-size:11px;line-height:1.55}
     body[data-route='overview'] #main>.notice,body[data-route='overview'] #main>.stats,body[data-route='overview'] #main>.split,body[data-route='overview'] #main>.lower{display:none}
     body[data-route='desks'] #main>.cards{display:none}
-    @media(max-width:800px){.ws-overview-grid,.ws-desk-methods{grid-template-columns:1fr}.ws-overview-grid article,.ws-desk-methods article{border-right:0;border-bottom:1px solid #e6eaed}.ws-overview-grid article:last-child,.ws-desk-methods article:last-child{border-bottom:0}.ws-list-head,.ws-list-row{grid-template-columns:1fr}.ws-state{margin-top:5px}}
+    @media(max-width:800px){.ws-overview-grid,.ws-desk-methods,.ws-continuum{grid-template-columns:1fr}.ws-overview-grid article,.ws-desk-methods article,.ws-continuum article{border-right:0;border-bottom:1px solid #e6eaed}.ws-overview-grid article:last-child,.ws-desk-methods article:last-child,.ws-continuum article:last-child{border-bottom:0}.ws-list-head,.ws-list-row{grid-template-columns:1fr}.ws-state{margin-top:5px}.ws-process-line i{width:12px}}
     @media(max-width:650px){.ws-capital-grid{grid-template-columns:1fr}.ws-capital-grid article{border-right:0;border-bottom:1px solid #e6eaed}.ws-capital-grid article:last-child{border-bottom:0}.ws-tape{gap:9px 14px}.ws-tape a{margin-left:0;width:100%}.ws-capital-head{align-items:flex-start;flex-direction:column}}
   `;
   document.head.appendChild(style);
