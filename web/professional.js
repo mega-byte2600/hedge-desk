@@ -15,7 +15,7 @@ const deskMethods = [
 function applyBrand() {
   document.title = 'Emporion | Markets · Intelligence · Discipline';
   const meta = document.querySelector('meta[name="description"]');
-  if (meta) meta.content = 'Emporion is an independent market research and decision-support platform with a seven-desk research architecture, scenario analysis, Yellow Sheets, deterministic portfolio-survival controls, and human review. A Bolton Investment Group (BIG) Project.';
+  if (meta) meta.content = 'Emporion is an independent market research and decision-support platform with a seven-desk research architecture, coordinated specialist-agent roles, scenario analysis, Yellow Sheets, deterministic portfolio-survival controls, and human review. A Bolton Investment Group (BIG) Project.';
 
   const icon = document.querySelector('link[rel="icon"]');
   if (icon) icon.href = './emporion-institutional-seal.svg';
@@ -68,12 +68,20 @@ function overviewBlock() {
         <div class="ws-label">WHAT EMPORION DOES</div>
         <div class="ws-process-line"><span>Candidate intake</span><i></i><span>Research desks</span><i></i><span>Scenario analysis</span><i></i><span>Yellow Sheets</span><i></i><span>Deterministic risk gate</span><i></i><span>Human review</span></div>
       </div>
-      <div class="ws-ror" aria-label="Risk of Ruin and portfolio survival">
-        <div class="ws-label">RISK OF RUIN / PORTFOLIO SURVIVAL</div>
+      <div class="ws-ror" aria-label="Coordinated agentic research architecture">
+        <div class="ws-label">COORDINATED RESEARCH SYSTEM</div>
         <div class="ws-ror-grid">
-          <article><h2>Survival before conviction.</h2><p>A strong thesis is not enough. Emporion treats Risk of Ruin as an independent portfolio-survival checkpoint between research and the final decision.</p></article>
-          <article><h3>Research informs. Risk constrains.</h3><p>The research thesis cannot override the risk gate. Position economics, maximum loss, portfolio state, and validated risk inputs remain separate from the Yellow Sheet narrative.</p></article>
-          <article><h3>Human review is still final.</h3><p>Human review comes after the risk state is known. A blocked risk or compliance state is not converted into approval by stronger conviction.</p></article>
+          <article><h2>Specialized by desk. Coordinated as one system.</h2><p>Emporion is designed for one or more specialist agents to support each research desk as always-on research analysts: gathering evidence, comparing signals, synthesizing findings, and challenging the thesis.</p></article>
+          <article><h3>Shared intelligence, not isolated bots.</h3><p>Desk agents are designed to exchange relevant findings across the platform so rates, events, fundamentals, market structure, and model research can inform one coordinated decision process.</p></article>
+          <article><h3>Automation is a path, not a claim.</h3><p>The architecture is intended to support user-controlled data, model, broker, and execution integrations over time. End-to-end automated trading is not live in the current MVP.</p></article>
+        </div>
+      </div>
+      <div class="ws-ror" aria-label="Risk of Ruin and portfolio survival">
+        <div class="ws-label">POINT OF DIFFERENCE · RISK OF RUIN / PORTFOLIO SURVIVAL</div>
+        <div class="ws-ror-grid">
+          <article><h2>Alpha is pursued. Survival comes first.</h2><p>Emporion separates the search for opportunity from permission to take risk. A strong research thesis can create conviction, but it does not get to override the portfolio-survival gate that shapes the final decision.</p></article>
+          <article><h3>Research asks: is there an edge?</h3><p>Risk asks a different question: can the portfolio survive being wrong? Position economics, maximum loss, portfolio state, and validated risk inputs remain independent of the Yellow Sheet narrative and agent conviction.</p></article>
+          <article><h3>Risk constrains. Human review decides.</h3><p>A blocked risk or compliance state stops progression regardless of thesis strength. Human review comes after the risk state is known and cannot convert a blocked gate into approval. The reference RoR model remains unvalidated in this MVP; the public console does not calculate or validate RoR.</p></article>
         </div>
       </div>
       <div class="ws-continuum" aria-label="Operating continuum">
@@ -112,14 +120,14 @@ function aboutCapitalBlock() {
       </div>
       <div class="ws-capital-grid">
         <article><h3>Data first</h3><p>Public, open, or properly licensed financial data supports the research workflows.</p></article>
-        <article><h3>Quantitative research</h3><p>Specialized desks combine quantitative methods, AI and machine-learning research, source provenance, and repeatable evidence.</p></article>
+        <article><h3>Coordinated research</h3><p>Specialized desk-agent roles are designed to gather, synthesize, challenge, and share research across one decision system rather than operate as isolated bots.</p></article>
         <article><h3>Structured decisions</h3><p>Candidates are evaluated through defined research methods, scenarios, documented decision criteria, and a separate portfolio-survival risk state.</p></article>
-        <article><h3>Human judgment</h3><p>Emporion is designed to support research and decision-making. Human review remains central, but it does not erase a blocked risk or compliance state.</p></article>
+        <article><h3>Survival discipline</h3><p>Research conviction does not override portfolio-survival controls. Human review remains central, but it does not erase a blocked risk or compliance state.</p></article>
       </div>
       <div class="ws-inspiration">
         <div class="ws-label">RESEARCH & INVESTING INSPIRATIONS</div>
         <p><strong>High-Flyer / DeepSeek team</strong> · <strong>Warren Buffett</strong> · <strong>Benjamin Graham</strong> · <strong>Ray Dalio / Bridgewater Associates</strong></p>
-        <p class="ws-inspiration-note">The design principle carried into Emporion is process over prediction: independent research, explicit downside discipline, challenge before commitment, and survival as a prerequisite for compounding. Inspirations only. No affiliation, endorsement, sponsorship, personal relationship, proprietary access, or claim of comparable results.</p>
+        <p class="ws-inspiration-note">The design principle carried into Emporion is process over prediction: specialized research, shared intelligence, explicit downside discipline, challenge before commitment, and survival as a prerequisite for compounding. Inspirations only. No affiliation, endorsement, sponsorship, personal relationship, proprietary access, or claim of comparable results.</p>
       </div>
       <p class="ws-legal">Emporion is an independent research and software project for structured market review. Users remain responsible for their own decisions, accounts, and implementation choices.</p>
     </section>`;
