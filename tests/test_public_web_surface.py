@@ -144,7 +144,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         for fragment in [
             "Candidates are the research queue, not recommendations.",
             "HOW EMPORION TURNS A SYMBOL INTO A DECISION",
-            "Institutional-style trade decision workflow",
+            "institutional-style trade decision workflow",
             "Research the idea",
             "Challenge the thesis",
             "Decide with discipline",
