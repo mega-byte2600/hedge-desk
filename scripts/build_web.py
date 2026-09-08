@@ -75,6 +75,7 @@ if __name__ == "__main__":
             "styles.css",
             "public-surface.js",
             "app.js",
+            "scenario-lab.js",
             "core.mjs",
             "professional.js",
             "yellow-sheet.css",
