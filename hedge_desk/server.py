@@ -102,13 +102,15 @@ def performance_snapshot():
 
 def _supabase_status():
     url = os.getenv("SUPABASE_URL", "").rstrip("/")
-    key = os.getenv("SUPABASE_ANON_KEY", "")
+    key = os.getenv("SUPABASE_PUBLISHABLE_KEY", "") or os.getenv("SUPABASE_ANON_KEY", "")
     if not url or not key:
         return {"configured": False, "reachable": False}
     try:
-        request = Request(url + "/rest/v1/", headers={"apikey": key, "Authorization": "Bearer " + key})
+        # The REST schema root now requires a secret key. Auth health is the
+        # supported public-key probe and does not expose or query user data.
+        request = Request(url + "/auth/v1/health", headers={"apikey": key})
         with urlopen(request, timeout=5) as response:
-            return {"configured": True, "reachable": 200 <= response.status < 500}
+            return {"configured": True, "reachable": 200 <= response.status < 300}
     except Exception:
         return {"configured": True, "reachable": False}
 
