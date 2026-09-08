@@ -135,6 +135,23 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("Live order placement | Roadmap / not implemented", audit)
         self.assertIn("Turnkey automation | Roadmap / not implemented", audit)
 
+    def test_homepage_explains_ror_as_independent_survival_gate(self):
+        professional = (WEB / "professional.js").read_text(encoding="utf-8")
+
+        for fragment in [
+            "Deterministic risk gate",
+            "RISK OF RUIN / PORTFOLIO SURVIVAL",
+            "Survival before conviction.",
+            "research thesis cannot override the risk gate",
+            "independent portfolio-survival checkpoint",
+            "Human review comes after the risk state",
+        ]:
+            self.assertIn(fragment, professional)
+
+        self.assertNotIn("RoR guarantees", professional)
+        self.assertNotIn("RoR authorizes", professional)
+        self.assertNotIn("human can override", professional.lower())
+
     def test_candidate_page_explains_the_mvp_without_overclaiming_functionality(self):
         app = (WEB / "app.js").read_text(encoding="utf-8")
         explainer = (WEB / "candidate-context.js").read_text(encoding="utf-8")
