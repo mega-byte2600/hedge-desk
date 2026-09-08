@@ -79,7 +79,7 @@ function overviewBlock() {
       <div class="ws-ror" aria-label="Risk of Ruin and portfolio survival">
         <div class="ws-label">POINT OF DIFFERENCE · RISK OF RUIN / PORTFOLIO SURVIVAL</div>
         <div class="ws-ror-grid">
-          <article><h2>Alpha is pursued. Survival comes first.</h2><p>Emporion separates the search for opportunity from permission to take risk. A strong research thesis can create conviction, but it does not get to override the portfolio-survival gate that shapes the final decision.</p></article>
+          <article><h2>Survival before conviction. Alpha is pursued. Survival comes first.</h2><p>Emporion separates the search for opportunity from permission to take risk. A strong research thesis can create conviction, but it does not get to override the portfolio-survival gate that shapes the final decision.</p></article>
           <article><h3>Research asks: is there an edge?</h3><p>Risk asks a different question: can the portfolio survive being wrong? Position economics, maximum loss, portfolio state, and validated risk inputs remain independent of the Yellow Sheet narrative and agent conviction.</p></article>
           <article><h3>Risk constrains. Human review decides.</h3><p>A blocked risk or compliance state stops progression regardless of thesis strength. Human review comes after the risk state is known and cannot convert a blocked gate into approval. The reference RoR model remains unvalidated in this MVP; the public console does not calculate or validate RoR.</p></article>
         </div>
