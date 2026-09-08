@@ -166,7 +166,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
             "Challenge the thesis",
             "Decide with discipline",
             "Candidate intake",
-            "Desk method",
+            "Desk research",
             "Evidence qualification",
             "Scenario + Yellow Sheet",
             "Human decision",
