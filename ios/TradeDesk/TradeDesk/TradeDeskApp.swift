@@ -9,6 +9,7 @@ struct TradeDeskApp: App {
                 DeskList().tabItem { Label("Desks", systemImage: "square.grid.2x2") }
                 ScenarioList().tabItem { Label("Scenarios", systemImage: "waveform.path.ecg") }
                 NotesList().tabItem { Label("Yellow Sheets", systemImage: "note.text") }
+                ResourcesList().tabItem { Label("Resources", systemImage: "books.vertical") }
                 ReportInfo().tabItem { Label("Report", systemImage: "doc.text.magnifyingglass") }
             }
             .environmentObject(store)
@@ -230,6 +231,100 @@ struct NoteEditor: View {
         }.interactiveDismissDisabled(!thesis.isEmpty || !evidence.isEmpty || !invalidation.isEmpty)
     }
 }
+
+struct ResearchResource: Identifiable {
+    let id: String
+    let name: String
+    let url: URL
+    let description: String
+}
+
+struct ResearchResourceGroup: Identifiable {
+    let id: String
+    let title: String
+    let note: String
+    let resources: [ResearchResource]
+}
+
+private let researchResourceGroups: [ResearchResourceGroup] = [
+    ResearchResourceGroup(
+        id: "rates-bonds-policy",
+        title: "Rates, Bonds & Monetary Policy",
+        note: "Primary institutional sources first.",
+        resources: [
+            ResearchResource(id: "ny-fed-reference-rates", name: "New York Fed · Reference Rates", url: URL(string: "https://www.newyorkfed.org/markets/reference-rates")!, description: "SOFR, EFFR, repo reference rates, money-market plumbing, and monetary-policy implementation."),
+            ResearchResource(id: "treasury-rates", name: "U.S. Treasury · Interest Rate Statistics", url: URL(string: "https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics")!, description: "Official Treasury par yield curves, real yield curves, bill rates, and related rate statistics."),
+            ResearchResource(id: "fed-policy", name: "Federal Reserve Board · Monetary Policy", url: URL(string: "https://www.federalreserve.gov/monetarypolicy.htm")!, description: "FOMC policy statements, implementation information, reports, and official Federal Reserve policy materials."),
+            ResearchResource(id: "fred", name: "FRED · Federal Reserve Bank of St. Louis", url: URL(string: "https://fred.stlouisfed.org/")!, description: "Macro, rates, credit, inflation, employment, and financial-market time series."),
+            ResearchResource(id: "finra-fixed-income", name: "FINRA · Fixed Income Data", url: URL(string: "https://www.finra.org/finra-data/fixed-income")!, description: "TRACE and other fixed-income market data for corporate and agency debt research."),
+            ResearchResource(id: "cme-rates", name: "CME Group · Interest Rates", url: URL(string: "https://www.cmegroup.com/markets/interest-rates.html")!, description: "Treasury, SOFR, Fed Funds, and other listed interest-rate futures and options.")
+        ]
+    ),
+    ResearchResourceGroup(
+        id: "filings-earnings-fundamentals",
+        title: "Filings, Earnings & Fundamental Research",
+        note: "Primary filings and event research.",
+        resources: [
+            ResearchResource(id: "sec-edgar", name: "SEC · EDGAR", url: URL(string: "https://www.sec.gov/search-filings")!, description: "Official U.S. public-company filings, registration statements, ownership forms, and filing search."),
+            ResearchResource(id: "earnings-whispers", name: "Earnings Whispers", url: URL(string: "https://www.earningswhispers.com/")!, description: "Earnings calendars, reported results, and expectation-focused event research."),
+            ResearchResource(id: "finviz", name: "Finviz", url: URL(string: "https://finviz.com/")!, description: "Screening, market maps, fundamentals, technical context, and news discovery.")
+        ]
+    ),
+    ResearchResourceGroup(
+        id: "macro-derivatives-market-structure",
+        title: "Macro, Derivatives & Market Structure",
+        note: "Official statistics and exchange-level market context.",
+        resources: [
+            ResearchResource(id: "bls", name: "BLS · U.S. Bureau of Labor Statistics", url: URL(string: "https://www.bls.gov/")!, description: "Official employment, CPI, PPI, productivity, and labor-market statistics."),
+            ResearchResource(id: "bea", name: "BEA · U.S. Bureau of Economic Analysis", url: URL(string: "https://www.bea.gov/")!, description: "Official GDP, personal income, consumption, trade, and national accounts."),
+            ResearchResource(id: "cboe", name: "Cboe Global Markets", url: URL(string: "https://www.cboe.com/")!, description: "Options, volatility, index, and market-structure resources.")
+        ]
+    )
+]
+
+struct ResourcesList: View {
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    VStack(alignment: .leading, spacing: 7) {
+                        Label("PRIMARY-SOURCE FIRST", systemImage: "building.columns").font(.caption.weight(.bold))
+                        Text("Open public research sources directly for rates, bonds, policy, filings, macro data, earnings, derivatives, and market structure.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }.padding(.vertical, 4)
+                }
+                ForEach(researchResourceGroups) { group in
+                    Section {
+                        ForEach(group.resources) { resource in
+                            Link(destination: resource.url) {
+                                VStack(alignment: .leading, spacing: 5) {
+                                    HStack {
+                                        Text(resource.name).font(.headline).foregroundStyle(.primary)
+                                        Spacer()
+                                        Image(systemName: "arrow.up.right.square").foregroundStyle(.secondary)
+                                    }
+                                    Text(resource.description).font(.caption).foregroundStyle(.secondary)
+                                }.padding(.vertical, 4)
+                            }
+                            .accessibilityHint("Opens the official external research source")
+                        }
+                    } header: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(group.title)
+                            Text(group.note).font(.caption2).textCase(nil)
+                        }
+                    }
+                }
+                Section {
+                    Text("External resources are provided for research convenience. Inclusion does not imply affiliation, endorsement, sponsorship, investment advice, or trade authorization.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle("Research Resources")
+        }
+    }
+}
+
 struct ReportInfo: View {
     @EnvironmentObject var store: ReportStore
     var body: some View {
