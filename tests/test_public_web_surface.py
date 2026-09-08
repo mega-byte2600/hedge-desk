@@ -166,6 +166,23 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("node.textContent !== value", yellow)
         self.assertIn("if (secondSub) setText(secondSub", yellow)
 
+    def test_scenario_lab_contract_is_snapshot_driven_and_fail_closed(self):
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+        core = (WEB / "core.mjs").read_text(encoding="utf-8")
+
+        self.assertIn("function scenarios()", app)
+        self.assertIn("function renderScenarios()", app)
+        self.assertIn("scenarioRows(report)", app)
+        self.assertIn("filterRows(scenarioRows(report)", app)
+        self.assertIn("report.war_games", core)
+        self.assertIn("report.portfolio_stress.scenarios", core)
+        self.assertIn("candidate.report?.environment!=='paper'", app)
+        self.assertIn("candidate.report.live_orders_enabled!==false", app)
+        self.assertIn("candidate.report.projects.length!==6", app)
+        self.assertIn("Exact engine record. Synthetic fixture only.", app)
+        self.assertNotIn("runScenario", app)
+        self.assertNotIn("executeScenario", app)
+
 
 if __name__ == "__main__":
     unittest.main()
