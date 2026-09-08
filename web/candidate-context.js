@@ -8,7 +8,7 @@
         <div>
           <div class="eyebrow">HOW EMPORION TURNS A SYMBOL INTO A DECISION</div>
           <h2>Candidates are the research queue, not recommendations.</h2>
-          <p>Emporion brings an institutional-style trade decision workflow into one open research workspace: research the idea, challenge the thesis, document the reasoning, and decide with discipline.</p>
+          <p>Emporion brings an institutional-style trade decision workflow into one open research workspace: Research the idea. Challenge the thesis. Document the reasoning. Decide with discipline.</p>
         </div>
       </div>
       <div class="panel-body">
