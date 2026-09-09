@@ -48,6 +48,33 @@ Model choice is deliberate: six distinct model families (`deepseek`, `glm`,
 `gpt`, `claude`, `gemini`, `qwen`) give genuine cognitive diversity so the desk
 does not produce six identical answers.
 
+## Deployment: free agents, not a fixed matrix
+
+The six SOULs are **not** bound to the six trading desks. A small desk does not
+need 36 near-identical profiles (one full six-role team per desk) — that
+duplicates state, model spend, and identity maintenance for zero decision
+value.
+
+Instead, the six SOULs are free agents, like a deployable specialist unit. They
+**decide** where they are needed and **deploy** to whatever desk currently
+requires them. An identity hovers between assignments and is stood up against
+the relevant trading desk on demand.
+
+- **They are not owned by a desk.** No SOUL is permanently assigned to Overnight
+  Premium, Earnings Event, Box/Parity, Dividend, Quant/AI Model Lab, or Futures
+  Event. Each can be invoked for any of them.
+- **They choose and are free.** The orchestrator routes; the specialists accept
+  work where their mandate applies. A SOUL does not need to be recreated per
+  desk — it carries its identity with it and applies it wherever deployed.
+- **Deploy on demand.** When a desk needs quantitative validation, deploy QUANT
+  against it. When it needs a build, deploy ENGINEER. When it needs an
+  independent challenge, deploy RISK. The identity is the same; the target desk
+  is the assignment.
+
+The desk's value is the SOUL's identity + judgment applied to the right problem
+at the right time — not a fixed roster of identical agents locked to fixed
+rooms.
+
 ## Why independent profiles, not subagents
 
 - **Isolated state.** Each profile owns its own `state.db`, `sessions/`,
