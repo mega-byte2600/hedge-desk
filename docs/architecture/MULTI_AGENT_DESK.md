@@ -1,5 +1,15 @@
 # Emporion Multi-Agent Research Desk
 
+## The centerpiece: SOUL.md
+
+The identity and value of the desk live in **SOUL.md**. It is the core of each
+agent, not an afterthought. It is what makes the team more than six models: it
+gives each agent a persistent, load-bearing identity — who it is, why it
+exists, what it owns, what it is forbidden from doing, and how it must behave.
+
+The desk exists to give SOUL.md a body. The models are interchangeable
+hardware; the SOUL is the agent.
+
 ## The problem this records
 
 The research organization is not a single model or a single persona. Different
@@ -60,17 +70,44 @@ does not produce six identical answers.
 - Set model: `hermes -p <profile> config set model.default <model>`
 - Tools per role: `hermes -p <profile> tools disable <toolset>`
 
-## SOUL contract (each agent's identity file)
+## SOUL contract (the core identity file — the value add)
 
-Each `SOUL.md` is self-contained and states, in this order:
+Each agent's **SOUL.md is its identity and its value**. It is the first thing
+loaded into the agent's system prompt, and when present it fully replaces the
+generic default identity. It is what turns a rented model into a member of the
+desk with a defined purpose and hard boundaries.
 
-1. Framework operating discipline (finish the job, verify with tools, never
-   fabricate output, plain claims).
-2. `# IDENTITY: <ROLE>` — why the agent exists.
-3. What it **owns**.
-4. What it does **NOT own** (boundaries that prevent overlap).
-5. How it behaves (role principle + explicit handoffs).
-6. `## Model` — its backing model and provider.
+Each `SOUL.md` is self-contained and states, in order:
+
+1. **Framework operating discipline** — the invariant rules the agent is never
+   told twice: finish the job with verified output, act with tools, never
+   fabricate data or results, state uncertainty plainly, compute and verify
+   with tools rather than memory, and verify every declared total or "done"
+   against real output.
+2. **`# IDENTITY: <ROLE>`** — why the agent exists. This is the agent's core.
+3. **What it owns** — its explicit domain of responsibility.
+4. **What it does NOT own** — the boundaries that prevent overlap and role
+   confusion. This is as important as what it owns.
+5. **How it behaves** — the role's governing principle (e.g. RISK is not
+   rewarded for agreeing) plus explicit handoffs.
+6. **`## Model`** — its backing model and provider, so the identity and the
+   hardware are both auditable.
+
+The role principles encoded in each SOUL are the desk's real governance:
+
+- **ORCHESTRATOR** — routes by mandate, synthesizes, and escalates
+  disagreement. Never overrides a specialist by fiat.
+- **QUANT** — data before narrative. Never fabricates data or results. Falsifies
+  before believing.
+- **ENGINEER** — inspect before modifying. Simple, testable, reliable systems.
+- **RESEARCH** — trace claims to evidence; distinguish fact, inference, and
+  speculation.
+- **RISK** — independent; not rewarded for agreeing. Quantified challenge, tail
+  risk, model risk, survivability.
+- **DATA** — provenance, quality, lineage, reproducibility. Filesystem-first.
+
+Because SOUL.md is protected agent-instruction content, changing an identity
+is a deliberate, gated action — exactly as it should be for an agent's core.
 
 ## Reproducing the setup
 
