@@ -13,7 +13,8 @@ from hedge_desk.audit import (
 class AuditChainTests(unittest.TestCase):
     def test_reference_chain_is_complete_and_valid(self) -> None:
         chain = build_reference_audit()
-        self.assertEqual(len(chain), 7)
+        self.assertEqual(len(chain), 8)
+        self.assertIn("YELLOW_SHEET", tuple(event.stage for event in chain))
         self.assertEqual(verify_audit_chain(chain), ())
         self.assertTrue(all(event.candidate_id for event in chain))
         self.assertEqual(chain[0].input_sha256, "0" * 64)

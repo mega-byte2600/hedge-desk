@@ -1,0 +1,34 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+		A001 = {isa = PBXProject; attributes = {LastUpgradeCheck = 1620;}; buildConfigurationList = A010; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; knownRegions = (en, Base); mainGroup = A002; productRefGroup = A003; projectDirPath = ""; projectRoot = ""; targets = (A004);};
+		A002 = {isa = PBXGroup; children = (A020, A003); sourceTree = "<group>";};
+		A003 = {isa = PBXGroup; children = (A005); name = Products; sourceTree = "<group>";};
+		A004 = {isa = PBXNativeTarget; buildConfigurationList = A011; buildPhases = (A030, A031, A032); buildRules = (); dependencies = (); name = HedgeDeskObjC; productName = HedgeDeskObjC; productReference = A005; productType = "com.apple.product-type.application";};
+		A005 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HedgeDeskObjC.app; sourceTree = BUILT_PRODUCTS_DIR;};
+		A020 = {isa = PBXGroup; path = HedgeDeskObjC; sourceTree = "<group>"; children = (A101,A102,A103,A104,A105,A106,A107,A108,A109);};
+		A101 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>";};
+		A102 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>";};
+		A103 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>";};
+		A104 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeskViewController.m; sourceTree = "<group>";};
+		A105 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeskViewController.h; sourceTree = "<group>";};
+		A106 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HedgeDeskAPI.m; sourceTree = "<group>";};
+		A107 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HedgeDeskAPI.h; sourceTree = "<group>";};
+		A108 = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>";};
+		A109 = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>";};
+		A201 = {isa = PBXBuildFile; fileRef = A101;}; A202 = {isa = PBXBuildFile; fileRef = A102;}; A204 = {isa = PBXBuildFile; fileRef = A104;}; A206 = {isa = PBXBuildFile; fileRef = A106;}; A208 = {isa = PBXBuildFile; fileRef = A108;}; A209 = {isa = PBXBuildFile; fileRef = A109;};
+		A030 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A201,A202,A204,A206); runOnlyForDeploymentPostprocessing = 0;};
+		A031 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;};
+		A032 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A208,A209); runOnlyForDeploymentPostprocessing = 0;};
+		A010 = {isa = XCConfigurationList; buildConfigurations = (A401,A402); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+		A011 = {isa = XCConfigurationList; buildConfigurations = (A403,A404); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+		A401 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {CLANG_ENABLE_MODULES = YES; IPHONEOS_DEPLOYMENT_TARGET = 16.0; SDKROOT = iphoneos;};};
+		A402 = {isa = XCBuildConfiguration; name = Release; buildSettings = {CLANG_ENABLE_MODULES = YES; IPHONEOS_DEPLOYMENT_TARGET = 16.0; SDKROOT = iphoneos;};};
+		A403 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; HEDGE_DESK_API_BASE_URL = "http://127.0.0.1:8765"; INFOPLIST_FILE = HedgeDeskObjC/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.hedgedesk.mvp; PRODUCT_NAME = "$(TARGET_NAME)"; TARGETED_DEVICE_FAMILY = 1;};};
+		A404 = {isa = XCBuildConfiguration; name = Release; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; HEDGE_DESK_API_BASE_URL = "https://replace-with-your-backend.example"; INFOPLIST_FILE = HedgeDeskObjC/Info.plist; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = com.hedgedesk.mvp; PRODUCT_NAME = "$(TARGET_NAME)"; TARGETED_DEVICE_FAMILY = 1; VALIDATE_PRODUCT = YES;};};
+	};
+	rootObject = A001;
+}

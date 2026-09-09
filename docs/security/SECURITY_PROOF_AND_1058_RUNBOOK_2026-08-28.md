@@ -69,7 +69,7 @@ From `/Users/cebu/Documents/BIG`:
 ```bash
 python3 -m unittest discover -s tests -v
 python3 -m hedge_desk.demo
-python3 -m hedge_desk.server
+python3 -m hedge_desk.schwab_server
 ```
 
 Then open:

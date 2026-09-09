@@ -20,6 +20,12 @@ from hedge_desk.options import (
     VerticalSpreadCalculation,
     evaluate_premium_exit,
 )
+from hedge_desk.yellow_sheet import (
+    TradeAction,
+    YellowSheet,
+    YellowSheetGate,
+    validate_yellow_sheet,
+)
 
 
 class MachineRiskStatus(str, Enum):
@@ -55,6 +61,9 @@ class PaperTradePlan:
     approval_expires_at: datetime
     execution_quote_max_age_seconds: int
     control_artifact_max_age_seconds: int
+    yellow_sheet: Optional[YellowSheet]
+    yellow_sheet_gate: YellowSheetGate
+    proposal_disposition: TradeAction
     plan_hash: str
 
 
@@ -226,6 +235,25 @@ def _calculate_plan_hash(
     return sha256(payload.encode("utf-8")).hexdigest()
 
 
+def calculate_proposed_plan_hash(
+    plan_id: str,
+    spread: VerticalSpreadCalculation,
+    risk_decision: Decision,
+    compliance_decision: BackOfficeDecision,
+    created_at: datetime,
+    approval_expires_at: datetime,
+    execution_quote_max_age_seconds: int,
+    control_artifact_max_age_seconds: int,
+    event_calendar_gate: EventCalendarGate,
+) -> str:
+    """Return the immutable hash a Yellow Sheet must bind before proposal."""
+    return _calculate_plan_hash(
+        plan_id, spread, risk_decision, compliance_decision, created_at,
+        approval_expires_at, execution_quote_max_age_seconds,
+        control_artifact_max_age_seconds, event_calendar_gate,
+    )
+
+
 def _assert_plan_integrity(plan: PaperTradePlan) -> None:
     expected = _calculate_plan_hash(
         plan.plan_id,
@@ -240,6 +268,15 @@ def _assert_plan_integrity(plan: PaperTradePlan) -> None:
     )
     if expected != plan.plan_hash:
         raise PermissionError("paper-trade plan integrity check failed")
+    gate = validate_yellow_sheet(
+        plan.yellow_sheet,
+        plan.risk_decision.candidate_id,
+        plan.plan_hash,
+        plan.created_at,
+        plan.control_artifact_max_age_seconds,
+    )
+    if gate != plan.yellow_sheet_gate or gate.reason_codes:
+        raise PermissionError("NO_TRADE: Yellow Sheet integrity check failed")
 
 
 def create_paper_trade_plan(
@@ -252,6 +289,7 @@ def create_paper_trade_plan(
     execution_quote_max_age_seconds: int = 120,
     control_artifact_max_age_seconds: int = 120,
     event_calendar_gate: Optional[EventCalendarGate] = None,
+    yellow_sheet: Optional[YellowSheet] = None,
 ) -> PaperTradePlan:
     if not plan_id:
         raise ValueError("plan identity is required")
@@ -328,6 +366,16 @@ def create_paper_trade_plan(
         control_artifact_max_age_seconds,
         event_calendar_gate,
     )
+    yellow_sheet_gate = validate_yellow_sheet(
+        yellow_sheet,
+        risk_decision.candidate_id,
+        plan_hash,
+        created_at,
+        control_artifact_max_age_seconds,
+    )
+    gate_reasons = yellow_sheet_gate.reason_codes
+    if gate_reasons:
+        machine_status = MachineRiskStatus.REJECT
     return PaperTradePlan(
         plan_id=plan_id,
         spread=spread,
@@ -336,13 +384,22 @@ def create_paper_trade_plan(
         event_calendar_gate=event_calendar_gate,
         machine_risk_status=machine_status,
         reason_codes=tuple(
-            sorted(set(risk_decision.reason_codes + compliance_decision.reason_codes))
+            sorted(set(
+                risk_decision.reason_codes
+                + compliance_decision.reason_codes
+                + gate_reasons
+            ))
         ),
         authorization=HumanAuthorization(HumanAuthorizationStatus.PENDING),
         created_at=created_at,
         approval_expires_at=approval_expires_at,
         execution_quote_max_age_seconds=execution_quote_max_age_seconds,
         control_artifact_max_age_seconds=control_artifact_max_age_seconds,
+        yellow_sheet=yellow_sheet,
+        yellow_sheet_gate=yellow_sheet_gate,
+        proposal_disposition=(
+            TradeAction.NO_TRADE if gate_reasons else TradeAction.HOLD
+        ),
         plan_hash=plan_hash,
     )
 
@@ -352,15 +409,15 @@ def approve_paper_trade(
     human_id: str,
     decided_at: datetime,
 ) -> PaperTradePlan:
-    _assert_plan_integrity(plan)
     if not human_id.strip():
         raise ValueError("human identity is required")
     if decided_at.tzinfo is None:
         raise ValueError("authorization timestamp must be timezone-aware")
-    if plan.machine_risk_status is not MachineRiskStatus.PASS:
-        raise PermissionError("human cannot override a machine risk rejection")
     if plan.compliance_decision.status is not BackOfficeStatus.PASS:
         raise PermissionError("human cannot override a Back Office compliance block")
+    if plan.machine_risk_status is not MachineRiskStatus.PASS:
+        raise PermissionError("human cannot override a machine risk rejection")
+    _assert_plan_integrity(plan)
     if decided_at > plan.approval_expires_at:
         raise PermissionError("paper-trade approval window has expired")
     if plan.authorization.status is not HumanAuthorizationStatus.PENDING:
@@ -412,7 +469,13 @@ def evaluate_paper_fill(
     contract_adjustment_pending: bool = False,
 ) -> PaperFillCheck:
     """Fail closed when current executable terms differ from the approved plan."""
-    _assert_plan_integrity(plan)
+    try:
+        _assert_plan_integrity(plan)
+    except PermissionError:
+        return PaperFillCheck(
+            False, ("YELLOW_SHEET_GATE_FAILED",), available_combo_size,
+            current_net_credit, checked_at,
+        )
     if checked_at.tzinfo is None:
         raise ValueError("fill-check timestamp must be timezone-aware")
     reasons = []

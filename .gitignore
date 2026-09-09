@@ -15,3 +15,5 @@ build/
 
 # Codex projectless-chat workspaces are not part of the application repository.
 /20??-??-??/
+config/*.local.json
+config/*.tokens.local.json
