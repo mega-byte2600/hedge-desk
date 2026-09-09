@@ -79,6 +79,7 @@ if __name__ == "__main__":
             "scenario-lab.js",
             "core.mjs",
             "professional.js",
+            "ror-positioning.js",
             "yellow-sheet.css",
             "yellow-sheet.js",
             "acknowledgements.js",
