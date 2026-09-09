@@ -21,12 +21,18 @@ test('every agent carries ownership, boundaries, and a principle', () => {
 });
 
 test('countdown computes days/hours/minutes/seconds and flags live', () => {
-  const future = new Date(Date.now() + 3 * 86400000 + 2 * 3600000).toISOString();
-  const cd = countdown(future);
-  assert.equal(cd.d, 3);
-  assert.equal(cd.h, 2);
+  // Deterministic: build the target from an explicit offset in ms and assert
+  // exact components, independent of when the test runs.
+  const now = Date.now();
+  const dayMs = 86400000, hourMs = 3600000, minMs = 60000, secMs = 1000;
+  const target = new Date(now + 3 * dayMs + 2 * hourMs + 30 * minMs + 15 * secMs).toISOString();
+  const cd = countdown(target);
+  assert.ok(cd.d === 3, 'expected 3 days, got ' + cd.d);
+  assert.ok(cd.h === 2, 'expected 2 hours, got ' + cd.h);
+  assert.ok(cd.m === 30, 'expected 30 minutes, got ' + cd.m);
   assert.ok(!cd.live);
-  const past = new Date(Date.now() - 1000).toISOString();
+  // Rounding: exactly-now target means live immediately (diff clamped to 0).
+  const past = new Date(now - 1000).toISOString();
   const gone = countdown(past);
   assert.equal(gone.live, true);
   assert.equal(gone.d, 0);
