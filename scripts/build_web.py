@@ -86,6 +86,8 @@ if __name__ == "__main__":
             "ui-polish.js",
             "resources.js",
             "desk-architecture.js",
+            "multi-agent-desk.mjs",
+            "timeline.json",
             "navigation-stability.js",
             "emporion-institutional-seal.svg",
             "report.json",

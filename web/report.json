@@ -4,7 +4,7 @@
     "report_type": "paper_hypothetical_morning_evaluation",
     "runner_version": "1.0.0",
     "code_commit": "LOCAL_UNSPECIFIED",
-    "generated_at": "2026-09-07T01:52:44.822875+00:00",
+    "generated_at": "2026-09-09T07:39:44.291236+00:00",
     "environment": "paper",
     "complete": true,
     "live_orders_enabled": false,
@@ -2009,12 +2009,12 @@
       "live_transition_authorized": false,
       "artifact_sha256": "9cc2c210afb346587dc3890a87ff3f7570f2ecdf9f1e547145948a0f2f63fa61"
     },
-    "report_sha256": "fb91acae2b163da53b71c955e6f76cce3613f5250d3ab6e8b9664cee7ae618f7"
+    "report_sha256": "195fac241d52866826b0096cc9de01279774f93b44d2973b7413cb6234747ec9"
   },
   "summary": {
     "report_type": "paper_morning_control_summary",
     "code_commit": "LOCAL_UNSPECIFIED",
-    "report_sha256": "fb91acae2b163da53b71c955e6f76cce3613f5250d3ab6e8b9664cee7ae618f7",
+    "report_sha256": "195fac241d52866826b0096cc9de01279774f93b44d2973b7413cb6234747ec9",
     "projects_evaluated": 6,
     "human_review": 1,
     "no_trade_projects": 5,
@@ -2077,9 +2077,218 @@
       "name": "Weather/War/Logistics Futures Event Desk",
       "status": "working_foundation",
       "objective": "Compare validated physical-event surprise with curve pricing, basis, roll, and costs."
+    },
+    {
+      "number": 7,
+      "project_id": "bonds-rates-desk",
+      "name": "Bonds and Rates Desk",
+      "status": "architecture_only",
+      "objective": "Anchor cross-asset research in Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress."
     }
   ],
-  "morning_markdown": "# Hedge Desk Morning Evaluation\n\nGenerated: 2026-09-07T01:52:44.822875+00:00\nCode commit: `LOCAL_UNSPECIFIED`\n\n## Actual status\n\n- Real money P&L: $0\n- Real trades executed: 0\n- Environment: PAPER / HYPOTHETICAL\n- Live orders enabled: false\n\n## Project evaluation\n\n| Project | Disposition |\n|---|---|\n| overnight-premium-desk | HUMAN_REVIEW |\n| earnings-event-desk | NO_TRADE |\n| arbitrage-observer | NO_TRADE |\n| dividend-opportunity-desk | NO_TRADE |\n| open-quant-ai-model-lab | NO_TRADE |\n| event-futures-desk | NO_TRADE |\n\n## Synthetic war games\n\n- Total declared scenarios: 73\n- NO_TRADE controls: 46\n- Premium profitable stresses: 1\n- Premium losing stresses: 4\n- Premium synthetic total P&L: $-848.00\n- Premium synthetic maximum drawdown: $925.40\n- Premium synthetic expected shortfall: $-407.60\n- Earnings equity-arm synthetic total: $-22\n- Earnings option-arm synthetic total: $-312.00\n- Earnings hedged-arm synthetic total: $-5\n- Arbitrage gated-policy synthetic total: $45\n- Dividend shares-arm synthetic total: $-1083.00\n- Dividend call-arm synthetic total: $-310.00\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n- STAT Brier score: 0.23\n- STAT inference: INSUFFICIENT_SAMPLE\n- STAT p-value: None\n- STAT 95% CI: None\n- BIG proposal (agent research): defined-risk synthetic put credit spread\n- Deterministic risk model: finite-capital-ruin-approximation 0.1.0-unvalidated\n- Validated risk-input artifact: `d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0`\n\n## Combined-MVP capital stress\n\n- Synthetic scenarios: 5\n- Starting synthetic capital: $100000\n- Synthetic total P&L: $-9936.00\n- Synthetic maximum drawdown: $10034.40\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n\n## Control verification\n\n- Data batch: READY_FOR_RESEARCH\n- Chronological replay valid: true\n- Audit chain valid: true\n- Paper Back Office reconciliation: pass\n- Paper reconciliation live-release eligible: false\n- Premium new-entry evaluation allowed: true\n- Premium monitoring allowed: true\n- Premium exit-policy review scenarios: 3\n- Live release status: LIVE_RELEASE_BLOCKED\n- Live transition authorized: false\n- Unsatisfied live-release requirements: 9\n- Report SHA-256: `fb91acae2b163da53b71c955e6f76cce3613f5250d3ab6e8b9664cee7ae618f7`\n\n## Limitations\n\n- Synthetic fixtures only; no current market opportunity is claimed.\n- Hypothetical paper output is not investment advice or a performance guarantee.\n- Research-only foundations correctly return NO_TRADE without validated risk inputs.\n",
+  "morning_markdown": "# Hedge Desk Morning Evaluation\n\nGenerated: 2026-09-09T07:39:44.291236+00:00\nCode commit: `LOCAL_UNSPECIFIED`\n\n## Actual status\n\n- Real money P&L: $0\n- Real trades executed: 0\n- Environment: PAPER / HYPOTHETICAL\n- Live orders enabled: false\n\n## Project evaluation\n\n| Project | Disposition |\n|---|---|\n| overnight-premium-desk | HUMAN_REVIEW |\n| earnings-event-desk | NO_TRADE |\n| arbitrage-observer | NO_TRADE |\n| dividend-opportunity-desk | NO_TRADE |\n| open-quant-ai-model-lab | NO_TRADE |\n| event-futures-desk | NO_TRADE |\n\n## Synthetic war games\n\n- Total declared scenarios: 73\n- NO_TRADE controls: 46\n- Premium profitable stresses: 1\n- Premium losing stresses: 4\n- Premium synthetic total P&L: $-848.00\n- Premium synthetic maximum drawdown: $925.40\n- Premium synthetic expected shortfall: $-407.60\n- Earnings equity-arm synthetic total: $-22\n- Earnings option-arm synthetic total: $-312.00\n- Earnings hedged-arm synthetic total: $-5\n- Arbitrage gated-policy synthetic total: $45\n- Dividend shares-arm synthetic total: $-1083.00\n- Dividend call-arm synthetic total: $-310.00\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n- STAT Brier score: 0.23\n- STAT inference: INSUFFICIENT_SAMPLE\n- STAT p-value: None\n- STAT 95% CI: None\n- BIG proposal (agent research): defined-risk synthetic put credit spread\n- Deterministic risk model: finite-capital-ruin-approximation 0.1.0-unvalidated\n- Validated risk-input artifact: `d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0`\n\n## Combined-MVP capital stress\n\n- Synthetic scenarios: 5\n- Starting synthetic capital: $100000\n- Synthetic total P&L: $-9936.00\n- Synthetic maximum drawdown: $10034.40\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n\n## Control verification\n\n- Data batch: READY_FOR_RESEARCH\n- Chronological replay valid: true\n- Audit chain valid: true\n- Paper Back Office reconciliation: pass\n- Paper reconciliation live-release eligible: false\n- Premium new-entry evaluation allowed: true\n- Premium monitoring allowed: true\n- Premium exit-policy review scenarios: 3\n- Live release status: LIVE_RELEASE_BLOCKED\n- Live transition authorized: false\n- Unsatisfied live-release requirements: 9\n- Report SHA-256: `195fac241d52866826b0096cc9de01279774f93b44d2973b7413cb6234747ec9`\n\n## Limitations\n\n- Synthetic fixtures only; no current market opportunity is claimed.\n- Hypothetical paper output is not investment advice or a performance guarantee.\n- Research-only foundations correctly return NO_TRADE without validated risk inputs.\n",
+  "candidate_feed": {
+    "schema_version": "hedge-desk-candidates-1.0.0",
+    "mode": "PAPER_RESEARCH_ONLY",
+    "candidate_definition": "SEED_UNIVERSE_NOT_METHOD_QUALIFIED",
+    "candidates": [
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "SPY",
+        "instrument_type": "ETF_OPTIONS",
+        "stage": "AWAITING_CURRENT_CHAIN",
+        "method": "Defined-risk premium after liquidity, volatility, event, and executable-spread checks.",
+        "evidence_needed": "Current option chain, volatility surface, calendar, and executable bid/ask.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "QQQ",
+        "instrument_type": "ETF_OPTIONS",
+        "stage": "AWAITING_CURRENT_CHAIN",
+        "method": "Defined-risk premium after liquidity, volatility, event, and executable-spread checks.",
+        "evidence_needed": "Current option chain, volatility surface, calendar, and executable bid/ask.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "earnings-event-desk",
+        "symbol": "AAPL",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "AWAITING_EVENT_EVIDENCE",
+        "method": "Earnings surprise versus point-in-time expectations, followed by observed price reaction.",
+        "evidence_needed": "Confirmed event, frozen consensus, release, and post-release reaction.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "earnings-event-desk",
+        "symbol": "NVDA",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "AWAITING_EVENT_EVIDENCE",
+        "method": "Earnings surprise versus point-in-time expectations, followed by observed price reaction.",
+        "evidence_needed": "Confirmed event, frozen consensus, release, and post-release reaction.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "arbitrage-observer",
+        "symbol": "SPX",
+        "instrument_type": "INDEX_OPTIONS",
+        "stage": "AWAITING_EXECUTABLE_QUOTES",
+        "method": "Put-call parity or box dislocation after spreads, fees, settlement, and financing.",
+        "evidence_needed": "Synchronized quotes, settlement terms, fees, and financing cost.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "arbitrage-observer",
+        "symbol": "XSP",
+        "instrument_type": "INDEX_OPTIONS",
+        "stage": "AWAITING_EXECUTABLE_QUOTES",
+        "method": "Put-call parity or box dislocation after spreads, fees, settlement, and financing.",
+        "evidence_needed": "Synchronized quotes, settlement terms, fees, and financing cost.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "dividend-opportunity-desk",
+        "symbol": "KO",
+        "instrument_type": "EQUITY",
+        "stage": "AWAITING_FUNDAMENTALS",
+        "method": "Dividend durability, payout capacity, shareholder yield, and valuation.",
+        "evidence_needed": "Point-in-time payouts, cash flow, issuance, buybacks, price, and valuation.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "dividend-opportunity-desk",
+        "symbol": "JNJ",
+        "instrument_type": "EQUITY",
+        "stage": "AWAITING_FUNDAMENTALS",
+        "method": "Dividend durability, payout capacity, shareholder yield, and valuation.",
+        "evidence_needed": "Point-in-time payouts, cash flow, issuance, buybacks, price, and valuation.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "open-quant-ai-model-lab",
+        "symbol": "SPY",
+        "instrument_type": "ETF",
+        "stage": "AWAITING_OOS_SCORE",
+        "method": "Independent quant and AI hypotheses with leakage-controlled out-of-sample tests.",
+        "evidence_needed": "Versioned features, purged walk-forward result, costs, and model quorum.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "open-quant-ai-model-lab",
+        "symbol": "QQQ",
+        "instrument_type": "ETF",
+        "stage": "AWAITING_OOS_SCORE",
+        "method": "Independent quant and AI hypotheses with leakage-controlled out-of-sample tests.",
+        "evidence_needed": "Versioned features, purged walk-forward result, costs, and model quorum.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "event-futures-desk",
+        "symbol": "CL",
+        "instrument_type": "FUTURES_ROOT",
+        "stage": "AWAITING_PHYSICAL_EVENT",
+        "method": "Physical weather, war, or logistics surprise compared with the futures curve.",
+        "evidence_needed": "Validated event, current curve, basis, roll, margin, liquidity, and costs.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "event-futures-desk",
+        "symbol": "NG",
+        "instrument_type": "FUTURES_ROOT",
+        "stage": "AWAITING_PHYSICAL_EVENT",
+        "method": "Physical weather, war, or logistics surprise compared with the futures curve.",
+        "evidence_needed": "Validated event, current curve, basis, roll, margin, liquidity, and costs.",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "event-futures-desk",
+        "symbol": "ZW",
+        "instrument_type": "FUTURES_ROOT",
+        "stage": "AWAITING_PHYSICAL_EVENT",
+        "method": "Physical weather, war, or logistics surprise compared with the futures curve.",
+        "evidence_needed": "Validated event, current curve, basis, roll, margin, liquidity, and costs.",
+        "trade_authorized": false
+      }
+    ]
+  },
+  "risk_dashboard": {
+    "schema_version": "hedge-desk-risk-dashboard-1.0.0",
+    "mode": "PAPER_RESEARCH_ONLY",
+    "trade_authorized_count": 0,
+    "live_orders_enabled": false,
+    "candidate_count": 13,
+    "desk_count": 6,
+    "stage_counts": {
+      "AWAITING_CURRENT_CHAIN": 2,
+      "AWAITING_EVENT_EVIDENCE": 2,
+      "AWAITING_EXECUTABLE_QUOTES": 2,
+      "AWAITING_FUNDAMENTALS": 2,
+      "AWAITING_OOS_SCORE": 2,
+      "AWAITING_PHYSICAL_EVENT": 3
+    },
+    "desk_counts": {
+      "arbitrage-observer": 2,
+      "dividend-opportunity-desk": 2,
+      "earnings-event-desk": 2,
+      "event-futures-desk": 3,
+      "open-quant-ai-model-lab": 2,
+      "overnight-premium-desk": 2
+    },
+    "evidence_gaps": {
+      "event_validation": 5,
+      "fundamental_validation": 2,
+      "market_microstructure": 4,
+      "model_validation": 2
+    },
+    "attention_queue": [
+      {
+        "symbol": "SPY",
+        "desk_id": "overnight-premium-desk",
+        "stage": "AWAITING_CURRENT_CHAIN",
+        "evidence_needed": "Current option chain, volatility surface, calendar, and executable bid/ask."
+      },
+      {
+        "symbol": "QQQ",
+        "desk_id": "overnight-premium-desk",
+        "stage": "AWAITING_CURRENT_CHAIN",
+        "evidence_needed": "Current option chain, volatility surface, calendar, and executable bid/ask."
+      },
+      {
+        "symbol": "SPX",
+        "desk_id": "arbitrage-observer",
+        "stage": "AWAITING_EXECUTABLE_QUOTES",
+        "evidence_needed": "Synchronized quotes, settlement terms, fees, and financing cost."
+      },
+      {
+        "symbol": "XSP",
+        "desk_id": "arbitrage-observer",
+        "stage": "AWAITING_EXECUTABLE_QUOTES",
+        "evidence_needed": "Synchronized quotes, settlement terms, fees, and financing cost."
+      },
+      {
+        "symbol": "CL",
+        "desk_id": "event-futures-desk",
+        "stage": "AWAITING_PHYSICAL_EVENT",
+        "evidence_needed": "Validated event, current curve, basis, roll, margin, liquidity, and costs."
+      },
+      {
+        "symbol": "NG",
+        "desk_id": "event-futures-desk",
+        "stage": "AWAITING_PHYSICAL_EVENT",
+        "evidence_needed": "Validated event, current curve, basis, roll, margin, liquidity, and costs."
+      }
+    ],
+    "executive_actions": [
+      "Keep the web surface research-only: candidate feed shows zero trade-authorized records.",
+      "Prioritize executable bid/ask, option-chain, and liquidity evidence before any premium desk review.",
+      "Freeze event calendars and source timestamps for earnings, futures, and catalyst workflows.",
+      "Require out-of-sample model evidence before promoting any quant or AI idea."
+    ]
+  },
+  "owner": {
+    "display_name": "mbolton",
+    "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"
+  },
   "research_data_sources": [
     {
       "source_id": "papers-with-backtest",
