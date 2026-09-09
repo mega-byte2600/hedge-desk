@@ -1,0 +1,1759 @@
+{
+  "schema_version": "desk-timeline-1",
+  "generated_at": "2026-09-09T07:32:47.631672+00:00",
+  "target_live": "2026-09-12T18:00:00-07:00",
+  "source": "https://github.com/mega-byte2600/hedge-desk",
+  "total_commits": 350,
+  "commits": [
+    {
+      "sha": "103268f",
+      "date": "2026-08-21T22:00:36-07:00",
+      "subject": "chore: establish hedge desk repository"
+    },
+    {
+      "sha": "03f3688",
+      "date": "2026-08-21T22:07:30-07:00",
+      "subject": "docs: lock non-agentic RoR and public V&V workflow"
+    },
+    {
+      "sha": "81612d7",
+      "date": "2026-08-21T22:23:41-07:00",
+      "subject": "docs: catalog initial financial validation sources"
+    },
+    {
+      "sha": "f01bd95",
+      "date": "2026-08-21T22:26:08-07:00",
+      "subject": "docs: catalog MIT finance theory references"
+    },
+    {
+      "sha": "e4905d1",
+      "date": "2026-08-21T22:48:01-07:00",
+      "subject": "docs: define three-leg desk and overnight premium MVP"
+    },
+    {
+      "sha": "19c1d69",
+      "date": "2026-08-21T22:54:38-07:00",
+      "subject": "docs: define earnings event paper desk MVP"
+    },
+    {
+      "sha": "7ad4b49",
+      "date": "2026-08-21T23:03:11-07:00",
+      "subject": "docs: add data, arbitrage, compliance, and human control planes"
+    },
+    {
+      "sha": "4c2451e",
+      "date": "2026-08-21T23:13:15-07:00",
+      "subject": "Build tested overnight premium paper workflow"
+    },
+    {
+      "sha": "8b09b8a",
+      "date": "2026-08-21T23:20:07-07:00",
+      "subject": "Register Dividend Opportunity Desk as MVP 4"
+    },
+    {
+      "sha": "2af69cb",
+      "date": "2026-08-21T23:26:20-07:00",
+      "subject": "Run scheduled overnight paper evaluations"
+    },
+    {
+      "sha": "cd98e83",
+      "date": "2026-08-21T23:27:54-07:00",
+      "subject": "Add open Quant AI model lab as MVP 5"
+    },
+    {
+      "sha": "7306984",
+      "date": "2026-08-21T23:31:48-07:00",
+      "subject": "Require Back Office compliance before paper execution"
+    },
+    {
+      "sha": "ed4683b",
+      "date": "2026-08-21T23:50:28-07:00",
+      "subject": "Add deterministic premium war game evaluations"
+    },
+    {
+      "sha": "7bae1dd",
+      "date": "2026-08-21T23:52:23-07:00",
+      "subject": "Expand war games across strategy MVPs"
+    },
+    {
+      "sha": "b99fd61",
+      "date": "2026-08-21T23:53:19-07:00",
+      "subject": "Add lookahead-safe chronological replay gates"
+    },
+    {
+      "sha": "29b8092",
+      "date": "2026-08-21T23:54:08-07:00",
+      "subject": "Gate and hash morning evaluation reports"
+    },
+    {
+      "sha": "771407c",
+      "date": "2026-08-21T23:54:59-07:00",
+      "subject": "Add tamper evident overnight audit chain"
+    },
+    {
+      "sha": "7485436",
+      "date": "2026-08-21T23:55:30-07:00",
+      "subject": "Reconcile cross MVP war game coverage"
+    },
+    {
+      "sha": "d0d24b7",
+      "date": "2026-08-21T23:57:06-07:00",
+      "subject": "Add deterministic tail and drawdown metrics"
+    },
+    {
+      "sha": "98e30a8",
+      "date": "2026-08-21T23:57:53-07:00",
+      "subject": "Add idempotent fail closed paper scheduler"
+    },
+    {
+      "sha": "6298472",
+      "date": "2026-08-21T23:58:32-07:00",
+      "subject": "Bind war game assumptions to fixture manifest"
+    },
+    {
+      "sha": "4dd9808",
+      "date": "2026-08-21T23:59:33-07:00",
+      "subject": "Bind portfolio exposure into Back Office approval"
+    },
+    {
+      "sha": "9065415",
+      "date": "2026-08-22T00:00:39-07:00",
+      "subject": "Fail closed incomplete overnight data batches"
+    },
+    {
+      "sha": "a29024d",
+      "date": "2026-08-22T00:01:29-07:00",
+      "subject": "Render honest human morning control report"
+    },
+    {
+      "sha": "d61508e",
+      "date": "2026-08-22T00:03:10-07:00",
+      "subject": "Add labeled STAT calibration evaluation gate"
+    },
+    {
+      "sha": "36fd466",
+      "date": "2026-08-22T00:04:51-07:00",
+      "subject": "Version and age machine control artifacts"
+    },
+    {
+      "sha": "bb7825a",
+      "date": "2026-08-22T00:07:12-07:00",
+      "subject": "Cancel paper fills when approved terms change"
+    },
+    {
+      "sha": "b1a9d15",
+      "date": "2026-08-22T00:08:03-07:00",
+      "subject": "Add deterministic morning run comparisons"
+    },
+    {
+      "sha": "fb21683",
+      "date": "2026-08-22T00:10:37-07:00",
+      "subject": "War game assignment and expiration controls"
+    },
+    {
+      "sha": "3c38b00",
+      "date": "2026-08-22T00:11:38-07:00",
+      "subject": "Pin CI actions to verified releases"
+    },
+    {
+      "sha": "99b1dec",
+      "date": "2026-08-22T00:13:34-07:00",
+      "subject": "Stress combined MVP capital paths"
+    },
+    {
+      "sha": "4a86312",
+      "date": "2026-08-22T00:14:45-07:00",
+      "subject": "Wire drawdown circuit breaker through Back Office"
+    },
+    {
+      "sha": "810206b",
+      "date": "2026-08-22T00:15:42-07:00",
+      "subject": "Bind stress artifacts to Back Office controls"
+    },
+    {
+      "sha": "d24d747",
+      "date": "2026-08-22T00:16:55-07:00",
+      "subject": "Recover failed overnight runs without duplication"
+    },
+    {
+      "sha": "d0b9deb",
+      "date": "2026-08-22T00:19:03-07:00",
+      "subject": "Bind premium candidates to contract exit timing"
+    },
+    {
+      "sha": "bcff481",
+      "date": "2026-08-22T00:20:03-07:00",
+      "subject": "Require synchronized underlying quotes for premium calculations"
+    },
+    {
+      "sha": "695631a",
+      "date": "2026-08-22T00:21:01-07:00",
+      "subject": "Enforce deterministic option liquidity gates"
+    },
+    {
+      "sha": "d24c617",
+      "date": "2026-08-22T00:22:54-07:00",
+      "subject": "Require validated inputs for deterministic RoR"
+    },
+    {
+      "sha": "bb6dbdd",
+      "date": "2026-08-22T00:23:22-07:00",
+      "subject": "Label BIG versus deterministic risk in morning report"
+    },
+    {
+      "sha": "ac56e95",
+      "date": "2026-08-22T00:24:00-07:00",
+      "subject": "Restore Python 3.9 risk input compatibility"
+    },
+    {
+      "sha": "c160122",
+      "date": "2026-08-22T00:25:54-07:00",
+      "subject": "Reconcile pending morning report lineage"
+    },
+    {
+      "sha": "7887278",
+      "date": "2026-08-22T00:26:48-07:00",
+      "subject": "Publish evidence-based project status"
+    },
+    {
+      "sha": "cc6e4c2",
+      "date": "2026-08-22T00:28:05-07:00",
+      "subject": "Add authority-free Quant AI research quorum"
+    },
+    {
+      "sha": "838c56b",
+      "date": "2026-08-22T00:29:07-07:00",
+      "subject": "Wire Quant AI quorum into overnight evaluation"
+    },
+    {
+      "sha": "15f41d6",
+      "date": "2026-08-22T00:31:09-07:00",
+      "subject": "Bind corporate event timing into premium plans"
+    },
+    {
+      "sha": "058bdc8",
+      "date": "2026-08-22T00:32:05-07:00",
+      "subject": "Report fixed-arm outcomes across MVP war games"
+    },
+    {
+      "sha": "e7452f3",
+      "date": "2026-08-22T00:33:25-07:00",
+      "subject": "Content-address complete war game results"
+    },
+    {
+      "sha": "f9bb8c2",
+      "date": "2026-08-22T00:34:56-07:00",
+      "subject": "Bind RoR baseline to portfolio snapshot"
+    },
+    {
+      "sha": "c0b547c",
+      "date": "2026-08-22T00:35:50-07:00",
+      "subject": "Bind morning replay to exact control artifacts"
+    },
+    {
+      "sha": "fb106f8",
+      "date": "2026-08-22T00:37:11-07:00",
+      "subject": "Render morning markdown from exact JSON artifact"
+    },
+    {
+      "sha": "b163a48",
+      "date": "2026-08-22T00:40:54-07:00",
+      "subject": "Content-address overnight artifact bundles"
+    },
+    {
+      "sha": "86b597a",
+      "date": "2026-08-22T00:41:44-07:00",
+      "subject": "Verify downloaded overnight artifact bundles"
+    },
+    {
+      "sha": "999cf41",
+      "date": "2026-08-22T00:42:47-07:00",
+      "subject": "Attach scheduler receipts to overnight bundles"
+    },
+    {
+      "sha": "e77174e",
+      "date": "2026-08-22T00:43:44-07:00",
+      "subject": "Bind scheduled reports to exact Git commit"
+    },
+    {
+      "sha": "4a9bdf0",
+      "date": "2026-08-22T00:45:21-07:00",
+      "subject": "Build point in time earnings surprise foundation"
+    },
+    {
+      "sha": "7e95c81",
+      "date": "2026-08-22T00:46:55-07:00",
+      "subject": "Build executable arbitrage research foundation"
+    },
+    {
+      "sha": "365e43e",
+      "date": "2026-08-22T00:49:16-07:00",
+      "subject": "Build ten year dividend research foundation"
+    },
+    {
+      "sha": "b597dbf",
+      "date": "2026-08-22T00:52:22-07:00",
+      "subject": "Restore weather war logistics futures MVP"
+    },
+    {
+      "sha": "468775a",
+      "date": "2026-08-22T00:52:51-07:00",
+      "subject": "Include futures shocks in combined capital paths"
+    },
+    {
+      "sha": "2ab806f",
+      "date": "2026-08-22T00:53:54-07:00",
+      "subject": "War game Quant AI governance failures"
+    },
+    {
+      "sha": "a780207",
+      "date": "2026-08-22T00:55:58-07:00",
+      "subject": "Require all MVP source families overnight"
+    },
+    {
+      "sha": "3a3628f",
+      "date": "2026-08-22T00:58:12-07:00",
+      "subject": "Separate deterministic compliance artifact"
+    },
+    {
+      "sha": "6a4b9dc",
+      "date": "2026-08-22T01:00:20-07:00",
+      "subject": "War game compliance control attacks"
+    },
+    {
+      "sha": "b174785",
+      "date": "2026-08-22T01:01:38-07:00",
+      "subject": "Evaluate premium exit timing ladder"
+    },
+    {
+      "sha": "62af17f",
+      "date": "2026-08-22T01:03:52-07:00",
+      "subject": "Add strict local data intake CLI"
+    },
+    {
+      "sha": "b92a8dd",
+      "date": "2026-08-22T01:06:07-07:00",
+      "subject": "Validate canonical option snapshots"
+    },
+    {
+      "sha": "3c0057b",
+      "date": "2026-08-22T01:07:43-07:00",
+      "subject": "Enumerate validated premium spread candidates"
+    },
+    {
+      "sha": "42c5f63",
+      "date": "2026-08-22T01:09:34-07:00",
+      "subject": "Bind premium candidates to V&V handoff"
+    },
+    {
+      "sha": "48af877",
+      "date": "2026-08-22T01:11:54-07:00",
+      "subject": "Trace premium intake through morning report"
+    },
+    {
+      "sha": "00fb29c",
+      "date": "2026-08-22T01:13:23-07:00",
+      "subject": "Bind risk validation to candidate calculation"
+    },
+    {
+      "sha": "846e96c",
+      "date": "2026-08-22T01:15:11-07:00",
+      "subject": "Bind options disclosures into compliance"
+    },
+    {
+      "sha": "51fffb3",
+      "date": "2026-08-22T01:16:43-07:00",
+      "subject": "War game options disclosure failures"
+    },
+    {
+      "sha": "4fc12fc",
+      "date": "2026-08-22T01:18:23-07:00",
+      "subject": "War game premium candidate pipeline"
+    },
+    {
+      "sha": "ac3dc6c",
+      "date": "2026-08-22T01:20:39-07:00",
+      "subject": "Complete Back Office audit lineage"
+    },
+    {
+      "sha": "78d252d",
+      "date": "2026-08-22T01:21:58-07:00",
+      "subject": "Verify serialized audit events on publication"
+    },
+    {
+      "sha": "1829e95",
+      "date": "2026-08-22T01:23:14-07:00",
+      "subject": "Rebuild data manifests before publication"
+    },
+    {
+      "sha": "04e4db1",
+      "date": "2026-08-22T01:24:14-07:00",
+      "subject": "Revalidate serialized replay before publication"
+    },
+    {
+      "sha": "068dbc2",
+      "date": "2026-08-22T01:26:18-07:00",
+      "subject": "Rebuild synthetic evaluations before publication"
+    },
+    {
+      "sha": "ce97978",
+      "date": "2026-08-22T01:28:02-07:00",
+      "subject": "Content address scheduler receipts"
+    },
+    {
+      "sha": "8defe5a",
+      "date": "2026-08-22T01:28:57-07:00",
+      "subject": "Enforce RoR architecture boundaries in CI"
+    },
+    {
+      "sha": "2fe32c0",
+      "date": "2026-08-22T01:31:30-07:00",
+      "subject": "Add non-overridable live release gate"
+    },
+    {
+      "sha": "1e0d4f9",
+      "date": "2026-08-22T01:33:31-07:00",
+      "subject": "Document optimal sub-100 data stack"
+    },
+    {
+      "sha": "7a60312",
+      "date": "2026-08-22T01:35:33-07:00",
+      "subject": "Rank ten-year dividend universe deterministically"
+    },
+    {
+      "sha": "36977c3",
+      "date": "2026-08-22T01:36:11-07:00",
+      "subject": "Reject sentinel release evidence hashes"
+    },
+    {
+      "sha": "8353063",
+      "date": "2026-08-22T01:37:33-07:00",
+      "subject": "Rank executable arbitrage packages"
+    },
+    {
+      "sha": "fde05e2",
+      "date": "2026-08-22T01:39:49-07:00",
+      "subject": "Rank point-in-time earnings events"
+    },
+    {
+      "sha": "2398ab6",
+      "date": "2026-08-22T01:41:02-07:00",
+      "subject": "Rank cost-aware futures events"
+    },
+    {
+      "sha": "043794f",
+      "date": "2026-08-22T01:43:45-07:00",
+      "subject": "Enforce options data entitlement readiness"
+    },
+    {
+      "sha": "8f94581",
+      "date": "2026-08-22T01:44:51-07:00",
+      "subject": "Expose strict data stack readiness CLI"
+    },
+    {
+      "sha": "438aa87",
+      "date": "2026-08-22T01:45:17-07:00",
+      "subject": "Verify entitlement manifest in CI"
+    },
+    {
+      "sha": "14b66e1",
+      "date": "2026-08-22T01:47:35-07:00",
+      "subject": "Add deterministic options session gate"
+    },
+    {
+      "sha": "1acf6f2",
+      "date": "2026-08-22T01:49:26-07:00",
+      "subject": "Bind options handoffs to market sessions"
+    },
+    {
+      "sha": "ad8d392",
+      "date": "2026-08-22T01:50:59-07:00",
+      "subject": "Accept strict market session evidence"
+    },
+    {
+      "sha": "5499908",
+      "date": "2026-08-22T01:51:49-07:00",
+      "subject": "Separate STAT alpha from interval coverage"
+    },
+    {
+      "sha": "b646569",
+      "date": "2026-08-22T01:54:34-07:00",
+      "subject": "Persist paper audit chain fail closed"
+    },
+    {
+      "sha": "1f7e8b5",
+      "date": "2026-08-22T01:55:37-07:00",
+      "subject": "Bundle verified audit journal overnight"
+    },
+    {
+      "sha": "8cb3db7",
+      "date": "2026-08-22T01:58:24-07:00",
+      "subject": "Fail closed on unhealthy overnight runs"
+    },
+    {
+      "sha": "a18ed39",
+      "date": "2026-08-22T01:59:52-07:00",
+      "subject": "Add independent RoR V&V vectors"
+    },
+    {
+      "sha": "cc99966",
+      "date": "2026-08-22T02:01:52-07:00",
+      "subject": "Govern reproducible open model runs"
+    },
+    {
+      "sha": "a085871",
+      "date": "2026-08-22T02:04:19-07:00",
+      "subject": "Exercise complete synthetic data intake in CI"
+    },
+    {
+      "sha": "9f9dfe7",
+      "date": "2026-08-22T02:06:27-07:00",
+      "subject": "Rank executable option underlyings"
+    },
+    {
+      "sha": "9cd26bb",
+      "date": "2026-08-22T02:07:41-07:00",
+      "subject": "War game option underlying selection"
+    },
+    {
+      "sha": "bbdc600",
+      "date": "2026-08-22T02:09:13-07:00",
+      "subject": "Add CAPE overlay to dividend ranking"
+    },
+    {
+      "sha": "997941e",
+      "date": "2026-08-22T02:10:23-07:00",
+      "subject": "Gate point-in-time news evidence"
+    },
+    {
+      "sha": "17ebec6",
+      "date": "2026-08-22T02:10:58-07:00",
+      "subject": "Feed news evidence into futures research"
+    },
+    {
+      "sha": "8364404",
+      "date": "2026-08-22T02:13:21-07:00",
+      "subject": "Bind compliance to regulatory traceability"
+    },
+    {
+      "sha": "884bb2c",
+      "date": "2026-08-22T02:14:06-07:00",
+      "subject": "Require regulatory traceability for live readiness"
+    },
+    {
+      "sha": "0e11ac7",
+      "date": "2026-08-22T02:15:45-07:00",
+      "subject": "Lock earnings experiment arms before release"
+    },
+    {
+      "sha": "74e148d",
+      "date": "2026-08-22T02:17:49-07:00",
+      "subject": "Model delayed FINRA OTC evidence honestly"
+    },
+    {
+      "sha": "14a694a",
+      "date": "2026-08-22T02:19:43-07:00",
+      "subject": "Bind strategic allocation portfolio control"
+    },
+    {
+      "sha": "af6ed54",
+      "date": "2026-08-22T02:20:36-07:00",
+      "subject": "War game strategic allocation controls"
+    },
+    {
+      "sha": "45e450a",
+      "date": "2026-08-22T02:21:16-07:00",
+      "subject": "Fail closed on empty audit storage"
+    },
+    {
+      "sha": "5cd4efc",
+      "date": "2026-08-22T02:21:55-07:00",
+      "subject": "Enforce exact overnight health age"
+    },
+    {
+      "sha": "58b8f93",
+      "date": "2026-08-22T02:22:38-07:00",
+      "subject": "Reject earnings experiment plan tampering"
+    },
+    {
+      "sha": "281a74c",
+      "date": "2026-08-22T02:24:19-07:00",
+      "subject": "Add local multi-underlying intake CLI"
+    },
+    {
+      "sha": "a9a6535",
+      "date": "2026-08-22T02:26:42-07:00",
+      "subject": "Harden local option universe intake"
+    },
+    {
+      "sha": "ee68af9",
+      "date": "2026-08-22T02:26:59-07:00",
+      "subject": "Refresh executable project status"
+    },
+    {
+      "sha": "24bebf4",
+      "date": "2026-08-22T02:31:09-07:00",
+      "subject": "Ship validated morning control summary"
+    },
+    {
+      "sha": "9156809",
+      "date": "2026-08-22T02:32:06-07:00",
+      "subject": "Reconcile morning summary to project registry"
+    },
+    {
+      "sha": "0a8c277",
+      "date": "2026-08-22T02:32:53-07:00",
+      "subject": "Fail closed on malformed morning reports"
+    },
+    {
+      "sha": "d266084",
+      "date": "2026-08-22T02:34:26-07:00",
+      "subject": "Require Back Office certification for live release"
+    },
+    {
+      "sha": "52fd12e",
+      "date": "2026-08-22T02:38:26-07:00",
+      "subject": "Wire deterministic paper Back Office reconciliation"
+    },
+    {
+      "sha": "8e68575",
+      "date": "2026-08-22T02:38:49-07:00",
+      "subject": "Assert Back Office state in hosted evaluation"
+    },
+    {
+      "sha": "8b49f83",
+      "date": "2026-08-22T02:39:45-07:00",
+      "subject": "War-game Back Office reconciliation failures"
+    },
+    {
+      "sha": "43fde8b",
+      "date": "2026-08-22T02:41:51-07:00",
+      "subject": "Upgrade pinned actions to Node 24"
+    },
+    {
+      "sha": "bace4d7",
+      "date": "2026-08-22T02:43:59-07:00",
+      "subject": "Separate research and live data readiness"
+    },
+    {
+      "sha": "07c0256",
+      "date": "2026-08-22T02:45:10-07:00",
+      "subject": "Reject malformed data entitlement values"
+    },
+    {
+      "sha": "3497e2c",
+      "date": "2026-08-22T02:47:23-07:00",
+      "subject": "Enforce whole-package branch coverage"
+    },
+    {
+      "sha": "5aabb76",
+      "date": "2026-08-22T02:48:26-07:00",
+      "subject": "Pin Python 3.9 compatible coverage"
+    },
+    {
+      "sha": "f94bb50",
+      "date": "2026-08-22T02:49:18-07:00",
+      "subject": "Enable TOML coverage config on Python 3.9"
+    },
+    {
+      "sha": "952fd35",
+      "date": "2026-08-22T02:55:13-07:00",
+      "subject": "Enforce purged walk-forward model splits"
+    },
+    {
+      "sha": "b3819a3",
+      "date": "2026-08-22T02:56:46-07:00",
+      "subject": "War-game model split leakage"
+    },
+    {
+      "sha": "f3aac8d",
+      "date": "2026-08-22T02:58:08-07:00",
+      "subject": "License Hedge Desk under Apache 2.0"
+    },
+    {
+      "sha": "aedf9db",
+      "date": "2026-08-22T02:58:48-07:00",
+      "subject": "Document CLI-first agent contributions"
+    },
+    {
+      "sha": "4fa0030",
+      "date": "2026-08-22T03:02:57-07:00",
+      "subject": "Gate premium entries to monthly cadence"
+    },
+    {
+      "sha": "b0b2fce",
+      "date": "2026-08-22T03:03:51-07:00",
+      "subject": "Normalize premium cadence to market timezone"
+    },
+    {
+      "sha": "41324b4",
+      "date": "2026-08-22T03:05:58-07:00",
+      "subject": "Bind premium cadence into morning controls"
+    },
+    {
+      "sha": "1426304",
+      "date": "2026-08-22T03:06:23-07:00",
+      "subject": "Assert premium cadence in hosted evaluation"
+    },
+    {
+      "sha": "70b1825",
+      "date": "2026-08-22T03:10:46-07:00",
+      "subject": "Enforce external RoR artifact boundary"
+    },
+    {
+      "sha": "d06f6c1",
+      "date": "2026-08-22T03:12:48-07:00",
+      "subject": "Require reasons for blocked evaluation layers"
+    },
+    {
+      "sha": "a65d553",
+      "date": "2026-08-22T03:14:54-07:00",
+      "subject": "Bind reconstructable allocation evidence to reports"
+    },
+    {
+      "sha": "cafb287",
+      "date": "2026-08-22T03:16:02-07:00",
+      "subject": "Pin approved RoR model and validator identities"
+    },
+    {
+      "sha": "966d39c",
+      "date": "2026-08-22T03:16:57-07:00",
+      "subject": "Reject malformed risk policy configuration"
+    },
+    {
+      "sha": "c701934",
+      "date": "2026-08-22T03:20:29-07:00",
+      "subject": "Add executable premium exit monitoring"
+    },
+    {
+      "sha": "d1bf641",
+      "date": "2026-08-22T03:21:05-07:00",
+      "subject": "Surface premium exit reviews in morning controls"
+    },
+    {
+      "sha": "5c3bb77",
+      "date": "2026-08-22T03:23:16-07:00",
+      "subject": "War-game hostile premium exit feeds"
+    },
+    {
+      "sha": "b0a25ff",
+      "date": "2026-08-22T03:24:20-07:00",
+      "subject": "Bind option exit monitoring to opening source"
+    },
+    {
+      "sha": "09126eb",
+      "date": "2026-08-22T03:25:17-07:00",
+      "subject": "Reject nonfinite reconciliation and release inputs"
+    },
+    {
+      "sha": "0527759",
+      "date": "2026-08-22T03:26:27-07:00",
+      "subject": "Reject nonfinite portfolio evaluation inputs"
+    },
+    {
+      "sha": "696e076",
+      "date": "2026-08-22T03:27:45-07:00",
+      "subject": "Enforce finite core decision records"
+    },
+    {
+      "sha": "d0a3953",
+      "date": "2026-08-22T03:28:15-07:00",
+      "subject": "Reject invalid conventional risk artifacts early"
+    },
+    {
+      "sha": "37d3c73",
+      "date": "2026-08-22T03:29:04-07:00",
+      "subject": "Reject nonfinite arbitrage and futures edges"
+    },
+    {
+      "sha": "91d28a7",
+      "date": "2026-08-22T03:29:59-07:00",
+      "subject": "Reject nonfinite earnings and dividend inputs"
+    },
+    {
+      "sha": "980ba30",
+      "date": "2026-08-22T03:32:46-07:00",
+      "subject": "Require approved plan for source-bound paper close"
+    },
+    {
+      "sha": "e584ea1",
+      "date": "2026-08-22T03:34:19-07:00",
+      "subject": "Bind paper close artifacts into reconciliation"
+    },
+    {
+      "sha": "a2f5144",
+      "date": "2026-08-22T03:34:40-07:00",
+      "subject": "Test paper close through Back Office reconciliation"
+    },
+    {
+      "sha": "4ce445a",
+      "date": "2026-08-22T03:35:37-07:00",
+      "subject": "Harden option quotes and scan policies"
+    },
+    {
+      "sha": "ec8d2fc",
+      "date": "2026-08-22T03:36:37-07:00",
+      "subject": "Harden statistical and training evaluation inputs"
+    },
+    {
+      "sha": "e2ab96a",
+      "date": "2026-08-22T03:37:55-07:00",
+      "subject": "Harden market and news intake contracts"
+    },
+    {
+      "sha": "c878b2d",
+      "date": "2026-08-22T03:38:45-07:00",
+      "subject": "Reject inconsistent source batch claims"
+    },
+    {
+      "sha": "aa6565a",
+      "date": "2026-08-22T03:39:32-07:00",
+      "subject": "Add pinned CodeQL security analysis"
+    },
+    {
+      "sha": "c6f65d0",
+      "date": "2026-08-22T03:42:06-07:00",
+      "subject": "Enforce audit append and hash lineage"
+    },
+    {
+      "sha": "184b791",
+      "date": "2026-08-22T03:43:29-07:00",
+      "subject": "Promote audit attacks into hosted war games"
+    },
+    {
+      "sha": "e576891",
+      "date": "2026-08-22T03:50:42-07:00",
+      "subject": "Validate scheduler history before idempotency"
+    },
+    {
+      "sha": "c04af3c",
+      "date": "2026-08-22T03:53:56-07:00",
+      "subject": "Promote scheduler forgery into hosted war games"
+    },
+    {
+      "sha": "089e6a4",
+      "date": "2026-08-22T03:55:33-07:00",
+      "subject": "Record hosted branch coverage evidence"
+    },
+    {
+      "sha": "6b8c957",
+      "date": "2026-08-22T03:58:23-07:00",
+      "subject": "Add validated exact STAT inference boundary"
+    },
+    {
+      "sha": "247e8a5",
+      "date": "2026-08-22T03:58:42-07:00",
+      "subject": "Lock inclusive STAT significance threshold"
+    },
+    {
+      "sha": "70b8936",
+      "date": "2026-08-22T03:59:13-07:00",
+      "subject": "Keep STAT inference outside control authority"
+    },
+    {
+      "sha": "1140f9e",
+      "date": "2026-08-22T04:00:05-07:00",
+      "subject": "Expose strict local STAT inference CLI"
+    },
+    {
+      "sha": "76cd128",
+      "date": "2026-08-22T04:02:37-07:00",
+      "subject": "Correct final hosted coverage measurement"
+    },
+    {
+      "sha": "ddfa81b",
+      "date": "2026-08-22T04:05:43-07:00",
+      "subject": "Exhaustively verify every live release combination"
+    },
+    {
+      "sha": "3e40685",
+      "date": "2026-08-22T04:06:19-07:00",
+      "subject": "Enforce immutable GitHub Action revisions"
+    },
+    {
+      "sha": "1da4b01",
+      "date": "2026-08-22T04:07:50-07:00",
+      "subject": "Cover YAML workflow extensions in pin policy"
+    },
+    {
+      "sha": "73de5b6",
+      "date": "2026-08-22T04:09:49-07:00",
+      "subject": "Bind STAT evaluation to unique hashed outcomes"
+    },
+    {
+      "sha": "fe87c1b",
+      "date": "2026-08-22T04:10:29-07:00",
+      "subject": "Ship content-bound STAT intake fixture"
+    },
+    {
+      "sha": "3c8b1e0",
+      "date": "2026-08-28T21:13:16-07:00",
+      "subject": "Add MVP status update for Sprint 1 demo"
+    },
+    {
+      "sha": "6fb4ce3",
+      "date": "2026-08-28T21:17:12-07:00",
+      "subject": "Add night office status and week-ahead premium plan"
+    },
+    {
+      "sha": "17ae1e4",
+      "date": "2026-08-28T22:19:10-07:00",
+      "subject": "Add next three MVP roadmap"
+    },
+    {
+      "sha": "fd20c47",
+      "date": "2026-08-28T22:24:57-07:00",
+      "subject": "Add security policy for paper-only broker boundary"
+    },
+    {
+      "sha": "4fcc037",
+      "date": "2026-08-28T22:25:10-07:00",
+      "subject": "Add money-system pull request checklist"
+    },
+    {
+      "sha": "2d50472",
+      "date": "2026-08-28T22:25:24-07:00",
+      "subject": "Add pinned secret pattern scan workflow"
+    },
+    {
+      "sha": "67a8f98",
+      "date": "2026-08-28T22:25:46-07:00",
+      "subject": "Document GitHub hardening checklist"
+    },
+    {
+      "sha": "50bd436",
+      "date": "2026-08-28T22:26:43-07:00",
+      "subject": "Add security proof and morning runbook"
+    },
+    {
+      "sha": "8f2dcab",
+      "date": "2026-08-29T11:17:59-07:00",
+      "subject": "Add Objective-C iOS API client header"
+    },
+    {
+      "sha": "4f23182",
+      "date": "2026-08-29T11:19:31-07:00",
+      "subject": "Add Objective-C iOS API client implementation"
+    },
+    {
+      "sha": "e7c2530",
+      "date": "2026-08-29T11:19:42-07:00",
+      "subject": "Add Objective-C iOS app delegate header"
+    },
+    {
+      "sha": "5c12d45",
+      "date": "2026-08-29T11:21:03-07:00",
+      "subject": "Add Objective-C iOS app delegate"
+    },
+    {
+      "sha": "74e20e4",
+      "date": "2026-08-29T11:21:12-07:00",
+      "subject": "Add Objective-C desk screen header"
+    },
+    {
+      "sha": "848b789",
+      "date": "2026-08-29T11:21:49-07:00",
+      "subject": "Add Objective-C desk screen backed by local API"
+    },
+    {
+      "sha": "c0856f8",
+      "date": "2026-08-29T11:21:56-07:00",
+      "subject": "Add Objective-C iOS app main"
+    },
+    {
+      "sha": "a0fde95",
+      "date": "2026-08-29T11:22:07-07:00",
+      "subject": "Add iOS backend startup helper"
+    },
+    {
+      "sha": "6e26ab9",
+      "date": "2026-08-29T16:47:55-07:00",
+      "subject": "Add QuantDesk package boundary"
+    },
+    {
+      "sha": "ce3e72d",
+      "date": "2026-08-29T16:48:39-07:00",
+      "subject": "Add QuantDesk ML options curation baselines"
+    },
+    {
+      "sha": "4cbc5d8",
+      "date": "2026-08-29T16:49:02-07:00",
+      "subject": "Test QuantDesk ML options curation baselines"
+    },
+    {
+      "sha": "01552fa",
+      "date": "2026-08-29T16:49:19-07:00",
+      "subject": "Anchor QuantDesk to ML options papers"
+    },
+    {
+      "sha": "7da4663",
+      "date": "2026-08-29T16:52:10-07:00",
+      "subject": "Add agent learning package boundary"
+    },
+    {
+      "sha": "ab03e34",
+      "date": "2026-08-29T16:52:39-07:00",
+      "subject": "Add agent paper outcome learning ledger"
+    },
+    {
+      "sha": "d6f6556",
+      "date": "2026-08-29T16:53:19-07:00",
+      "subject": "Test agent learning ledger safety invariants"
+    },
+    {
+      "sha": "b5eeafe",
+      "date": "2026-08-29T18:15:05-07:00",
+      "subject": "Anchor Hermes Matrix agent boundary"
+    },
+    {
+      "sha": "ff40bf2",
+      "date": "2026-08-29T18:16:35-07:00",
+      "subject": "Tighten no chat history boundary"
+    },
+    {
+      "sha": "d7ad605",
+      "date": "2026-09-06T21:42:42-07:00",
+      "subject": "Deploy full-stack web MVP with CI/CD guardrails (#22)"
+    },
+    {
+      "sha": "ff85caa",
+      "date": "2026-09-06T22:21:51-07:00",
+      "subject": "Fix Render static asset path and harden GM CI"
+    },
+    {
+      "sha": "16684b3",
+      "date": "2026-09-06T22:35:43-07:00",
+      "subject": "docs: add downloadable public research README"
+    },
+    {
+      "sha": "829ceb7",
+      "date": "2026-09-06T22:51:31-07:00",
+      "subject": "feat: add open dataset discovery scout"
+    },
+    {
+      "sha": "b3d2f5e",
+      "date": "2026-09-06T22:51:46-07:00",
+      "subject": "test: cover data scout licensing and ranking"
+    },
+    {
+      "sha": "079ba9e",
+      "date": "2026-09-06T22:52:11-07:00",
+      "subject": "ci: add recurring open dataset discovery"
+    },
+    {
+      "sha": "9d19586",
+      "date": "2026-09-06T22:54:10-07:00",
+      "subject": "feat: score and classify discovered finance datasets"
+    },
+    {
+      "sha": "316b5df",
+      "date": "2026-09-06T22:54:43-07:00",
+      "subject": "fix: preserve stronger duplicate dataset candidate"
+    },
+    {
+      "sha": "a1d6d4b",
+      "date": "2026-09-06T22:59:51-07:00",
+      "subject": "mbolton: make bonds and rates the first data priority"
+    },
+    {
+      "sha": "57bd2b1",
+      "date": "2026-09-06T23:00:09-07:00",
+      "subject": "mbolton: test bond-first discovery and data policy"
+    },
+    {
+      "sha": "65c9f4b",
+      "date": "2026-09-06T23:00:28-07:00",
+      "subject": "mbolton: record bond-first data and SDLC decisions"
+    },
+    {
+      "sha": "7299f9a",
+      "date": "2026-09-06T23:00:43-07:00",
+      "subject": "mbolton: polish public research console and capital-partner boundary"
+    },
+    {
+      "sha": "5407332",
+      "date": "2026-09-06T23:02:03-07:00",
+      "subject": "mbolton: fix Treasury classification in bond-first scout"
+    },
+    {
+      "sha": "96e1c99",
+      "date": "2026-09-06T23:17:52-07:00",
+      "subject": "Clean public console presentation"
+    },
+    {
+      "sha": "d9ab373",
+      "date": "2026-09-06T23:45:48-07:00",
+      "subject": "Keep operational pages production-safe and brand as Emporion"
+    },
+    {
+      "sha": "048bb9d",
+      "date": "2026-09-07T00:22:22-07:00",
+      "subject": "Add Yellow Sheet trade lifecycle and feedback loop"
+    },
+    {
+      "sha": "8d33969",
+      "date": "2026-09-07T00:22:38-07:00",
+      "subject": "Style Yellow Sheet decision feedback loop"
+    },
+    {
+      "sha": "aaec258",
+      "date": "2026-09-07T00:22:55-07:00",
+      "subject": "Wire Yellow Sheet feedback UI into research console"
+    },
+    {
+      "sha": "54a3617",
+      "date": "2026-09-07T00:36:21-07:00",
+      "subject": "Add special acknowledgement for William Campbell PhD"
+    },
+    {
+      "sha": "fbcac3e",
+      "date": "2026-09-07T00:36:45-07:00",
+      "subject": "Wire Campbell acknowledgement into public console"
+    },
+    {
+      "sha": "a20057d",
+      "date": "2026-09-07T00:37:06-07:00",
+      "subject": "Document special acknowledgement to William Campbell PhD"
+    },
+    {
+      "sha": "ee13ce3",
+      "date": "2026-09-07T00:37:49-07:00",
+      "subject": "Add Emporion production logo mark"
+    },
+    {
+      "sha": "4739511",
+      "date": "2026-09-07T00:38:10-07:00",
+      "subject": "Implement Emporion logo and production brand shell"
+    },
+    {
+      "sha": "0b8f425",
+      "date": "2026-09-07T00:38:40-07:00",
+      "subject": "Render Emporion logo consistently across public site"
+    },
+    {
+      "sha": "d741be7",
+      "date": "2026-09-07T00:39:02-07:00",
+      "subject": "Load persistent Emporion brand treatment"
+    },
+    {
+      "sha": "a00c4e3",
+      "date": "2026-09-07T00:39:39-07:00",
+      "subject": "Align public README with Emporion brand"
+    },
+    {
+      "sha": "f89ae93",
+      "date": "2026-09-07T00:43:42-07:00",
+      "subject": "Add APE PFAC PSSM5 demo data"
+    },
+    {
+      "sha": "f104aa0",
+      "date": "2026-09-07T00:43:58-07:00",
+      "subject": "Add APE PFAC demo page"
+    },
+    {
+      "sha": "845a4df",
+      "date": "2026-09-07T00:44:37-07:00",
+      "subject": "Style APE PFAC demo page"
+    },
+    {
+      "sha": "218ade3",
+      "date": "2026-09-07T00:44:47-07:00",
+      "subject": "Add APE PFAC demo client"
+    },
+    {
+      "sha": "fa93ba9",
+      "date": "2026-09-07T00:45:07-07:00",
+      "subject": "Expose APE PFAC demo API route"
+    },
+    {
+      "sha": "1c7de9a",
+      "date": "2026-09-07T00:45:25-07:00",
+      "subject": "Copy APE PFAC demo assets to dist"
+    },
+    {
+      "sha": "427778e",
+      "date": "2026-09-07T00:51:57-07:00",
+      "subject": "Remove APE ILE routes from Emporion service"
+    },
+    {
+      "sha": "b09a02f",
+      "date": "2026-09-07T00:52:15-07:00",
+      "subject": "Remove APE ILE assets from Emporion build"
+    },
+    {
+      "sha": "772000f",
+      "date": "2026-09-07T00:52:23-07:00",
+      "subject": "Remove APE ILE demo module from Emporion repo"
+    },
+    {
+      "sha": "e9b2a9b",
+      "date": "2026-09-07T00:52:31-07:00",
+      "subject": "Remove APE ILE page from Emporion repo"
+    },
+    {
+      "sha": "b0607ea",
+      "date": "2026-09-07T00:52:39-07:00",
+      "subject": "Remove APE ILE styles from Emporion repo"
+    },
+    {
+      "sha": "eef37a0",
+      "date": "2026-09-07T00:52:44-07:00",
+      "subject": "Remove APE ILE client from Emporion repo"
+    },
+    {
+      "sha": "bb675e6",
+      "date": "2026-09-07T00:58:16-07:00",
+      "subject": "Package complete Emporion web assets for production"
+    },
+    {
+      "sha": "4499cd9",
+      "date": "2026-09-07T00:58:32-07:00",
+      "subject": "Place professor acknowledgement with About inspirations only"
+    },
+    {
+      "sha": "1b1ce7d",
+      "date": "2026-09-07T00:58:56-07:00",
+      "subject": "Polish public Emporion interface copy"
+    },
+    {
+      "sha": "9d767d0",
+      "date": "2026-09-07T00:59:15-07:00",
+      "subject": "Load final Emporion UI polish layer"
+    },
+    {
+      "sha": "c754ce6",
+      "date": "2026-09-07T00:59:35-07:00",
+      "subject": "Ship final UI polish asset in production build"
+    },
+    {
+      "sha": "d55ac64",
+      "date": "2026-09-07T01:17:25-07:00",
+      "subject": "Merge PR #25: Add bond-first recurring open finance dataset scout"
+    },
+    {
+      "sha": "3c5564c",
+      "date": "2026-09-07T01:28:03-07:00",
+      "subject": "Add Emporion institutional seal asset"
+    },
+    {
+      "sha": "2a2e3cf",
+      "date": "2026-09-07T01:29:23-07:00",
+      "subject": "Refine Emporion institutional seal as production vector"
+    },
+    {
+      "sha": "6db7c37",
+      "date": "2026-09-07T01:30:31-07:00",
+      "subject": "Adopt Emporion institutional seal in public shell"
+    },
+    {
+      "sha": "1abd386",
+      "date": "2026-09-07T01:30:53-07:00",
+      "subject": "Apply institutional seal across Emporion brand surfaces"
+    },
+    {
+      "sha": "22679de",
+      "date": "2026-09-07T01:31:10-07:00",
+      "subject": "Ship institutional seal in production build"
+    },
+    {
+      "sha": "2a0c36f",
+      "date": "2026-09-07T01:31:30-07:00",
+      "subject": "Keep professor acknowledgement on About only"
+    },
+    {
+      "sha": "1ca4932",
+      "date": "2026-09-07T01:32:57-07:00",
+      "subject": "Align web documentation with Emporion launch brand"
+    },
+    {
+      "sha": "8978e10",
+      "date": "2026-09-07T01:33:04-07:00",
+      "subject": "Remove superseded Emporion monogram"
+    },
+    {
+      "sha": "dbe3b1d",
+      "date": "2026-09-07T01:35:22-07:00",
+      "subject": "Bump CodeQL init action pin"
+    },
+    {
+      "sha": "d338983",
+      "date": "2026-09-07T01:41:51-07:00",
+      "subject": "Remove internal controls page from public navigation"
+    },
+    {
+      "sha": "172d8e0",
+      "date": "2026-09-07T01:42:02-07:00",
+      "subject": "Block internal-only routes from public site"
+    },
+    {
+      "sha": "834266c",
+      "date": "2026-09-07T01:42:18-07:00",
+      "subject": "Package public route guard with Emporion site"
+    },
+    {
+      "sha": "b6eeee1",
+      "date": "2026-09-07T01:42:30-07:00",
+      "subject": "Add regression test for public-only Emporion navigation"
+    },
+    {
+      "sha": "ed509f9",
+      "date": "2026-09-07T01:50:39-07:00",
+      "subject": "Bump CodeQL init action to v4.37.9"
+    },
+    {
+      "sha": "ed29e1c",
+      "date": "2026-09-07T01:51:02-07:00",
+      "subject": "Add contributor contact to Emporion About page"
+    },
+    {
+      "sha": "e5f3319",
+      "date": "2026-09-07T01:51:19-07:00",
+      "subject": "Cover contributor contact in public surface regression"
+    },
+    {
+      "sha": "8b9f1e9",
+      "date": "2026-09-07T02:10:50-07:00",
+      "subject": "Finalize public Emporion presentation"
+    },
+    {
+      "sha": "ee3f288",
+      "date": "2026-09-07T02:11:24-07:00",
+      "subject": "Align public shell with launch copy"
+    },
+    {
+      "sha": "6cb27e3",
+      "date": "2026-09-07T02:11:47-07:00",
+      "subject": "Lock launch copy and seal regression"
+    },
+    {
+      "sha": "49b0d01",
+      "date": "2026-09-07T02:19:33-07:00",
+      "subject": "Align CodeQL action versions"
+    },
+    {
+      "sha": "b9bd153",
+      "date": "2026-09-07T02:46:55-07:00",
+      "subject": "Add institutional research resources page"
+    },
+    {
+      "sha": "31af193",
+      "date": "2026-09-07T02:47:23-07:00",
+      "subject": "Expose research resources in Emporion navigation"
+    },
+    {
+      "sha": "170859c",
+      "date": "2026-09-07T02:47:48-07:00",
+      "subject": "Package research resources page for deployment"
+    },
+    {
+      "sha": "c15781c",
+      "date": "2026-09-07T02:48:11-07:00",
+      "subject": "Cover institutional research resources in regression"
+    },
+    {
+      "sha": "0e7558b",
+      "date": "2026-09-07T02:48:54-07:00",
+      "subject": "Harden research resources route rendering"
+    },
+    {
+      "sha": "bd42fad",
+      "date": "2026-09-07T12:53:54-07:00",
+      "subject": "Add paper risk dashboard"
+    },
+    {
+      "sha": "ba433a4",
+      "date": "2026-09-07T13:26:52-07:00",
+      "subject": "Add Bonds and Rates as seventh research desk"
+    },
+    {
+      "sha": "58beb83",
+      "date": "2026-09-07T13:27:06-07:00",
+      "subject": "Cover seventh Bonds and Rates desk"
+    },
+    {
+      "sha": "73665c9",
+      "date": "2026-09-07T13:28:04-07:00",
+      "subject": "Expose seven-desk architecture with Bonds and Rates anchor"
+    },
+    {
+      "sha": "9ed7790",
+      "date": "2026-09-07T13:28:29-07:00",
+      "subject": "Package seven-desk architecture overlay"
+    },
+    {
+      "sha": "c5f1535",
+      "date": "2026-09-07T13:28:48-07:00",
+      "subject": "Align public shell to seven-desk architecture"
+    },
+    {
+      "sha": "cd30bdd",
+      "date": "2026-09-07T13:29:10-07:00",
+      "subject": "Cover seven-desk public architecture"
+    },
+    {
+      "sha": "971679e",
+      "date": "2026-09-07T13:30:08-07:00",
+      "subject": "Add deterministic research intelligence scoring"
+    },
+    {
+      "sha": "2a82278",
+      "date": "2026-09-07T13:30:26-07:00",
+      "subject": "Test research intelligence scoring gates"
+    },
+    {
+      "sha": "9300c2a",
+      "date": "2026-09-07T13:31:38-07:00",
+      "subject": "Separate working MVPs from seven-desk architecture"
+    },
+    {
+      "sha": "a0031b7",
+      "date": "2026-09-07T13:31:55-07:00",
+      "subject": "Test working MVP and desk architecture separation"
+    },
+    {
+      "sha": "cd15092",
+      "date": "2026-09-07T13:33:29-07:00",
+      "subject": "Publish seven-desk architecture without widening engine scope"
+    },
+    {
+      "sha": "be1c47c",
+      "date": "2026-09-07T13:33:49-07:00",
+      "subject": "Separate evaluated desks from public architecture in web export"
+    },
+    {
+      "sha": "b9a1489",
+      "date": "2026-09-07T13:48:20-07:00",
+      "subject": "Align public research desk counts to seven-desk architecture"
+    },
+    {
+      "sha": "57fc526",
+      "date": "2026-09-07T13:48:44-07:00",
+      "subject": "Lock seven-desk public counts across professional shell"
+    },
+    {
+      "sha": "dad917e",
+      "date": "2026-09-07T14:07:06-07:00",
+      "subject": "Align iOS with Emporion product contract and positioning"
+    },
+    {
+      "sha": "5ff5009",
+      "date": "2026-09-07T14:08:45-07:00",
+      "subject": "Keep iOS bundled snapshot compatible with seven-desk architecture"
+    },
+    {
+      "sha": "9f00463",
+      "date": "2026-09-07T14:09:25-07:00",
+      "subject": "Run native iPhone regression build on main pushes"
+    },
+    {
+      "sha": "280192e",
+      "date": "2026-09-07T14:23:16-07:00",
+      "subject": "Publish iPhone simulator preview artifact"
+    },
+    {
+      "sha": "9d35e49",
+      "date": "2026-09-07T14:32:17-07:00",
+      "subject": "Publish standalone Emporion iPhone simulator preview"
+    },
+    {
+      "sha": "8ad7a27",
+      "date": "2026-09-07T14:32:53-07:00",
+      "subject": "Regression test standalone iPhone preview deployment"
+    },
+    {
+      "sha": "25c8d61",
+      "date": "2026-09-07T14:33:12-07:00",
+      "subject": "temp"
+    },
+    {
+      "sha": "4fa509d",
+      "date": "2026-09-07T14:33:40-07:00",
+      "subject": "Package standalone iPhone simulator preview"
+    },
+    {
+      "sha": "6647d11",
+      "date": "2026-09-07T14:33:55-07:00",
+      "subject": "Remove temporary preview marker"
+    },
+    {
+      "sha": "3a4f236",
+      "date": "2026-09-07T15:25:43-07:00",
+      "subject": "Harden lightweight web serving for concurrent low-latency reads"
+    },
+    {
+      "sha": "d89225c",
+      "date": "2026-09-07T15:25:55-07:00",
+      "subject": "Regression test lightweight concurrent web serving"
+    },
+    {
+      "sha": "a1527e6",
+      "date": "2026-09-07T16:26:39-07:00",
+      "subject": "Add lightweight API cache metrics and ETag revalidation"
+    },
+    {
+      "sha": "1f35d09",
+      "date": "2026-09-07T16:27:07-07:00",
+      "subject": "Regression test cache metrics and ETag behavior"
+    },
+    {
+      "sha": "098dedd",
+      "date": "2026-09-07T16:27:30-07:00",
+      "subject": "Add dependency-free concurrency load test"
+    },
+    {
+      "sha": "3c6f13d",
+      "date": "2026-09-07T16:28:08-07:00",
+      "subject": "Gate MVP on 25 50 100 concurrency load test"
+    },
+    {
+      "sha": "4edbd1f",
+      "date": "2026-09-07T16:29:11-07:00",
+      "subject": "Keep server performance tests independent of built dist"
+    },
+    {
+      "sha": "31e14e8",
+      "date": "2026-09-07T16:32:10-07:00",
+      "subject": "Lock MVP golden master as regression baseline"
+    },
+    {
+      "sha": "f8bc64e",
+      "date": "2026-09-07T16:32:45-07:00",
+      "subject": "Make Golden Master an explicit regression gate"
+    },
+    {
+      "sha": "8bde1df",
+      "date": "2026-09-07T16:43:59-07:00",
+      "subject": "Raise web accept backlog and cache health dependency check"
+    },
+    {
+      "sha": "b1fea03",
+      "date": "2026-09-07T16:47:59-07:00",
+      "subject": "Tighten Emporion latency regression gate"
+    },
+    {
+      "sha": "49935ba",
+      "date": "2026-09-07T17:08:55-07:00",
+      "subject": "Lock Emporion public marketing boundary"
+    },
+    {
+      "sha": "f6a5a0d",
+      "date": "2026-09-07T17:11:04-07:00",
+      "subject": "Activate Emporion decision-process positioning"
+    },
+    {
+      "sha": "1c0eb47",
+      "date": "2026-09-07T17:28:32-07:00",
+      "subject": "Fix Emporion workspace navigation stickiness"
+    },
+    {
+      "sha": "1a229e0",
+      "date": "2026-09-07T17:59:24-07:00",
+      "subject": "Fix Emporion route freeze after Scenario Lab"
+    },
+    {
+      "sha": "62628d5",
+      "date": "2026-09-07T19:14:06-07:00",
+      "subject": "Add first-class research resources to iPhone app"
+    },
+    {
+      "sha": "f30ee97",
+      "date": "2026-09-07T19:14:53-07:00",
+      "subject": "Mirror iPhone research resources in public preview"
+    },
+    {
+      "sha": "36dde68",
+      "date": "2026-09-07T19:15:31-07:00",
+      "subject": "Regression lock iPhone public research resources"
+    },
+    {
+      "sha": "51a36eb",
+      "date": "2026-09-07T19:15:44-07:00",
+      "subject": "Regression lock Resources tab in iPhone preview"
+    },
+    {
+      "sha": "23a3da3",
+      "date": "2026-09-08T05:44:01-07:00",
+      "subject": "Consolidate PR template casing"
+    },
+    {
+      "sha": "275c1b8",
+      "date": "2026-09-08T05:44:10-07:00",
+      "subject": "Remove duplicate lowercase PR template"
+    },
+    {
+      "sha": "f479419",
+      "date": "2026-09-08T05:44:56-07:00",
+      "subject": "Merge PR template casing cleanup"
+    },
+    {
+      "sha": "5819733",
+      "date": "2026-09-08T07:02:00-07:00",
+      "subject": "Regression lock Scenario Lab public contract"
+    },
+    {
+      "sha": "2a1c2bd",
+      "date": "2026-09-08T07:02:54-07:00",
+      "subject": "Improve Scenario Lab presentation without changing engine contract"
+    },
+    {
+      "sha": "b105ac4",
+      "date": "2026-09-08T07:03:30-07:00",
+      "subject": "Load progressive Scenario Lab enhancement"
+    },
+    {
+      "sha": "a6bcc00",
+      "date": "2026-09-08T07:04:05-07:00",
+      "subject": "Package Scenario Lab enhancement in web build"
+    },
+    {
+      "sha": "0086144",
+      "date": "2026-09-08T07:04:29-07:00",
+      "subject": "Regression test enhanced Scenario Lab presentation"
+    },
+    {
+      "sha": "d82e589",
+      "date": "2026-09-08T09:15:10-07:00",
+      "subject": "Regression lock candidate page product explanation"
+    },
+    {
+      "sha": "8b16777",
+      "date": "2026-09-08T09:16:12-07:00",
+      "subject": "Point candidate regression at progressive explainer"
+    },
+    {
+      "sha": "7520edc",
+      "date": "2026-09-08T09:16:32-07:00",
+      "subject": "Clarify candidate page MVP decision flow"
+    },
+    {
+      "sha": "5421be0",
+      "date": "2026-09-08T09:17:05-07:00",
+      "subject": "Load candidate MVP explainer after base app"
+    },
+    {
+      "sha": "ac0be50",
+      "date": "2026-09-08T09:17:24-07:00",
+      "subject": "Package candidate MVP explainer in web build"
+    },
+    {
+      "sha": "ff4f303",
+      "date": "2026-09-08T09:25:47-07:00",
+      "subject": "Regression lock candidate trade-decision positioning"
+    },
+    {
+      "sha": "8b4d04e",
+      "date": "2026-09-08T09:26:09-07:00",
+      "subject": "Sharpen candidate trade-decision positioning"
+    },
+    {
+      "sha": "f031be5",
+      "date": "2026-09-08T09:27:49-07:00",
+      "subject": "Fix candidate positioning regression assertion"
+    },
+    {
+      "sha": "7adc042",
+      "date": "2026-09-08T09:51:51-07:00",
+      "subject": "Clarify coordinated research agent positioning"
+    },
+    {
+      "sha": "9203feb",
+      "date": "2026-09-08T09:53:36-07:00",
+      "subject": "Preserve candidate explainer regression copy"
+    },
+    {
+      "sha": "90b2c94",
+      "date": "2026-09-08T10:16:55-07:00",
+      "subject": "Regression lock RoR public positioning"
+    },
+    {
+      "sha": "dec7f31",
+      "date": "2026-09-08T10:17:56-07:00",
+      "subject": "Restore RoR portfolio-survival positioning"
+    },
+    {
+      "sha": "9937939",
+      "date": "2026-09-08T10:20:07-07:00",
+      "subject": "Align candidate regression with coordinated research copy"
+    },
+    {
+      "sha": "2915902",
+      "date": "2026-09-08T11:19:00-07:00",
+      "subject": "Fix Supabase production health probe (#30)"
+    },
+    {
+      "sha": "77f3ac7",
+      "date": "2026-09-08T11:53:31-07:00",
+      "subject": "Sharpen Emporion agentic research and RoR positioning"
+    },
+    {
+      "sha": "544b4be",
+      "date": "2026-09-08T11:55:52-07:00",
+      "subject": "Restore RoR survival copy regression anchor"
+    },
+    {
+      "sha": "557b960",
+      "date": "2026-09-08T11:56:17-07:00",
+      "subject": "Tighten public Risk of Ruin North Star copy"
+    },
+    {
+      "sha": "cb56c1f",
+      "date": "2026-09-08T11:56:40-07:00",
+      "subject": "Integrate Risk of Ruin as Emporion North Star differentiator"
+    },
+    {
+      "sha": "9cd7a2a",
+      "date": "2026-09-08T11:56:55-07:00",
+      "subject": "Align Emporion marketing audit to RoR North Star"
+    },
+    {
+      "sha": "86276e9",
+      "date": "2026-09-08T11:57:10-07:00",
+      "subject": "Surface Risk of Ruin North Star in Emporion public copy"
+    },
+    {
+      "sha": "ec6535f",
+      "date": "2026-09-08T11:59:21-07:00",
+      "subject": "Complete RoR point-of-difference copy contract"
+    },
+    {
+      "sha": "9e13dbc",
+      "date": "2026-09-08T18:35:23-07:00",
+      "subject": "Add High-Flyer-inspired Emporion target architecture"
+    },
+    {
+      "sha": "0f7d802",
+      "date": "2026-09-08T18:41:38-07:00",
+      "subject": "Add filesystem dataset manifest contract"
+    },
+    {
+      "sha": "337d59a",
+      "date": "2026-09-08T18:42:03-07:00",
+      "subject": "Add durable research job contract"
+    },
+    {
+      "sha": "2bd069f",
+      "date": "2026-09-08T18:42:34-07:00",
+      "subject": "Test filesystem dataset manifest contract"
+    },
+    {
+      "sha": "f7c2c5b",
+      "date": "2026-09-08T18:42:53-07:00",
+      "subject": "Test durable research job contract"
+    },
+    {
+      "sha": "b196095",
+      "date": "2026-09-08T18:43:10-07:00",
+      "subject": "Document filesystem-first research plane decision"
+    },
+    {
+      "sha": "a02ad9d",
+      "date": "2026-09-08T18:43:29-07:00",
+      "subject": "Export dataset manifest contract"
+    },
+    {
+      "sha": "6a83037",
+      "date": "2026-09-08T18:46:00-07:00",
+      "subject": "Merge filesystem-first research plane contracts"
+    }
+  ]
+}
