@@ -81,6 +81,33 @@ class ServerPerformanceContractTests(unittest.TestCase):
         self.assertTrue(server.ThreadingWSGIServer.daemon_threads)
         self.assertTrue(issubclass(server.ThreadingWSGIServer, server.WSGIServer))
 
+    def test_report_snapshot_is_client_cacheable_for_fast_repeat_loads(self):
+        # The console fetches report.json on first load. A short public cache
+        # (rather than no-cache) lets repeat visits render from browser cache
+        # instead of revalidating against a possibly cold origin.
+        response, body = self._request("/report.json")
+        self.assertEqual(response["status"], "200 OK")
+        self.assertTrue(body)
+        self.assertEqual(
+            response["headers"]["Cache-Control"],
+            "public, max-age=60, stale-while-revalidate=300",
+        )
+
+    def test_console_preloads_report_and_uses_browser_cache(self):
+        index = (server.PACKAGE_ROOT / "web" / "index.html").read_text(encoding="utf-8")
+        # preload the report so the fetch starts in parallel with the JS
+        self.assertIn('rel="preload"', index)
+        self.assertIn('href="./report.json"', index)
+
+        app_js = (server.PACKAGE_ROOT / "web" / "app.js").read_text(encoding="utf-8")
+        # the client must not opt out of the browser cache with no-store
+        self.assertNotIn("cache:'no-store'", app_js)
+        self.assertIn("report.json", app_js)
+
+    def test_cold_start_shows_a_waking_message_instead_of_stalling(self):
+        app_js = (server.PACKAGE_ROOT / "web" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("Waking the research desk", app_js)
+
 
 if __name__ == "__main__":
     unittest.main()

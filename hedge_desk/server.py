@@ -52,9 +52,18 @@ def _json(start_response, payload, status="200 OK"):
 
 
 def _static_cache_control(target):
-    """Cache immutable-ish assets briefly while keeping HTML immediately fresh."""
+    """Cache immutable-ish assets briefly while keeping HTML immediately fresh.
 
-    if target.suffix.lower() in {".css", ".js", ".mjs", ".svg", ".png", ".jpg", ".jpeg", ".webp"}:
+    report.json is a data snapshot the console must fetch on first load; giving
+    it a short browser cache (plus stale-while-revalidate) means repeat visits
+    render instantly from cache instead of making a revalidation round-trip to
+    the origin, which is what makes a cold/slow instance feel sluggish.
+    """
+
+    suffix = target.suffix.lower()
+    if suffix == ".json":
+        return "public, max-age=60, stale-while-revalidate=300"
+    if suffix in {".css", ".js", ".mjs", ".svg", ".png", ".jpg", ".jpeg", ".webp"}:
         return "public, max-age=300, stale-while-revalidate=600"
     return "no-cache"
 
