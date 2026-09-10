@@ -116,6 +116,7 @@ async function acctRefresh() {
     ACCT.tier = null;
   }
   acctRender();
+  acctBrokerRefresh();
 }
 
 /* ---- social login (Supabase Auth IdP) ---------------------------------- */
@@ -191,6 +192,76 @@ async function acctCompleteSocialIfPresent() {
     acctToast('Signed in as ' + (ACCT.current && ACCT.current.email ? ACCT.current.email : ''));
     return true;
   } catch (e) {
+    return false;
+  }
+}
+
+/* ---- broker linking (read-only; members/LPs) ---------------------------- */
+
+async function acctBrokerRefresh() {
+  const box = document.getElementById('acct-broker');
+  if (!box) return;
+  const c = ACCT.current;
+  if (!c || !c.authenticated || !(ACCT.tier && ACCT.tier.real_data)) {
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = 'block';
+  let st = { configured: false, linked: false };
+  try { st = await acctFetch('/api/broker/status'); } catch (e) { /* leave defaults */ }
+  ACCT.broker = st;
+  const label = document.getElementById('acct-broker-label');
+  const connect = document.getElementById('acct-broker-connect');
+  const disconnect = document.getElementById('acct-broker-disconnect');
+  if (label) {
+    label.textContent = !st.configured
+      ? 'Broker linking is not configured on this deployment.'
+      : (st.linked ? 'Broker connected (read-only).' : 'No broker connected yet.');
+  }
+  if (connect) connect.style.display = st.configured && !st.linked ? 'inline-flex' : 'none';
+  if (disconnect) disconnect.style.display = st.linked ? 'inline-flex' : 'none';
+}
+
+async function acctBrokerConnect(btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const res = await acctFetch('/api/broker/authorize');
+    if (res && res.authorize_url) { window.location.href = res.authorize_url; return; }
+    throw new Error('no authorize url');
+  } catch (e) {
+    if (btn) btn.disabled = false;
+    const err = document.getElementById('acct-error');
+    if (err) err.textContent = 'Could not start broker link: ' + (e.message || e);
+  }
+}
+
+async function acctBrokerDisconnect() {
+  try { await acctFetch('/api/broker/unlink', { method: 'POST', body: '{}' }); } catch (e) { /* ignore */ }
+  acctBrokerRefresh();
+  acctToast('Broker disconnected');
+}
+
+/* The broker OAuth redirect returns ?code=...&state=... — finish the link. */
+async function acctBrokerCompleteIfPresent() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  if (!code || !state) return false;
+  try {
+    await acctFetch('/api/broker/link', {
+      method: 'POST',
+      body: JSON.stringify({ code, state }),
+    });
+    const url = new URL(window.location.href);
+    url.searchParams.delete('code');
+    url.searchParams.delete('state');
+    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    acctToast('Broker connected (read-only)');
+    acctBrokerRefresh();
+    return true;
+  } catch (e) {
+    const err = document.getElementById('acct-error');
+    if (err) err.textContent = 'Broker link failed: ' + (e.message || e);
     return false;
   }
 }
@@ -275,6 +346,11 @@ function acctBind() {
 
   const closeBtn = root.querySelector('#acct-close');
   if (closeBtn) closeBtn.addEventListener('click', acctClose);
+
+  const bc = root.querySelector('#acct-broker-connect');
+  if (bc) bc.addEventListener('click', () => acctBrokerConnect(bc));
+  const bd = root.querySelector('#acct-broker-disconnect');
+  if (bd) bd.addEventListener('click', acctBrokerDisconnect);
 }
 
 function acctInit() {
@@ -292,6 +368,7 @@ function acctInit() {
   ACCT.modal = modal;
   acctBind();
   acctLoadProviders().then(() => acctCompleteSocialIfPresent());
+  acctBrokerCompleteIfPresent();
   acctRefresh();
 }
 

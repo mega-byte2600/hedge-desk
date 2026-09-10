@@ -62,6 +62,15 @@
         <button id="acct-verify" class="btn primary" type="button">Sign in</button>
       </div>
       <div id="acct-status" class="acct-status"></div>
+      <div id="acct-broker" class="acct-broker" style="display:none">
+        <h3>Broker connection</h3>
+        <p id="acct-broker-label" class="small-note">No broker connected yet.</p>
+        <div class="acct-actions">
+          <button id="acct-broker-connect" class="btn primary" type="button" style="display:none">Connect broker (read-only)</button>
+          <button id="acct-broker-disconnect" class="btn" type="button" style="display:none">Disconnect</button>
+        </div>
+        <p class="small-note">Read-only. The desk can read positions and balances; it cannot place orders.</p>
+      </div>
       <div class="acct-manage">
         <button id="acct-subscribe" class="btn" type="button">Upgrade to subscription member</button>
         <button id="acct-logout" class="btn" type="button">Sign out</button>
