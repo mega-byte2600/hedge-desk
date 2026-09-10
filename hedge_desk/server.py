@@ -12,6 +12,8 @@ from wsgiref.simple_server import WSGIServer, make_server
 
 from hedge_desk.candidates import build_candidate_feed
 from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
+from hedge_desk.console_report import build_console_payload
+from hedge_desk.overnight import current_morning_report
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
@@ -100,6 +102,18 @@ def performance_snapshot():
         }
 
 
+def build_live_console_payload():
+    """Regenerate a fresh, validated desk-console payload from the engine.
+
+    Mirrors the deploy-time export (scripts/build_web.py) but runs the engine
+    now, so the console can show a report generated moments ago rather than
+    only the last committed deploy snapshot. Rejected by the release gate if
+    the freshly computed report is not publishable.
+    """
+    report = current_morning_report()
+    return build_console_payload(report)
+
+
 def _supabase_status():
     url = os.getenv("SUPABASE_URL", "").rstrip("/")
     key = os.getenv("SUPABASE_PUBLISHABLE_KEY", "") or os.getenv("SUPABASE_ANON_KEY", "")
@@ -125,6 +139,8 @@ def _dispatch(environ, start_response):
         return _json(start_response, _cached("risk-dashboard", build_candidate_risk_dashboard))
     if path == "/api/about":
         return _json(start_response, {"display_name": "mbolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
+    if path == "/api/report":
+        return _json(start_response, _cached("console-report", build_live_console_payload))
     relative = "index.html" if path in ("/", "") else path.lstrip("/")
     target = (WEB / relative).resolve()
     if WEB.resolve() not in target.parents and target != WEB.resolve():

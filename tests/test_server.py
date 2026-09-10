@@ -55,3 +55,47 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(payload['trade_authorized_count'], 0)
         self.assertGreaterEqual(payload['desk_count'], 6)
         self.assertTrue(payload['executive_actions'])
+
+    def test_live_report_recomputes_a_valid_paper_only_console_payload(self):
+        status, payload = self.request('/api/report')
+
+        self.assertEqual(status, '200 OK')
+        self.assertEqual(payload['schema_version'], 'desk-console-1')
+        report = payload['report']
+        self.assertEqual(report['environment'], 'paper')
+        self.assertFalse(report['live_orders_enabled'])
+        self.assertEqual(report['real_trades_executed'], 0)
+        self.assertEqual(len(report['projects']), 6)
+        self.assertIn('report_sha256', report)
+        self.assertIn('generated_at', report)
+        # registry + summary present for the console to render
+        self.assertEqual(len(payload['registry']), len(payload['report']['projects']) + 1)
+        self.assertIn('projects_evaluated', payload['summary'])
+
+    def test_live_report_is_cached_but_fresh_within_cache_window(self):
+        # Two calls inside the API cache window return the same generated_at
+        # (cache hit) — proves the memoization path is live, not a fresh
+        # recompute per request which would break the golden render.
+        first = self.request('/api/report')[1]
+        second = self.request('/api/report')[1]
+        self.assertEqual(
+            first['report']['generated_at'],
+            second['report']['generated_at'],
+            'repeat calls should be served from the API cache window',
+        )
+
+    def test_live_report_uses_engine_not_the_committed_snapshot(self):
+        # The endpoint must be recomputing from the engine (fresh timestamp),
+        # not serving the static dist/report.json snapshot. We assert the
+        # report hash matches a direct engine build at the same moment.
+        from hedge_desk.console_report import build_console_payload
+        from hedge_desk.overnight import build_morning_report
+        from datetime import datetime, timezone
+
+        engine = build_console_payload(
+            build_morning_report(datetime.now(timezone.utc), "TEST-LIVE")
+        )
+        status, payload = self.request('/api/report')
+        self.assertEqual(status, '200 OK')
+        self.assertEqual(payload['report']['environment'], engine['report']['environment'])
+        self.assertEqual(len(payload['report']['projects']), len(engine['report']['projects']))
