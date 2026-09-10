@@ -53,6 +53,19 @@ def _utcnow() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _default_http_transport(method, url, headers, body):
+    """Default PostgREST transport (stdlib urllib)."""
+    import urllib.error
+    import urllib.request
+
+    req = urllib.request.Request(url, data=body, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return resp.status, resp.read()
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.read()
+
+
 def _encrypt_token(token: str, key: bytes) -> str:
     # Envelope: random nonce + HMAC-authenticated token. Not cryptographic
     # storage-grade on its own; it only guards an at-rest reference until a
@@ -155,6 +168,107 @@ class BrokerAdapter:
 
     def balances(self, token: str) -> dict:
         return {"status": "not_implemented", "broker": self.name}
+
+
+class SupabaseBrokerLinkStore:
+    """Broker connections persisted to Supabase so they survive redeploys.
+
+    Same interface as ``BrokerLinkStore`` (link/connection/unlink) but backed
+    by PostgREST over stdlib urllib. The transport is injectable for tests.
+    """
+
+    def __init__(self, url: str, service_key: str, transport=None) -> None:
+        if not url or not service_key:
+            raise ValueError("SupabaseBrokerLinkStore requires url and service_key")
+        self.url = url.rstrip("/")
+        self.service_key = service_key
+        self._transport = transport or _default_http_transport
+
+    def _headers(self, prefer: str = "") -> dict:
+        headers = {
+            "apikey": self.service_key,
+            "Authorization": f"Bearer {self.service_key}",
+            "Content-Type": "application/json",
+        }
+        if prefer:
+            headers["Prefer"] = prefer
+        return headers
+
+    def _call(self, method, query="", body=None, prefer=""):
+        url = f"{self.url}/rest/v1/broker_links"
+        if query:
+            url += "?" + query
+        import json as _json
+        import urllib.request as _ur
+
+        data = _json.dumps(body).encode("utf-8") if body is not None else None
+        status, raw = self._transport(method, url, self._headers(prefer), data)
+        if status >= 400:
+            raise RuntimeError(f"supabase broker_links {method} failed: {status}")
+        if not raw:
+            return []
+        try:
+            return _json.loads(raw)
+        except Exception:
+            return []
+
+    def close(self) -> None:
+        return None
+
+    def link(self, email, role, broker, token, account_label="", key=None) -> dict:
+        if str(role).upper() not in _ROLES_ALLOWED:
+            raise PermissionError("broker link requires member/LP/GP")
+        if not key:
+            key = (os.environ.get("BROKER_LINK_KEY") or "").encode("utf-8")
+            if not key:
+                raise ValueError("BROKER_LINK_KEY not set; refusing to store broker token")
+        now = _utcnow()
+        enc = _encrypt_token(token, key)
+        self._call(
+            "POST",
+            body={
+                "email": email.lower(),
+                "broker": broker,
+                "account_label": account_label,
+                "token_enc": enc,
+                "created_at": now,
+                "updated_at": now,
+            },
+            prefer="resolution=merge-duplicates",
+        )
+        return {"email": email.lower(), "broker": broker, "account_label": account_label, "linked": True}
+
+    def connection(self, email: str) -> dict:
+        rows = self._call("GET", f"email=eq.{email.lower()}&select=broker,account_label,updated_at")
+        if not rows:
+            return {"linked": False}
+        r = rows[0]
+        return {
+            "linked": True,
+            "broker": r.get("broker"),
+            "account_label": r.get("account_label"),
+            "updated_at": r.get("updated_at"),
+        }
+
+    def unlink(self, email: str) -> None:
+        self._call("DELETE", f"email=eq.{email.lower()}")
+
+
+def default_broker_store():
+    """Choose the broker-link store backend from the environment.
+
+    Supabase when SUPABASE_URL + SUPABASE_SERVICE_KEY are set (persists through
+    redeploys), else local SQLite (dev).
+    """
+    url = (os.environ.get("SUPABASE_URL") or "").strip().rstrip("/")
+    key = (
+        os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or ""
+    ).strip()
+    if url and key:
+        return SupabaseBrokerLinkStore(url, key)
+    db = os.environ.get("BROKER_DB") or str(Path(__file__).resolve().parents[1] / "data" / "broker.db")
+    Path(db).parent.mkdir(parents=True, exist_ok=True)
+    return BrokerLinkStore(db)
 
 
 def build_broker_gate(store: BrokerLinkStore, adapter: Optional[BrokerAdapter] = None) -> Callable:

@@ -277,5 +277,112 @@ class SocialLoginEndpointTests(unittest.TestCase):
         self.assertIn("providers", body)
 
 
+class BrokerEndpointTests(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+
+        from hedge_desk.auth_app import make_auth_app
+        from hedge_desk.broker_link import BrokerLinkStore, BrokerAdapter
+        from hedge_desk.brokers.schwab_oauth import SchwabOAuth, SchwabOAuthConfig
+
+        self.tmp = tempfile.mkdtemp()
+        self.store = MembershipStore(
+            os.path.join(self.tmp, "b.db"), clock=FakeClock(), secret="test-secret"
+        )
+        self.broker_store = BrokerLinkStore(os.path.join(self.tmp, "bl.db"))
+        self.key = b"broker-key"
+        os.environ["BROKER_LINK_KEY"] = "broker-key"
+
+        self.sender = CaptureSender()
+        cfg = SchwabOAuthConfig("cid", "csecret", "https://site/api/broker/callback")
+        tokens = {"access_token": "AT", "refresh_token": "RT", "expires_in": 1800, "scope": "readonly"}
+        self.oauth = SchwabOAuth(cfg, transport=lambda m, u, h, b: (200, json.dumps(tokens).encode()))
+        self.adapter = BrokerAdapter("schwab")
+
+        self.dispatch = make_auth_app(
+            self.store,
+            sender=self.sender,
+            gp_email="gp@x.com",
+            broker_store=self.broker_store,
+            broker_oauth=self.oauth,
+            broker_adapter=self.adapter,
+        )
+
+    def tearDown(self):
+        self.store.close()
+        self.broker_store.close()
+        os.environ.pop("BROKER_LINK_KEY", None)
+
+    def sender_for_member(self):
+        return self.sender
+
+    def test_guest_denied_broker_authorize(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "guest@example.com")
+        status, body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
+        self.assertEqual(status, "403 Forbidden")
+        self.assertEqual(body["error"], "broker_requires_member")
+
+    def test_member_gets_authorize_url_with_state(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        status, body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
+        self.assertEqual(status, "200 OK")
+        self.assertIn("authorize_url", body)
+        self.assertIn("state=", body["authorize_url"])
+        self.assertIn("scope=readonly", body["authorize_url"])
+
+    def test_link_requires_valid_state(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        status, body, _ = _post(
+            self.dispatch, "/api/broker/link", {"code": "C", "state": "bogus"}, cookie=cookie
+        )
+        self.assertEqual(status, "400 Bad Request")
+        self.assertEqual(body["error"], "invalid_state")
+
+    def test_link_with_valid_state_stores_connection_read_only(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        # get a real state from the authorize endpoint
+        _, auth_body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
+        state = auth_body["authorize_url"].split("state=")[1].split("&")[0]
+        status, body, _ = _post(
+            self.dispatch, "/api/broker/link", {"code": "C", "state": state, "account_label": "Main"}, cookie=cookie
+        )
+        self.assertEqual(status, "200 OK")
+        self.assertTrue(body["read_only"])
+        conn = self.broker_store.connection("m@example.com")
+        self.assertTrue(conn["linked"])
+        self.assertEqual(conn["broker"], "schwab")
+
+    def test_status_reports_configured_and_linked(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        status, body, _ = _get(self.dispatch, "/api/broker/status", cookie=cookie)
+        self.assertEqual(status, "200 OK")
+        self.assertTrue(body["configured"])
+        self.assertFalse(body["linked"])
+
+    def test_positions_requires_link(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        status, body, _ = _get(self.dispatch, "/api/broker/positions", cookie=cookie)
+        self.assertEqual(status, "409 Conflict")
+        self.assertEqual(body["error"], "no_broker_linked")
+
+    def test_unlink(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        _, auth_body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
+        state = auth_body["authorize_url"].split("state=")[1].split("&")[0]
+        _post(self.dispatch, "/api/broker/link", {"code": "C", "state": state}, cookie=cookie)
+        _post(self.dispatch, "/api/broker/unlink", {}, cookie=cookie)
+        self.assertFalse(self.broker_store.connection("m@example.com")["linked"])
+
+    def test_broker_requires_auth(self):
+        status, body, _ = _get(self.dispatch, "/api/broker/status")
+        self.assertEqual(status, "403 Forbidden")
+
+
 if __name__ == "__main__":
     unittest.main()

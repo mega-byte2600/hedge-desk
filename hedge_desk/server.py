@@ -33,9 +33,24 @@ def _auth_app():
             if _AUTH_APP is None:
                 store = default_membership_store()
                 from hedge_desk.supabase_auth import verifier_from_env
+                from hedge_desk.broker_link import default_broker_store
+                from hedge_desk.brokers.schwab_oauth import SchwabOAuth, SchwabOAuthConfig
+                from hedge_desk.brokers.schwab_readonly import SchwabReadOnlyBroker
 
+                broker_oauth = None
+                try:
+                    cfg = SchwabOAuthConfig.from_environment()
+                    if cfg.configured:
+                        broker_oauth = SchwabOAuth(cfg)
+                except Exception:
+                    broker_oauth = None
                 _AUTH_APP = make_auth_app(
-                    store, gp_email=GP_EMAIL, jwt_verifier=verifier_from_env()
+                    store,
+                    gp_email=GP_EMAIL,
+                    jwt_verifier=verifier_from_env(),
+                    broker_store=default_broker_store(),
+                    broker_oauth=broker_oauth,
+                    broker_adapter=SchwabReadOnlyBroker(),
                 )
     return _AUTH_APP
 

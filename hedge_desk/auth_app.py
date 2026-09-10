@@ -109,12 +109,16 @@ def make_auth_app(
     sender: Optional[Callable[[str, str, str], None]] = None,
     gp_email: Optional[str] = None,
     jwt_verifier=None,
+    broker_store=None,
+    broker_oauth=None,
+    broker_adapter=None,
 ):
     """Build a WSGI auth dispatch for the given store + email sender.
 
     store implements the membership-store interface (SQLite or Supabase).
     gp_email is the GP's address; only it may issue LP invites.
     jwt_verifier (optional) verifies Supabase Auth JWTs for social login.
+    broker_store/broker_oauth/broker_adapter (optional) enable broker linking.
     """
     send = sender or build_sender()
 
@@ -295,6 +299,101 @@ def make_auth_app(
                     "status": "real_data_available",
                     "note": "Real data adapter not yet wired — endpoint is gated and ready.",
                 },
+            )
+
+        # ---- broker: status -------------------------------------------------
+        if path == "/api/broker/status" and method == "GET":
+            if not email:
+                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
+            decision = store.access_for(email)
+            configured = bool(broker_oauth and getattr(broker_oauth.config, "configured", False))
+            linked = False
+            if broker_store and decision.allowed and can_access_real_data(decision.role or ""):
+                try:
+                    linked = bool(broker_store.connection(email).get("linked"))
+                except Exception:
+                    linked = False
+            return _json_response(
+                start_response,
+                {
+                    "configured": configured,
+                    "linked": linked,
+                    "role": decision.role,
+                    "allowed": decision.allowed and can_access_real_data(decision.role or ""),
+                },
+            )
+
+        # ---- broker: authorize URL (member/LP only) --------------------------
+        if path == "/api/broker/authorize" and method == "GET":
+            if not email:
+                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
+            decision = store.access_for(email)
+            if not decision.allowed or not can_access_real_data(decision.role or ""):
+                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
+            if not broker_oauth or not getattr(broker_oauth.config, "configured", False):
+                return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
+            # Reuse the OTP primitive for a single-use, expiring CSRF state.
+            state = store.issue_otp(email, purpose="broker_state")
+            return _json_response(start_response, {"authorize_url": broker_oauth.authorize_url(state)})
+
+        # ---- broker: link (exchange code; member/LP only) --------------------
+        if path == "/api/broker/link" and method == "POST":
+            if not email:
+                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
+            decision = store.access_for(email)
+            if not decision.allowed or not can_access_real_data(decision.role or ""):
+                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
+            if not (broker_oauth and broker_store):
+                return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
+            data = _read_json(environ)
+            code = str(data.get("code", "")).strip()
+            state = str(data.get("state", "")).strip()
+            if not state or not store.verify_otp(email, state, purpose="broker_state"):
+                return _json_response(start_response, {"error": "invalid_state"}, "400 Bad Request")
+            tokens = broker_oauth.exchange_code(code)
+            if tokens.get("status") != "ok":
+                return _json_response(
+                    start_response,
+                    {"error": "token_exchange_failed", "detail": tokens.get("error")},
+                    "502 Bad Gateway",
+                )
+            try:
+                broker_store.link(
+                    email,
+                    decision.role,
+                    getattr(broker_oauth, "name", "schwab"),
+                    tokens["access_token"],
+                    account_label=str(data.get("account_label", ""))[:64],
+                )
+            except (PermissionError, ValueError) as exc:
+                return _json_response(start_response, {"error": str(exc)}, "400 Bad Request")
+            return _json_response(start_response, {"status": "linked", "broker": "schwab", "read_only": True})
+
+        # ---- broker: unlink --------------------------------------------------
+        if path == "/api/broker/unlink" and method == "POST":
+            if not email:
+                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
+            if broker_store:
+                broker_store.unlink(email)
+            return _json_response(start_response, {"status": "unlinked"})
+
+        # ---- broker: read-only positions (member/LP + linked) ----------------
+        if path == "/api/broker/positions" and method == "GET":
+            if not email:
+                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
+            decision = store.access_for(email)
+            if not decision.allowed or not can_access_real_data(decision.role or ""):
+                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
+            if not broker_store or not broker_adapter:
+                return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
+            conn = broker_store.connection(email)
+            if not conn.get("linked"):
+                return _json_response(start_response, {"error": "no_broker_linked"}, "409 Conflict")
+            # Read-only: the adapter never places orders.
+            positions = broker_adapter.positions("")
+            return _json_response(
+                start_response,
+                {"broker": conn.get("broker"), "read_only": True, "positions": positions},
             )
 
         return _json_response(start_response, {"error": "not_found"}, "404 Not Found")
