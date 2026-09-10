@@ -20,6 +20,11 @@
 .acct-broker h3{font-size:14px;margin:0 0 8px}
 .acct-broker .acct-actions{margin:12px 0 8px}
 .acct-broker .btn{width:auto}
+.acct-gp{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
+.acct-gp h3{font-size:14px;margin:0 0 8px}
+.acct-gp .acct-actions{margin:12px 0 8px}
+.acct-gp .btn{width:auto}
+.acct-gp-counts{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 14px}
 .acct-actions{display:flex;gap:8px;margin-bottom:18px}
 .acct-manage{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;border-top:1px solid var(--line);padding-top:18px}
 .small-note{font-size:12px;color:#7b858c;margin:18px 0 0;line-height:1.6}

@@ -117,6 +117,7 @@ async function acctRefresh() {
   }
   acctRender();
   acctBrokerRefresh();
+  acctGpRefresh();
 }
 
 /* ---- social login (Supabase Auth IdP) ---------------------------------- */
@@ -266,6 +267,54 @@ async function acctBrokerCompleteIfPresent() {
   }
 }
 
+/* ---- GP console (visible only to the GP) ------------------------------- */
+
+async function acctGpRefresh() {
+  const box = document.getElementById('acct-gp');
+  if (!box) return;
+  const c = ACCT.current;
+  if (!c || !c.authenticated || c.role !== 'GP') {
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = 'block';
+  let data = null;
+  try { data = await acctFetch('/api/auth/members'); } catch (e) { /* leave null */ }
+  if (!data) return;
+  ACCT.gp = data;
+  const cap = document.getElementById('acct-gp-cap');
+  if (cap) cap.textContent = `LP seats: ${data.lp_count} / ${data.max_lp} · ${data.total} total members`;
+  const counts = document.getElementById('acct-gp-counts');
+  if (counts) {
+    counts.innerHTML = Object.keys(data.counts || {})
+      .sort()
+      .map((r) => `<span class="tag">${r}: ${data.counts[r]}</span>`)
+      .join(' ');
+  }
+}
+
+async function acctGpInvite(btn) {
+  const input = document.getElementById('acct-gp-email');
+  const err = document.getElementById('acct-error');
+  const status = document.getElementById('acct-status');
+  const email = input ? input.value.trim() : '';
+  if (!email || email.indexOf('@') < 1) { if (err) err.textContent = 'Enter a valid LP email.'; return; }
+  if (err) err.textContent = '';
+  if (status) status.textContent = 'Issuing invite…';
+  if (btn) btn.disabled = true;
+  try {
+    await acctFetch('/api/auth/invite', { method: 'POST', body: JSON.stringify({ email }) });
+    if (status) status.textContent = 'LP invite issued for ' + email + '.';
+    if (input) input.value = '';
+    acctGpRefresh();
+  } catch (e) {
+    if (status) status.textContent = '';
+    if (err) err.textContent = e.message || 'Could not issue invite.';
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 async function acctSendCode(email) {
   await acctFetch('/api/auth/request', { method: 'POST', body: JSON.stringify({ email }) });
 }
@@ -351,6 +400,8 @@ function acctBind() {
   if (bc) bc.addEventListener('click', () => acctBrokerConnect(bc));
   const bd = root.querySelector('#acct-broker-disconnect');
   if (bd) bd.addEventListener('click', acctBrokerDisconnect);
+  const gpInvite = root.querySelector('#acct-gp-invite');
+  if (gpInvite) gpInvite.addEventListener('click', () => acctGpInvite(gpInvite));
 }
 
 function acctInit() {

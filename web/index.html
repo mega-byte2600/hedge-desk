@@ -71,6 +71,16 @@
         </div>
         <p class="small-note">Read-only. The desk can read positions and balances; it cannot place orders.</p>
       </div>
+      <div id="acct-gp" class="acct-gp" style="display:none">
+        <h3>GP console</h3>
+        <p id="acct-gp-cap" class="small-note">LP seats: — / —</p>
+        <p id="acct-gp-counts" class="acct-gp-counts"></p>
+        <label class="form-field">Invite a limited partner<input id="acct-gp-email" class="input" type="email" placeholder="lp@example.com"></label>
+        <div class="acct-actions">
+          <button id="acct-gp-invite" class="btn primary" type="button">Issue LP invite</button>
+        </div>
+        <p class="small-note">LPs are investors in the LLC — invited, and never a paid tier. The seat cap is enforced server-side.</p>
+      </div>
       <div class="acct-manage">
         <button id="acct-subscribe" class="btn" type="button">Upgrade to subscription member</button>
         <button id="acct-logout" class="btn" type="button">Sign out</button>
