@@ -31,6 +31,7 @@ from hedge_desk.membership import (
     MAX_LP_MEMBERS,
     MembershipStore,
 )
+from hedge_desk.tier_access import DataTier, data_tier_for, can_access_real_data, is_investor
 from hedge_desk.email_transport import build_sender
 
 SESSION_COOKIE = "emporion_session"
@@ -201,6 +202,49 @@ def make_auth_app(
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             store.set_subscribed(email_addr)
             return _json_response(start_response, {"status": "subscribed", "role": "MEMBER"})
+
+        # ---- tier (data entitlement for the current role) -------------------
+        if path == "/api/tier" and method == "GET":
+            if not email:
+                return _json_response(start_response, {"tier": DataTier.SYNTHETIC.value, "role": None})
+            decision = store.access_for(email)
+            tier = data_tier_for(decision.role or "")
+            return _json_response(
+                start_response,
+                {
+                    "tier": tier.value,
+                    "role": decision.role,
+                    "real_data": tier in (DataTier.REAL, DataTier.FULL),
+                    "investor": is_investor(decision.role or ""),
+                    "access": decision.allowed,
+                    "reason": decision.reason,
+                },
+            )
+
+        # ---- gated real-data endpoint (guests get synthetic only) -----------
+        if path == "/api/data/real" and method == "GET":
+            decision = store.access_for(email) if email else None
+            role = decision.role if decision and decision.allowed else None
+            if not can_access_real_data(role or ""):
+                return _json_response(
+                    start_response,
+                    {
+                        "error": "real_data_requires_member",
+                        "tier": data_tier_for(role or "").value,
+                        "hint": "Sign in as a member or LP to access real market data.",
+                    },
+                    "403 Forbidden",
+                )
+            # Placeholder: real data adapter hooks here. Fail closed until wired.
+            return _json_response(
+                start_response,
+                {
+                    "tier": DataTier.REAL.value,
+                    "role": role,
+                    "status": "real_data_available",
+                    "note": "Real data adapter not yet wired — endpoint is gated and ready.",
+                },
+            )
 
         return _json_response(start_response, {"error": "not_found"}, "404 Not Found")
 

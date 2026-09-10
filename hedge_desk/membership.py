@@ -55,6 +55,13 @@ CREATE TABLE IF NOT EXISTS members (
     guest_expires_at TEXT,
     -- subscription member flag (self-serve, non-invite)
     subscribed  INTEGER NOT NULL DEFAULT 0,
+    -- LP is an LLC investor (invited by GP), never a payer. investor=1 marks
+    -- a capital-committed LP as distinct from a paid subscriber.
+    investor    INTEGER NOT NULL DEFAULT 0,
+    -- LP/GP fee schedule fields, set by the GP per the LLC operating agreement.
+    -- fee_type: e.g. management | carried | performance. rate is a Decimal str.
+    fee_type    TEXT,
+    fee_rate    TEXT,
     -- invite: invite token + expiry, issued by GP for LP seats
     invite_token   TEXT,
     invite_expires_at TEXT
@@ -142,7 +149,8 @@ class MembershipStore:
     def get_member(self, email: str) -> Optional[dict]:
         row = self._conn.execute(
             "SELECT email, role, created_at, guest_expires_at, subscribed, "
-            "invite_token, invite_expires_at FROM members WHERE email=?",
+            "investor, fee_type, fee_rate, invite_token, invite_expires_at "
+            "FROM members WHERE email=?",
             (email.lower(),),
         ).fetchone()
         if not row:
@@ -153,8 +161,11 @@ class MembershipStore:
             "created_at": row[2],
             "guest_expires_at": row[3],
             "subscribed": bool(row[4]),
-            "invite_token": row[5],
-            "invite_expires_at": row[6],
+            "investor": bool(row[5]),
+            "fee_type": row[6],
+            "fee_rate": row[7],
+            "invite_token": row[8],
+            "invite_expires_at": row[9],
         }
 
     def upsert_guest(self, email: str) -> dict:
@@ -192,12 +203,28 @@ class MembershipStore:
         email = email.lower()
         self._conn.execute(
             "INSERT INTO members (email, role, created_at, subscribed, "
-            "guest_expires_at, invite_token, invite_expires_at) "
-            "VALUES (?, ?, ?, 0, NULL, NULL, NULL) "
+            "investor, guest_expires_at, invite_token, invite_expires_at) "
+            "VALUES (?, ?, ?, 0, 1, NULL, NULL, NULL) "
             "ON CONFLICT(email) DO UPDATE SET "
-            "  role=?, guest_expires_at=NULL, invite_token=NULL, "
+            "  role=?, investor=1, guest_expires_at=NULL, invite_token=NULL, "
             "  invite_expires_at=NULL",
             (email, ROLE_LP, _utc_iso(self._now()), ROLE_LP),
+        )
+        self._conn.commit()
+        member = self.get_member(email)
+        assert member is not None
+        return member
+
+    def set_lp_fee(self, email: str, fee_type: str, fee_rate: str) -> dict:
+        """Set the LP fee schedule (e.g. management/carried/performance).
+
+        Rate is stored as a string so it can be a Decimal at the point of use;
+        the value is set by the GP per the LLC operating agreement.
+        """
+        email = email.lower()
+        self._conn.execute(
+            "UPDATE members SET fee_type=?, fee_rate=? WHERE email=? AND role=?",
+            (fee_type, fee_rate, email, ROLE_LP),
         )
         self._conn.commit()
         member = self.get_member(email)
@@ -212,7 +239,8 @@ class MembershipStore:
 
     def all_members(self) -> list[dict]:
         rows = self._conn.execute(
-            "SELECT email, role, created_at, subscribed FROM members ORDER BY created_at"
+            "SELECT email, role, created_at, subscribed, investor, fee_type, fee_rate "
+            "FROM members ORDER BY created_at"
         ).fetchall()
         return [
             {
@@ -220,6 +248,9 @@ class MembershipStore:
                 "role": r[1],
                 "created_at": r[2],
                 "subscribed": bool(r[3]),
+                "investor": bool(r[4]),
+                "fee_type": r[5],
+                "fee_rate": r[6],
             }
             for r in rows
         ]
@@ -236,10 +267,10 @@ class MembershipStore:
         expires = now + timedelta(days=ttl_days)
         self._conn.execute(
             "INSERT INTO members (email, role, created_at, subscribed, "
-            "guest_expires_at, invite_token, invite_expires_at) "
-            "VALUES (?, ?, ?, 0, NULL, ?, ?) "
+            "investor, guest_expires_at, invite_token, invite_expires_at) "
+            "VALUES (?, ?, ?, 0, 1, NULL, ?, ?) "
             "ON CONFLICT(email) DO UPDATE SET "
-            "  role=?, guest_expires_at=NULL, invite_token=excluded.invite_token, "
+            "  role=?, investor=1, guest_expires_at=NULL, invite_token=excluded.invite_token, "
             "  invite_expires_at=excluded.invite_expires_at",
             (
                 email,

@@ -99,9 +99,32 @@ class MembershipStoreTests(unittest.TestCase):
         member = self.store.get_member("lp@example.com")
         self.assertIsNone(member["guest_expires_at"])
         self.assertEqual(member["role"], ROLE_LP)
+        self.assertTrue(member["investor"], "LP is an LLC investor, not a payer")
         decision = self.store.access_for("lp@example.com")
         self.assertTrue(decision.allowed)
         self.assertEqual(decision.role, ROLE_LP)
+
+    def test_lp_is_investor_not_subscriber(self):
+        # LP is never the paid 'subscribed' tier; investor flag distinguishes them.
+        self.store.promote_to_lp("investor@example.com")
+        member = self.store.get_member("investor@example.com")
+        self.assertTrue(member["investor"])
+        self.assertFalse(member["subscribed"], "LP is not a paid subscriber")
+        self.assertEqual(member["role"], ROLE_LP)
+
+    def test_set_lp_fee_schedule(self):
+        self.store.promote_to_lp("fee@example.com")
+        self.store.set_lp_fee("fee@example.com", "management", "0.015")
+        member = self.store.get_member("fee@example.com")
+        self.assertEqual(member["fee_type"], "management")
+        self.assertEqual(member["fee_rate"], "0.015")
+
+    def test_issue_lp_invite_marks_investor(self):
+        invite = self.store.issue_lp_invite("newlp@example.com")
+        self.assertTrue(invite["token"])
+        member = self.store.get_member("newlp@example.com")
+        self.assertEqual(member["role"], ROLE_LP)
+        self.assertTrue(member["investor"])
 
     def test_lp_cap_is_enforced(self):
         for i in range(MAX_LP_MEMBERS):
