@@ -80,7 +80,10 @@ function acctRender() {
         ? 'Investor access — live data and full desk service.'
         : 'Member access — live market data (broker link available).';
     } else {
-      tierLine.textContent = 'Guest test drive — synthetic data. Upgrade for live data.';
+      const left = (t && typeof t.guest_days_left === 'number')
+        ? ` Test drive: ${t.guest_days_left} day${t.guest_days_left === 1 ? '' : 's'} left.`
+        : '';
+      tierLine.textContent = 'Guest test drive — synthetic data.' + left + ' Upgrade for live data.';
     }
   }
 }
@@ -116,6 +119,8 @@ async function acctRefresh() {
     ACCT.tier = null;
   }
   acctRender();
+  acctBrokerRefresh();
+  acctGpRefresh();
 }
 
 /* ---- social login (Supabase Auth IdP) ---------------------------------- */
@@ -192,6 +197,124 @@ async function acctCompleteSocialIfPresent() {
     return true;
   } catch (e) {
     return false;
+  }
+}
+
+/* ---- broker linking (read-only; members/LPs) ---------------------------- */
+
+async function acctBrokerRefresh() {
+  const box = document.getElementById('acct-broker');
+  if (!box) return;
+  const c = ACCT.current;
+  if (!c || !c.authenticated || !(ACCT.tier && ACCT.tier.real_data)) {
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = 'block';
+  let st = { configured: false, linked: false };
+  try { st = await acctFetch('/api/broker/status'); } catch (e) { /* leave defaults */ }
+  ACCT.broker = st;
+  const label = document.getElementById('acct-broker-label');
+  const connect = document.getElementById('acct-broker-connect');
+  const disconnect = document.getElementById('acct-broker-disconnect');
+  if (label) {
+    label.textContent = !st.configured
+      ? 'Broker linking is not configured on this deployment.'
+      : (st.linked ? 'Broker connected (read-only).' : 'No broker connected yet.');
+  }
+  if (connect) connect.style.display = st.configured && !st.linked ? 'inline-flex' : 'none';
+  if (disconnect) disconnect.style.display = st.linked ? 'inline-flex' : 'none';
+}
+
+async function acctBrokerConnect(btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const res = await acctFetch('/api/broker/authorize');
+    if (res && res.authorize_url) { window.location.href = res.authorize_url; return; }
+    throw new Error('no authorize url');
+  } catch (e) {
+    if (btn) btn.disabled = false;
+    const err = document.getElementById('acct-error');
+    if (err) err.textContent = 'Could not start broker link: ' + (e.message || e);
+  }
+}
+
+async function acctBrokerDisconnect() {
+  try { await acctFetch('/api/broker/unlink', { method: 'POST', body: '{}' }); } catch (e) { /* ignore */ }
+  acctBrokerRefresh();
+  acctToast('Broker disconnected');
+}
+
+/* The broker OAuth redirect returns ?code=...&state=... — finish the link. */
+async function acctBrokerCompleteIfPresent() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  if (!code || !state) return false;
+  try {
+    await acctFetch('/api/broker/link', {
+      method: 'POST',
+      body: JSON.stringify({ code, state }),
+    });
+    const url = new URL(window.location.href);
+    url.searchParams.delete('code');
+    url.searchParams.delete('state');
+    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    acctToast('Broker connected (read-only)');
+    acctBrokerRefresh();
+    return true;
+  } catch (e) {
+    const err = document.getElementById('acct-error');
+    if (err) err.textContent = 'Broker link failed: ' + (e.message || e);
+    return false;
+  }
+}
+
+/* ---- GP console (visible only to the GP) ------------------------------- */
+
+async function acctGpRefresh() {
+  const box = document.getElementById('acct-gp');
+  if (!box) return;
+  const c = ACCT.current;
+  if (!c || !c.authenticated || c.role !== 'GP') {
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = 'block';
+  let data = null;
+  try { data = await acctFetch('/api/auth/members'); } catch (e) { /* leave null */ }
+  if (!data) return;
+  ACCT.gp = data;
+  const cap = document.getElementById('acct-gp-cap');
+  if (cap) cap.textContent = `LP seats: ${data.lp_count} / ${data.max_lp} · ${data.total} total members`;
+  const counts = document.getElementById('acct-gp-counts');
+  if (counts) {
+    counts.innerHTML = Object.keys(data.counts || {})
+      .sort()
+      .map((r) => `<span class="tag">${r}: ${data.counts[r]}</span>`)
+      .join(' ');
+  }
+}
+
+async function acctGpInvite(btn) {
+  const input = document.getElementById('acct-gp-email');
+  const err = document.getElementById('acct-error');
+  const status = document.getElementById('acct-status');
+  const email = input ? input.value.trim() : '';
+  if (!email || email.indexOf('@') < 1) { if (err) err.textContent = 'Enter a valid LP email.'; return; }
+  if (err) err.textContent = '';
+  if (status) status.textContent = 'Issuing invite…';
+  if (btn) btn.disabled = true;
+  try {
+    await acctFetch('/api/auth/invite', { method: 'POST', body: JSON.stringify({ email }) });
+    if (status) status.textContent = 'LP invite issued for ' + email + '.';
+    if (input) input.value = '';
+    acctGpRefresh();
+  } catch (e) {
+    if (status) status.textContent = '';
+    if (err) err.textContent = e.message || 'Could not issue invite.';
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -275,6 +398,13 @@ function acctBind() {
 
   const closeBtn = root.querySelector('#acct-close');
   if (closeBtn) closeBtn.addEventListener('click', acctClose);
+
+  const bc = root.querySelector('#acct-broker-connect');
+  if (bc) bc.addEventListener('click', () => acctBrokerConnect(bc));
+  const bd = root.querySelector('#acct-broker-disconnect');
+  if (bd) bd.addEventListener('click', acctBrokerDisconnect);
+  const gpInvite = root.querySelector('#acct-gp-invite');
+  if (gpInvite) gpInvite.addEventListener('click', () => acctGpInvite(gpInvite));
 }
 
 function acctInit() {
@@ -292,6 +422,7 @@ function acctInit() {
   ACCT.modal = modal;
   acctBind();
   acctLoadProviders().then(() => acctCompleteSocialIfPresent());
+  acctBrokerCompleteIfPresent();
   acctRefresh();
 }
 

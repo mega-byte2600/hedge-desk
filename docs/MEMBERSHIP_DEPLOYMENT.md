@@ -18,9 +18,11 @@ It creates `members`, `otps`, `sessions`, `broker_links` and enables RLS.
 | `SUPABASE_ANON_KEY` | Publishable/anon key — safe to expose; enables social login in the browser | for social login |
 | `SUPABASE_JWT_SECRET` | Project JWT secret (Settings → API → JWT Settings) — server verifies social-login tokens with it | for social login |
 | `SOCIAL_PROVIDERS` | Comma list of enabled IdPs, e.g. `google,github,azure,apple` (default `google,github`) | optional |
+| `SCHWAB_CLIENT_ID` / `SCHWAB_CLIENT_SECRET` | Schwab app credentials (server-side only) | for broker linking |
+| `SCHWAB_REDIRECT_URI` | Must match the Schwab app callback exactly. Point it at the site root so the console finishes the link | for broker linking |
+| `BROKER_LINK_KEY` | Long random value; encrypts broker token references at rest | for broker linking |
 | `MEMBERSHIP_SECRET` | HMAC secret for OTP/session hashing. Set a long random value. | yes |
 | `GP_EMAIL` | The GP's email — the only account allowed to issue LP invites / view the cap. | yes |
-| `BROKER_LINK_KEY` | Key used to encrypt broker token references at rest. | only when broker linking is enabled |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` / `SMTP_FROM_NAME` | OTP email delivery. Without these, codes print to the server log (dev fallback). | for real sign-in emails |
 | `GUEST_ACCESS_DAYS` | Guest test-drive length in days (default 31). | optional |
 
@@ -53,8 +55,36 @@ and email-OTP still works.
 | LP | real market data + full desk service | yes | investor in the LLC — never pays |
 | GP | everything | everything | operator |
 
-## 4. Safety notes
+## 3b. Using the desk
 
+- **Sign in** (top-right) — social (Google/GitHub/…) when configured, else the
+  email one-time code.
+- **Broker connection** appears for members/LPs once `SCHWAB_*` is set. It is
+  **read-only**: the desk can read positions and balances and cannot place
+  orders.
+- **GP console** appears only for `GP_EMAIL`. It shows LP seats used/cap, total
+  members, role counts, and lets the GP issue an LP invite by email. The seat
+  cap is enforced server-side, so the UI cannot exceed it.
+
+## 3c. Keep the service warm (cold starts)
+
+Render's free tier sleeps after ~15 minutes idle; the first request afterwards
+can take 30–60s. Mitigations in place:
+
+- `report.json` is now browser-cacheable, the client no longer uses
+  `cache:'no-store'`, and the report is preloaded — so **repeat visits render
+  from cache** without a round-trip.
+- The console shows *"Waking the research desk…"* after 2.5s instead of
+  appearing to hang.
+- A local keep-alive pings every 8 minutes and warms `/`, `/api/health`, and
+  `/report.json`.
+
+The local pinger only runs while the machine hosting it is awake. For true
+always-on, add an **external** uptime monitor (UptimeRobot or cron-job.org —
+both free) pointing at `https://<service>.onrender.com/api/health` every 5
+minutes. That removes cold starts regardless of your own machine.
+
+## 4. Safety notes
 - The `SUPABASE_SERVICE_KEY` is server-side only. Never expose it to the
   browser or commit it. RLS is on for all tables.
 - `MEMBERSHIP_SECRET` and `BROKER_LINK_KEY` must be long random values and must

@@ -33,9 +33,24 @@ def _auth_app():
             if _AUTH_APP is None:
                 store = default_membership_store()
                 from hedge_desk.supabase_auth import verifier_from_env
+                from hedge_desk.broker_link import default_broker_store
+                from hedge_desk.brokers.schwab_oauth import SchwabOAuth, SchwabOAuthConfig
+                from hedge_desk.brokers.schwab_readonly import SchwabReadOnlyBroker
 
+                broker_oauth = None
+                try:
+                    cfg = SchwabOAuthConfig.from_environment()
+                    if cfg.configured:
+                        broker_oauth = SchwabOAuth(cfg)
+                except Exception:
+                    broker_oauth = None
                 _AUTH_APP = make_auth_app(
-                    store, gp_email=GP_EMAIL, jwt_verifier=verifier_from_env()
+                    store,
+                    gp_email=GP_EMAIL,
+                    jwt_verifier=verifier_from_env(),
+                    broker_store=default_broker_store(),
+                    broker_oauth=broker_oauth,
+                    broker_adapter=SchwabReadOnlyBroker(),
                 )
     return _AUTH_APP
 
@@ -138,10 +153,13 @@ def _supabase_status():
 
 def _dispatch(environ, start_response):
     path = environ.get("PATH_INFO", "/")
-    # Membership/auth surface. All /api/auth/* requests are handled by the
-    # auth app; the report/candidate/risk-dashboard endpoints below stay
-    # public so the guest "test drive" tier remains open.
-    if path.startswith("/api/auth/"):
+    # Membership/auth surface. The auth app owns the auth, tier, data-gate,
+    # and broker routes; the report/candidate/risk-dashboard endpoints below
+    # stay public so the guest "test drive" tier remains open.
+    if path.startswith("/api/auth/") or path.startswith("/api/broker/") or path in (
+        "/api/tier",
+        "/api/data/real",
+    ):
         return _auth_app()(environ, start_response)
     if path == "/api/health":
         return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _cached("supabase-status", _supabase_status)})

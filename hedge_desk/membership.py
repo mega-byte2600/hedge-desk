@@ -185,11 +185,19 @@ class MembershipStore:
         return member
 
     def set_subscribed(self, email: str) -> dict:
-        """Upgrade a member to self-serve subscription (non-invite)."""
+        """Upgrade a GUEST to self-serve subscription (non-invite).
+
+        Upserts for a missing row, and never downgrades a higher role: an LP or
+        GP who "subscribes" stays an LP/GP.
+        """
         email = email.lower()
         self._conn.execute(
-            "UPDATE members SET role=?, subscribed=1, guest_expires_at=NULL WHERE email=?",
-            (ROLE_MEMBER, email),
+            "INSERT INTO members (email, role, created_at, subscribed, investor) "
+            "VALUES (?, ?, ?, 1, 0) "
+            "ON CONFLICT(email) DO UPDATE SET "
+            "  role=?, subscribed=1, guest_expires_at=NULL "
+            "WHERE members.role = ?",
+            (email, ROLE_MEMBER, _utc_iso(self._now()), ROLE_MEMBER, ROLE_GUEST),
         )
         self._conn.commit()
         member = self.get_member(email)

@@ -94,6 +94,16 @@ class TierAccessEndpointTests(unittest.TestCase):
         self.assertEqual(payload["tier"], "synthetic")
         self.assertFalse(payload["real_data"])
 
+    def test_tier_endpoint_guest_reports_days_left(self):
+        import json
+        cookie = self._guest_session()
+        env = {"PATH_INFO": "/api/tier", "REQUEST_METHOD": "GET",
+               "HTTP_COOKIE": "emporion_session=" + cookie}
+        def start(s, h): pass
+        payload = json.loads(b"".join(self.dispatch(env, start)))
+        self.assertIn("guest_days_left", payload)
+        self.assertEqual(payload["guest_days_left"], 31)
+
     def test_guest_denied_real_data(self):
         import json
         cookie = self._guest_session()

@@ -123,6 +123,17 @@ class SupabaseMembershipTests(unittest.TestCase):
         self.assertTrue(m["subscribed"])
         self.assertIsNone(m["guest_expires_at"])
 
+    def test_subscribe_does_not_downgrade_lp(self):
+        self.store.promote_to_lp("lp@example.com")
+        m = self.store.set_subscribed("lp@example.com")
+        self.assertEqual(m["role"], ROLE_LP)
+        self.assertTrue(m["investor"])
+
+    def test_subscribe_creates_row_when_missing(self):
+        m = self.store.set_subscribed("fresh@example.com")
+        self.assertEqual(m["role"], ROLE_MEMBER)
+        self.assertTrue(m["subscribed"])
+
     def test_promote_to_lp_marks_investor(self):
         self.store.promote_to_lp("lp@example.com")
         m = self.store.get_member("lp@example.com")
