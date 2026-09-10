@@ -15,6 +15,9 @@ It creates `members`, `otps`, `sessions`, `broker_links` and enables RLS.
 |---|---|---|
 | `SUPABASE_URL` | Project URL, e.g. `https://xxxx.supabase.co` | yes (for persistence) |
 | `SUPABASE_SERVICE_KEY` | Service role key (server-side only — never ship to the browser) | yes (for persistence) |
+| `SUPABASE_ANON_KEY` | Publishable/anon key — safe to expose; enables social login in the browser | for social login |
+| `SUPABASE_JWT_SECRET` | Project JWT secret (Settings → API → JWT Settings) — server verifies social-login tokens with it | for social login |
+| `SOCIAL_PROVIDERS` | Comma list of enabled IdPs, e.g. `google,github,azure,apple` (default `google,github`) | optional |
 | `MEMBERSHIP_SECRET` | HMAC secret for OTP/session hashing. Set a long random value. | yes |
 | `GP_EMAIL` | The GP's email — the only account allowed to issue LP invites / view the cap. | yes |
 | `BROKER_LINK_KEY` | Key used to encrypt broker token references at rest. | only when broker linking is enabled |
@@ -24,6 +27,22 @@ It creates `members`, `otps`, `sessions`, `broker_links` and enables RLS.
 Behaviour: if `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` are set the server uses
 the Supabase store; otherwise it falls back to local SQLite (dev only — data
 resets on redeploy).
+
+## 2b. Enable social login (Supabase Auth)
+
+1. Supabase dashboard → Authentication → Providers → enable Google / GitHub /
+   Microsoft / Apple and paste each provider's OAuth client ID + secret.
+2. Authentication → URL Configuration → add your site URL
+   (`https://hedge-desk.onrender.com`) to the redirect allow-list so the OAuth
+   callback returns to the desk.
+3. Set `SUPABASE_ANON_KEY`, `SUPABASE_JWT_SECRET`, and `SOCIAL_PROVIDERS` on the
+   Render service.
+
+Flow: the browser signs in with the provider via Supabase; the desk's server
+**verifies the Supabase JWT** (`SUPABASE_JWT_SECRET`) before issuing its own
+role-scoped session cookie. Identity comes from Supabase; role/tier stays with
+the desk. If social login is not configured the buttons simply do not appear
+and email-OTP still works.
 
 ## 3. What the tiers get
 

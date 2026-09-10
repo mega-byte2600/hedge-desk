@@ -3,18 +3,34 @@
  * The research console stays open (guest "test drive" tier is public). This
  * adds an opt-in membership layer:
  *   - a Sign in / account control in the topbar,
- *   - an email-OTP sign-in flow (no password),
+ *   - social login via Supabase Auth (Google/GitHub/... IdP),
+ *   - email-OTP sign-in (no password) as a fallback,
  *   - role-aware UI (guest / member / LP / GP),
  *   - self-serve subscription (MEMBER) and GP invite (LP) surfaces.
  *
- * Email-OTP auth means every sign-in captures a verified, consent-collected
- * email -> the GP's first-party marketing list.
+ * Identity (email + provider) comes from Supabase Auth; the desk maps that
+ * verified email to a membership role/tier. Email-OTP also captures a
+ * verified, consent-collected email -> the GP's first-party marketing list.
  */
+
+// Pinned to an exact version for supply-chain reproducibility (never @2 / @latest).
+const SUPABASE_JS_CDN = 'https://esm.sh/@supabase/supabase-js@2.116.0';
+let _supabaseClient = null;
+
+async function loadSupabase(url, anonKey) {
+  if (_supabaseClient) return _supabaseClient;
+  const mod = await import(/* @vite-ignore */ SUPABASE_JS_CDN);
+  _supabaseClient = mod.createClient(url, anonKey, {
+    auth: { persistSession: true, detectSessionInUrl: true, autoRefreshToken: true },
+  });
+  return _supabaseClient;
+}
 
 const ACCT = {
   modal: null,
   current: null, // {authenticated, email, role, access, reason}
   tier: null, // {tier, real_data, investor}
+  social: null, // {enabled, supabase_url, supabase_anon_key, providers}
   state: 'idle', // idle | sending | verifying
 };
 
@@ -100,6 +116,83 @@ async function acctRefresh() {
     ACCT.tier = null;
   }
   acctRender();
+}
+
+/* ---- social login (Supabase Auth IdP) ---------------------------------- */
+
+const PROVIDER_LABEL = {
+  google: 'Continue with Google',
+  github: 'Continue with GitHub',
+  azure: 'Continue with Microsoft',
+  apple: 'Continue with Apple',
+};
+
+async function acctLoadProviders() {
+  try {
+    ACCT.social = await acctFetch('/api/auth/providers');
+  } catch (e) {
+    ACCT.social = { enabled: false, providers: [] };
+  }
+  acctRenderProviders();
+}
+
+function acctRenderProviders() {
+  const box = document.getElementById('acct-social');
+  if (!box) return;
+  const s = ACCT.social;
+  if (!s || !s.enabled || !s.providers || !s.providers.length) {
+    box.innerHTML = '';
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = 'block';
+  box.innerHTML = s.providers
+    .map((p) => `<button type="button" class="btn acct-social-btn" data-provider="${p}">${PROVIDER_LABEL[p] || ('Continue with ' + p)}</button>`)
+    .join('');
+  box.querySelectorAll('button[data-provider]').forEach((b) => {
+    b.addEventListener('click', () => acctSocialSignIn(b.dataset.provider, b));
+  });
+}
+
+async function acctSocialSignIn(provider, btn) {
+  const s = ACCT.social;
+  if (!s || !s.enabled) return;
+  if (btn) { btn.disabled = true; }
+  try {
+    const client = await loadSupabase(s.supabase_url, s.supabase_anon_key);
+    const { error } = await client.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin + window.location.pathname },
+    });
+    if (error) throw error;
+  } catch (e) {
+    if (btn) btn.disabled = false;
+    const err = document.getElementById('acct-error');
+    if (err) err.textContent = 'Social sign-in unavailable: ' + (e.message || e);
+  }
+}
+
+/* After an OAuth redirect back, Supabase has a session in the URL/storage.
+ * Exchange its access token with the desk to get our role-scoped session. */
+async function acctCompleteSocialIfPresent() {
+  const s = ACCT.social;
+  if (!s || !s.enabled) return false;
+  try {
+    const client = await loadSupabase(s.supabase_url, s.supabase_anon_key);
+    const { data } = await client.auth.getSession();
+    const session = data && data.session;
+    if (!session || !session.access_token) return false;
+    await acctFetch('/api/auth/social', {
+      method: 'POST',
+      body: JSON.stringify({ access_token: session.access_token }),
+    });
+    await client.auth.signOut();
+    await acctRefresh();
+    acctToast('Signed in as ' + (ACCT.current && ACCT.current.email ? ACCT.current.email : ''));
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 async function acctSendCode(email) {
@@ -198,6 +291,7 @@ function acctInit() {
   });
   ACCT.modal = modal;
   acctBind();
+  acctLoadProviders().then(() => acctCompleteSocialIfPresent());
   acctRefresh();
 }
 

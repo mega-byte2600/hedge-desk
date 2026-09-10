@@ -15,11 +15,19 @@ class AccountSurfaceTests(unittest.TestCase):
         self.assertIn('id="acct-label"', index)
         self.assertIn('id="acct-modal"', index)
         self.assertIn('id="acct-tier"', index)
+        self.assertIn('id="acct-social"', index)
         self.assertIn("account.js", index)
         self.assertIn("/api/auth/me", acct)
         self.assertIn("/api/auth/request", acct)
         self.assertIn("/api/auth/verify", acct)
         self.assertIn("/api/tier", acct)
+        # social login (Supabase Auth) wiring
+        self.assertIn("/api/auth/providers", acct)
+        self.assertIn("/api/auth/social", acct)
+        self.assertIn("signInWithOAuth", acct)
+        # supply-chain: the CDN import must be pinned to an exact version
+        self.assertNotIn("supabase-js@2'", acct)
+        self.assertRegex(acct, r"@supabase/supabase-js@\d+\.\d+\.\d+")
 
     def test_guest_tier_stays_open_not_walled(self):
         # The research console must remain publicly reachable; sign-in is an
