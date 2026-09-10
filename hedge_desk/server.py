@@ -14,11 +14,49 @@ from hedge_desk.candidates import build_candidate_feed
 from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
 from hedge_desk.console_report import build_console_payload
 from hedge_desk.overnight import current_morning_report
+from hedge_desk.auth_app import make_auth_app, default_membership_store
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
 WEB = DEPLOY_ROOT / "dist" if (DEPLOY_ROOT / "dist").is_dir() else PACKAGE_ROOT / "dist"
 API_CACHE_SECONDS = max(0.0, float(os.getenv("EMPORION_API_CACHE_SECONDS", "15")))
+
+# Lazy singleton for the membership/auth app. The store is only opened on the
+# first auth request so that a plain report server never pays the SQLite cost.
+_AUTH_APP = None
+_AUTH_APP_LOCK = Lock()
+GP_EMAIL = os.getenv("GP_EMAIL", "").strip()
+
+
+def _auth_app():
+    global _AUTH_APP
+    if _AUTH_APP is None:
+        with _AUTH_APP_LOCK:
+            if _AUTH_APP is None:
+                store = default_membership_store()
+                from hedge_desk.supabase_auth import verifier_from_env
+                from hedge_desk.broker_link import default_broker_store
+                from hedge_desk.brokers.schwab_oauth import SchwabOAuth, SchwabOAuthConfig
+                from hedge_desk.brokers.schwab_readonly import SchwabReadOnlyBroker
+
+                broker_oauth = None
+                try:
+                    cfg = SchwabOAuthConfig.from_environment()
+                    if cfg.configured:
+                        broker_oauth = SchwabOAuth(cfg)
+                except Exception:
+                    broker_oauth = None
+                _AUTH_APP = make_auth_app(
+                    store,
+                    gp_email=GP_EMAIL,
+                    jwt_verifier=verifier_from_env(),
+                    broker_store=default_broker_store(),
+                    broker_oauth=broker_oauth,
+                    broker_adapter=SchwabReadOnlyBroker(),
+                )
+    return _AUTH_APP
+
+
 
 
 class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
@@ -140,6 +178,11 @@ def _supabase_status():
 
 def _dispatch(environ, start_response):
     path = environ.get("PATH_INFO", "/")
+    # Membership/auth surface. All /api/auth/* requests are handled by the
+    # auth app; the report/candidate/risk-dashboard endpoints below stay
+    # public so the guest "test drive" tier remains open.
+    if path.startswith("/api/auth/"):
+        return _auth_app()(environ, start_response)
     if path == "/api/health":
         return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _cached("supabase-status", _supabase_status)})
     if path == "/api/candidates":

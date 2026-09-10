@@ -35,6 +35,7 @@ CONSOLE_ASSETS = (
     "timeline.json",
     "navigation-stability.js",
     "emporion-institutional-seal.svg",
+    "account.js",
     "report.json",
 )
 

@@ -56,6 +56,27 @@ class ServerTests(unittest.TestCase):
         self.assertGreaterEqual(payload['desk_count'], 6)
         self.assertTrue(payload['executive_actions'])
 
+    def test_auth_route_is_wired_into_server_and_report_stays_public(self):
+        # /api/auth/me should respond through the server (unauthenticated now,
+        # but a real 200 JSON from the auth app, not a 404 or the SPA fallback).
+        from hedge_desk.server import _dispatch
+        captured = {}
+
+        def start(status, headers):
+            captured['status'] = status
+            captured['headers'] = headers
+
+        import json as _json
+        body = b''.join(_dispatch({'PATH_INFO': '/api/auth/me', 'REQUEST_METHOD': 'GET'}, start))
+        self.assertEqual(captured['status'], '200 OK')
+        payload = _json.loads(body)
+        self.assertIn('authenticated', payload)
+
+        # report/candidate endpoints remain publicly reachable without auth (guest tier open)
+        status2, report = self.request('/api/candidates')
+        self.assertEqual(status2, '200 OK')
+        self.assertEqual(len({row['desk_id'] for row in report['candidates']}), 6)
+
     def test_live_report_recomputes_a_valid_paper_only_console_payload(self):
         status, payload = self.request('/api/report')
 

@@ -41,11 +41,56 @@
   <div class="sidebar-bottom"><div class="mode">RESEARCH PLATFORM</div><p>Seven-desk architecture.<br>Six evaluated workflows.</p><a href="https://github.com/mega-byte2600/hedge-desk" target="_blank" rel="noopener">GitHub repository ↗</a></div>
 </aside>
 <div class="shell">
-  <header class="topbar"><span>Workspace <span class="muted">/</span> <strong id="breadcrumb">Candidates</strong></span><span class="top-status">Independent research platform</span></header>
+  <header class="topbar"><span>Workspace <span class="muted">/</span> <strong id="breadcrumb">Candidates</strong></span><span class="top-status">Independent research platform</span><span class="top-account"><button id="acct-btn" class="acct-btn" type="button" aria-haspopup="dialog"><span id="acct-label">Sign in</span><span class="acct-caret">⌄</span></button></span></header>
   <main id="main" tabindex="-1"><div class="loading">Loading research workspace…</div></main>
   <footer><span>EMPORION <span class="muted">/ A Bolton Investment Group (BIG) Project</span></span><span id="reportstamp">Research workspace loading</span></footer>
 </div>
 <dialog id="detail"><div id="detail-content"></div></dialog>
+<dialog id="acct-modal" class="acct-modal" aria-labelledby="acct-title">
+  <div class="acct-modal-inner">
+    <div class="acct-head"><div><h2 id="acct-title">Emporion membership</h2><p class="subtitle">The desk stays open to explore. Sign in with your email to keep a verified account, subscribe, or claim an LP invite.</p></div><button id="acct-close" class="close" aria-label="Close">×</button></div>
+    <div class="acct-body">
+      <div id="acct-tier" class="acct-tier">Browsing as a guest — synthetic test-drive data.</div>
+      <div id="acct-error" class="acct-error" role="alert"></div>
+      <div id="acct-social" class="acct-social"></div>
+      <div class="acct-divider"><span>or sign in with email</span></div>
+      <label class="form-field">Email address<input id="acct-email" class="input" type="email" placeholder="you@example.com" autocomplete="email"></label>
+      <div class="acct-actions">
+        <button id="acct-send" class="btn" type="button">Send code</button>
+      </div>
+      <label class="form-field">One-time code<input id="acct-code" class="input" type="text" inputmode="numeric" placeholder="paste the code from your inbox" autocomplete="one-time-code"></label>
+      <div class="acct-actions">
+        <button id="acct-verify" class="btn primary" type="button">Sign in</button>
+      </div>
+      <div id="acct-status" class="acct-status"></div>
+      <div id="acct-broker" class="acct-broker" style="display:none">
+        <h3>Broker connection</h3>
+        <p id="acct-broker-label" class="small-note">No broker connected yet.</p>
+        <div class="acct-actions">
+          <button id="acct-broker-connect" class="btn primary" type="button" style="display:none">Connect broker (read-only)</button>
+          <button id="acct-broker-disconnect" class="btn" type="button" style="display:none">Disconnect</button>
+        </div>
+        <p class="small-note">Read-only. The desk can read positions and balances; it cannot place orders.</p>
+      </div>
+      <div id="acct-gp" class="acct-gp" style="display:none">
+        <h3>GP console</h3>
+        <p id="acct-gp-cap" class="small-note">LP seats: — / —</p>
+        <p id="acct-gp-counts" class="acct-gp-counts"></p>
+        <label class="form-field">Invite a limited partner<input id="acct-gp-email" class="input" type="email" placeholder="lp@example.com"></label>
+        <div class="acct-actions">
+          <button id="acct-gp-invite" class="btn primary" type="button">Issue LP invite</button>
+        </div>
+        <p class="small-note">LPs are investors in the LLC — invited, and never a paid tier. The seat cap is enforced server-side.</p>
+      </div>
+      <div class="acct-manage">
+        <button id="acct-subscribe" class="btn" type="button">Upgrade to subscription member</button>
+        <button id="acct-logout" class="btn" type="button">Sign out</button>
+      </div>
+      <p class="small-note">Guest access is a 31-day test drive. Subscription members and invited LPs keep ongoing access. Verified sign-ins opt you in to desk updates — unsubscribe any time.</p>
+    </div>
+  </div>
+</dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 <noscript>This research console requires JavaScript. Enable it to inspect the research workspace.</noscript>
+<script type="module" src="./account.js"></script>
 </body></html>
