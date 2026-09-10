@@ -12,11 +12,28 @@ from wsgiref.simple_server import WSGIServer, make_server
 
 from hedge_desk.candidates import build_candidate_feed
 from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
+from hedge_desk.auth_app import make_auth_app, default_membership_store
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
 WEB = DEPLOY_ROOT / "dist" if (DEPLOY_ROOT / "dist").is_dir() else PACKAGE_ROOT / "dist"
 API_CACHE_SECONDS = max(0.0, float(os.getenv("EMPORION_API_CACHE_SECONDS", "15")))
+
+# Lazy singleton for the membership/auth app. The store is only opened on the
+# first auth request so that a plain report server never pays the SQLite cost.
+_AUTH_APP = None
+_AUTH_APP_LOCK = Lock()
+GP_EMAIL = os.getenv("GP_EMAIL", "").strip()
+
+
+def _auth_app():
+    global _AUTH_APP
+    if _AUTH_APP is None:
+        with _AUTH_APP_LOCK:
+            if _AUTH_APP is None:
+                store = default_membership_store()
+                _AUTH_APP = make_auth_app(store, gp_email=GP_EMAIL)
+    return _AUTH_APP
 
 
 class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
@@ -117,6 +134,11 @@ def _supabase_status():
 
 def _dispatch(environ, start_response):
     path = environ.get("PATH_INFO", "/")
+    # Membership/auth surface. All /api/auth/* requests are handled by the
+    # auth app; the report/candidate/risk-dashboard endpoints below stay
+    # public so the guest "test drive" tier remains open.
+    if path.startswith("/api/auth/"):
+        return _auth_app()(environ, start_response)
     if path == "/api/health":
         return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _cached("supabase-status", _supabase_status)})
     if path == "/api/candidates":
