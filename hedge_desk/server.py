@@ -178,10 +178,13 @@ def _supabase_status():
 
 def _dispatch(environ, start_response):
     path = environ.get("PATH_INFO", "/")
-    # Membership/auth surface. All /api/auth/* requests are handled by the
-    # auth app; the report/candidate/risk-dashboard endpoints below stay
-    # public so the guest "test drive" tier remains open.
-    if path.startswith("/api/auth/"):
+    # Membership/auth surface. The auth app owns the auth, tier, data-gate,
+    # and broker routes; the report/candidate/risk-dashboard endpoints below
+    # stay public so the guest "test drive" tier remains open.
+    if path.startswith("/api/auth/") or path.startswith("/api/broker/") or path in (
+        "/api/tier",
+        "/api/data/real",
+    ):
         return _auth_app()(environ, start_response)
     if path == "/api/health":
         return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _cached("supabase-status", _supabase_status)})
