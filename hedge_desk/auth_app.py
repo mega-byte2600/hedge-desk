@@ -43,6 +43,18 @@ MEMBERSHIP_DB = os.getenv("MEMBERSHIP_DB", str(Path(__file__).resolve().parents[
 MEMBERSHIP_SECRET = os.getenv("MEMBERSHIP_SECRET", "dev-secret-change-me")
 ACCESS_DAYS = int(os.getenv("GUEST_ACCESS_DAYS", "31"))
 
+# Public Supabase Auth config for social login. The anon (publishable) key is
+# safe to expose to the browser; the service key and JWT secret are not.
+SUPABASE_AUTH_URL = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
+SUPABASE_ANON_KEY = (
+    os.getenv("SUPABASE_ANON_KEY", "").strip()
+    or os.getenv("SUPABASE_PUBLISHABLE_KEY", "").strip()
+)
+# Comma-separated list, e.g. "google,github,azure,apple".
+SOCIAL_PROVIDERS = [
+    p.strip() for p in os.getenv("SOCIAL_PROVIDERS", "google,github").split(",") if p.strip()
+]
+
 
 def _read_json(environ) -> dict:
     try:
@@ -93,13 +105,16 @@ def _set_session_cookie(start_response, token):
 
 
 def make_auth_app(
-    store: MembershipStore,
+    store,
     sender: Optional[Callable[[str, str, str], None]] = None,
     gp_email: Optional[str] = None,
+    jwt_verifier=None,
 ):
     """Build a WSGI auth dispatch for the given store + email sender.
 
+    store implements the membership-store interface (SQLite or Supabase).
     gp_email is the GP's address; only it may issue LP invites.
+    jwt_verifier (optional) verifies Supabase Auth JWTs for social login.
     """
     send = sender or build_sender()
 
@@ -108,6 +123,29 @@ def make_auth_app(
         method = environ.get("REQUEST_METHOD", "GET")
         session_token = _cookie_from(environ)
         email = store.lookup_session(session_token) if session_token else None
+
+        # ---- social login (Supabase Auth JWT) ------------------------------
+        if path == "/api/auth/social" and method == "POST":
+            data = _read_json(environ)
+            token = str(data.get("access_token", "")).strip()
+            if not token:
+                return _json_response(start_response, {"error": "missing_token"}, "400 Bad Request")
+            if jwt_verifier is None:
+                return _json_response(
+                    start_response, {"error": "social_login_not_configured"}, "503 Service Unavailable"
+                )
+            verified_email = jwt_verifier.email_from(token)
+            if not verified_email:
+                return _json_response(start_response, {"error": "invalid_token"}, "401 Unauthorized")
+            # Same rule as OTP: a verified email starts/keeps its membership.
+            # Role is preserved if the account already exists (LP/MEMBER).
+            store.upsert_guest(verified_email)
+            decision = store.access_for(verified_email)
+            if not decision.allowed:
+                return _json_response(start_response, {"error": decision.reason}, "403 Forbidden")
+            session = store.create_session(verified_email)
+            _set_session_cookie(start_response, session)
+            return [json.dumps({"status": "ok", "role": decision.role, "email": verified_email}).encode("utf-8")]
 
         # ---- request OTP ---------------------------------------------------
         if path == "/api/auth/request" and method == "POST":
@@ -155,6 +193,19 @@ def make_auth_app(
             if session_token:
                 store.delete_session(session_token)
             return _json_response(start_response, {"status": "logged_out"})
+
+        # ---- social config (public: url + anon key + providers) -------------
+        if path == "/api/auth/providers" and method == "GET":
+            enabled = bool(SUPABASE_AUTH_URL and SUPABASE_ANON_KEY)
+            return _json_response(
+                start_response,
+                {
+                    "enabled": enabled,
+                    "supabase_url": SUPABASE_AUTH_URL,
+                    "supabase_anon_key": SUPABASE_ANON_KEY,
+                    "providers": SOCIAL_PROVIDERS if enabled else [],
+                },
+            )
 
         # ---- me ------------------------------------------------------------
         if path == "/api/auth/me" and method == "GET":

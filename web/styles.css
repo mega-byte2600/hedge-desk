@@ -11,6 +11,10 @@
 .acct-body{padding:24px 26px}
 .acct-error{color:#a7443f;font-size:13px;min-height:1em;margin-bottom:12px}
 .acct-tier{background:#eef3f6;border:1px solid #dbe3e8;border-radius:5px;padding:10px 12px;font-size:12px;color:#48555e;margin-bottom:16px}
+.acct-social{display:grid;gap:8px;margin-bottom:8px}
+.acct-social .acct-social-btn{width:100%;justify-content:center}
+.acct-divider{display:flex;align-items:center;gap:10px;margin:14px 0 16px;color:#8b969d;font-size:11px;letter-spacing:.4px;text-transform:uppercase}
+.acct-divider::before,.acct-divider::after{content:'';flex:1;height:1px;background:#e4eaee}
 .acct-status{font-size:13px;color:#527527;min-height:1em;margin-top:6px}
 .acct-actions{display:flex;gap:8px;margin-bottom:18px}
 .acct-manage{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;border-top:1px solid var(--line);padding-top:18px}

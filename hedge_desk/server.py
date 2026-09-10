@@ -32,7 +32,11 @@ def _auth_app():
         with _AUTH_APP_LOCK:
             if _AUTH_APP is None:
                 store = default_membership_store()
-                _AUTH_APP = make_auth_app(store, gp_email=GP_EMAIL)
+                from hedge_desk.supabase_auth import verifier_from_env
+
+                _AUTH_APP = make_auth_app(
+                    store, gp_email=GP_EMAIL, jwt_verifier=verifier_from_env()
+                )
     return _AUTH_APP
 
 
