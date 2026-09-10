@@ -80,7 +80,10 @@ function acctRender() {
         ? 'Investor access — live data and full desk service.'
         : 'Member access — live market data (broker link available).';
     } else {
-      tierLine.textContent = 'Guest test drive — synthetic data. Upgrade for live data.';
+      const left = (t && typeof t.guest_days_left === 'number')
+        ? ` Test drive: ${t.guest_days_left} day${t.guest_days_left === 1 ? '' : 's'} left.`
+        : '';
+      tierLine.textContent = 'Guest test drive — synthetic data.' + left + ' Upgrade for live data.';
     }
   }
 }

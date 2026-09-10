@@ -286,17 +286,31 @@ def make_auth_app(
                 return _json_response(start_response, {"tier": DataTier.SYNTHETIC.value, "role": None})
             decision = store.access_for(email)
             tier = data_tier_for(decision.role or "")
-            return _json_response(
-                start_response,
-                {
-                    "tier": tier.value,
-                    "role": decision.role,
-                    "real_data": tier in (DataTier.REAL, DataTier.FULL),
-                    "investor": is_investor(decision.role or ""),
-                    "access": decision.allowed,
-                    "reason": decision.reason,
-                },
-            )
+            payload = {
+                "tier": tier.value,
+                "role": decision.role,
+                "real_data": tier in (DataTier.REAL, DataTier.FULL),
+                "investor": is_investor(decision.role or ""),
+                "access": decision.allowed,
+                "reason": decision.reason,
+            }
+            # For a guest, surface how long the test drive has left.
+            if decision.role == "GUEST":
+                try:
+                    member = store.get_member(email) or {}
+                    expires = member.get("guest_expires_at")
+                    if expires:
+                        import math
+                        from datetime import datetime, timezone
+
+                        delta = datetime.fromisoformat(expires) - datetime.now(timezone.utc)
+                        seconds = delta.total_seconds()
+                        # ceil so a partial day still reads as a day left
+                        payload["guest_days_left"] = max(0, math.ceil(seconds / 86400))
+                        payload["guest_expires_at"] = expires
+                except Exception:
+                    pass
+            return _json_response(start_response, payload)
 
         # ---- gated real-data endpoint (guests get synthetic only) -----------
         if path == "/api/data/real" and method == "GET":
