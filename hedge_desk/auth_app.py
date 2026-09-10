@@ -251,7 +251,25 @@ def make_auth_app(
     return dispatch
 
 
-def default_membership_store() -> MembershipStore:
+def default_membership_store():
+    """Choose the membership store backend from the environment.
+
+    - If SUPABASE_URL + SUPABASE_SERVICE_KEY are set, use the Supabase-backed
+      store so members/sessions survive redeploys (required on Render free,
+      whose disk is ephemeral).
+    - Otherwise fall back to the local SQLite store (dev / single-host).
+    """
+    supa_url = os.getenv("SUPABASE_URL", "").strip()
+    supa_key = (
+        os.getenv("SUPABASE_SERVICE_KEY", "").strip()
+        or os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    )
+    if supa_url and supa_key:
+        from hedge_desk.supabase_membership import SupabaseMembershipStore
+
+        return SupabaseMembershipStore(
+            supa_url, supa_key, secret=MEMBERSHIP_SECRET
+        )
     Path(MEMBERSHIP_DB).parent.mkdir(parents=True, exist_ok=True)
     return MembershipStore(MEMBERSHIP_DB, secret=MEMBERSHIP_SECRET)
 
