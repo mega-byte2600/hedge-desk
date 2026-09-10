@@ -77,3 +77,31 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status2, '200 OK')
         self.assertEqual(len({row['desk_id'] for row in report['candidates']}), 6)
 
+    def test_auth_tier_and_broker_routes_are_forwarded_to_the_auth_app(self):
+        # Regression: the server previously forwarded only /api/auth/*, so
+        # /api/tier, /api/broker/* and /api/data/real fell through to the SPA
+        # fallback and returned HTML instead of JSON.
+        from hedge_desk.server import _dispatch
+        import json as _json
+
+        for path in ('/api/tier', '/api/broker/status', '/api/data/real', '/api/auth/me'):
+            captured = {}
+
+            def start(status, headers, _c=captured):
+                _c['status'] = status
+                _c['headers'] = dict(headers)
+
+            body = b''.join(
+                _dispatch({'PATH_INFO': path, 'REQUEST_METHOD': 'GET'}, start)
+            )
+            content_type = captured['headers'].get('Content-Type', '')
+            self.assertIn('application/json', content_type, f'{path} should return JSON')
+            self.assertIsInstance(_json.loads(body), dict)
+
+    def test_public_report_endpoints_are_not_gated(self):
+        # The guest test-drive tier must stay open: no auth required.
+        for path in ('/api/health', '/api/candidates', '/api/risk-dashboard'):
+            status, payload = self.request(path)
+            self.assertEqual(status, '200 OK', path)
+            self.assertIsInstance(payload, dict)
+
