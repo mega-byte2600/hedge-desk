@@ -68,6 +68,19 @@ def _read_json(environ) -> dict:
         return {}
 
 
+def _client_ip(environ) -> str:
+    """Best-effort client IP.
+
+    Behind Render's proxy REMOTE_ADDR is the proxy, so the forwarded header is
+    the useful value. It is caller-controllable in the general case, which is
+    why the per-email limit (not the per-IP one) is the primary control.
+    """
+    forwarded = environ.get("HTTP_X_FORWARDED_FOR", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return environ.get("REMOTE_ADDR", "") or ""
+
+
 def _cookie_from(environ) -> str:
     raw = environ.get("HTTP_COOKIE", "")
     if not raw:
@@ -112,6 +125,7 @@ def make_auth_app(
     broker_store=None,
     broker_oauth=None,
     broker_adapter=None,
+    rate_limits=None,
 ):
     """Build a WSGI auth dispatch for the given store + email sender.
 
@@ -119,8 +133,13 @@ def make_auth_app(
     gp_email is the GP's address; only it may issue LP invites.
     jwt_verifier (optional) verifies Supabase Auth JWTs for social login.
     broker_store/broker_oauth/broker_adapter (optional) enable broker linking.
+    rate_limits (optional) guards OTP issuance and verification.
     """
     send = sender or build_sender()
+    if rate_limits is None:
+        from hedge_desk.rate_limit import AuthRateLimits
+
+        rate_limits = AuthRateLimits()
 
     def dispatch(environ, start_response):
         path = environ.get("PATH_INFO", "")
@@ -157,6 +176,12 @@ def make_auth_app(
             email_addr = str(data.get("email", "")).strip().lower()
             if "@" not in email_addr or "." not in email_addr:
                 return _json_response(start_response, {"error": "invalid_email"}, "400 Bad Request")
+            if not rate_limits.allow_request(email_addr, _client_ip(environ)):
+                return _json_response(
+                    start_response,
+                    {"error": "rate_limited", "detail": "Too many code requests. Try again later."},
+                    "429 Too Many Requests",
+                )
             # Any verified email can start as a GUEST (open test drive). LP/MEMBER
             # status is preserved if the account already has it.
             store.upsert_guest(email_addr)
@@ -183,6 +208,12 @@ def make_auth_app(
             data = _read_json(environ)
             email_addr = str(data.get("email", "")).strip().lower()
             code = str(data.get("code", "")).strip()
+            if not rate_limits.allow_verify(email_addr):
+                return _json_response(
+                    start_response,
+                    {"error": "rate_limited", "detail": "Too many attempts. Try again later."},
+                    "429 Too Many Requests",
+                )
             if not store.verify_otp(email_addr, code, purpose="signin"):
                 return _json_response(start_response, {"error": "invalid_code"}, "401 Unauthorized")
             decision = store.access_for(email_addr)
