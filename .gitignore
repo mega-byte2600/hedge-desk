@@ -15,3 +15,9 @@ build/
 
 # Codex projectless-chat workspaces are not part of the application repository.
 /20??-??-??/
+
+# Runtime membership/auth database (never commit member/session data).
+/data/
+*.db
+*.db-shm
+*.db-wal
