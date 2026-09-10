@@ -14,10 +14,12 @@ class AccountSurfaceTests(unittest.TestCase):
         self.assertIn('id="acct-btn"', index)
         self.assertIn('id="acct-label"', index)
         self.assertIn('id="acct-modal"', index)
+        self.assertIn('id="acct-tier"', index)
         self.assertIn("account.js", index)
         self.assertIn("/api/auth/me", acct)
         self.assertIn("/api/auth/request", acct)
         self.assertIn("/api/auth/verify", acct)
+        self.assertIn("/api/tier", acct)
 
     def test_guest_tier_stays_open_not_walled(self):
         # The research console must remain publicly reachable; sign-in is an

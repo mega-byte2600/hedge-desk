@@ -14,6 +14,7 @@
 const ACCT = {
   modal: null,
   current: null, // {authenticated, email, role, access, reason}
+  tier: null, // {tier, real_data, investor}
   state: 'idle', // idle | sending | verifying
 };
 
@@ -41,11 +42,30 @@ function acctRender() {
   const { label } = acctEls();
   if (!label) return;
   const c = ACCT.current;
+  const t = ACCT.tier;
   if (c && c.authenticated) {
     const roleLabel = { GP: 'GP', LP: 'LP', MEMBER: 'Member', GUEST: 'Guest' }[c.role] || c.role;
-    label.textContent = c.access ? (roleLabel + ' · ' + c.email) : ('Expired · ' + c.email);
+    if (c.access) {
+      const dataLabel = t && t.real_data ? ' · live data' : ' · test drive';
+      label.textContent = roleLabel + dataLabel;
+    } else {
+      label.textContent = 'Expired · ' + c.email;
+    }
   } else {
     label.textContent = 'Sign in';
+  }
+  // Reflect tier in the modal status line so users see what data they get.
+  const tierLine = document.getElementById('acct-tier');
+  if (tierLine) {
+    if (!c || !c.authenticated) {
+      tierLine.textContent = 'Browsing as a guest — synthetic test-drive data.';
+    } else if (t && t.real_data) {
+      tierLine.textContent = t.investor
+        ? 'Investor access — live data and full desk service.'
+        : 'Member access — live market data (broker link available).';
+    } else {
+      tierLine.textContent = 'Guest test drive — synthetic data. Upgrade for live data.';
+    }
   }
 }
 
@@ -73,6 +93,11 @@ async function acctRefresh() {
     ACCT.current = await acctFetch('/api/auth/me');
   } catch (e) {
     ACCT.current = { authenticated: false };
+  }
+  try {
+    ACCT.tier = await acctFetch('/api/tier');
+  } catch (e) {
+    ACCT.tier = null;
   }
   acctRender();
 }
