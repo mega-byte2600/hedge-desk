@@ -236,6 +236,28 @@ def make_auth_app(
                 {"lp_count": store.lp_count(), "max_lp": MAX_LP_MEMBERS},
             )
 
+        # ---- members roster (GP only) --------------------------------------
+        if path == "/api/auth/members" and method == "GET":
+            if not email or email.lower() != (gp_email or "").lower():
+                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
+            try:
+                members = store.all_members()
+            except Exception:
+                members = []
+            counts = {}
+            for m in members:
+                counts[m.get("role", "UNKNOWN")] = counts.get(m.get("role", "UNKNOWN"), 0) + 1
+            return _json_response(
+                start_response,
+                {
+                    "lp_count": store.lp_count(),
+                    "max_lp": MAX_LP_MEMBERS,
+                    "total": len(members),
+                    "counts": counts,
+                    "members": members,
+                },
+            )
+
         # ---- invite LP (GP only) -------------------------------------------
         if path == "/api/auth/invite" and method == "POST":
             if not email or email.lower() != (gp_email or "").lower():

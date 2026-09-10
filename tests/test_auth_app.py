@@ -167,7 +167,7 @@ class AuthAppTests(unittest.TestCase):
         self.assertEqual(member["role"], "LP")
 
     def test_cap_reports_lp_count(self):
-        # promote LPs up to the cap then check cap endpoint as GP
+        # promote LPs then check cap endpoint as GP
         for i in range(5):
             self.store.promote_to_lp(f"lp{i}@example.com")
         cookie = _full_signin(self.dispatch, self.sender, self.gp)
@@ -175,6 +175,29 @@ class AuthAppTests(unittest.TestCase):
         self.assertEqual(status, "200 OK")
         self.assertEqual(body["lp_count"], 5)
         self.assertEqual(body["max_lp"], MAX_LP_MEMBERS)
+
+    def test_gp_sees_member_roster_and_cap(self):
+        self.store.promote_to_lp("lp1@example.com")
+        self.store.set_subscribed("sub@example.com")
+        cookie = _full_signin(self.dispatch, self.sender, self.gp)
+        status, body, _ = _get(self.dispatch, "/api/auth/members", cookie=cookie)
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(body["lp_count"], 1)
+        self.assertEqual(body["max_lp"], MAX_LP_MEMBERS)
+        self.assertIn("counts", body)
+        self.assertGreaterEqual(body["total"], 3)  # gp + lp + member
+        roles = {m["email"]: m["role"] for m in body["members"]}
+        self.assertEqual(roles.get("lp1@example.com"), "LP")
+        self.assertEqual(roles.get("sub@example.com"), "MEMBER")
+
+    def test_member_roster_denied_for_non_gp(self):
+        cookie = _full_signin(self.dispatch, self.sender, "notgp@example.com")
+        status, body, _ = _get(self.dispatch, "/api/auth/members", cookie=cookie)
+        self.assertEqual(status, "403 Forbidden")
+
+    def test_member_roster_denied_when_unauthenticated(self):
+        status, body, _ = _get(self.dispatch, "/api/auth/members")
+        self.assertEqual(status, "403 Forbidden")
 
     def test_subscribe_upgrades_to_member(self):
         cookie = _full_signin(self.dispatch, self.sender, "sub@example.com")

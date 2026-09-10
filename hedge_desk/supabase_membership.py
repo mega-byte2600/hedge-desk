@@ -157,13 +157,29 @@ class SupabaseMembershipStore:
         return member
 
     def set_subscribed(self, email: str) -> dict:
+        """Upgrade a GUEST to self-serve subscription; never downgrade LP/GP."""
         email = email.lower()
-        self._call(
-            "PATCH",
-            "members",
-            f"email=eq.{email}",
-            body={"role": ROLE_MEMBER, "subscribed": True, "guest_expires_at": None},
-        )
+        existing = self.get_member(email)
+        if existing is None:
+            self._call(
+                "POST",
+                "members",
+                body={
+                    "email": email,
+                    "role": ROLE_MEMBER,
+                    "created_at": utc_iso(self._now()),
+                    "subscribed": True,
+                    "investor": False,
+                },
+                prefer="resolution=merge-duplicates",
+            )
+        elif existing["role"] == ROLE_GUEST:
+            self._call(
+                "PATCH",
+                "members",
+                f"email=eq.{email}&role=eq.{ROLE_GUEST}",
+                body={"role": ROLE_MEMBER, "subscribed": True, "guest_expires_at": None},
+            )
         member = self.get_member(email)
         assert member is not None
         return member

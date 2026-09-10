@@ -91,6 +91,17 @@ class MembershipStoreTests(unittest.TestCase):
         self.assertIsNone(member["guest_expires_at"])
         self.assertTrue(member["subscribed"])
 
+    def test_subscribe_does_not_downgrade_lp(self):
+        self.store.promote_to_lp("lp@example.com")
+        member = self.store.set_subscribed("lp@example.com")
+        self.assertEqual(member["role"], ROLE_LP, "an LP must not be downgraded to MEMBER")
+        self.assertTrue(member["investor"])
+
+    def test_subscribe_creates_row_when_missing(self):
+        member = self.store.set_subscribed("fresh@example.com")
+        self.assertEqual(member["role"], ROLE_MEMBER)
+        self.assertTrue(member["subscribed"])
+
     # ---- LP tier + cap -----------------------------------------------------
 
     def test_lp_promotion_clears_guest_expiry(self):
