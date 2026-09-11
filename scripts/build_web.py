@@ -3,17 +3,11 @@ import argparse
 import json
 import sys
 import shutil
-from dataclasses import asdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from hedge_desk.overnight import current_morning_report
-from hedge_desk.projects import DESK_ARCHITECTURE
-from hedge_desk.reporting import build_control_summary, render_morning_markdown, validate_report
-from hedge_desk.data import PWB_DAILY_NEWS_DATASET
-from hedge_desk.candidates import build_candidate_feed
-from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
 
 # Static console assets copied verbatim from web/ into the deploy bundle.
 # build_web.py FAILS if index.html references a local asset not listed here,
@@ -41,6 +35,7 @@ CONSOLE_ASSETS = (
     "timeline.json",
     "navigation-stability.js",
     "emporion-institutional-seal.svg",
+    "account.js",
     "report.json",
 )
 
@@ -83,40 +78,9 @@ def _verify_console_assets(web_root: Path) -> None:
 
 
 def export_report(report, destination):
-    decision = validate_report(report)
-    if not decision.publishable:
-        raise ValueError("Report rejected: " + ", ".join(decision.reason_codes))
-    candidate_feed = build_candidate_feed()
-    payload = {
-        "schema_version": "desk-console-1",
-        "report": report,
-        "summary": build_control_summary(report),
-        "registry": [asdict(project) for project in DESK_ARCHITECTURE],
-        "morning_markdown": render_morning_markdown(report),
-        "candidate_feed": candidate_feed,
-        "risk_dashboard": build_candidate_risk_dashboard(candidate_feed),
-        "owner": {
-            "display_name": "mbolton",
-            "linkedin_url": "https://www.linkedin.com/in/bolton-2600/",
-        },
-        "research_data_sources": [
-            {
-                "source_id": "papers-with-backtest",
-                "dataset": PWB_DAILY_NEWS_DATASET,
-                "status": "ADAPTER_READY",
-                "mode": "LICENSED_RESEARCH_ONLY",
-                "feeds": ["earnings-event-desk", "open-quant-ai-model-lab", "event-futures-desk"],
-                "controls": [
-                    "point-in-time embargo",
-                    "explicit source timezone",
-                    "entitlement identifier",
-                    "content hashes",
-                    "no vendor text retention",
-                    "no trade authorization",
-                ],
-            }
-        ],
-    }
+    from hedge_desk.console_report import build_console_payload
+
+    payload = build_console_payload(report)
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
     temporary = destination / "report.json.tmp"

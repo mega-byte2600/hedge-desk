@@ -12,11 +12,53 @@ from wsgiref.simple_server import WSGIServer, make_server
 
 from hedge_desk.candidates import build_candidate_feed
 from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
+from hedge_desk.console_report import build_console_payload
+from hedge_desk.overnight import current_morning_report
+from hedge_desk.auth_app import make_auth_app, default_membership_store
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
 WEB = DEPLOY_ROOT / "dist" if (DEPLOY_ROOT / "dist").is_dir() else PACKAGE_ROOT / "dist"
 API_CACHE_SECONDS = max(0.0, float(os.getenv("EMPORION_API_CACHE_SECONDS", "15")))
+
+# Lazy singleton for the membership/auth app. The store is only opened on the
+# first auth request so that a plain report server never pays the SQLite cost.
+_AUTH_APP = None
+_AUTH_APP_LOCK = Lock()
+GP_EMAIL = os.getenv("GP_EMAIL", "").strip()
+
+
+def _auth_app():
+    global _AUTH_APP
+    if _AUTH_APP is None:
+        with _AUTH_APP_LOCK:
+            if _AUTH_APP is None:
+                store = default_membership_store()
+                from hedge_desk.supabase_auth import verifier_from_env
+                from hedge_desk.broker_link import default_broker_store
+                from hedge_desk.brokers.schwab_oauth import SchwabOAuth, SchwabOAuthConfig
+                from hedge_desk.brokers.schwab_readonly import SchwabReadOnlyBroker
+                from hedge_desk.membership_audit import default_audit_log
+
+                broker_oauth = None
+                try:
+                    cfg = SchwabOAuthConfig.from_environment()
+                    if cfg.configured:
+                        broker_oauth = SchwabOAuth(cfg)
+                except Exception:
+                    broker_oauth = None
+                _AUTH_APP = make_auth_app(
+                    store,
+                    gp_email=GP_EMAIL,
+                    jwt_verifier=verifier_from_env(),
+                    broker_store=default_broker_store(),
+                    broker_oauth=broker_oauth,
+                    broker_adapter=SchwabReadOnlyBroker(),
+                    audit=default_audit_log(),
+                )
+    return _AUTH_APP
+
+
 
 
 class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
@@ -52,9 +94,18 @@ def _json(start_response, payload, status="200 OK"):
 
 
 def _static_cache_control(target):
-    """Cache immutable-ish assets briefly while keeping HTML immediately fresh."""
+    """Cache immutable-ish assets briefly while keeping HTML immediately fresh.
 
-    if target.suffix.lower() in {".css", ".js", ".mjs", ".svg", ".png", ".jpg", ".jpeg", ".webp"}:
+    report.json is a data snapshot the console must fetch on first load; giving
+    it a short browser cache (plus stale-while-revalidate) means repeat visits
+    render instantly from cache instead of making a revalidation round-trip to
+    the origin, which is what makes a cold/slow instance feel sluggish.
+    """
+
+    suffix = target.suffix.lower()
+    if suffix == ".json":
+        return "public, max-age=60, stale-while-revalidate=300"
+    if suffix in {".css", ".js", ".mjs", ".svg", ".png", ".jpg", ".jpeg", ".webp"}:
         return "public, max-age=300, stale-while-revalidate=600"
     return "no-cache"
 
@@ -100,6 +151,18 @@ def performance_snapshot():
         }
 
 
+def build_live_console_payload():
+    """Regenerate a fresh, validated desk-console payload from the engine.
+
+    Mirrors the deploy-time export (scripts/build_web.py) but runs the engine
+    now, so the console can show a report generated moments ago rather than
+    only the last committed deploy snapshot. Rejected by the release gate if
+    the freshly computed report is not publishable.
+    """
+    report = current_morning_report()
+    return build_console_payload(report)
+
+
 def _supabase_status():
     url = os.getenv("SUPABASE_URL", "").rstrip("/")
     key = os.getenv("SUPABASE_PUBLISHABLE_KEY", "") or os.getenv("SUPABASE_ANON_KEY", "")
@@ -117,6 +180,14 @@ def _supabase_status():
 
 def _dispatch(environ, start_response):
     path = environ.get("PATH_INFO", "/")
+    # Membership/auth surface. The auth app owns the auth, tier, data-gate,
+    # and broker routes; the report/candidate/risk-dashboard endpoints below
+    # stay public so the guest "test drive" tier remains open.
+    if path.startswith("/api/auth/") or path.startswith("/api/broker/") or path in (
+        "/api/tier",
+        "/api/data/real",
+    ):
+        return _auth_app()(environ, start_response)
     if path == "/api/health":
         return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _cached("supabase-status", _supabase_status)})
     if path == "/api/candidates":
@@ -125,6 +196,8 @@ def _dispatch(environ, start_response):
         return _json(start_response, _cached("risk-dashboard", build_candidate_risk_dashboard))
     if path == "/api/about":
         return _json(start_response, {"display_name": "mbolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
+    if path == "/api/report":
+        return _json(start_response, _cached("console-report", build_live_console_payload))
     relative = "index.html" if path in ("/", "") else path.lstrip("/")
     target = (WEB / relative).resolve()
     if WEB.resolve() not in target.parents and target != WEB.resolve():
