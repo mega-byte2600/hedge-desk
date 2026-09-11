@@ -2,6 +2,7 @@ services:
   - type: web
     name: hedge-desk
     runtime: python
+    region: virginia
     plan: free
     buildCommand: python scripts/build_web.py && pip install .
     startCommand: hedge-desk-web
