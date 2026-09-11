@@ -38,6 +38,7 @@ def _auth_app():
                 from hedge_desk.broker_link import default_broker_store
                 from hedge_desk.brokers.schwab_oauth import SchwabOAuth, SchwabOAuthConfig
                 from hedge_desk.brokers.schwab_readonly import SchwabReadOnlyBroker
+                from hedge_desk.membership_audit import default_audit_log
 
                 broker_oauth = None
                 try:
@@ -53,6 +54,7 @@ def _auth_app():
                     broker_store=default_broker_store(),
                     broker_oauth=broker_oauth,
                     broker_adapter=SchwabReadOnlyBroker(),
+                    audit=default_audit_log(),
                 )
     return _AUTH_APP
 

@@ -126,6 +126,7 @@ def make_auth_app(
     broker_oauth=None,
     broker_adapter=None,
     rate_limits=None,
+    audit=None,
 ):
     """Build a WSGI auth dispatch for the given store + email sender.
 
@@ -140,6 +141,15 @@ def make_auth_app(
         from hedge_desk.rate_limit import AuthRateLimits
 
         rate_limits = AuthRateLimits()
+
+    def _audit(event: str, email_addr: str, actor: str = "", detail: str = "") -> None:
+        """Best-effort audit append; never let an audit failure break auth."""
+        if audit is None:
+            return
+        try:
+            audit.record(event, email_addr, actor=actor, detail=detail)
+        except Exception:
+            pass
 
     def dispatch(environ, start_response):
         path = environ.get("PATH_INFO", "")
@@ -289,6 +299,22 @@ def make_auth_app(
                 },
             )
 
+        # ---- audit trail (GP only) ------------------------------------------
+        if path == "/api/auth/audit" and method == "GET":
+            if not email or email.lower() != (gp_email or "").lower():
+                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
+            if audit is None:
+                return _json_response(start_response, {"entries": [], "valid": True, "note": "audit not configured"})
+            try:
+                entries = audit.entries()
+                reasons = audit.verify()
+            except Exception as exc:
+                return _json_response(start_response, {"error": f"audit_unavailable:{exc}"}, "503 Service Unavailable")
+            return _json_response(
+                start_response,
+                {"entries": entries, "count": len(entries), "valid": not reasons, "reasons": reasons},
+            )
+
         # ---- invite LP (GP only) -------------------------------------------
         if path == "/api/auth/invite" and method == "POST":
             if not email or email.lower() != (gp_email or "").lower():
@@ -299,6 +325,7 @@ def make_auth_app(
                 invite = store.issue_lp_invite(invite_email)
             except ValueError as exc:
                 return _json_response(start_response, {"error": str(exc)}, "409 Conflict")
+            _audit("lp_invited", invite_email, actor=email)
             return _json_response(start_response, {"status": "invited", **invite}, "201 Created")
 
         # ---- subscribe (self-serve, non-invite) -----------------------------
@@ -309,6 +336,7 @@ def make_auth_app(
                 # require the requester to be authenticated as that email
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             store.set_subscribed(email_addr)
+            _audit("subscribed", email_addr, actor=email)
             return _json_response(start_response, {"status": "subscribed", "role": "MEMBER"})
 
         # ---- tier (data entitlement for the current role) -------------------
@@ -434,6 +462,7 @@ def make_auth_app(
                 )
             except (PermissionError, ValueError) as exc:
                 return _json_response(start_response, {"error": str(exc)}, "400 Bad Request")
+            _audit("broker_linked", email, actor=email, detail=str(getattr(broker_oauth, "name", "schwab")))
             return _json_response(start_response, {"status": "linked", "broker": "schwab", "read_only": True})
 
         # ---- broker: unlink --------------------------------------------------
