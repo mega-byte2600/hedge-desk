@@ -28,6 +28,7 @@ from hedge_desk.membership_base import (
     MAX_LP_MEMBERS,
     OTP_TTL_SECONDS,
     ROLE_GUEST,
+    ROLE_GP,
     ROLE_LP,
     ROLE_MEMBER,
     SESSION_TTL_SECONDS,
@@ -155,6 +156,31 @@ class SupabaseMembershipStore:
         member = self.get_member(email)
         assert member is not None
         return member
+
+    def ensure_gp(self, email: str) -> Optional[dict]:
+        """Record (or upgrade) the configured GP identity.
+
+        Mirrors MembershipStore.ensure_gp: the GP is configured by GP_EMAIL,
+        not by a stored invite, so the row is written here. Without it the GP
+        signs in as GUEST and the console's GP surfaces never render.
+        """
+        email = (email or "").strip().lower()
+        if not email:
+            return None
+        existing = self.get_member(email)
+        if existing is not None and existing.get("role") == ROLE_GP:
+            return existing
+        self._call(
+            "POST",
+            "members",
+            body={
+                "email": email,
+                "role": ROLE_GP,
+                "guest_expires_at": None,
+            },
+            prefer="resolution=merge-duplicates",
+        )
+        return self.get_member(email)
 
     def set_subscribed(self, email: str) -> dict:
         """Upgrade a GUEST to self-serve subscription; never downgrade LP/GP."""

@@ -199,6 +199,64 @@ class AuthAppTests(unittest.TestCase):
         status, body, _ = _get(self.dispatch, "/api/auth/members")
         self.assertEqual(status, "403 Forbidden")
 
+    # ---- the GP identity (GP_EMAIL) ----------------------------------------
+    # The GP is configured by environment, not by a stored invite, so the
+    # member row is created as a GUEST on first sign-in. The console gates its
+    # GP panel on the role reported here, so every surface must agree.
+
+    def test_gp_signs_in_as_gp_not_guest(self):
+        cookie = _full_signin(self.dispatch, self.sender, self.gp)
+        status, body, _ = _get(self.dispatch, "/api/auth/me", cookie=cookie)
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(body["role"], "GP")
+        self.assertTrue(body["access"])
+
+    def test_verify_reports_gp_role_for_the_gp(self):
+        _post(self.dispatch, "/api/auth/request", {"email": self.gp})
+        code = self.sender.sent[-1]["body"].split("code is:\n\n")[1].split("\n")[0].strip()
+        status, body, _ = _post(
+            self.dispatch, "/api/auth/verify", {"email": self.gp, "code": code}
+        )
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(body["role"], "GP")
+
+    def test_gp_gets_full_tier_and_real_data(self):
+        cookie = _full_signin(self.dispatch, self.sender, self.gp)
+        status, body, _ = _get(self.dispatch, "/api/tier", cookie=cookie)
+        self.assertEqual(body["tier"], "full")
+        self.assertTrue(body["real_data"])
+        self.assertTrue(body["investor"])
+        status, body, _ = _get(self.dispatch, "/api/data/real", cookie=cookie)
+        self.assertEqual(status, "200 OK")
+
+    def test_gp_identity_is_recorded_in_the_store(self):
+        self.assertEqual(self.store.get_member(self.gp)["role"], "GP")
+        cookie = _full_signin(self.dispatch, self.sender, self.gp)
+        status, body, _ = _get(self.dispatch, "/api/auth/members", cookie=cookie)
+        roles = {m["email"]: m["role"] for m in body["members"]}
+        self.assertEqual(roles.get(self.gp), "GP")
+
+    def test_gp_role_resolved_even_when_the_stored_row_lags(self):
+        """A stale GUEST row must not hide the operator's console."""
+        self.store._conn.execute(
+            "UPDATE members SET role=? WHERE email=?", ("GUEST", self.gp)
+        )
+        self.store._conn.commit()
+        self.assertEqual(self.store.get_member(self.gp)["role"], "GUEST")
+        cookie = _full_signin(self.dispatch, self.sender, self.gp)
+        status, body, _ = _get(self.dispatch, "/api/auth/me", cookie=cookie)
+        self.assertEqual(body["role"], "GP")
+
+    def test_non_gp_member_is_never_promoted_to_gp(self):
+        email = "someone@example.com"
+        cookie = _full_signin(self.dispatch, self.sender, email)
+        status, body, _ = _get(self.dispatch, "/api/auth/me", cookie=cookie)
+        self.assertEqual(body["role"], "GUEST")
+        self.assertEqual(self.store.get_member(email)["role"], "GUEST")
+        status, body, _ = _get(self.dispatch, "/api/tier", cookie=cookie)
+        self.assertEqual(body["tier"], "synthetic")
+        self.assertFalse(body["real_data"])
+
     def test_subscribe_upgrades_to_member(self):
         cookie = _full_signin(self.dispatch, self.sender, "sub@example.com")
         status, body, _ = _post(

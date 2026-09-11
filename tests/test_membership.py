@@ -1,5 +1,6 @@
 import os
 import tempfile
+import threading
 import unittest
 from datetime import datetime, timedelta, timezone
 
@@ -190,6 +191,60 @@ class MembershipStoreTests(unittest.TestCase):
         self.assertIsNone(self.store.lookup_session(token + "x"))
         self.store.delete_session(token)
         self.assertIsNone(self.store.lookup_session(token))
+
+
+class StoreThreadSafetyTests(unittest.TestCase):
+    """The web console serves requests from a thread pool.
+
+    A sqlite3 connection is bound to its creating thread unless opened with
+    check_same_thread=False, so a store built while handling one request used to
+    raise ProgrammingError (HTTP 500) the moment another thread touched it.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.store = MembershipStore(
+            os.path.join(self.tmp, "threads.db"), clock=FakeClock(T0), secret="test-secret"
+        )
+
+    def tearDown(self):
+        self.store.close()
+
+    def test_store_is_usable_from_another_thread(self):
+        errors = []
+
+        def work():
+            try:
+                self.store.upsert_guest("other-thread@example.com")
+                self.store.get_member("other-thread@example.com")
+            except Exception as exc:  # pragma: no cover - failure path
+                errors.append(exc)
+
+        thread = threading.Thread(target=work)
+        thread.start()
+        thread.join()
+        self.assertEqual(errors, [])
+
+    def test_concurrent_sign_ins_do_not_raise(self):
+        errors = []
+
+        def work(index):
+            try:
+                email = f"concurrent{index}@example.com"
+                self.store.upsert_guest(email)
+                token = self.store.create_session(email)
+                self.store.lookup_session(token)
+                self.store.access_for(email)
+            except Exception as exc:  # pragma: no cover - failure path
+                errors.append(exc)
+
+        threads = [threading.Thread(target=work, args=(i,)) for i in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(self.store.get_member("concurrent7@example.com"))
 
 
 if __name__ == "__main__":
