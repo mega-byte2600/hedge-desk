@@ -1,6 +1,7 @@
 # Emporion demo runbook
 
-Everything below is verified working on the combined branch (`combine/all-verified`, PR #42).
+Everything below is verified working on `main` (the combined build from PR #42 plus the
+console fixes in PR #43).
 
 ## 0. One-time prep (5 minutes, before the demo)
 
@@ -16,8 +17,13 @@ bash scripts/demo.sh
 Sign-in codes print to the terminal (dev mail fallback) — copy the code from the
 terminal into the modal. Set `GP_EMAIL=you@yourhost.com` to be the GP.
 
-**B. Demo the public Render URL (needs the merge)**
-Merge PR #42 → Render auto-deploys main → https://hedge-desk.onrender.com
+**B. Demo the public Render URL**
+https://hedge-desk.onrender.com auto-deploys `main`.
+
+Live-only prerequisite: sign-in codes are emailed over SMTP if `SMTP_*` is set on the
+Render service; otherwise they are printed to the Render **service logs** (Dashboard →
+hedge-desk → Logs → look for `[membership-mail]`). The GP console appears only when
+`GP_EMAIL` on the service matches the address you sign in with.
 
 ## 1. The 5-minute demo script
 
@@ -48,6 +54,12 @@ risk gate is credible.
 
 ## 3. If something breaks mid-demo
 
+- **Nothing responds — no modal, no clicks (fixed in PR #43):** this was the page
+  freezing itself. `applyRoRPositioning` wrote innerHTML from inside the
+  MutationObserver watching `main` with `subtree:true`, so it re-triggered itself in
+  an endless microtask loop and locked the main thread ~1s after load. Guarded and
+  rAF-deferred now; if it ever recurs, reload and check the console for a runaway
+  observer callback.
 - **Page hangs on first load:** Render free sleeps after ~15 min idle. Wait ~30s, or
   refresh — the console now shows "Waking the research desk…" instead of hanging.
 - **No social buttons:** expected unless Supabase is configured. Email-OTP is the
@@ -58,8 +70,10 @@ risk gate is credible.
 
 ## 4. After the demo (the real gates)
 
-- Merge PR #42.
+- ~~Merge PR #42.~~ Done; `main` is live (PR #43 carries the console fixes).
 - Supabase project + `supabase/schema.sql`, then set `SUPABASE_URL`,
   `SUPABASE_SERVICE_KEY`, `MEMBERSHIP_SECRET`, `GP_EMAIL` on Render so members persist.
+  Until then the Render disk is ephemeral: members, LP invites, and sessions reset on
+  every deploy (the GP row is recreated from `GP_EMAIL` at boot).
 - Add an external uptime pinger (UptimeRobot / cron-job.org, free) so cold starts stop.
 - **Securities counsel** before any live LP capital or order execution.
