@@ -19,10 +19,11 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+from hedge_desk.sqlite_thread import new_lock, open_connection, thread_safe
 
 GENESIS = "0" * 64
 
@@ -79,12 +80,15 @@ def verify_chain(entries: list[dict]) -> list[str]:
     return reasons
 
 
+@thread_safe
 class MembershipAuditLog:
     """SQLite-backed append-only audit log."""
 
     def __init__(self, db_path: Path | str) -> None:
         self.db_path = str(db_path)
-        self._conn = sqlite3.connect(self.db_path)
+        # Served from a thread pool: one connection shared under one lock.
+        self._lock = new_lock()
+        self._conn = open_connection(self.db_path)
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.executescript(_SCHEMA)
         self._conn.commit()

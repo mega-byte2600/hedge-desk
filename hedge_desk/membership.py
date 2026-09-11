@@ -30,12 +30,13 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
-import sqlite3
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Optional
+
+from hedge_desk.sqlite_thread import new_lock, open_connection, thread_safe
 
 GUEST_ACCESS_DAYS = 31
 MAX_LP_MEMBERS = 99
@@ -112,6 +113,7 @@ def _utc_iso(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).isoformat()
 
 
+@thread_safe
 class MembershipStore:
     """SQLite-backed membership, OTP, session, and invite store."""
 
@@ -127,7 +129,9 @@ class MembershipStore:
         # secret is used for cookie signing / token hashing. In production set
         # from env (e.g. MEMBERSHIP_SECRET); for tests a deterministic value.
         self._secret = (secret or "dev-secret-change-me").encode("utf-8")
-        self._conn = sqlite3.connect(self.db_path)
+        # Served from a thread pool: one connection shared under one lock.
+        self._lock = new_lock()
+        self._conn = open_connection(self.db_path)
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA foreign_keys=ON")
         self._conn.executescript(SCHEMA)
@@ -183,6 +187,28 @@ class MembershipStore:
         member = self.get_member(email)
         assert member is not None
         return member
+
+    def ensure_gp(self, email: str) -> Optional[dict]:
+        """Record (or upgrade) the configured GP identity.
+
+        The GP is configured by the GP_EMAIL environment variable, not by a
+        stored invite, so the row is created here. Without this the GP's own
+        row stays GUEST (it is created by upsert_guest on first sign-in) and
+        the console's GP surfaces never render. An already-GP row is left
+        alone; any lower role is raised to GP.
+        """
+        email = (email or "").strip().lower()
+        if not email:
+            return None
+        self._conn.execute(
+            "INSERT INTO members (email, role, created_at, subscribed) "
+            "VALUES (?, ?, ?, 0) "
+            "ON CONFLICT(email) DO UPDATE SET role=?, guest_expires_at=NULL "
+            "WHERE members.role <> ?",
+            (email, ROLE_GP, _utc_iso(self._now()), ROLE_GP, ROLE_GP),
+        )
+        self._conn.commit()
+        return self.get_member(email)
 
     def set_subscribed(self, email: str) -> dict:
         """Upgrade a GUEST to self-serve subscription (non-invite).

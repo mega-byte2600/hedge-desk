@@ -26,12 +26,12 @@ import hashlib
 import hmac
 import os
 import secrets
-import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
 
+from hedge_desk.sqlite_thread import new_lock, open_connection, thread_safe
 from hedge_desk.tier_access import can_access_real_data
 
 BROKER_TABLE = """
@@ -86,12 +86,15 @@ def _decrypt_token(blob: str, key: bytes) -> Optional[str]:
         return None
 
 
+@thread_safe
 class BrokerLinkStore:
     """SQLite-backed broker connections, scoped per member email."""
 
     def __init__(self, db_path: Path | str) -> None:
         self.db_path = str(db_path)
-        self._conn = sqlite3.connect(self.db_path)
+        # Served from a thread pool: one connection shared under one lock.
+        self._lock = new_lock()
+        self._conn = open_connection(self.db_path)
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.executescript(BROKER_TABLE)
         self._conn.commit()

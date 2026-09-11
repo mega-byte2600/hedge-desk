@@ -29,6 +29,7 @@ from pathlib import Path
 
 from hedge_desk.membership import (
     MAX_LP_MEMBERS,
+    ROLE_GP,
     MembershipStore,
 )
 from hedge_desk.tier_access import DataTier, data_tier_for, can_access_real_data, is_investor
@@ -142,6 +143,30 @@ def make_auth_app(
 
         rate_limits = AuthRateLimits()
 
+    gp_addr = (gp_email or "").strip().lower()
+    # The GP is configured by GP_EMAIL, not by a stored invite. Make sure the
+    # store actually records that identity: the row is otherwise created as a
+    # GUEST on first sign-in, and the console gates its GP surfaces on the role
+    # this app reports.
+    if gp_addr:
+        try:
+            ensure_gp = getattr(store, "ensure_gp", None)
+            if callable(ensure_gp):
+                ensure_gp(gp_addr)
+        except Exception:
+            pass
+
+    def _role_for(email_addr: Optional[str], decision) -> Optional[str]:
+        """Effective role for a caller.
+
+        GP_EMAIL always resolves to GP even if the stored row lags (a write
+        that failed, or a row created before the GP was configured), so the
+        operator's console is never hidden behind a stale GUEST row.
+        """
+        if email_addr and gp_addr and email_addr.strip().lower() == gp_addr:
+            return ROLE_GP
+        return decision.role if decision else None
+
     def _audit(event: str, email_addr: str, actor: str = "", detail: str = "") -> None:
         """Best-effort audit append; never let an audit failure break auth."""
         if audit is None:
@@ -178,7 +203,7 @@ def make_auth_app(
                 return _json_response(start_response, {"error": decision.reason}, "403 Forbidden")
             session = store.create_session(verified_email)
             _set_session_cookie(start_response, session)
-            return [json.dumps({"status": "ok", "role": decision.role, "email": verified_email}).encode("utf-8")]
+            return [json.dumps({"status": "ok", "role": _role_for(verified_email, decision), "email": verified_email}).encode("utf-8")]
 
         # ---- request OTP ---------------------------------------------------
         if path == "/api/auth/request" and method == "POST":
@@ -231,7 +256,7 @@ def make_auth_app(
                 return _json_response(start_response, {"error": decision.reason}, "403 Forbidden")
             token = store.create_session(email_addr)
             _set_session_cookie(start_response, token)
-            return [json.dumps({"status": "ok", "role": decision.role}).encode("utf-8")]
+            return [json.dumps({"status": "ok", "role": _role_for(email_addr, decision)}).encode("utf-8")]
 
         # ---- logout --------------------------------------------------------
         if path == "/api/auth/logout" and method == "POST":
@@ -262,7 +287,7 @@ def make_auth_app(
                 {
                     "authenticated": True,
                     "email": email,
-                    "role": decision.role,
+                    "role": _role_for(email, decision),
                     "access": decision.allowed,
                     "reason": decision.reason,
                 },
@@ -344,17 +369,18 @@ def make_auth_app(
             if not email:
                 return _json_response(start_response, {"tier": DataTier.SYNTHETIC.value, "role": None})
             decision = store.access_for(email)
-            tier = data_tier_for(decision.role or "")
+            role = _role_for(email, decision)
+            tier = data_tier_for(role or "")
             payload = {
                 "tier": tier.value,
-                "role": decision.role,
+                "role": role,
                 "real_data": tier in (DataTier.REAL, DataTier.FULL),
-                "investor": is_investor(decision.role or ""),
+                "investor": is_investor(role or ""),
                 "access": decision.allowed,
                 "reason": decision.reason,
             }
             # For a guest, surface how long the test drive has left.
-            if decision.role == "GUEST":
+            if role == "GUEST":
                 try:
                     member = store.get_member(email) or {}
                     expires = member.get("guest_expires_at")
@@ -374,7 +400,7 @@ def make_auth_app(
         # ---- gated real-data endpoint (guests get synthetic only) -----------
         if path == "/api/data/real" and method == "GET":
             decision = store.access_for(email) if email else None
-            role = decision.role if decision and decision.allowed else None
+            role = _role_for(email, decision) if decision and decision.allowed else None
             if not can_access_real_data(role or ""):
                 return _json_response(
                     start_response,
@@ -401,9 +427,10 @@ def make_auth_app(
             if not email:
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             decision = store.access_for(email)
+            role = _role_for(email, decision)
             configured = bool(broker_oauth and getattr(broker_oauth.config, "configured", False))
             linked = False
-            if broker_store and decision.allowed and can_access_real_data(decision.role or ""):
+            if broker_store and decision.allowed and can_access_real_data(role or ""):
                 try:
                     linked = bool(broker_store.connection(email).get("linked"))
                 except Exception:
@@ -413,8 +440,8 @@ def make_auth_app(
                 {
                     "configured": configured,
                     "linked": linked,
-                    "role": decision.role,
-                    "allowed": decision.allowed and can_access_real_data(decision.role or ""),
+                    "role": role,
+                    "allowed": decision.allowed and can_access_real_data(role or ""),
                 },
             )
 
@@ -423,7 +450,7 @@ def make_auth_app(
             if not email:
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(decision.role or ""):
+            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
                 return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
             if not broker_oauth or not getattr(broker_oauth.config, "configured", False):
                 return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
@@ -436,7 +463,7 @@ def make_auth_app(
             if not email:
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(decision.role or ""):
+            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
                 return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
             if not (broker_oauth and broker_store):
                 return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
@@ -455,7 +482,7 @@ def make_auth_app(
             try:
                 broker_store.link(
                     email,
-                    decision.role,
+                    _role_for(email, decision),
                     getattr(broker_oauth, "name", "schwab"),
                     tokens["access_token"],
                     account_label=str(data.get("account_label", ""))[:64],
@@ -478,7 +505,7 @@ def make_auth_app(
             if not email:
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(decision.role or ""):
+            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
                 return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
             if not broker_store or not broker_adapter:
                 return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
