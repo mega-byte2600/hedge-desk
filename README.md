@@ -87,13 +87,70 @@ order to a broker.
 
 ## Run
 
-### Web console
+### Web console (Emporion)
 
-Run `python scripts/build_web.py`, then
-`python -m http.server 8080 --directory web --bind 127.0.0.1` and open
-`http://localhost:8080`. The console displays validated synthetic report
-snapshots, desk controls, scenario evidence and browser-local research notes.
-See [web console instructions](web/README.md) for exports and verification.
+The console is a single-page app served by `hedge_desk.server`, which also owns the
+JSON API. Do **not** serve `web/` with a plain static server: the membership, tier
+and report routes live in the server, and the page will load without them.
+
+```bash
+python scripts/build_web.py                 # bundle web/ -> dist/
+bash scripts/demo.sh                        # serve on :8765 (PORT=… to change)
+# or: PORT=8765 python -m hedge_desk.server
+```
+
+Open `http://localhost:8765`. Sign-in codes print to the terminal (dev mail
+fallback) until `SMTP_*` is configured.
+
+Deployed: <https://hedge-desk.onrender.com> (Render free tier; it sleeps when idle).
+
+#### What is in it
+
+- **Eight tabs** — Overview, Candidates, Research desks, Scenario lab, Yellow
+  Sheets, Research resources, Multi-agent desk, About.
+- **Three access tiers, published openly.** GUEST is the open 31-day test drive on
+  synthetic research only. MEMBER is the self-serve subscription: real market data
+  and connecting your own broker **read-only**. LP is an investor in the LLC —
+  invited by the GP, never a paid tier, capped at 99 seats. The About tab states all
+  three; the server enforces them (`/api/tier`), and the guest lane is never walled.
+- **Email-OTP sign-in** with rate limiting (5 codes per address / 15 min, 20 per IP),
+  a first-party consent list, and `HttpOnly` session cookies. Social login via
+  Supabase Auth appears only when `SUPABASE_URL` + an anon key are configured.
+- **GP console** — appears for the `GP_EMAIL` address: LP seats used against the cap,
+  member counts, and issue-an-LP-invite. Enforced server-side, not just hidden in UI.
+- **Broker linking (read-only)** — tier-gated Schwab OAuth scaffold. It reports
+  "not configured" cleanly until `SCHWAB_*` is set, and the desk never places orders.
+- **Multi-agent desk** — the six SOUL specialists, their models, mandates and
+  boundaries, plus a results timeline. Commit history is shown only when the
+  timeline loads; it is never fabricated.
+- **Yellow Sheets / Trade Log** — thesis, evidence, invalidation, then the closeout
+  lifecycle (planned exit, trade status, why exit, post-trade review), stored in the
+  browser with the report hash they were written against.
+- **Scenario lab** — the recorded war games and stress cases, searchable and
+  filterable, each opening its exact engine record.
+- **Research resources** — primary-source-first institutional links, every external
+  link `rel="noopener"`.
+
+The console displays validated synthetic report snapshots, desk controls, scenario
+evidence and browser-local research notes. See
+[web console instructions](web/README.md) for exports.
+
+#### Verify and validate before demoing
+
+```bash
+bash scripts/demo.sh > /tmp/demo.log 2>&1 &        # server, codes -> /tmp/demo.log
+
+node scripts/vv_console.mjs  http://127.0.0.1:8765            # full V&V matrix
+node scripts/vv_console.mjs  http://127.0.0.1:8765 --engine=webkit
+node scripts/smoke_console.mjs http://127.0.0.1:8765          # routes + data-loss + RoR + desks
+node scripts/smoke_auth.mjs  http://127.0.0.1:8765 /tmp/demo.log   # sign-in lifecycle
+```
+
+V&V follows `docs/CONSOLE_VV_SPEC.md`: **VERIFIED** means the artifact meets its
+specification (measured by the commands above plus `python -m unittest discover -s
+tests` and `node --test web/`); **VALIDATED** means it meets the GP's expectations
+for function and use. Browser tooling is optional — the scripts print `SKIP` and
+exit 0 when Playwright is absent.
 
 ```bash
 python -m hedge_desk.cli
