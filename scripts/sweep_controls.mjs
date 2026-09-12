@@ -53,7 +53,12 @@ const CLICK = (index) => {
   const launched = await launchEngine('chromium');
   if (launched.error) { console.log('SKIP: no browser — ' + launched.error); process.exit(0); }
   const { browser } = launched;
-  const page = await browser.newPage();
+  // A dedicated context so downloads are accepted and dialogs dismissed; otherwise a
+  // mailto: link or a download anchor blocks the next navigation and the sweep stalls
+  // (observed: the run froze on the first route with no output for minutes).
+  const context = await browser.newContext({ acceptDownloads: true });
+  const page = await context.newPage();
+  page.on('dialog', (d) => d.dismiss().catch(() => {}));
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e.message).slice(0, 140)));
   let downloads = 0;
@@ -84,8 +89,23 @@ const CLICK = (index) => {
       const errBefore = errors.length;
       const dlBefore = downloads;
       let clickError = '';
+      // Only a real URI scheme counts: `href="#candidates"` has no scheme and IS a
+      // clickable in-page link. Splitting on ':' classified every hash anchor as an
+      // external protocol and silently skipped 89 nav links (caught by the tally).
+      const scheme = (control.href || '').match(/^([a-z][a-z0-9+.-]*):/i);
+      const protocol = scheme ? scheme[1].toLowerCase() : '';
+      if (protocol && !['http', 'https'].includes(protocol)) {
+        // mailto: and friends hand off to an external handler; clicking them is not a
+        // page interaction and observing it here would be theatre.
+        results.push({ route, ...control, outcome: 'EXTERNAL-PROTOCOL', detail: protocol + ':' });
+        continue;
+      }
       try {
-        await page.evaluate(CLICK, control.index);
+        // Bound each control. One pathological control must not stall a 205-control run.
+        await Promise.race([
+          page.evaluate(CLICK, control.index),
+          new Promise((_, rj) => setTimeout(() => rj(new Error('control timeout')), 12000)),
+        ]);
       } catch (e) {
         clickError = String(e.message).slice(0, 90);
       }
