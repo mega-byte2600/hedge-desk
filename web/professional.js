@@ -147,6 +147,8 @@ function installStyle() {
     .ws-ror{border-top:1px solid #e6eaed;background:#fff;padding:18px 20px}.ws-ror-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;margin:10px -20px -18px}.ws-ror-grid article{padding:18px 20px;border-top:1px solid #e6eaed;border-right:1px solid #e6eaed}.ws-ror-grid article:last-child{border-right:0}.ws-ror-grid h2,.ws-ror-grid h3{margin:0 0 8px}.ws-ror-grid h2{font-size:18px}.ws-ror-grid h3{font-size:13px}.ws-ror-grid p{font-size:12px;line-height:1.6;color:#596871;margin:0}
     .ws-continuum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #e6eaed}.ws-continuum article{padding:16px 20px;border-right:1px solid #e6eaed}.ws-continuum article:last-child{border-right:0}.ws-continuum strong{display:block;font-size:13px;margin-bottom:6px}.ws-continuum span{display:block;font-size:12px;line-height:1.55;color:#596871}
     .ws-desk-list{border-top:1px solid #e6eaed}.ws-list-head,.ws-list-row{display:grid;grid-template-columns:1fr 180px;align-items:center;padding:11px 18px;border-bottom:1px solid #eef1f3}.ws-list-head{font:10px 'IBM Plex Mono',monospace;letter-spacing:.7px;color:#74818a;text-transform:uppercase;background:#fafbfc}.ws-list-row:last-child{border-bottom:0}.ws-list-row strong{font-size:13px}.ws-state{font:10px 'IBM Plex Mono',monospace;letter-spacing:.45px;color:#52616a}
+    .ws-list-row-action{cursor:pointer}.ws-list-row-action:hover{background:#f7f9fa}.ws-list-row-action:focus-visible{outline:2px solid #101820;outline-offset:-2px}
+    .ws-desk-openable{cursor:pointer}.ws-desk-openable:hover{background:#f7f9fa}.ws-desk-openable:focus-visible{outline:2px solid #101820;outline-offset:-2px}
     .ws-desk-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ws-desk-methods article{padding:22px;border-right:1px solid #e6eaed;border-bottom:1px solid #e6eaed}.ws-desk-methods article:nth-child(2n){border-right:0}.ws-desk-methods article:nth-last-child(-n+2){border-bottom:0}.ws-desk-methods h2{font-size:16px;margin:8px 0}.ws-desk-methods p{font-size:12px;line-height:1.6;color:#596871;min-height:38px}
     .ws-capital-head{padding:19px 21px;border-bottom:1px solid #e6eaed;display:flex;align-items:center;justify-content:space-between;gap:18px}.ws-capital-head h2{margin-top:7px}.ws-brandline{margin:6px 0 0;font:10px 'IBM Plex Mono',monospace;letter-spacing:.6px;color:#6d7a83}.ws-boundary{font:10px 'IBM Plex Mono',monospace;letter-spacing:.7px;background:#f3f5f6;border:1px solid #d8dfe3;padding:7px 9px;border-radius:3px;color:#58666f;white-space:nowrap}
     .ws-capital-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ws-capital-grid article{padding:20px 21px;border-right:1px solid #e6eaed;border-bottom:1px solid #e6eaed}.ws-capital-grid article:nth-child(2n){border-right:0}.ws-capital-grid article:nth-last-child(-n+2){border-bottom:0}.ws-capital-grid h3{font-size:14px;margin:0 0 8px}.ws-capital-grid p{font-size:12px;line-height:1.6;color:#596871;margin:0}
@@ -157,6 +159,62 @@ function installStyle() {
     @media(max-width:650px){.ws-capital-grid{grid-template-columns:1fr}.ws-capital-grid article{border-right:0;border-bottom:1px solid #e6eaed}.ws-capital-grid article:last-child{border-bottom:0}.ws-tape{gap:9px 14px}.ws-tape a{margin-left:0;width:100%}.ws-capital-head{align-items:flex-start;flex-direction:column}}
   `;
   document.head.appendChild(style);
+}
+
+// Make the visible desk surfaces open a desk, like app.js's cards do.
+//
+// This module hides app.js's own desk cards on this route
+// (body[data-route='desks'] #main>.cards{display:none}) and substitutes its own
+// markup. That substitute was inert, so the only control that opens a desk's
+// detail dialog (and from there "Write Yellow Sheet") was the hidden one — i.e.
+// unreachable on the Research desks tab. Each visible card/row is wired to the
+// real button app.js rendered, matched by the desk name it displays, so no
+// project id is guessed and a surface with no counterpart (Bonds & Rates, which
+// is architecture-only) is simply left inert.
+function wireDeskRows() {
+  const surfaces = [
+    ...document.querySelectorAll('#main .ws-desk-methods article'),
+    ...document.querySelectorAll('#main .ws-desk-list .ws-list-row'),
+  ];
+  const openers = [...document.querySelectorAll('#main>.cards button[data-desk]')];
+  if (!surfaces.length || !openers.length) return;
+  const nameOf = (el) => (el?.textContent || '').trim().toLowerCase();
+  // Two surfaces name the same desk differently ("Global Quant & AI Research Lab"
+  // in this module's copy vs "Quant / AI Model Lab" on app.js's card), so exact
+  // and substring matching both miss it. Significant-token overlap catches that
+  // pair without matching distinct desks: "Futures Event" and "Earnings Event"
+  // share only the word "event", and the rule needs two.
+  const tokens = (text) => new Set(text.split(/[^a-z0-9]+/).filter((t) => t.length > 2));
+  const sharesTwoTokens = (a, b) => {
+    const ta = tokens(a);
+    let hits = 0;
+    for (const t of tokens(b)) if (ta.has(t)) hits++;
+    return hits >= 2;
+  };
+  for (const node of surfaces) {
+    if (node.dataset.wired === 'true') continue;
+    const label = nameOf(node.querySelector('h2') || node.querySelector('strong'));
+    if (!label) continue;
+    const opener = openers.find((button) => {
+      const heading = nameOf(button.closest('.desk-card')?.querySelector('h2'));
+      if (!heading) return false;
+      return heading === label || heading.includes(label) || label.includes(heading)
+        || sharesTwoTokens(heading, label);
+    });
+    if (!opener) continue;
+    node.dataset.wired = 'true';
+    node.classList.add('ws-desk-openable');
+    node.setAttribute('role', 'button');
+    node.setAttribute('tabindex', '0');
+    const open = (event) => {
+      event.preventDefault();
+      opener.click();
+    };
+    node.addEventListener('click', open);
+    node.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') open(event);
+    });
+  }
 }
 
 function renderContext() {
@@ -175,6 +233,7 @@ function renderContext() {
     cursor.insertAdjacentElement('afterend', node);
     cursor = node;
   }
+  wireDeskRows();
 }
 
 window.addEventListener('hashchange', () => requestAnimationFrame(renderContext));
