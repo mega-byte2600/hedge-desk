@@ -24,32 +24,9 @@
 // places and SKIPS (exit 0) when it is unavailable, so it never breaks a run.
 // Override the lookup with PLAYWRIGHT_PATH=/path/to/node_modules/playwright.
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { createRequire } from 'node:module';
-
-// This file is ESM (.mjs), so bare `require` does not exist. Playwright is loaded
-// by path at runtime, which needs the CJS loader.
-const require = createRequire(import.meta.url);
+import { loadPlaywright, launchEngine } from './playwright_loader.mjs';
 
 const BASE = process.argv[2] || process.env.CONSOLE_URL || 'http://127.0.0.1:8765';
-
-function loadPlaywright() {
-  const candidates = [];
-  if (process.env.PLAYWRIGHT_PATH) candidates.push(process.env.PLAYWRIGHT_PATH);
-  candidates.push('playwright');
-  // npx cache: ~/.npm/_npx/<hash>/node_modules/playwright
-  try {
-    const npxDir = path.join(process.env.HOME || '', '.npm', '_npx');
-    for (const hash of fs.readdirSync(npxDir)) {
-      candidates.push(path.join(npxDir, hash, 'node_modules', 'playwright'));
-    }
-  } catch (e) { /* no npx cache */ }
-  for (const c of candidates) {
-    try { return require(c); } catch (e) { /* try next */ }
-  }
-  return null;
-}
 
 const playwright = loadPlaywright();
 if (!playwright) {
@@ -213,7 +190,9 @@ async function checkDeskOpensFromDesksTab(page) {
 
 (async () => {
   console.log(`console smoke test -> ${BASE}`);
-  browser = await playwright.chromium.launch({ args: ['--disable-dev-shm-usage', '--no-sandbox'] });
+  const launched = await launchEngine('chromium');
+  if (launched.error) { console.log('SKIP: no browser available — ' + launched.error); process.exit(0); }
+  browser = launched.browser;
   const page = await browser.newPage();
   const client = await page.context().newCDPSession(page);
   await client.send('Debugger.enable');
