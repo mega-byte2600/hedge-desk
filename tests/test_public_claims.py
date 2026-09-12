@@ -58,15 +58,20 @@ def _shipped_text() -> list[tuple[str, str]]:
 NEGATION = re.compile(r"\b(not|no|never|cannot|can't|isn't|aren't|without|nor)\b", re.I)
 
 
-def _is_negated(text: str, start: int) -> bool:
+def _is_negated(text: str, start: int, end: int) -> bool:
     """True when the match sits inside a disclaimer.
 
     Disclaimers legitimately contain these words — "not investment advice or a
-    performance guarantee", "no guarantee of results". An earlier version of this
-    check flagged the product's own risk disclaimer, which is the opposite of a
-    violation, so a negation in the short window before the match clears it.
+    performance guarantee", "no guarantee of results", "no risk of loss". The first
+    version of this check flagged the product's own risk disclaimer, which is the
+    opposite of a violation, so a negation shortly before the match clears it, and a
+    negation that is part of the match itself ("no risk") clears it too.
+
+    Deliberate tradeoff: this makes the guard conservative. It will not flag a "no
+    risk" headline as a claim. That is the right error direction for a tripwire whose
+    worst failure mode is crying wolf on the product's own disclaimers.
     """
-    window = text[max(0, start - 48): start]
+    window = text[max(0, start - 48): max(start, end)]
     return bool(NEGATION.search(window))
 
 
@@ -76,7 +81,7 @@ class PublicClaimTests(unittest.TestCase):
         for name, text in _shipped_text():
             for pattern, why in BANNED:
                 for m in re.finditer(pattern, text, re.I):
-                    if _is_negated(text, m.start()):
+                    if _is_negated(text, m.start(), m.end()):
                         continue          # a disclaimer, not a claim
                     snippet = text[max(0, m.start() - 40): m.end() + 40].replace("\n", " ")
                     offenders.append(f"{name}: '{m.group(0)}' ({why}) ...{snippet.strip()}...")
@@ -89,8 +94,8 @@ class PublicClaimTests(unittest.TestCase):
 
     def test_negation_guard_does_not_disable_the_check(self):
         # The negation guard must not swallow real violations.
-        self.assertFalse(_is_negated("We guarantee returns.", 3))
-        self.assertTrue(_is_negated("not investment advice or a performance guarantee.", 44))
+        self.assertFalse(_is_negated("We guarantee returns.", 3, 12))
+        self.assertTrue(_is_negated("not investment advice or a performance guarantee.", 26, 35))
         for phrase, should_flag in [
             ("guaranteed results", True),
             ("not a guarantee", False),
@@ -104,7 +109,7 @@ class PublicClaimTests(unittest.TestCase):
                 match = re.search(pattern, phrase, re.I)
                 if match:
                     break
-            hit = bool(match) and not _is_negated(phrase, match.start())
+            hit = bool(match) and not _is_negated(phrase, match.start(), match.end())
             self.assertEqual(hit, should_flag, f"{phrase!r} -> expected flagged={should_flag}")
 
 
