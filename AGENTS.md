@@ -49,6 +49,18 @@ The constraint is on redistribution, not on learning:
 - The same rule covers brokerage credentials, account data, licensed market-data
   payloads, and third-party study material purchased under a personal licence.
 
+## Engineering lessons
+
+Read `docs/ENGINEERING_LESSONS.md` before changing public copy, a DOM selector, a store, or
+anything that reports a result. It records the failure classes this project has actually hit
+and the rule that prevents each. Two of them have already cost real time more than once:
+
+- **Locked public copy is not safe from a DOM edit.** Positioned copy conveys claims (Risk of
+  Ruin, disclaimers, method descriptions). A bare class selector can match more than one
+  block and silently rewrite the wrong one, and that has happened repeatedly.
+- **A check that passes for the wrong reason is worse than no check.** A count is not
+  evidence until you know what it counted. An assertion is a hypothesis, not proof.
+
 ## Method Stack
 
 - Series 7 / FINRA / SEC: compliance and product-rule layer.
