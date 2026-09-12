@@ -20,7 +20,34 @@ Two mechanisms sit behind that language, and both are already implemented:
   the layered research does the work a professional desk does around a position —
   qualifying candidates, gathering and challenging evidence, running the scenario set,
   and stating what would invalidate the thesis — with the user holding the decision and
-  the execution. The **full-service** mode automates the same suite at a higher price.
+  the execution. The user either takes the candidates the desks surface or configures
+  their own desks on top of the same research layer. The **full-service** mode automates
+  the same suite at a higher price.
+
+### The two modes, named precisely
+
+Terms are taken from the domain rather than invented, each tied to its source:
+
+| Concept | The real term | Basis |
+|---|---|---|
+| Investor who can hold the higher-risk, unregistered offering | **accredited investor** | SEC definition (Regulation D, Rule 501) |
+| Investor in a private fund such as the LLC | **qualified purchaser** | Investment Company Act Sec. 2(a)(51) |
+| End-to-end automated trading | **automated / algorithmic trading** | ordinary regulatory vocabulary |
+| The user-controlled stop valve | **kill switch** | SEC Rule 15c3-5 (Market Access Rule); FINRA names kill switches for highly automated firms |
+
+### The kill switch, stated honestly
+
+The full-service mode is designed so automation is bounded by a control the **user** holds:
+notifications at the cadence they choose, with stop valves that can shut the automation
+down ("kill switch") rather than a system that runs unattended with no brake.
+
+The concept mirrors a real control. SEC Rule 15c3-5 obliges a broker-dealer *with market
+access* to maintain risk-management controls and supervisory procedures, and FINRA
+describes kill switches as part of that obligation for highly automated firms. That
+obligation attaches to a broker-dealer and Emporion is not one, so this is a product
+control implemented in the spirit of the rule, **not** a claim of regulatory compliance.
+Turning it into a genuine compliance posture is a question for securities counsel,
+alongside the fund structure.
 
 Claim discipline (see `docs/EMPORION_MARKETING_CLAIM_AUDIT.md`): this is a statement of
 capability and architecture, not of performance. Automated execution and full autonomy
