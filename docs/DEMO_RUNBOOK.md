@@ -48,8 +48,9 @@ node scripts/smoke_console.mjs http://127.0.0.1:8765
 ```
 
 The smoke test walks every tab (forward, reverse, and repeated toggling of
-Yellow Sheets / Resources / Multi-agent desk / About) in a real browser and fails
-if any route freezes the page or renders empty. It is the check that catches the
+Yellow Sheets / Resources / Multi-agent desk / About) in a real browser, fails if
+any route freezes the page or renders empty, and saves a Yellow Sheet to confirm
+the lifecycle fields actually persist. It is the check that catches the
 freeze class this console has shipped twice — see `tests/test_web_page_guards.py`
 for the source-level guards. Playwright is optional: the script prints SKIP and
 exits 0 when it is not installed.
