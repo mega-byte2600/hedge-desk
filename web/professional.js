@@ -2,19 +2,19 @@
 import { currentRoute } from './core.mjs';
 
 const deskMethods = [
-  ['Overnight Premium', 'Defined-risk premium after liquidity, volatility, event, and executable-spread checks.', 'DATA INTEGRATION'],
-  ['Earnings Event', 'Point-in-time expectations, confirmed events, release evidence, and post-event reaction.', 'DATA INTEGRATION'],
-  ['Box / Parity Observer', 'Parity and box relationships after spreads, fees, settlement, and financing.', 'DATA INTEGRATION'],
-  ['Dividend Opportunity', 'Payout durability, cash generation, shareholder yield, and valuation.', 'DATA INTEGRATION'],
-  ['Global Quant & AI Research Lab', 'Global finance-AI, ML, datasets, benchmarks, and reproducible model evaluation.', 'DATA INTEGRATION'],
-  ['Futures Event', 'Physical events, futures curves, liquidity, and contract specifications.', 'DATA INTEGRATION'],
-  ['Bonds & Rates', 'Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress anchor cross-asset research.', 'ARCHITECTURE ONLY']
+  ['Overnight Premium', 'Sells defined risk premium, and only after liquidity, volatility, event, and spread checks pass.', 'DATA INTEGRATION'],
+  ['Earnings Event', 'Compares what was expected against what the company confirmed, and how the stock reacted.', 'DATA INTEGRATION'],
+  ['Box / Parity Observer', 'Checks parity and box relationships after spreads, fees, settlement, and financing.', 'DATA INTEGRATION'],
+  ['Dividend Opportunity', 'Asks whether the payout can survive: cash generation, shareholder yield, and valuation.', 'DATA INTEGRATION'],
+  ['Global Quant & AI Research Lab', 'Covers quantitative and machine learning research, datasets, benchmarks, and reproducible model checks.', 'DATA INTEGRATION'],
+  ['Futures Event', 'Reads physical events against futures curves, liquidity, and contract specifications.', 'DATA INTEGRATION'],
+  ['Bonds & Rates', 'Uses Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress as the backdrop for other research.', 'ARCHITECTURE ONLY']
 ];
 
 function applyBrand() {
   document.title = 'Emporion | Markets · Intelligence · Discipline';
   const meta = document.querySelector('meta[name="description"]');
-  if (meta) meta.content = 'Emporion is an independent market research and decision-support platform with a seven-desk research architecture, coordinated specialist-agent roles, scenario analysis, Yellow Sheets, deterministic portfolio-survival controls, and human review. A Bolton Investment Group (BIG) Project.';
+  if (meta) meta.content = 'Emporion is an independent market research and decision-support platform with a seven-desk research architecture, scenario analysis, Yellow Sheets, portfolio survival controls, and human review. A Bolton Investment Group (BIG) Project.';
 
   const icon = document.querySelector('link[rel="icon"]');
   if (icon) icon.href = './emporion-institutional-seal.svg';

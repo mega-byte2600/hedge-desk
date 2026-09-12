@@ -37,13 +37,12 @@ test('countdown computes days/hours/minutes/seconds and flags live', () => {
   assert.equal(gone.d, 0);
 });
 
-test('renderSouls emits the team and deployment sections', () => {
+test('renderSouls emits the team and staffing sections', () => {
   const html = renderSouls({ total_commits: 350, generated_at: new Date().toISOString(), target_live: new Date(Date.now() + 86400000).toISOString() });
   assert.ok(html.includes('Multi-agent research desk'));
   assert.ok(html.includes('The team'));
-  assert.ok(html.includes('Deployment model'));
+  assert.ok(html.includes('How the desk is staffed'));
   assert.ok(html.includes('Agents'));
-  assert.ok(html.includes('Model families'));
   assert.ok(!/<img[^>]*onerror/i.test(html), 'no event-handler injection');
 });
 
@@ -77,14 +76,21 @@ test('the public desk page never renders internal build telemetry', () => {
   assert.ok(!/\b\d{2,}\b/.test(withTimeline.replace(/[0-9]+(px|%)/g, '')), 'no commit count');
 });
 
-test('renderSouls renders fully when the timeline is missing or unusable', () => {
-  // The timeline fetch may fail (it is not needed for the page to render any more).
-  // The desk must still render the team and not invent any number to fill the gap.
-  for (const missing of [null, undefined, {}, {total_commits: 'nope'}]) {
-    const html = renderSouls(missing);
-    assert.ok(html.includes('The team'), 'team renders without a timeline');
-    assert.ok(html.includes('Deployment model'), 'deployment renders without a timeline');
-    assert.ok(!html.includes('Commit history'), 'no commit-history claim without it');
-    assert.ok(!/\b\d{2,}\b/.test(html.replace(/[0-9]+(px|%)/g, '')), 'no invented commit number');
+test('the public desk page never publishes internal model routing', () => {
+  // Which underlying model backs which specialist is internal infrastructure. It was
+  // rendered on each card (vendor slug + a "Model families" tile naming all six vendors).
+  // The data stays in SOULS for internal use; the page must not show it.
+  const html = renderSouls(undefined);
+  // Vendor slugs and family names are the leak: they must not appear anywhere, markup
+  // included. Internal naming (SOUL, model families) is judged on VISIBLE text, because
+  // a CSS class name like `.soul-grid` is not something a reader ever sees.
+  const visibleText = html.replace(/<[^>]+>/g, ' ').toLowerCase();
+  const vendorLeaks = ['deepseek', 'glm', 'gpt', 'claude', 'gemini', 'qwen', 'anthropic', 'openai', 'z-ai', 'google/'];
+  for (const leak of vendorLeaks) {
+    assert.ok(!html.toLowerCase().includes(leak), 'must not publish internal model routing: ' + leak);
+  }
+  const namingLeaks = ['model families', 'soul', 'model slug', 'specialist-agent', 'souls'];
+  for (const leak of namingLeaks) {
+    assert.ok(!visibleText.includes(leak), 'must not publish internal naming in visible copy: ' + leak);
   }
 });

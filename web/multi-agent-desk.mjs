@@ -39,12 +39,12 @@ export const SOULS = [
 ];
 
 const DEPLOYMENT = [
-  'Six independent, isolated profiles — not six agreeable copies of one model.',
-  'Each carries a persistent SOUL identity: who it is, what it owns, what it must not do, how it behaves.',
-  'Six distinct model families (deepseek, glm, gpt, claude, gemini, qwen) for genuine cognitive diversity.',
-  'Free agents, not a fixed matrix: a SOUL deploys to whichever trading desk needs it, like a specialist unit.',
-  'Isolated state, sessions, memory, and skills per profile; independent verification and explicit handoffs.',
-  'RISK is an independent challenge function that is not rewarded for agreeing with the others.',
+  'Six specialists run as separate profiles with separate state, so one cannot quietly drift into another.',
+  'Each has a written remit: what it is responsible for, what it must not touch, and how it works.',
+  'They run on different underlying models, chosen so their judgements stay independent of each other.',
+  'A specialist moves to whichever desk needs it, instead of sitting in a fixed team chart.',
+  'Sessions, memory, and skills stay separate per specialist, and handoffs are stated out loud.',
+  'Risk is a challenge role with no incentive to agree with the desk it is reviewing.',
 ];
 
 export function escapeHTML(s) {
@@ -76,13 +76,11 @@ export function renderSouls(_timeline) {
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
         <div style="display:flex;gap:12px;align-items:center">
           <span class="soul-icon" style="display:grid;place-items:center;width:42px;height:42px;border-radius:6px;background:var(--ink);color:#d1ef9f;font-size:22px">${s.icon}</span>
-          <div><div class="eyebrow">AGENT · ${escapeHTML(s.role.toUpperCase())}</div><h2 style="margin:2px 0 0">${escapeHTML(s.name)}</h2></div>
+          <div><div class="eyebrow">${escapeHTML(s.role.toUpperCase())}</div><h2 style="margin:2px 0 0">${escapeHTML(s.name)}</h2></div>
         </div>
-        <span class="tag">${escapeHTML(s.family)}</span>
       </div>
       <p style="margin:0">${escapeHTML(s.mandate)}</p>
-      <div class="soul-model mono" style="font:12px 'IBM Plex Mono',monospace;background:#0f1a24;color:#c7ed8b;border-radius:4px;padding:8px 10px">${escapeHTML(s.model)}</div>
-      <details><summary>SOUL — ownership &amp; boundaries</summary>
+      <details><summary>What this specialist owns, and what it does not</summary>
         <p><strong>Owns:</strong> ${escapeHTML(s.owns)}</p>
         <p><strong>Does NOT own:</strong> ${escapeHTML(s.notOwn)}</p>
         <p class="small"><strong>Principle:</strong> ${escapeHTML(s.principle)}</p>
@@ -91,21 +89,20 @@ export function renderSouls(_timeline) {
 
   return `
   ${headHTML()}
-  <div class="notice"><strong>MULTI-AGENT RESEARCH DESK</strong><span>The Emporion team — six isolated, independently-governed specialists. Paper-only; no agent authorizes or executes a trade.</span><span class="tag">PAPER_ONLY</span></div>
+  <div class="notice"><strong>MULTI-AGENT RESEARCH DESK</strong><span>Six specialists staff this desk. Each works independently of the others, and none of them can place a trade.</span><span class="tag">PAPER_ONLY</span></div>
 
   <div class="stats">
-    <div class="stat"><div class="eyebrow">Agents</div><div class="stat-value">6</div><div class="stat-foot">Isolated profiles</div></div>
-    <div class="stat"><div class="eyebrow">Model families</div><div class="stat-value">6</div><div class="stat-foot">deepseek · glm · gpt · claude · gemini · qwen</div></div>
+    <div class="stat"><div class="eyebrow">Agents</div><div class="stat-value">6</div><div class="stat-foot">Separate profiles, separate state</div></div>
   </div>
 
   <div class="section-gap">
-    <section class="panel"><div class="panel-head"><div><h2>The team</h2><p>Six SOULs, each with its own model, mandate, and hard boundaries.</p></div></div>
+    <section class="panel"><div class="panel-head"><div><h2>The team</h2><p>Each has a defined remit, and limits it does not cross.</p></div></div>
       <div class="soul-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">${soulCards}</div>
     </section>
   </div>
 
   <div class="section-gap">
-    <section class="panel"><div class="panel-head"><div><h2>Deployment model</h2><p>Free agents, not a fixed matrix.</p></div></div>
+    <section class="panel"><div class="panel-head"><div><h2>How the desk is staffed</h2><p>Each specialist works independently, rather than as one team with one opinion.</p></div></div>
       <div class="panel-body" style="display:grid;gap:10px">${DEPLOYMENT.map(t => `<div class="deploy-line" style="display:flex;gap:10px;align-items:flex-start"><span style="color:#c7ed8b">▸</span><span>${escapeHTML(t)}</span></div>`).join('')}</div>
     </section>
   </div>
@@ -114,7 +111,7 @@ export function renderSouls(_timeline) {
 }
 
 function headHTML() {
-  return `<div class="page-head"><div><h1>Multi-agent research desk</h1><p class="subtitle">Six specialized agents, each with its own SOUL identity, model, and mandate.</p></div></div>`;
+  return `<div class="page-head"><div><h1>Multi-agent research desk</h1><p class="subtitle">Each has its own remit and its own way of working the problem.</p></div></div>`;
 }
 
 // ── Browser wiring (guarded so the module is importable under node:test) ──
