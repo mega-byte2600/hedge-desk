@@ -1,6 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
 import {renderSouls, countdown, SOULS} from './multi-agent-desk.mjs';
 
 test('the desk has six distinct agents with models from six families', () => {
@@ -38,30 +37,54 @@ test('countdown computes days/hours/minutes/seconds and flags live', () => {
   assert.equal(gone.d, 0);
 });
 
-test('renderSouls emits the team, deployment, and progress sections', () => {
+test('renderSouls emits the team and deployment sections', () => {
   const html = renderSouls({ total_commits: 350, generated_at: new Date().toISOString(), target_live: new Date(Date.now() + 86400000).toISOString() });
   assert.ok(html.includes('Multi-agent research desk'));
   assert.ok(html.includes('The team'));
   assert.ok(html.includes('Deployment model'));
-  assert.ok(html.includes('Results &amp; progress'));
-  assert.ok(html.includes('350'));
+  assert.ok(html.includes('Agents'));
+  assert.ok(html.includes('Model families'));
   assert.ok(!/<img[^>]*onerror/i.test(html), 'no event-handler injection');
 });
 
-test('renderSouls never invents a commit history when the timeline is missing', () => {
-  // The timeline fetch can fail. The panel must not then show a made-up count
-  // under a "Real commit history from the repository" label.
-  for (const missing of [null, undefined]) {
-    const html = renderSouls(missing);
-    assert.ok(!html.includes('Real commit history'), 'must not claim real history without it');
-    assert.ok(html.includes('Commit history unavailable'), 'must say the count is unavailable');
-    assert.ok(!/\b\d{2,}\b/.test(html.replace(/[0-9]+(px|%)/g, '')), 'no invented commit number');
+test('the public desk page never renders internal build telemetry', () => {
+  // This desk page is public product surface. Commit counts, a go-live countdown, and
+  // the deployment-progress panel are internal engineering/deployment state: they were
+  // rendered here and were removed, because "how many commits landed" and "when do we
+  // intend to go live" are not things a visitor, a member, or an LP should be shown.
+  // This test fails if any of it comes back.
+  const withTimeline = renderSouls({
+    total_commits: 350,
+    generated_at: new Date().toISOString(),
+    target_live: new Date(Date.now() + 86400000).toISOString(),
+  });
+  const forbidden = [
+    'Commits to main',
+    'Countdown to live',
+    'Real commit history',
+    'Commit history',
+    'Snapshot generated',
+    'Results &amp; progress',
+    'go-live',
+    'Reproducible history',
+    'deployment track',
+  ];
+  for (const text of forbidden) {
+    assert.ok(!withTimeline.includes(text), 'must not render internal telemetry: ' + text);
   }
+  // No d/h/m/s countdown of any shape, and no multi-digit number that reads as a commit count.
+  assert.ok(!/\d+d \d+h \d+m/.test(withTimeline), 'no go-live countdown');
+  assert.ok(!/\b\d{2,}\b/.test(withTimeline.replace(/[0-9]+(px|%)/g, '')), 'no commit count');
 });
 
-test('the rendered countdown matches the shape the per-second tick writes', () => {
-  // The stat used to render d/h/m while the tick wrote d/h/m/s, so the value
-  // changed shape under the viewer one second after render.
-  const html = renderSouls({ total_commits: 10, generated_at: new Date().toISOString(), target_live: new Date(Date.now() + 3600000).toISOString() });
-  assert.ok(/\d+d \d+h \d+m \d+s/.test(html), 'countdown must render days/hours/minutes/seconds');
+test('renderSouls renders fully when the timeline is missing or unusable', () => {
+  // The timeline fetch may fail (it is not needed for the page to render any more).
+  // The desk must still render the team and not invent any number to fill the gap.
+  for (const missing of [null, undefined, {}, {total_commits: 'nope'}]) {
+    const html = renderSouls(missing);
+    assert.ok(html.includes('The team'), 'team renders without a timeline');
+    assert.ok(html.includes('Deployment model'), 'deployment renders without a timeline');
+    assert.ok(!html.includes('Commit history'), 'no commit-history claim without it');
+    assert.ok(!/\b\d{2,}\b/.test(html.replace(/[0-9]+(px|%)/g, '')), 'no invented commit number');
+  }
 });
