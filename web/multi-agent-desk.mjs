@@ -134,6 +134,7 @@ function headHTML() {
 // ── Browser wiring (guarded so the module is importable under node:test) ──
 const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 let _timelineCache = null;
+let _deskRendering = false;
 
 async function loadTimeline() {
   if (_timelineCache) return _timelineCache;
@@ -151,9 +152,25 @@ async function renderDeskView() {
   if (!isBrowser) return;
   const main = document.getElementById('main');
   if (!main) return;
+  if (location.hash !== '#desk') return;
+  // Re-entrancy guard. This write lands inside the subtree the observer below
+  // watches, so without it the observer re-fires on its own mutation, writes the
+  // loading HTML again, and the microtask queue never drains — the page locks up
+  // solid before the first await resolves. Navigating to the multi-agent desk
+  // tab was enough to hang the whole renderer.
+  if (_deskRendering) return;
+  if (main.dataset.deskView === 'rendered' && document.querySelector('.soul-card')) return;
+  _deskRendering = true;
+  main.dataset.deskView = 'loading';
   main.innerHTML = '<div class="loading">Loading multi-agent desk…</div>';
-  const timeline = await loadTimeline();
-  main.innerHTML = renderSouls(timeline);
+  try {
+    const timeline = await loadTimeline();
+    if (location.hash !== '#desk') return;
+    main.innerHTML = renderSouls(timeline);
+    main.dataset.deskView = 'rendered';
+  } finally {
+    _deskRendering = false;
+  }
 }
 
 if (isBrowser) {
@@ -164,7 +181,15 @@ if (isBrowser) {
   document.addEventListener('DOMContentLoaded', () => {
     if (location.hash === '#desk') renderDeskView();
     const main = document.getElementById('main');
-    if (main) new MutationObserver(() => { if (location.hash === '#desk' && !document.querySelector('.soul-card')) renderDeskView(); }).observe(main, { childList: true, subtree: true });
+    if (main) {
+      // Deferred, like every other page enhancer: a synchronous observer callback
+      // that writes into its own subtree can never yield and freezes the page.
+      new MutationObserver(() => requestAnimationFrame(() => {
+        if (location.hash === '#desk' && !_deskRendering && !document.querySelector('.soul-card')) {
+          renderDeskView();
+        }
+      })).observe(main, { childList: true, subtree: true });
+    }
   });
 }
 
