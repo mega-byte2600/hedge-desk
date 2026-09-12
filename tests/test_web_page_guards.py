@@ -64,6 +64,10 @@ class MutationObserverGuardTests(unittest.TestCase):
         yield, so it hard-freezes the page. Deferring (rAF or a microtask) is the
         pattern the other enhancers use. Callbacks that only read, or that write
         outside the observed subtree, are not flagged.
+
+        Matches both ``new MutationObserver(() => { ... })`` and the bare-identifier
+        form ``new MutationObserver(enhanceCandidates)`` — the latter is how
+        candidate-context.js slipped past an earlier version of this check.
         """
         write = re.compile(
             r"\.innerHTML\s*=|insertAdjacentHTML|\.appendChild\(|\.prepend\(|"
@@ -73,17 +77,45 @@ class MutationObserverGuardTests(unittest.TestCase):
         offenders = []
         for path in sorted(WEB.glob("*.js")) + sorted(WEB.glob("*.mjs")):
             src = path.read_text(encoding="utf-8")
-            for match in re.finditer(r"new MutationObserver\(\(\)\s*=>\s*\{", src):
-                body = src[match.end(): match.end() + 600]
-                if write.search(body) and not defer.search(body):
-                    line = src[: match.start()].count("\n") + 1
-                    offenders.append(f"{path.name}:{line}")
+            for match in re.finditer(
+                r"new MutationObserver\(\s*(?:\(\)\s*=>\s*\{|([A-Za-z_$][\w$]*)\s*\))", src
+            ):
+                line = src[: match.start()].count("\n") + 1
+                if match.group(1):
+                    # bare identifier callback: the whole named function must defer
+                    fn = re.search(
+                        rf"function\s+{re.escape(match.group(1))}\s*\([^)]*\)\s*\{{(.*?)\n\}}",
+                        src,
+                        re.S,
+                    )
+                    body = fn.group(1) if fn else src[match.end(): match.end() + 600]
+                    if defer.search(body) or not write.search(body):
+                        continue
+                    offenders.append(f"{path.name}:{line} -> {match.group(1)}()")
+                else:
+                    body = src[match.end(): match.end() + 600]
+                    if write.search(body) and not defer.search(body):
+                        offenders.append(f"{path.name}:{line}")
         self.assertEqual(
             offenders,
             [],
             "these MutationObserver callbacks write without deferring, which can "
             "re-enter and lock the main thread: " + ", ".join(offenders),
         )
+
+    def test_route_derivation_has_one_definition(self):
+        """Enhancers must share currentRoute() from core.mjs.
+
+        Four modules each derived the route with a different default, so on a
+        plain "/" load the overview subtitle was written onto the Candidates page.
+        """
+        core = (WEB / "core.mjs").read_text(encoding="utf-8")
+        self.assertIn("export function currentRoute()", core)
+        for name in ("ui-polish.js", "acknowledgements.js", "professional.js"):
+            src = (WEB / name).read_text(encoding="utf-8")
+            self.assertIn("from './core.mjs'", src, f"{name} must import from core.mjs")
+            self.assertIn("currentRoute", src, f"{name} must use the shared currentRoute")
+            self.assertNotIn("location.hash || '#overview'", src, f"{name} must not keep a private route default")
 
 
 class YellowSheetSaveTests(unittest.TestCase):

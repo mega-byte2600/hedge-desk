@@ -141,5 +141,82 @@ class AuthEndpointRateLimitTests(unittest.TestCase):
         self.assertEqual(status, "202 Accepted")
 
 
+class LimiterHardeningTests(unittest.TestCase):
+    """Bounded memory, atomic accounting, IP checked first."""
+
+    def test_key_map_stays_bounded(self):
+        # Keys are caller-controlled (an attacker picks the email address) and a
+        # key was never removed once created, so one client could grow the map
+        # without limit on a 512MB instance.
+        clock = FakeMonotonic()
+        limiter = SlidingWindowLimiter(5, 60, clock=clock, max_keys=50)
+        for i in range(500):
+            limiter.allow(f"victim{i}@example.com")
+        self.assertLessEqual(
+            len(limiter._events), 60, "the key map must not grow without bound"
+        )
+
+    def test_live_keys_are_never_evicted_inside_their_window(self):
+        clock = FakeMonotonic()
+        limiter = SlidingWindowLimiter(2, 600, clock=clock, max_keys=10)
+        for i in range(5):
+            limiter.allow(f"live{i}@example.com")
+        # A live window must still be enforced: evicting active keys to make room
+        # would let a caller reset its own limit by flooding new addresses.
+        self.assertTrue(limiter.allow("live0@example.com"))
+        self.assertFalse(limiter.allow("live0@example.com"))
+
+    def test_exhausted_budget_fails_closed_for_new_keys(self):
+        clock = FakeMonotonic()
+        limiter = SlidingWindowLimiter(5, 600, clock=clock, max_keys=3)
+        for i in range(3):
+            self.assertTrue(limiter.allow(f"a{i}@example.com"))
+        self.assertFalse(limiter.allow("a-brand-new@example.com"))
+        self.assertLessEqual(len(limiter._events), 3)
+
+    def test_expired_keys_are_reclaimed_once_the_window_passes(self):
+        clock = FakeMonotonic()
+        limiter = SlidingWindowLimiter(5, 60, clock=clock, max_keys=3)
+        for i in range(3):
+            limiter.allow(f"a{i}@example.com")
+        self.assertFalse(limiter.allow("blocked@example.com"))
+        clock.advance(61)     # every window has elapsed
+        self.assertTrue(limiter.allow("fresh@example.com"))
+        self.assertLessEqual(len(limiter._events), 3)
+
+    def test_ip_limit_is_checked_before_the_address_budget_is_spent(self):
+        # The per-address limiter used to run first, so traffic the IP limit was
+        # about to refuse still consumed (and minted) per-address entries.
+        clock = FakeMonotonic()
+        limits = AuthRateLimits(clock=clock)
+        for i in range(25):   # past the per-IP limit of 20
+            limits.allow_request(f"fresh{i}@example.com", "203.0.113.9")
+        self.assertEqual(
+            limits.request_per_email.remaining("fresh24@example.com"),
+            limits.request_per_email.limit,
+            "a request refused by the IP limiter must not spend the address budget",
+        )
+
+    def test_concurrent_allows_cannot_exceed_the_limit(self):
+        import threading
+
+        limiter = SlidingWindowLimiter(50, 60)
+        granted = []
+        lock = threading.Lock()
+
+        def hammer():
+            for _ in range(50):
+                if limiter.allow("shared-key"):
+                    with lock:
+                        granted.append(1)
+
+        threads = [threading.Thread(target=hammer) for _ in range(6)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertLessEqual(len(granted), 50, "check-then-act must be atomic")
+
+
 if __name__ == "__main__":
     unittest.main()

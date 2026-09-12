@@ -1,6 +1,5 @@
-function currentRoute() {
-  return (location.hash || '#overview').slice(1).split('?')[0] || 'overview';
-}
+
+import { currentRoute } from './core.mjs';
 
 function acknowledgementBlock() {
   if (currentRoute() !== 'about') return;

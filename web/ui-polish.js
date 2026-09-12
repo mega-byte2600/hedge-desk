@@ -1,6 +1,5 @@
-function route() {
-  return (location.hash || '#overview').slice(1).split('?')[0] || 'overview';
-}
+
+import { currentRoute } from './core.mjs';
 
 const subtitles = {
   overview: 'Six research workflows, operating state, and decision controls.',
@@ -17,7 +16,7 @@ function setText(node, value) {
 }
 
 function polishCopy() {
-  const current = route();
+  const current = currentRoute();
   const subtitle = document.querySelector('#main .page-head .subtitle');
   if (subtitle && subtitles[current]) setText(subtitle, subtitles[current]);
 

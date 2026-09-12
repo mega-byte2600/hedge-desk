@@ -204,5 +204,65 @@ class StoreSelectionTests(unittest.TestCase):
         store.close()
 
 
+class SignInMustNotDowngradeTests(unittest.TestCase):
+    """A sign-in must never lower an existing member's role.
+
+    The SQLite store's upsert touches only `guest_expires_at`, but PostgREST's
+    `resolution=merge-duplicates` writes every column in the payload, so sending
+    `role=GUEST` reset an LP or MEMBER to GUEST on every sign-in: investor rights
+    were stripped, the member dropped out of `lp_count()` (making the 99-seat cap
+    unenforceable), and `created_at` was rewritten.
+    """
+
+    def setUp(self):
+        self.fake = FakeSupabase()
+        self.clock = FakeClock()
+        self.store = SupabaseMembershipStore(
+            "https://project.supabase.co", "service-key",
+            transport=self.fake, clock=self.clock,
+        )
+
+    def test_lp_survives_a_sign_in(self):
+        self.store.promote_to_lp("lp@example.com")
+        self.assertEqual(self.store.lp_count(), 1)
+
+        self.store.upsert_guest("lp@example.com")   # what /api/auth/request calls
+
+        member = self.store.get_member("lp@example.com")
+        self.assertEqual(member["role"], ROLE_LP, "sign-in must not downgrade an LP")
+        self.assertTrue(member["investor"])
+        self.assertEqual(self.store.lp_count(), 1, "the LP seat cap depends on this count")
+        self.assertTrue(self.store.access_for("lp@example.com").allowed)
+
+    def test_member_survives_a_sign_in(self):
+        self.store.set_subscribed("member@example.com")
+        self.store.upsert_guest("member@example.com")
+
+        member = self.store.get_member("member@example.com")
+        self.assertEqual(member["role"], ROLE_MEMBER, "sign-in must not downgrade a member")
+        self.assertTrue(member["subscribed"])
+
+    def test_guest_row_is_created_with_created_at(self):
+        # members.created_at is NOT NULL with no default in supabase/schema.sql,
+        # so an insert that omits it is rejected by Postgres.
+        self.store.upsert_guest("new@example.com")
+        member = self.store.get_member("new@example.com")
+        self.assertEqual(member["role"], "GUEST")
+        self.assertTrue(member.get("created_at"), "created_at must be sent on insert")
+
+    def test_ensure_gp_creates_the_row_with_created_at(self):
+        # Regression: the previous upsert omitted created_at, so on Supabase the
+        # GP row was never created and the error was swallowed.
+        member = self.store.ensure_gp("gp@example.com")
+        self.assertIsNotNone(member)
+        self.assertEqual(member["role"], "GP")
+        self.assertTrue(member.get("created_at"), "created_at must be sent on insert")
+
+    def test_ensure_gp_upgrades_an_existing_guest(self):
+        self.store.upsert_guest("gp@example.com")
+        member = self.store.ensure_gp("gp@example.com")
+        self.assertEqual(member["role"], "GP")
+
+
 if __name__ == "__main__":
     unittest.main()

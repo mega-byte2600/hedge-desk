@@ -22,20 +22,33 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from http.cookies import SimpleCookie
 from typing import Callable, Optional
-from urllib.parse import parse_qs
 from pathlib import Path
 
 from hedge_desk.membership import (
     MAX_LP_MEMBERS,
     ROLE_GP,
+    SESSION_TTL_SECONDS,
     MembershipStore,
 )
 from hedge_desk.tier_access import DataTier, data_tier_for, can_access_real_data, is_investor
 from hedge_desk.email_transport import build_sender
 
 SESSION_COOKIE = "emporion_session"
+
+
+def _warn(message: str) -> None:
+    """Report a degraded-but-survivable failure to the service log.
+
+    Auth handlers must not raise on secondary work (audit append, GP row
+    creation), but a bare ``except: pass`` previously hid a missing Supabase
+    audit table and a rejected GP insert — two failures that looked like success.
+    """
+    print(f"[auth-warning] {message}", file=sys.stderr, flush=True)
+
+
 # Where the SQLite DB lives. In production this should point at a path on a
 # persistent volume; on Render free the instance disk is ephemeral, so
 # configure MEMBERSHIP_DB to a persistent store (Supabase/Turso/DB) or accept
@@ -108,12 +121,31 @@ def _json_response(start_response, payload, status="200 OK"):
     return [body]
 
 
-def _set_session_cookie(start_response, token):
+def _set_session_cookie(start_response, token, environ=None):
+    """Issue the session cookie.
+
+    This was a third response path that forgot what the other two do: it
+    hardcoded "200 OK" (so a caller could not express a different status) and sent
+    no Cache-Control. A session-creating response is exactly the one a shared cache
+    must not store, so it now matches ``_json_response`` and adds the cookie
+    lifetime and the Secure flag when the request arrived over TLS.
+    """
+    secure = ""
+    scheme = ""
+    if environ:
+        scheme = (environ.get("HTTP_X_FORWARDED_PROTO") or environ.get("wsgi.url_scheme") or "")
+    if "https" in scheme.lower():
+        secure = "; Secure"
     start_response(
         "200 OK",
         [
             ("Content-Type", "application/json"),
-            ("Set-Cookie", f"{SESSION_COOKIE}={token}; HttpOnly; Path=/; SameSite=Lax"),
+            ("Cache-Control", "no-store"),
+            (
+                "Set-Cookie",
+                f"{SESSION_COOKIE}={token}; HttpOnly; Path=/; SameSite=Lax; "
+                f"Max-Age={SESSION_TTL_SECONDS}{secure}",
+            ),
         ],
     )
 
@@ -153,8 +185,12 @@ def make_auth_app(
             ensure_gp = getattr(store, "ensure_gp", None)
             if callable(ensure_gp):
                 ensure_gp(gp_addr)
-        except Exception:
-            pass
+        except Exception as exc:
+            # Report, never swallow: a failure here means the operator's row is
+            # absent (the GP still works via the role short-circuit below, but the
+            # roster silently omits them). This was a bare `pass`, which hid a
+            # 400 from Supabase's NOT NULL created_at.
+            _warn(f"ensure_gp failed for {gp_addr}: {exc!r}")
 
     def _role_for(email_addr: Optional[str], decision) -> Optional[str]:
         """Effective role for a caller.
@@ -168,13 +204,18 @@ def make_auth_app(
         return decision.role if decision else None
 
     def _audit(event: str, email_addr: str, actor: str = "", detail: str = "") -> None:
-        """Best-effort audit append; never let an audit failure break auth."""
+        """Best-effort audit append; never let an audit failure break auth.
+
+        Best-effort, but not silent: this was a bare ``except: pass``, which hid
+        the fact that the Supabase audit table did not exist at all, so the
+        tamper-evident trail recorded nothing and reported nothing.
+        """
         if audit is None:
             return
         try:
             audit.record(event, email_addr, actor=actor, detail=detail)
-        except Exception:
-            pass
+        except Exception as exc:
+            _warn(f"audit append failed for {event!r} ({email_addr}): {exc!r}")
 
     def dispatch(environ, start_response):
         path = environ.get("PATH_INFO", "")
@@ -202,7 +243,7 @@ def make_auth_app(
             if not decision.allowed:
                 return _json_response(start_response, {"error": decision.reason}, "403 Forbidden")
             session = store.create_session(verified_email)
-            _set_session_cookie(start_response, session)
+            _set_session_cookie(start_response, session, environ)
             return [json.dumps({"status": "ok", "role": _role_for(verified_email, decision), "email": verified_email}).encode("utf-8")]
 
         # ---- request OTP ---------------------------------------------------
@@ -255,7 +296,7 @@ def make_auth_app(
             if not decision.allowed:
                 return _json_response(start_response, {"error": decision.reason}, "403 Forbidden")
             token = store.create_session(email_addr)
-            _set_session_cookie(start_response, token)
+            _set_session_cookie(start_response, token, environ)
             return [json.dumps({"status": "ok", "role": _role_for(email_addr, decision)}).encode("utf-8")]
 
         # ---- logout --------------------------------------------------------

@@ -18,6 +18,7 @@ Design notes:
 
 from __future__ import annotations
 
+import threading
 import time
 from collections import defaultdict, deque
 from typing import Callable, Deque, Dict, Optional
@@ -32,12 +33,18 @@ class SlidingWindowLimiter:
         window_seconds: float,
         *,
         clock: Optional[Callable[[], float]] = None,
+        max_keys: int = 10_000,
     ) -> None:
         if limit < 1:
             raise ValueError("limit must be >= 1")
         self.limit = limit
         self.window = float(window_seconds)
         self._clock = clock or time.monotonic
+        # One lock per limiter: check-then-act on a deque is not atomic, and this
+        # runs on the threaded WSGI server, so two concurrent requests could both
+        # observe room and both append.
+        self._lock = threading.Lock()
+        self._max_keys = max_keys
         self._events: Dict[str, Deque[float]] = defaultdict(deque)
 
     def _prune(self, key: str, now: float) -> None:
@@ -46,23 +53,46 @@ class SlidingWindowLimiter:
         while events and events[0] <= cutoff:
             events.popleft()
 
+    def _evict_expired(self, now: float) -> None:
+        """Drop keys whose window has fully elapsed, so the map stays bounded.
+
+        Only elapsed keys are reclaimed. Evicting *live* keys to make room would
+        let a caller reset its own limit by flooding new addresses, so when the
+        budget is exhausted by active keys the limiter fails closed instead (see
+        ``allow``).
+        """
+        cutoff = now - self.window
+        for k in [k for k, v in self._events.items() if not v or v[-1] <= cutoff]:
+            self._events.pop(k, None)
+
     def allow(self, key: str) -> bool:
         """Record an attempt for ``key``; return False if it exceeds the limit."""
-        now = self._clock()
-        self._prune(key, now)
-        events = self._events[key]
-        if len(events) >= self.limit:
-            return False
-        events.append(now)
-        return True
+        with self._lock:
+            now = self._clock()
+            if key not in self._events and len(self._events) >= self._max_keys:
+                self._evict_expired(now)
+                if len(self._events) >= self._max_keys:
+                    # Every remaining key is inside its window. Refusing here keeps
+                    # the map bounded without handing an attacker a way to clear an
+                    # active limit; keys are caller-controlled, so the bound is the
+                    # only thing standing between this map and the instance memory.
+                    return False
+            self._prune(key, now)
+            events = self._events[key]
+            if len(events) >= self.limit:
+                return False
+            events.append(now)
+            return True
 
     def remaining(self, key: str) -> int:
-        now = self._clock()
-        self._prune(key, now)
-        return max(0, self.limit - len(self._events[key]))
+        with self._lock:
+            now = self._clock()
+            self._prune(key, now)
+            return max(0, self.limit - len(self._events[key]))
 
     def reset(self, key: str) -> None:
-        self._events.pop(key, None)
+        with self._lock:
+            self._events.pop(key, None)
 
 
 class AuthRateLimits:
@@ -76,10 +106,17 @@ class AuthRateLimits:
         self.verify_per_email = SlidingWindowLimiter(10, 900, clock=clock)
 
     def allow_request(self, email: str, client_ip: str) -> bool:
-        """Both the address and the client IP must be under their limits."""
-        email_ok = self.request_per_email.allow(email)
-        ip_ok = self.request_per_ip.allow(client_ip or "unknown")
-        return email_ok and ip_ok
+        """Both the address and the client IP must be under their limits.
+
+        The IP limit is evaluated first and short-circuits. It used to run second,
+        so a rejected request still recorded a per-address entry for an
+        attacker-chosen address: one client could mint unbounded keys (and the
+        per-email limiter is the primary control, so its budget was also spent by
+        traffic the IP limit was about to refuse).
+        """
+        if not self.request_per_ip.allow(client_ip or "unknown"):
+            return False
+        return self.request_per_email.allow(email)
 
     def allow_verify(self, email: str) -> bool:
         return self.verify_per_email.allow(email)

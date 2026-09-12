@@ -1,15 +1,36 @@
 function applyRoRPositioning() {
-  const riskBlock = document.querySelector('.ws-ror');
-  if (riskBlock && riskBlock.dataset.positioned !== 'true') {
-    riskBlock.dataset.positioned = 'true';
-    riskBlock.setAttribute('aria-label', 'Emporion North Star: portfolio survival');
-    riskBlock.innerHTML = `
-      <div class="ws-label">NORTH STAR · RISK OF RUIN</div>
-      <div class="ws-ror-grid">
-        <article><h2>Survive first. Compound second.</h2><p>Emporion treats Risk of Ruin as an independent constraint on every decision, not an afterthought to conviction.</p></article>
-        <article><h3>Point of difference</h3><p>Research can build conviction. It cannot override portfolio survival.</p></article>
-        <article><h3>Credit</h3><p>Dr. Cooper helped bring the explicit Risk of Ruin discipline to the table.</p></article>
-      </div>`;
+  // The page renders TWO `.ws-ror` blocks: the coordinated-research-architecture
+  // section and, below it, the portfolio-survival section. A bare
+  // querySelector('.ws-ror') took the first, so this enhancement replaced the
+  // architecture copy with a second copy of the survival copy — the architecture
+  // block disappeared from the page and the real survival block was left alone.
+  // Target the survival block explicitly.
+  const riskBlock = [...document.querySelectorAll('.ws-ror')].find(
+    (node) => node.dataset.riskOfRuin === 'true' || /RISK OF RUIN/i.test(node.textContent || '')
+  );
+  if (!riskBlock) return;
+  if (riskBlock.dataset.positioned === 'true') return;
+  riskBlock.dataset.positioned = 'true';
+  riskBlock.setAttribute('aria-label', 'Emporion North Star: portfolio survival');
+
+  // Additive, never a replacement. This block already carries language the short
+  // north-star copy below does not — that the reference RoR model is unvalidated
+  // and that human review happens only after the risk state is known. Replacing
+  // the block's markup deleted that copy, so only the two genuinely new pieces
+  // (the north-star label and the credit line) are inserted.
+  if (!riskBlock.querySelector('[data-rr-northstar]')) {
+    riskBlock.insertAdjacentHTML(
+      'afterbegin',
+      '<div class="ws-label" data-rr-northstar>NORTH STAR · RISK OF RUIN</div>'
+    );
+  }
+  if (!riskBlock.querySelector('[data-rr-credit]')) {
+    riskBlock.insertAdjacentHTML(
+      'beforeend',
+      '<p data-rr-credit style="margin:0;padding:14px 20px 0;font-size:12px;line-height:1.6;color:#596871">' +
+        '<strong>Credit</strong> — Dr. Cooper helped bring the explicit Risk of Ruin discipline to the table.' +
+        '</p>'
+    );
   }
 
   // Idempotent on purpose: the MutationObserver below is registered on
