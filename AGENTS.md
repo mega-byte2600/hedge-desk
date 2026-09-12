@@ -30,6 +30,25 @@
   be tied to an exact source and must not be converted into a formula by an
   agent's interpretation alone.
 
+## Reference material and licensed content
+
+Agents are permitted, and expected, to study reference material — licensing exam
+manuals, vendor documentation, rulebooks, textbooks — and to let it inform design and
+engineering decisions. A rule, a domain outline, or a concept is knowledge; applying it
+is the job.
+
+The constraint is on redistribution, not on learning:
+
+- Do **not** commit licensed or restricted material to this repository, in whole or in
+  part. This project is public open source, so everything committed is published.
+- Do **not** reproduce passages from licensed material in commits, PRs, issues, comments,
+  or documentation. Cite public sources instead — rule numbers, statute sections, and
+  published exam-domain structures.
+- Derived notes in an agent's own words **are** permitted and belong in `docs/`, with the
+  public sources named.
+- The same rule covers brokerage credentials, account data, licensed market-data
+  payloads, and third-party study material purchased under a personal licence.
+
 ## Method Stack
 
 - Series 7 / FINRA / SEC: compliance and product-rule layer.
