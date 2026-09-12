@@ -39,11 +39,26 @@ hedge-desk → Logs → look for `[membership-mail]`). The GP console appears on
 | 8 | Invite an LP by email | A row is created with the LP role; the 99-seat cap is enforced server-side. |
 | 9 | `/api/report` and `/api/tier` in a second tab (optional, for the technical audience) | Live JSON: the engine output and the caller's data entitlement. |
 
-## 2. What to say if asked "is this real?"
+## 2. Verify the console before you demo
+
+```bash
+python3 scripts/build_web.py                 # build dist/
+bash scripts/demo.sh                         # serve (default :8765)
+node scripts/smoke_console.mjs http://127.0.0.1:8765
+```
+
+The smoke test walks every tab (forward, reverse, and repeated toggling of
+Yellow Sheets / Resources / Multi-agent desk / About) in a real browser and fails
+if any route freezes the page or renders empty. It is the check that catches the
+freeze class this console has shipped twice — see `tests/test_web_page_guards.py`
+for the source-level guards. Playwright is optional: the script prints SKIP and
+exits 0 when it is not installed.
+
+## 3. What to say if asked "is this real?"
 
 - **Real:** the engine runs on demand (measured ~0.01s) and recomputes on load; the
   auth, tiers, invites, rate limits, and read-only broker scaffold are all implemented
-  and covered by **531 passing tests**; CI is green (Python 3.9/3.11/3.13, scan, CodeQL,
+  and covered by **557 passing tests**; CI is green (Python 3.9/3.11/3.13, scan, CodeQL,
   Golden Master, load/capacity).
 - **Not real (by design, say so plainly):** no orders are placed. Broker access is
   **read-only**. Market data is synthetic fixtures. There is no live P&L. Real LP
@@ -52,14 +67,16 @@ hedge-desk → Logs → look for `[membership-mail]`). The GP console appears on
 Saying the limits out loud reads as strength here — it is the same reason the desk's
 risk gate is credible.
 
-## 3. If something breaks mid-demo
+## 4. If something breaks mid-demo
 
-- **Nothing responds — no modal, no clicks (fixed in PR #43):** this was the page
-  freezing itself. `applyRoRPositioning` wrote innerHTML from inside the
-  MutationObserver watching `main` with `subtree:true`, so it re-triggered itself in
-  an endless microtask loop and locked the main thread ~1s after load. Guarded and
-  rAF-deferred now; if it ever recurs, reload and check the console for a runaway
-  observer callback.
+- **Nothing responds — no modal, no clicks:** the page has frozen its own main
+  thread. This happened twice, always the same way: a page enhancer wrote into the
+  subtree its own `MutationObserver` was watching, so the callback re-triggered
+  itself and the microtask queue never drained. `web/ror-positioning.js` did it on
+  every page load (~1s in), and `web/multi-agent-desk.mjs` did it on navigating to
+  the Multi-agent desk tab. Both are guarded and rAF-deferred now. If it recurs,
+  run `node scripts/smoke_console.mjs http://127.0.0.1:8765` to find the route, then
+  check that route's enhancer for an unguarded write.
 - **Page hangs on first load:** Render free sleeps after ~15 min idle. Wait ~30s, or
   refresh — the console now shows "Waking the research desk…" instead of hanging.
 - **No social buttons:** expected unless Supabase is configured. Email-OTP is the
@@ -68,7 +85,7 @@ risk gate is credible.
   degrades cleanly; nothing else is affected.
 - **Fall back:** `bash scripts/demo.sh` locally — independent of Render entirely.
 
-## 4. After the demo (the real gates)
+## 5. After the demo (the real gates)
 
 - ~~Merge PR #42.~~ Done; `main` is live (PR #43 carries the console fixes).
 - Supabase project + `supabase/schema.sql`, then set `SUPABASE_URL`,
