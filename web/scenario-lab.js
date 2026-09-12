@@ -1,4 +1,4 @@
-import { escapeHTML as e, human, statusClass, scenarioRows } from './core.mjs';
+import { escapeHTML as e, human, statusClass, scenarioRows, reasonList } from './core.mjs';
 
 let envelope = null;
 let loading = null;
@@ -12,11 +12,20 @@ const scalarEntries = scenario => Object.entries(scenario).filter(([key, value])
 async function getEnvelope() {
   if (envelope) return envelope;
   if (!loading) {
-    loading = fetch('./report.json', { cache: 'no-store' })
+    // Prefer the live endpoint: the scenario table is built from app.js's live
+    // report, so reading the committed report.json snapshot here left rows whose
+    // scenario_id exists live but not in the snapshot unable to resolve, which made
+    // those clicks silently do nothing. report.json stays as the fallback so the
+    // page still works from a static deploy.
+    loading = fetch('./api/report', { cache: 'no-store' })
       .then(response => {
-        if (!response.ok) throw new Error('Scenario snapshot unavailable.');
+        if (!response.ok) throw new Error('live report unavailable');
         return response.json();
       })
+      .catch(() => fetch('./report.json', { cache: 'no-store' }).then(response => {
+        if (!response.ok) throw new Error('Scenario snapshot unavailable.');
+        return response.json();
+      }))
       .then(candidate => {
         if (candidate.schema_version !== 'desk-console-1' ||
             candidate.report?.environment !== 'paper' ||
@@ -61,7 +70,9 @@ async function enhanceScenarioRoute() {
 
 function scenarioDetail(scenario) {
   const outcome = scenario.disposition || scenario.lifecycle_action || 'REFERENCE_RESULT';
-  const reasons = scenario.reason_codes || [];
+  // scenarioRows normalises this, but this renderer can be handed a scenario from
+  // elsewhere, so coerce defensively rather than throwing on a non-array.
+  const reasons = reasonList(scenario.reason_codes);
   const metrics = scalarEntries(scenario).slice(0, 8);
   const metricRows = metrics.length
     ? metrics.map(([key, value]) => `<div class="keyvalue"><span>${e(human(key))}</span><strong>${e(value)}</strong></div>`).join('')
@@ -80,20 +91,26 @@ function scenarioDetail(scenario) {
 document.addEventListener('click', async event => {
   const button = event.target.closest('button[data-scenario]');
   if (!button || location.hash !== '#scenarios') return;
-  event.preventDefault();
-  event.stopImmediatePropagation();
+  // Resolve BEFORE suppressing anything. This listener captures, and
+  // stopImmediatePropagation() prevents app.js's own scenario handler (which reads
+  // the live report) from running. Resolving first means that when this module
+  // cannot serve the click, the event is left alone and the live handler opens the
+  // dialog instead of the user getting nothing at all.
+  let scenario = null;
   try {
     const data = await getEnvelope();
-    const scenario = scenarioRows(data.report).find(row => row.scenario_id === button.dataset.scenario);
-    if (!scenario) return;
-    const detail = document.querySelector('#detail');
-    const content = document.querySelector('#detail-content');
-    if (!detail || !content) return;
-    content.innerHTML = scenarioDetail(scenario);
-    detail.showModal();
+    scenario = scenarioRows(data.report).find(row => row.scenario_id === button.dataset.scenario);
   } catch {
-    // Do not manufacture scenario evidence when the published snapshot cannot be loaded.
+    scenario = null;
   }
+  if (!scenario) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const detail = document.querySelector('#detail');
+  const content = document.querySelector('#detail-content');
+  if (!detail || !content) return;
+  content.innerHTML = scenarioDetail(scenario);
+  detail.showModal();
 }, true);
 
 window.addEventListener('hashchange', () => queueMicrotask(enhanceScenarioRoute));
