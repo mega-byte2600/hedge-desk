@@ -180,6 +180,37 @@ async function checkRoRBlocks(page) {
   return true;
 }
 
+// A desk must be openable from the Research desks tab.
+//
+// That tab hides app.js's own desk cards (display:none) and renders a substitute
+// from professional.js. The substitute was inert, so the desk detail dialog and
+// the "Write Yellow Sheet" flow inside it were unreachable from the tab that
+// lists the desks.
+async function checkDeskOpensFromDesksTab(page) {
+  console.log('  check: a desk opens from the Research desks tab');
+  await page.click('[data-nav="desks"]', { timeout: 5000 });
+  await sleep(2200);
+  const wiredCount = await page.$$eval('#main .ws-desk-openable', (n) => n.length).catch(() => 0);
+  const opener = await page.$('#main .ws-desk-openable');
+  if (!opener) {
+    console.error('    no desk surface is clickable on the desks tab');
+    return false;
+  }
+  await opener.click();
+  await sleep(1300);
+  const opened = await page.evaluate(() => {
+    const d = document.getElementById('detail');
+    return { open: !!d && d.open, len: (document.getElementById('detail-content') || {}).textContent?.length || 0 };
+  });
+  await page.evaluate(() => { const d = document.getElementById('detail'); if (d && d.open) d.close(); });
+  if (!opened.open || opened.len < 200) {
+    console.error(`    desk dialog did not open (open=${opened.open}, chars=${opened.len})`);
+    return false;
+  }
+  console.log(`    ${wiredCount} desk surfaces clickable; dialog opened (${opened.len} chars)`);
+  return true;
+}
+
 (async () => {
   console.log(`console smoke test -> ${BASE}`);
   browser = await playwright.chromium.launch({ args: ['--disable-dev-shm-usage', '--no-sandbox'] });
@@ -241,10 +272,17 @@ async function checkRoRBlocks(page) {
     process.exit(4);
   }
 
+  const deskOk = await checkDeskOpensFromDesksTab(page);
+  if (!deskOk) {
+    console.error('FAIL: a desk cannot be opened from the Research desks tab.');
+    try { await browser.close(); } catch (e) {}
+    process.exit(5);
+  }
+
   try { await browser.close(); } catch (e) {}
   if (misses) {
     console.error(`FAIL: ${misses} route(s) did not render their content.`);
     process.exit(2);
   }
-  console.log(`PASS: ${steps} route visits, all responsive with content; Yellow Sheet fields persist; RoR blocks intact.`);
+  console.log(`PASS: ${steps} route visits responsive with content; Yellow Sheet fields persist; RoR blocks intact; desk opens from the desks tab.`);
 })().catch((e) => { console.error('FAILED: ' + e.message); process.exit(3); });

@@ -181,5 +181,35 @@ class YellowSheetSaveTests(unittest.TestCase):
         )
 
 
+class DeskAccessTests(unittest.TestCase):
+    """The Research desks tab must keep a way to open a desk.
+
+    professional.js hides app.js's own desk cards on that route
+    (``body[data-route='desks'] #main>.cards{display:none}``) and substitutes its
+    own markup. The substitute was inert, so the only control that opens a desk's
+    detail dialog — and with it the "Write Yellow Sheet" flow — was the hidden one,
+    leaving a primary surface unreachable from one of the eight tabs.
+    """
+
+    def test_hidden_cards_have_a_wired_substitute(self):
+        src = (WEB / "professional.js").read_text(encoding="utf-8")
+        self.assertIn(
+            "body[data-route='desks'] #main>.cards{display:none}",
+            src,
+            "if this override is removed, revisit the wiring below",
+        )
+        self.assertIn(
+            "wireDeskRows",
+            src,
+            "the substitute for the hidden desk cards must be wired to open a desk",
+        )
+        self.assertIn(
+            "wireDeskRows();",
+            src,
+            "renderContext must call the wiring on every render",
+        )
+        self.assertIn("data-desk", src, "the wiring targets app.js's real desk buttons")
+
+
 if __name__ == "__main__":
     unittest.main()
