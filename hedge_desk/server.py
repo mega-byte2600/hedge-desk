@@ -116,16 +116,25 @@ def _etag_for(target):
 
 
 def _cached(key, builder):
+    """Serve a built value from a short-lived cache.
+
+    The builder runs *outside* the lock. It used to run inside, so one slow build
+    serialised every other endpoint: ``_cached("supabase-status", ...)`` does a
+    urlopen with a 5s timeout on the health path that Render polls, and while it
+    was in flight a request for the engine-backed report or risk dashboard blocked
+    behind it. A concurrent miss may now build twice, which is harmless for these
+    idempotent builders and far cheaper than a cross-endpoint stall.
+    """
     if API_CACHE_SECONDS <= 0:
         return builder()
-    now = monotonic()
     with _cache_lock:
         entry = _api_cache.get(key)
-        if entry and entry[0] > now:
+        if entry and entry[0] > monotonic():
             return entry[1]
-        value = builder()
-        _api_cache[key] = (now + API_CACHE_SECONDS, value)
-        return value
+    value = builder()
+    with _cache_lock:
+        _api_cache[key] = (monotonic() + API_CACHE_SECONDS, value)
+    return value
 
 
 def _record_request(elapsed, status):
@@ -203,6 +212,14 @@ def _dispatch(environ, start_response):
     if WEB.resolve() not in target.parents and target != WEB.resolve():
         return _json(start_response, {"error": "not_found"}, "404 Not Found")
     if not target.is_file():
+        # The console is a single-page app, so an extension-less path falls back to
+        # the shell for deep links. Anything else is a real miss: an unknown
+        # /api/* route or a missing asset must be a JSON 404. Previously every miss
+        # returned the HTML shell with 200, so a client's fetch('/api/typo') got
+        # HTML that it then tried to parse as JSON, and a mistyped route looked
+        # like it had succeeded.
+        if path.startswith("/api/") or Path(relative).suffix:
+            return _json(start_response, {"error": "not_found", "path": path}, "404 Not Found")
         target = WEB / "index.html"
     if not target.is_file():
         return _json(start_response, {"error": "web_assets_missing"}, "503 Service Unavailable")

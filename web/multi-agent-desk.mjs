@@ -197,10 +197,19 @@ if (isBrowser) {
   });
 }
 
+let _lastTick = '';
+
 function tickCountdown() {
   if (!isBrowser) return;
+  // Only while the desk view is on screen. The stat node lives inside #main, so
+  // writing it fires every subtree observer on the page; ticking on every route
+  // meant a full enhancement cascade once a second, forever.
+  if (location.hash !== '#desk') return;
   const node = document.querySelector('.stat .mono');
   if (!node || !_timelineCache) return;
   const cd = countdown(_timelineCache.target_live);
-  node.textContent = `${cd.d}d ${cd.h}h ${cd.m}m ${cd.s}s`;
+  const next = `${cd.d}d ${cd.h}h ${cd.m}m ${cd.s}s`;
+  if (next === _lastTick) return;
+  node.textContent = next;
+  _lastTick = next;
 }

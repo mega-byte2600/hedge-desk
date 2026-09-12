@@ -31,7 +31,12 @@
     stats.insertAdjacentHTML('beforebegin', markup);
   }
 
-  const observer = new MutationObserver(enhanceCandidates);
+  // Deferred, like the other page enhancers. enhanceCandidates writes into the
+  // subtree this observer watches, so a synchronous invocation terminates only
+  // because the presence guard happens to hold after the write — one partial
+  // write and the microtask queue never drains (the freeze this codebase has
+  // already shipped twice).
+  const observer = new MutationObserver(() => requestAnimationFrame(enhanceCandidates));
   observer.observe(main, { childList: true, subtree: true });
   window.addEventListener('hashchange', enhanceCandidates);
   enhanceCandidates();

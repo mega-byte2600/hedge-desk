@@ -155,3 +155,71 @@ class ServerTests(unittest.TestCase):
             status, payload = self.request(path)
             self.assertEqual(status, '200 OK', path)
             self.assertIsInstance(payload, dict)
+
+    def raw(self, path):
+        """Request without assuming a JSON body (the shell is HTML)."""
+        from hedge_desk.server import application
+        captured = {}
+        def start(status, headers):
+            captured['status'] = status
+        body = b''.join(application({'PATH_INFO': path}, start))
+        return captured['status'], body
+
+    def test_unknown_api_paths_return_json_not_html(self):
+        # Every miss used to fall back to the SPA shell with 200, so a client's
+        # fetch('/api/typo') received HTML that it then tried to parse as JSON,
+        # and a mistyped API route looked like it had succeeded.
+        for path in ('/api/does-not-exist', '/api/candidatesX'):
+            status, body = self.raw(path)
+            self.assertEqual(status, '404 Not Found', path)
+            self.assertEqual(json.loads(body).get('error'), 'not_found', path)
+
+    def test_missing_asset_returns_404_not_the_shell(self):
+        status, body = self.raw('/nope.html')
+        self.assertEqual(status, '404 Not Found')
+        self.assertEqual(json.loads(body).get('error'), 'not_found')
+
+    def test_extensionless_deep_link_still_serves_the_shell(self):
+        from hedge_desk.server import WEB
+        if not (WEB / "index.html").is_file():
+            # CI runs the suite without building the bundle, so there is no shell
+            # for the SPA fallback to return. The routing rule is what this test
+            # covers; the 404 cases above do not depend on the bundle.
+            self.skipTest("web bundle not built; no shell to serve")
+        status, body = self.raw('/some/deep/link')
+        self.assertEqual(status, '200 OK')
+        self.assertIn(b'<!doctype html', body[:200])
+
+    def test_a_second_cache_key_is_not_blocked_by_a_slow_build(self):
+        """The builder must run outside the cache lock.
+
+        _cached() called builder() while holding the lock, so the supabase-status
+        probe (a urlopen with a 5s timeout, on the health path Render polls)
+        serialised every other endpoint, including the engine-backed report.
+        """
+        import threading
+        import time
+        from hedge_desk import server as srv
+
+        srv._api_cache.clear()
+        started = threading.Event()
+        release = threading.Event()
+
+        def slow_build():
+            started.set()
+            release.wait(5)
+            return 'slow'
+
+        worker = threading.Thread(target=lambda: srv._cached('test-slow-key', slow_build))
+        worker.start()
+        try:
+            self.assertTrue(started.wait(2), 'the slow builder never started')
+            began = time.monotonic()
+            value = srv._cached('test-fast-key', lambda: 'fast')
+            elapsed = time.monotonic() - began
+            self.assertEqual(value, 'fast')
+            self.assertLess(elapsed, 0.5, 'an unrelated cache key blocked behind a slow build')
+        finally:
+            release.set()
+            worker.join(5)
+            srv._api_cache.clear()

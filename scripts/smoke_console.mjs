@@ -153,6 +153,33 @@ async function checkYellowSheetSave(page) {
   return true;
 }
 
+// The RoR enhancement must enrich the survival block without destroying the
+// coordinated-research architecture block above it, and without deleting the
+// compliance copy that block carries.
+async function checkRoRBlocks(page) {
+  console.log('  check: RoR enhancement targets the survival block');
+  await page.click('[data-nav="overview"]', { timeout: 5000 });
+  await sleep(1800);
+  const problems = await page.evaluate(() => {
+    const blocks = [...document.querySelectorAll('.ws-ror')];
+    const out = [];
+    const arch = blocks.find((b) => /COORDINATED RESEARCH SYSTEM/i.test(b.textContent || ''));
+    const ror = blocks.find((b) => b.dataset.riskOfRuin === 'true');
+    if (blocks.length !== 2) out.push(`expected 2 .ws-ror blocks, found ${blocks.length}`);
+    if (!arch) out.push('the coordinated-research architecture block was replaced or lost');
+    if (!ror) out.push('the portfolio-survival block is missing');
+    if (ror && !ror.querySelector('[data-rr-northstar]')) out.push('north-star label missing on the survival block');
+    if (ror && !/unvalidated/i.test(ror.textContent || '')) out.push('the survival block lost its compliance copy');
+    return out;
+  });
+  if (problems.length) {
+    console.error(`    ${problems.join('; ')}`);
+    return false;
+  }
+  console.log('    architecture block intact, survival block enriched');
+  return true;
+}
+
 (async () => {
   console.log(`console smoke test -> ${BASE}`);
   browser = await playwright.chromium.launch({ args: ['--disable-dev-shm-usage', '--no-sandbox'] });
@@ -207,10 +234,17 @@ async function checkYellowSheetSave(page) {
     process.exit(3);
   }
 
+  const rorOk = await checkRoRBlocks(page);
+  if (!rorOk) {
+    console.error('FAIL: the Risk-of-Ruin enhancement damaged the overview blocks.');
+    try { await browser.close(); } catch (e) {}
+    process.exit(4);
+  }
+
   try { await browser.close(); } catch (e) {}
   if (misses) {
     console.error(`FAIL: ${misses} route(s) did not render their content.`);
     process.exit(2);
   }
-  console.log(`PASS: ${steps} route visits, all responsive with content; Yellow Sheet fields persist.`);
+  console.log(`PASS: ${steps} route visits, all responsive with content; Yellow Sheet fields persist; RoR blocks intact.`);
 })().catch((e) => { console.error('FAILED: ' + e.message); process.exit(3); });

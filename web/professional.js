@@ -1,6 +1,5 @@
-function currentRoute() {
-  return (location.hash || '#overview').slice(1).split('?')[0] || 'overview';
-}
+
+import { currentRoute } from './core.mjs';
 
 const deskMethods = [
   ['Overnight Premium', 'Defined-risk premium after liquidity, volatility, event, and executable-spread checks.', 'DATA INTEGRATION'],
@@ -76,7 +75,7 @@ function overviewBlock() {
           <article><h3>Automation is a path, not a claim.</h3><p>The architecture is intended to support user-controlled data, model, broker, and execution integrations over time. End-to-end automated trading is not live in the current MVP.</p></article>
         </div>
       </div>
-      <div class="ws-ror" aria-label="Risk of Ruin and portfolio survival">
+      <div class="ws-ror" data-risk-of-ruin="true" aria-label="Risk of Ruin and portfolio survival">
         <div class="ws-label">POINT OF DIFFERENCE · RISK OF RUIN / PORTFOLIO SURVIVAL</div>
         <div class="ws-ror-grid">
           <article><h2>Survival before conviction. Alpha is pursued. Survival comes first.</h2><p>Emporion separates the search for opportunity from permission to take risk. The research thesis cannot override the risk gate; conviction only advances after the independent portfolio-survival state is known. That separation shapes the final decision.</p></article>
@@ -183,10 +182,14 @@ window.addEventListener('DOMContentLoaded', () => {
   applyBrand();
   const main = document.querySelector('main');
   if (main) {
-    const observer = new MutationObserver(() => {
+    // Deferred: applyBrand runs on every mutation of main and rewrites the
+    // footer, sidebar and sidebar copy. That is safe today only because those
+    // nodes are siblings of main rather than descendants; observing a broader
+    // scope would make it the third instance of this codebase's freeze bug.
+    const observer = new MutationObserver(() => requestAnimationFrame(() => {
       applyBrand();
-      if (!document.getElementById('wall-street-context')) requestAnimationFrame(renderContext);
-    });
+      if (!document.getElementById('wall-street-context')) renderContext();
+    }));
     observer.observe(main, {childList:true});
   }
   renderContext();

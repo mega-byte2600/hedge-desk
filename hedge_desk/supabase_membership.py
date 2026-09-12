@@ -137,22 +137,43 @@ class SupabaseMembershipStore:
         }
 
     def upsert_guest(self, email: str) -> dict:
+        """Create (or refresh the expiry of) a guest member.
+
+        Must never downgrade an existing role. The SQLite store's
+        ``ON CONFLICT(email) DO UPDATE SET guest_expires_at`` touches only the
+        expiry column, but PostgREST's ``resolution=merge-duplicates`` writes every
+        column present in the payload. Sending ``role=GUEST`` therefore reset an
+        existing LP or MEMBER to GUEST on every sign-in: it stripped investor
+        rights, dropped the member out of ``lp_count()`` (so the 99-seat cap became
+        unenforceable, because ``promote_to_lp``/``issue_lp_invite`` check a count
+        that had just read 0), and rewrote ``created_at`` so the roster reordered.
+        Mirrored here as: insert a new row, otherwise patch the expiry only.
+        """
         email = email.lower()
         now = self._now()
         expires = now + timedelta(days=GUEST_ACCESS_DAYS)
-        self._call(
-            "POST",
-            "members",
-            body={
-                "email": email,
-                "role": ROLE_GUEST,
-                "created_at": utc_iso(now),
-                "guest_expires_at": utc_iso(expires),
-                "subscribed": False,
-                "investor": False,
-            },
-            prefer="resolution=merge-duplicates",
-        )
+        if self.get_member(email) is None:
+            self._call(
+                "POST",
+                "members",
+                body={
+                    "email": email,
+                    "role": ROLE_GUEST,
+                    "created_at": utc_iso(now),
+                    "guest_expires_at": utc_iso(expires),
+                    "subscribed": False,
+                    "investor": False,
+                },
+            )
+        else:
+            # Same single-column update the SQLite store performs. No role,
+            # subscribed, investor or created_at in the payload.
+            self._call(
+                "PATCH",
+                "members",
+                f"email=eq.{email}",
+                body={"guest_expires_at": utc_iso(expires)},
+            )
         member = self.get_member(email)
         assert member is not None
         return member
@@ -163,23 +184,34 @@ class SupabaseMembershipStore:
         Mirrors MembershipStore.ensure_gp: the GP is configured by GP_EMAIL,
         not by a stored invite, so the row is written here. Without it the GP
         signs in as GUEST and the console's GP surfaces never render.
+
+        The row is inserted through an explicit GET/POST/PATCH split rather than a
+        merge-duplicates upsert: ``members.created_at`` is NOT NULL with no default,
+        so an upsert payload that omitted it failed with a 400 on every new row and
+        the operator's row was never created at all.
         """
         email = (email or "").strip().lower()
         if not email:
             return None
         existing = self.get_member(email)
-        if existing is not None and existing.get("role") == ROLE_GP:
-            return existing
-        self._call(
-            "POST",
-            "members",
-            body={
-                "email": email,
-                "role": ROLE_GP,
-                "guest_expires_at": None,
-            },
-            prefer="resolution=merge-duplicates",
-        )
+        if existing is None:
+            self._call(
+                "POST",
+                "members",
+                body={
+                    "email": email,
+                    "role": ROLE_GP,
+                    "created_at": utc_iso(self._now()),
+                    "guest_expires_at": None,
+                },
+            )
+        elif existing.get("role") != ROLE_GP:
+            self._call(
+                "PATCH",
+                "members",
+                f"email=eq.{email}",
+                body={"role": ROLE_GP, "guest_expires_at": None},
+            )
         return self.get_member(email)
 
     def set_subscribed(self, email: str) -> dict:
