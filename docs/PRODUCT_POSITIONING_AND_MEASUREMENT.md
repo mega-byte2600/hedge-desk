@@ -1,5 +1,31 @@
 # Emporion Product Positioning and Measurement
 
+## Positioning in the GP's words
+
+The desk-level framing, recorded as the GP stated it:
+
+> "If you were an institutional trade-desk manager and started an app that let retail
+> investors have what is usually behind doors in back office, etc — Emporion allows you
+> to have a compass to navigate the seas of the market and make it to shore. That means
+> in manual mode you can use our multilayered AI to have your watchlist 'activated' like
+> that of a professional money manager's portfolio."
+
+Two mechanisms sit behind that language, and both are already implemented:
+
+- **The compass, not the boat.** Emporion does not take the wheel. It plots: candidate
+  intake, specialized research desks, scenario stress, Yellow Sheets with an explicit
+  invalidation, and a deterministic survival check before any decision advances. The
+  navigation aid is the product; the voyage remains the user's.
+- **Activating a watchlist.** In **manual mode** the client keeps full manual control and
+  the layered research does the work a professional desk does around a position —
+  qualifying candidates, gathering and challenging evidence, running the scenario set,
+  and stating what would invalidate the thesis — with the user holding the decision and
+  the execution. The **full-service** mode automates the same suite at a higher price.
+
+Claim discipline (see `docs/EMPORION_MARKETING_CLAIM_AUDIT.md`): this is a statement of
+capability and architecture, not of performance. Automated execution and full autonomy
+are not part of the current MVP, and nothing here is investment advice.
+
 ## Product origin
 
 Emporion is the current implementation of a personal investment-research system that has been developed iteratively since 1998. The product should communicate that history as continuity of research practice, not as a claim of investment performance.
