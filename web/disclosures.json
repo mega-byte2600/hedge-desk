@@ -1,0 +1,58 @@
+{
+  "schema_version": "emporion-disclosures-1",
+  "disclosure_version": "2026.09-a",
+  "effective": "2026-09-11",
+  "review_note": "Reviewed whenever the public surface changes. Language is capability-framed and scanned by tests/test_public_claims.py.",
+  "disclosures": [
+    {
+      "id": "paper-only",
+      "title": "Paper only. No orders are placed.",
+      "text": "Emporion is a research and decision-support workspace. It does not place orders, does not route orders, and does not execute trades. Live orders are disabled in the shipped configuration and the console reports this openly."
+    },
+    {
+      "id": "synthetic-fixtures",
+      "title": "The public console runs on synthetic research fixtures.",
+      "text": "Report inputs are synthetic fixtures, not current market data. No current market opportunity is claimed and no live market feed is connected. Method-qualified picks read zero until real, licensed evidence is connected."
+    },
+    {
+      "id": "not-advice",
+      "title": "Research output is not investment advice.",
+      "text": "Nothing produced here is investment advice, a recommendation, an offer, or a solicitation. Research supports a decision; it does not make one. Users remain responsible for their own decisions, accounts, data and implementation choices."
+    },
+    {
+      "id": "risk-of-ruin-unvalidated",
+      "title": "The reference Risk of Ruin model is unvalidated.",
+      "text": "The risk layer surfaces an existing deterministic engine output and blocks progression when a gate fails. Its reference Risk of Ruin model is marked unvalidated in this MVP. The public console does not calculate, validate, or substitute a Risk of Ruin value. Agents never produce one."
+    },
+    {
+      "id": "no-performance-claim",
+      "title": "No performance record and no expectation of results.",
+      "text": "There is no track record to show, and none is implied. Past or hypothetical results would not indicate future results in any case. The project makes no promise about returns, and no outcome here is a guarantee of any kind."
+    },
+    {
+      "id": "broker-read-only",
+      "title": "Broker access, when enabled, is read-only.",
+      "text": "A member may connect their own brokerage for read-only access to positions and balances. The desk cannot place, modify, or cancel orders through that connection. Broker linking is inert until the deployment is explicitly configured for it."
+    },
+    {
+      "id": "tier-boundaries",
+      "title": "What each access tier may see.",
+      "text": "Guest access is a time-limited test drive over synthetic research only. Subscription members may enable licensed real market data and their own read-only broker connection. Members of the LLC are investors in the entity, are invited by the GP, and are never a paid tier."
+    },
+    {
+      "id": "not-an-offering",
+      "title": "Nothing here is an offer of securities.",
+      "text": "This site is not an offer to sell or a solicitation of an offer to buy any security or interest in any entity. Any investment in the LLC is made only through definitive documents with investors who satisfy the applicable eligibility requirements, and only where permitted by law."
+    },
+    {
+      "id": "no-registration-claimed",
+      "title": "No registration, approval, or endorsement is claimed.",
+      "text": "Emporion is not a broker-dealer, not an investment adviser, and not registered with any regulator, and it does not claim review, approval, insurance, or endorsement by any agency or exchange. Any regulated activity would require the applicable registration and a sponsoring firm."
+    },
+    {
+      "id": "reproducibility",
+      "title": "Decisions retain their inputs.",
+      "text": "Engine decisions carry reason codes and the inputs needed to reproduce them, and membership and approval events are appended to a tamper-evident, hash-chained trail. Records are kept so a decision can be explained after the fact."
+    }
+  ]
+}

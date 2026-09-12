@@ -251,6 +251,21 @@ async function checkDeskOpensFromDesksTab(page) {
     process.exit(4);
   }
 
+  // The disclosures surface is versioned copy on the About tab; assert it renders.
+  await page.goto(`${BASE}/#about`, { waitUntil: 'domcontentloaded' });
+  await sleep(2200);
+  const disc = await page.evaluate(() => {
+    const el = document.getElementById('emporion-disclosures');
+    return { present: !!el, items: el ? el.querySelectorAll('.disclosure-item').length : 0,
+             version: (el ? (el.textContent.match(/VERSION ([0-9.\-a-z]+)/i) || [])[1] : null) };
+  });
+  if (!disc.present || disc.items < 5) {
+    console.error(`FAIL: disclosures did not render (present=${disc.present}, items=${disc.items})`);
+    try { await browser.close(); } catch (e) {}
+    process.exit(6);
+  }
+  console.log(`  check: disclosures render (${disc.items} items, version ${disc.version})`);
+
   const deskOk = await checkDeskOpensFromDesksTab(page);
   if (!deskOk) {
     console.error('FAIL: a desk cannot be opened from the Research desks tab.');

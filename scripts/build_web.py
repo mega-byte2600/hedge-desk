@@ -34,6 +34,8 @@ CONSOLE_ASSETS = (
     "multi-agent-desk.mjs",
     "timeline.json",
     "navigation-stability.js",
+    "disclosures.js",
+    "disclosures.json",
     "emporion-institutional-seal.svg",
     "account.js",
     "report.json",
