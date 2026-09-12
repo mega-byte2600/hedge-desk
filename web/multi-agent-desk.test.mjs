@@ -47,3 +47,21 @@ test('renderSouls emits the team, deployment, and progress sections', () => {
   assert.ok(html.includes('350'));
   assert.ok(!/<img[^>]*onerror/i.test(html), 'no event-handler injection');
 });
+
+test('renderSouls never invents a commit history when the timeline is missing', () => {
+  // The timeline fetch can fail. The panel must not then show a made-up count
+  // under a "Real commit history from the repository" label.
+  for (const missing of [null, undefined]) {
+    const html = renderSouls(missing);
+    assert.ok(!html.includes('Real commit history'), 'must not claim real history without it');
+    assert.ok(html.includes('Commit history unavailable'), 'must say the count is unavailable');
+    assert.ok(!/\b\d{2,}\b/.test(html.replace(/[0-9]+(px|%)/g, '')), 'no invented commit number');
+  }
+});
+
+test('the rendered countdown matches the shape the per-second tick writes', () => {
+  // The stat used to render d/h/m while the tick wrote d/h/m/s, so the value
+  // changed shape under the viewer one second after render.
+  const html = renderSouls({ total_commits: 10, generated_at: new Date().toISOString(), target_live: new Date(Date.now() + 3600000).toISOString() });
+  assert.ok(/\d+d \d+h \d+m \d+s/.test(html), 'countdown must render days/hours/minutes/seconds');
+});

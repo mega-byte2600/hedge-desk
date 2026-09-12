@@ -136,20 +136,32 @@ if (main) observer.observe(main, { childList: true, subtree: true });
 window.addEventListener('hashchange', () => queueMicrotask(enhance));
 queueMicrotask(enhance);
 
-// app.js saves the base research record first. Extend that same record with
-// lifecycle fields without changing the engine or authorization boundary.
+// app.js saves the base research record; extend that same record with the
+// lifecycle fields without touching the engine or authorization boundary.
+//
+// Ordering matters and is easy to get wrong. app.js registers its `document`
+// submit listener first (index.html loads app.js before this module) and saves the
+// record synchronously inside that listener, so by the time this listener runs the
+// note is already stored — this listener is deliberately a bubble-phase listener
+// with no deferral, and it extends the last stored record directly.
+//
+// Two variants that look right and are not:
+//   * deferring with queueMicrotask: a microtask queued in a submit listener drains
+//     at the checkpoint right after that listener returns, i.e. *before* app.js's
+//     bubble listener saves, so the record being extended does not exist yet;
+//   * relying on a note-count delta: this listener reads the count after the base
+//     save, so an "expect exactly one more" guard can never be satisfied.
 document.addEventListener('submit', event => {
   if (event.target?.id !== 'note-form') return;
   const form = event.target;
-  let before = 0;
-  try { before = readNotes(localStorage).length; } catch { return; }
   const values = Object.fromEntries(new FormData(form).entries());
-  queueMicrotask(() => {
-    try {
-      const notes = readNotes(localStorage);
-      if (notes.length !== before + 1) return;
-      const last = notes[notes.length - 1];
-      Object.assign(last, {
+  try {
+    const notes = readNotes(localStorage);
+    const last = notes[notes.length - 1];
+    // The base save must have landed for this submission, and this must be the
+    // first extension of it (the listener is idempotent).
+    if (!last || last.thesis !== values.thesis || last.yellow_sheet_extended) return;
+    Object.assign(last, {
         symbol: String(values.symbol || '').trim().toUpperCase(),
         position: String(values.position || '').trim(),
         horizon: String(values.horizon || '').trim(),
@@ -158,12 +170,12 @@ document.addEventListener('submit', event => {
         entry_execution: String(values.entry_execution || '').trim(),
         exit_execution: String(values.exit_execution || '').trim(),
         why_exit: String(values.why_exit || '').trim(),
-        post_trade_review: String(values.post_trade_review || '').trim()
-      });
-      localStorage.setItem(KEY, JSON.stringify(notes));
-      enhanceSavedNotes();
-    } catch {
-      // Base journal behavior remains authoritative if browser storage is invalid.
-    }
-  });
+        post_trade_review: String(values.post_trade_review || '').trim(),
+        yellow_sheet_extended: true
+    });
+    localStorage.setItem(KEY, JSON.stringify(notes));
+    enhanceSavedNotes();
+  } catch {
+    // Base journal behavior remains authoritative if browser storage is invalid.
+  }
 });

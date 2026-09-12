@@ -97,6 +97,62 @@ async function stackNow(page, client) {
   return frames;
 }
 
+// Interactive check: the Yellow Sheet lifecycle fields must actually persist.
+// app.js saves the base record; yellow-sheet.js extends it with symbol, position,
+// horizon, planned exit, trade status, entry/exit execution, why-exit and
+// post-trade review. A submit-listener ordering bug made that extension a silent
+// no-op — the form collected the fields and threw them away.
+async function checkYellowSheetSave(page) {
+  console.log('  check: Yellow Sheet lifecycle fields persist');
+  await page.click('[data-nav="journal"]', { timeout: 5000 });
+  await sleep(1500);
+
+  const need = ['symbol', 'position', 'horizon', 'planned_exit', 'trade_status', 'why_exit'];
+  const present = await page.evaluate((names) => names.filter((n) => !!document.querySelector(`#note-form [name="${n}"]`)), need);
+  if (present.length !== need.length) {
+    console.error(`    MISSING form fields: ${need.filter((n) => !present.includes(n)).join(', ')}`);
+    return false;
+  }
+
+  await page.fill('#note-form [name="thesis"]', 'Smoke test thesis.');
+  await page.fill('#note-form [name="evidence"]', 'Smoke test evidence.');
+  await page.fill('#note-form [name="invalidation"]', 'Smoke test invalidation.');
+  await page.fill('#note-form [name="symbol"]', 'SMOKE');
+  await page.fill('#note-form [name="position"]', 'defined risk put spread');
+  await page.fill('#note-form [name="horizon"]', '1 to 4 weeks');
+  await page.fill('#note-form [name="planned_exit"]', 'Exit on thesis invalidation or at target.');
+
+  // The trade-log closeout fields live behind a collapsed <details>; a user has to
+  // open it, so the check does too.
+  const closeout = await page.$('#note-form details.ys-closeout');
+  if (!closeout) { console.error('    MISSING the trade-log closeout disclosure'); return false; }
+  await page.click('#note-form details.ys-closeout summary');
+  await sleep(400);
+
+  await page.selectOption('#note-form [name="trade_status"]', 'PAPER_OPEN');
+  await page.fill('#note-form [name="why_exit"]', 'Original plan invalidated.');
+  await page.click('#note-form button[type="submit"]', { timeout: 5000 });
+  await sleep(1500);
+
+  const saved = await page.evaluate(() => {
+    try {
+      const notes = JSON.parse(localStorage.getItem('trade-desk-yellow-sheets-v1') || '[]');
+      return notes[notes.length - 1] || null;
+    } catch (e) { return null; }
+  });
+
+  if (!saved) { console.error('    no note was saved at all'); return false; }
+  const expected = { symbol: 'SMOKE', position: 'defined risk put spread', horizon: '1 to 4 weeks', planned_exit: 'Exit on thesis invalidation or at target.', trade_status: 'PAPER_OPEN', why_exit: 'Original plan invalidated.' };
+  const lost = Object.keys(expected).filter((k) => saved[k] !== expected[k]);
+  if (lost.length) {
+    console.error(`    lifecycle fields dropped on save: ${lost.join(', ')}`);
+    console.error(`    stored keys: ${Object.keys(saved).join(', ')}`);
+    return false;
+  }
+  console.log('    all lifecycle fields persisted');
+  return true;
+}
+
 (async () => {
   console.log(`console smoke test -> ${BASE}`);
   browser = await playwright.chromium.launch({ args: ['--disable-dev-shm-usage', '--no-sandbox'] });
@@ -143,10 +199,18 @@ async function stackNow(page, client) {
   }
 
   clearTimeout(watchdog);
+
+  const sheetOk = await checkYellowSheetSave(page);
+  if (!sheetOk) {
+    console.error('FAIL: the Yellow Sheet did not persist its lifecycle fields.');
+    try { await browser.close(); } catch (e) {}
+    process.exit(3);
+  }
+
   try { await browser.close(); } catch (e) {}
   if (misses) {
     console.error(`FAIL: ${misses} route(s) did not render their content.`);
     process.exit(2);
   }
-  console.log(`PASS: ${steps} route visits, all responsive with content.`);
+  console.log(`PASS: ${steps} route visits, all responsive with content; Yellow Sheet fields persist.`);
 })().catch((e) => { console.error('FAILED: ' + e.message); process.exit(3); });

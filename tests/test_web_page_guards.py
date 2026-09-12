@@ -86,5 +86,68 @@ class MutationObserverGuardTests(unittest.TestCase):
         )
 
 
+class YellowSheetSaveTests(unittest.TestCase):
+    """The Yellow Sheet lifecycle fields are written by a second submit listener.
+
+    app.js registers a `document` submit listener first and saves the note
+    synchronously inside it, so the extension listener must run *after* that save and
+    extend the stored record directly. The shipped version deferred itself with
+    queueMicrotask and then compared note counts: the microtask drains at the
+    checkpoint right after its own listener returns (before app.js saves), and the
+    count guard `notes.length !== before + 1` could never be satisfied because
+    `before` was read after the save. Symbol, position, horizon, planned exit, trade
+    status, entry/exit execution, why-exit and post-trade review were collected and
+    silently discarded.
+    """
+
+    def _listener(self):
+        src = (WEB / "yellow-sheet.js").read_text(encoding="utf-8")
+        marker = "document.addEventListener('submit'"
+        self.assertIn(marker, src)
+        return src[src.index(marker):]
+
+    def test_extension_runs_after_the_base_save(self):
+        listener = self._listener()
+        self.assertNotIn(
+            "{ capture: true }",
+            listener,
+            "the extension must be a bubble-phase listener so app.js's save has already "
+            "run; capturing makes it read the store before the record exists",
+        )
+
+    def test_extension_is_not_deferred(self):
+        listener = self._listener()
+        self.assertNotIn(
+            "queueMicrotask",
+            listener,
+            "a microtask queued here drains before app.js's bubble listener saves, so "
+            "the record being extended does not exist yet",
+        )
+
+    def test_extension_confirms_the_base_save_landed(self):
+        listener = self._listener()
+        self.assertIn(
+            "last.thesis !== values.thesis",
+            listener,
+            "the extension must confirm the just-saved record is the one being extended",
+        )
+        self.assertIn("yellow_sheet_extended", listener, "the extension must be idempotent")
+
+    def test_lifecycle_fields_are_written(self):
+        listener = self._listener()
+        for field in ("symbol", "position", "horizon", "planned_exit", "trade_status",
+                      "entry_execution", "exit_execution", "why_exit", "post_trade_review"):
+            self.assertIn(field, listener, f"{field} must be persisted")
+
+    def test_app_js_still_loads_before_yellow_sheet_js(self):
+        """The extension depends on this order; reordering breaks it."""
+        html = (WEB / "index.html").read_text(encoding="utf-8")
+        self.assertLess(
+            html.index("./app.js"),
+            html.index("./yellow-sheet.js"),
+            "app.js must load before yellow-sheet.js so its save listener runs first",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
