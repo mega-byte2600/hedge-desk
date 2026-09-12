@@ -67,13 +67,10 @@ function progressBar() {
   return '';
 }
 
-export function renderSouls(timeline) {
-  const hasTimeline = !!(timeline && typeof timeline.total_commits === 'number');
-  const total = hasTimeline ? timeline.total_commits : null;
-  const generated = hasTimeline && timeline.generated_at ? new Date(timeline.generated_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '';
-
-  const cd = hasTimeline && timeline.target_live ? countdown(timeline.target_live) : null;
-
+export function renderSouls(_timeline) {
+  // Build telemetry (commit counts, go-live countdown, deployment track) is deliberately
+  // NOT rendered here. This desk page is public product surface; how many commits landed
+  // and when we intend to go live is internal deployment detail and belongs in ops docs.
   const soulCards = SOULS.map(s => `
     <article class="panel soul-card" style="display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
@@ -99,8 +96,6 @@ export function renderSouls(timeline) {
   <div class="stats">
     <div class="stat"><div class="eyebrow">Agents</div><div class="stat-value">6</div><div class="stat-foot">Isolated profiles</div></div>
     <div class="stat"><div class="eyebrow">Model families</div><div class="stat-value">6</div><div class="stat-foot">deepseek · glm · gpt · claude · gemini · qwen</div></div>
-    <div class="stat"><div class="eyebrow">Commits to main</div><div class="stat-value">${total === null ? '—' : total}</div><div class="stat-foot">${total === null ? 'Commit history unavailable' : 'Reproducible history'}</div></div>
-    ${cd ? `<div class="stat"><div class="eyebrow">Countdown to live</div><div class="stat-value mono">${cd.d}d ${cd.h}h ${cd.m}m ${cd.s}s</div><div class="stat-foot">${cd.live ? 'LIVE' : 'target ' + new Date(timeline.target_live).toLocaleDateString()}</div></div>` : ''}
   </div>
 
   <div class="section-gap">
@@ -115,16 +110,6 @@ export function renderSouls(timeline) {
     </section>
   </div>
 
-  <div class="section-gap">
-    <section class="panel"><div class="panel-head"><div><h2>Results &amp; progress toward go-live</h2><p>${generated ? 'Snapshot generated ' + generated + '. Real commit history from the repository.' : 'Commit history could not be loaded, so no count is shown.'}</p></div></div>
-      <div class="panel-body" style="display:grid;gap:14px">
-        <div class="progress-track" style="position:relative;height:10px;background:#e1e6e9;border-radius:5px;overflow:hidden">
-          <div style="position:absolute;inset:0 0 auto auto;width:42%;background:#c7ed8b;border-radius:5px"></div>
-        </div>
-        <div class="small">Reference deployment track — the console is live once the Render service is healthy.</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">${SOULS.map(s => `<span class="tag">${escapeHTML(s.family)} ${escapeHTML(s.role)}</span>`).join('')}</div>
-      </div>
-    </section>
   </div>`;
 }
 
