@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.emporion.nightly</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/astra/workspace/projects/hedge-desk/scripts/run_nightly_batch.sh</string>
+    </array>
+
+    <!-- Fire at 4:30pm EST after the market close. Both US coasts shift DST
+         together, so 16:30 Eastern is always 13:30 local time year-round. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>13</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/Users/astra/workspace/projects/hedge-desk/artifacts/logs/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/astra/workspace/projects/hedge-desk/artifacts/logs/launchd.err.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

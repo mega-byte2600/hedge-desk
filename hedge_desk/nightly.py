@@ -35,6 +35,7 @@ from hedge_desk.cboe_chain import real_chain_income
 from hedge_desk.rates_desk import rates_environment
 from hedge_desk.vix_regime import vix_regime
 from hedge_desk.macro_desk import macro_environment
+from hedge_desk.freshness import freshness_summary
 from hedge_desk.earnings_desk import earnings_desk
 from hedge_desk.execution_gate import (
     KillSwitch,
@@ -137,6 +138,14 @@ def run_nightly(
            if transport else ingest_eod(symbols, cutoff, range_param=FEATURE_YAHOO_RANGE))
     candidates = build_premium_candidates(eod)
 
+    # Data-freshness gate: is the batch running on today's close or the prior
+    # trading day's? (At 4:30pm EST the source may not have published today yet.)
+    last_bar_dates = [
+        str(row["last_day"]) for row in eod.get("source_results", [])
+        if isinstance(row, dict) and row.get("status") == "PASS" and row.get("last_day")
+    ]
+    freshness = freshness_summary(last_bar_dates, cutoff.date())
+
     # Feature plane (Tier 1): deterministic per-symbol technical context.
     days_by_symbol = {}
     for row in eod.get("source_results", []):
@@ -209,6 +218,7 @@ def run_nightly(
         "watchlist": list(symbols),
         "eod_batch_status": eod["batch_status"],
         "eod_manifest_sha256": eod["batch_manifest_sha256"],
+        "data_freshness": freshness,
         "candidate_count": candidates["candidate_count"],
         "symbol_count": candidates["symbol_count"],
         "candidates": candidates["candidates"],
