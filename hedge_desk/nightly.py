@@ -29,6 +29,8 @@ from typing import Dict, Sequence
 from hedge_desk.data.eod_ingest import ingest_eod
 from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.cboe_chain import real_chain_income
+from hedge_desk.rates_desk import rates_environment
+from hedge_desk.earnings_desk import earnings_desk
 
 NIGHTLY_VERSION = "hedge-desk-nightly-2.0.0"
 DEFAULT_WATCHLIST = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA")
@@ -47,13 +49,16 @@ def run_nightly(
     transport=None,
     chain_symbols: Sequence[str] = ("SPY",),
     chain_transport=None,
+    rates_transport=None,
+    earnings_ciks: Sequence[str] = (),
+    earnings_transport=None,
 ) -> Dict[str, object]:
-    """Run the EOD batch + premium candidates + real chain income, write AM report.
+    """Run the EOD batch + premium candidates + real chain income + macro desks.
 
-    Real chain income is added for the symbols in ``chain_symbols`` (default SPY)
-    from Cboe delayed quotes, so the AM report's premium desk shows executable
-    net credit, not just collateral. A chain that fails (no OTM window, network
-    error) is reported as blocked — never fabricated.
+    Real chain income (Cboe) for ``chain_symbols``; a real rates environment
+    (FRED); and real earnings actuals (SEC EDGAR, by 10-digit CIK in
+    ``earnings_ciks``). Anything that fails is reported blocked — never
+    fabricated.
     """
     symbols = tuple(watchlist) if watchlist else _watchlist()
     if not symbols:
@@ -74,6 +79,28 @@ def run_nightly(
         except ValueError as exc:
             chain_results[cs] = {"mode": "BLOCKED", "reason": str(exc)}
 
+    # Real macro: rates environment (FRED).
+    try:
+        rates = (
+            rates_environment(transport=rates_transport)
+            if rates_transport
+            else rates_environment()
+        )
+    except ValueError as exc:
+        rates = {"mode": "BLOCKED", "reason": str(exc)}
+
+    # Real earnings actuals (SEC EDGAR) per supplied CIK.
+    earnings_results = {}
+    for cik in earnings_ciks:
+        try:
+            earnings_results[cik] = (
+                earnings_desk(cik, transport=earnings_transport)
+                if earnings_transport
+                else earnings_desk(cik)
+            )
+        except ValueError as exc:
+            earnings_results[cik] = {"mode": "BLOCKED", "reason": str(exc)}
+
     report = {
         "schema_version": NIGHTLY_VERSION,
         "mode": "REAL_EOD_NIGHTLY",
@@ -86,9 +113,12 @@ def run_nightly(
         "candidates": candidates["candidates"],
         "eod_source_results": eod["source_results"],
         "chain_income": chain_results,
+        "rates_environment": rates,
+        "earnings_actuals": earnings_results,
         "note": (
             "Equity candidates: collateral/margin from real EOD closes. Premium "
             "desk: executable net credit from REAL Cboe delayed option chains. "
+            "Rates: real FRED observations. Earnings: real SEC EDGAR actuals. "
             "No probability or Risk of Ruin. No order placed; no trade "
             "authorized (every candidate trade_authorized=False)."
         ),
