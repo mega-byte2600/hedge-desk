@@ -42,7 +42,7 @@ def _fetch(series: str, start: _dt.date, end: _dt.date, transport) -> Tuple[str,
     fabricated number.
     """
     url = FRED_CSV_URL.format(series=series, start=start.isoformat(), end=end.isoformat())
-    for attempt in range(3):
+    for attempt in range(2):
         status, raw = transport(url)
         if status == 200 and raw:
             rows = _parse_fred_csv(raw)

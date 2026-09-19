@@ -43,7 +43,9 @@ TWO_YEAR = "DGS2"          # 2-year treasury constant maturity, %
 def _default_transport(url: str) -> Tuple[int, bytes]:
     req = urllib.request.Request(url, headers={"User-Agent": "hedge-desk/1.0"})
     try:
-        with urllib.request.urlopen(req, timeout=25) as resp:
+        # FRED normally answers in <2s; a short timeout makes a down/slow FRED
+        # fail fast so the after-close batch is bounded, not stalled for minutes.
+        with urllib.request.urlopen(req, timeout=8) as resp:
             return resp.status, resp.read()
     except urllib.error.HTTPError as exc:
         return exc.code, exc.read()
