@@ -17,6 +17,9 @@ export MEMBERSHIP_DB="${MEMBERSHIP_DB:-$PWD/data/membership.db}"
 echo "== Building the console bundle =="
 python3 scripts/build_web.py
 
+echo "== Regenerating the real AM report (EOD -> overnight -> candidates) =="
+python3 -m hedge_desk.am_demo
+
 echo
 echo "== Emporion desk =="
 echo "   URL:        http://127.0.0.1:${PORT}/"
