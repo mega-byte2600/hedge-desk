@@ -117,7 +117,10 @@ def run_nightly(
     transport=None,
     chain_symbols: Sequence[str] = ("SPY",),
     chain_transport=None,
+    csp_transport=None,
     rates_transport=None,
+    vix_transport=None,
+    macro_transport=None,
     earnings_ciks: Sequence[str] = (),
     earnings_transport=None,
     paper_log_path: Path | str = "artifacts/paper-outcomes.jsonl",
@@ -156,60 +159,73 @@ def run_nightly(
             ]
     features = build_feature_bundle_from_days(days_by_symbol)
 
-    # Cash-secured-put wheel scan (Tier 2) on the liquid names, no fabricated equity.
-    csp_results = {}
-    for cs in symbols:
+    # Independent data fetches run CONCURRENTLY so one slow/flaky source (e.g.
+    # FRED) cannot stall the whole after-close batch. Each is fail-closed: a
+    # ValueError becomes a BLOCKED entry, never a fabricated number. The EOD
+    # ingest above stays sequential because candidates/features depend on it.
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    def _safe(fn, *args, **kwargs):
         try:
-            csp_results[cs] = scan_cash_secured_put(cs, cutoff)
+            return fn(*args, **kwargs)
         except ValueError as exc:
-            csp_results[cs] = {"mode": "BLOCKED", "reason": str(exc)}
+            return {"mode": "BLOCKED", "reason": str(exc)}
 
-    chain_results = {}
-    for cs in chain_symbols:
-        cs = str(cs).upper()
-        try:
-            chain = (
-                real_chain_income(cs, cutoff, transport=chain_transport)
-                if chain_transport
-                else real_chain_income(cs, cutoff)
-            )
-            chain_results[cs] = _annotate_chain_with_gates(chain)
-        except ValueError as exc:
-            chain_results[cs] = {"mode": "BLOCKED", "reason": str(exc)}
+    csp_results: dict = {}
+    chain_results: dict = {}
+    rates: dict = {}
+    vix: dict = {}
+    macro: dict = {}
+    earnings_results: dict = {}
 
-    # Real macro: rates environment (FRED).
-    try:
-        rates = (
-            rates_environment(transport=rates_transport)
-            if rates_transport
-            else rates_environment()
-        )
-    except ValueError as exc:
-        rates = {"mode": "BLOCKED", "reason": str(exc)}
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        futures = {}
+        for cs in symbols:
+            if csp_transport:
+                futures[ex.submit(_safe, scan_cash_secured_put, cs, cutoff,
+                                  csp_transport)] = ("csp", cs)
+            else:
+                futures[ex.submit(_safe, scan_cash_secured_put, cs, cutoff)] = ("csp", cs)
+        for cs in chain_symbols:
+            cs = str(cs).upper()
+            if chain_transport:
+                futures[ex.submit(_safe, real_chain_income, cs, cutoff,
+                                  chain_transport)] = ("chain", cs)
+            else:
+                futures[ex.submit(_safe, real_chain_income, cs, cutoff)] = ("chain", cs)
+        if rates_transport:
+            futures[ex.submit(_safe, rates_environment, transport=rates_transport)] = ("rates", None)
+        else:
+            futures[ex.submit(_safe, rates_environment)] = ("rates", None)
+        if vix_transport:
+            futures[ex.submit(_safe, vix_regime, cutoff, vix_transport)] = ("vix", None)
+        else:
+            futures[ex.submit(_safe, vix_regime, cutoff)] = ("vix", None)
+        if macro_transport:
+            futures[ex.submit(_safe, macro_environment, macro_transport)] = ("macro", None)
+        else:
+            futures[ex.submit(_safe, macro_environment)] = ("macro", None)
+        for cik in earnings_ciks:
+            if earnings_transport:
+                futures[ex.submit(_safe, earnings_desk, cik, earnings_transport)] = ("earnings", cik)
+            else:
+                futures[ex.submit(_safe, earnings_desk, cik)] = ("earnings", cik)
 
-    # Real VIX regime (premium-timing context) from the public chart endpoint.
-    try:
-        vix = vix_regime(cutoff)
-    except ValueError as exc:
-        vix = {"mode": "BLOCKED", "reason": str(exc)}
-
-    # Real macro desk (inflation, unemployment, fuller curve) from FRED.
-    try:
-        macro = macro_environment()
-    except ValueError as exc:
-        macro = {"mode": "BLOCKED", "reason": str(exc)}
-
-    # Real earnings actuals (SEC EDGAR) per supplied CIK.
-    earnings_results = {}
-    for cik in earnings_ciks:
-        try:
-            earnings_results[cik] = (
-                earnings_desk(cik, transport=earnings_transport)
-                if earnings_transport
-                else earnings_desk(cik)
-            )
-        except ValueError as exc:
-            earnings_results[cik] = {"mode": "BLOCKED", "reason": str(exc)}
+        for fut in as_completed(futures):
+            kind, key = futures[fut]
+            res = fut.result()
+            if kind == "csp":
+                csp_results[key] = res
+            elif kind == "chain":
+                chain_results[key] = _annotate_chain_with_gates(res)
+            elif kind == "rates":
+                rates = res
+            elif kind == "vix":
+                vix = res
+            elif kind == "macro":
+                macro = res
+            elif kind == "earnings":
+                earnings_results[key] = res
 
     report = {
         "schema_version": NIGHTLY_VERSION,
