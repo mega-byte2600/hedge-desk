@@ -36,6 +36,7 @@ def _yesno(prompt: str, default: bool = False) -> bool:
 def run(env_file: str | None = None, write: bool = True) -> dict:
     path = Path((env_file or DEFAULT_ENV_FILE)).expanduser()
     path.parent.mkdir(parents=True, exist_ok=True)
+    os.chmod(path.parent, 0o700)  # secrets dir not world/group readable
 
     existing = load_env(path)
     if existing:

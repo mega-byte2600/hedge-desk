@@ -104,6 +104,30 @@ def load_env(path: Path) -> Dict[str, str]:
     return _read_env_file(path)
 
 
+def _state_file(env_file: Path) -> Path:
+    return env_file.parent / ".schwab_state"
+
+
+def _save_state(env_file: Path, state: str) -> None:
+    """Persist the CSRF state until the exchange completes (0600, single value)."""
+    sf = _state_file(env_file)
+    sf.write_text(state, encoding="utf-8")
+    os.chmod(sf, 0o600)
+
+
+def _read_and_consume_state(env_file: Path) -> Optional[str]:
+    """Read the expected state, then delete it (single-use, tamper-evident)."""
+    sf = _state_file(env_file)
+    if not sf.is_file():
+        return None
+    value = sf.read_text(encoding="utf-8").strip()
+    try:
+        sf.unlink()
+    except OSError:
+        pass
+    return value or None
+
+
 def main() -> None:
     import argparse
 
@@ -115,7 +139,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--auth", action="store_true",
-        help="print the authorize URL (run once, then log in in your browser)",
+        help="print the authorize URL and save its CSRF state for the exchange step",
     )
     parser.add_argument(
         "--code", default="",
@@ -123,25 +147,38 @@ def main() -> None:
     )
     parser.add_argument(
         "--state", default="",
-        help="the state value this script generated (must match)",
+        help="the state value Schwab echoed back (required; verified against the saved state)",
     )
     args = parser.parse_args()
 
     env_file = Path(args.env).expanduser()
+    env_file.parent.mkdir(parents=True, exist_ok=True)
+    # Hard requirement: the secrets directory must not be world/group readable.
+    os.chmod(env_file.parent, 0o700)
+
     env = load_env(env_file)
     if args.auth:
-        print(json.dumps(build_authorize_url(env), indent=2))
+        result = build_authorize_url(env)
+        if result.get("status") == "ok" and result.get("state"):
+            _save_state(env_file, str(result["state"]))
+        print(json.dumps(result, indent=2))
         return
     if not args.code:
         parser.error("Use --auth to get the URL, log in, then pass --code <code> --state <state>")
         return
-    # state tracking: we store the generated state in a sibling file the user owns
-    state_file = env_file.parent / ".schwab_state"
-    expected_state = args.state
-    if args.state:
-        state_file.write_text(args.state, encoding="utf-8")
-    # In interactive use the user copy-pastes the state from the --auth output.
-    print(json.dumps(exchange_and_probe(env, args.code, args.state, args.state), indent=2))
+
+    # GENUINE round-trip CSRF: compare the provided state against the one SAVED at
+    # --auth time (a value can never verify itself). Single-use: consumed after.
+    expected = _read_and_consume_state(env_file)
+    if expected is None:
+        print(json.dumps(
+            {"status": "error",
+             "error": "no_saved_state",
+             "detail": "Run --auth first so the expected CSRF state is stored."},
+            indent=2))
+        return
+    print(json.dumps(
+        exchange_and_probe(env, args.code, expected, args.state or ""), indent=2))
 
 
 if __name__ == "__main__":
