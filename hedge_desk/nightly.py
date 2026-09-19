@@ -28,8 +28,9 @@ from typing import Dict, Sequence
 
 from hedge_desk.data.eod_ingest import ingest_eod
 from hedge_desk.premium_candidates import build_premium_candidates
+from hedge_desk.cboe_chain import real_chain_income
 
-NIGHTLY_VERSION = "hedge-desk-nightly-1.0.0"
+NIGHTLY_VERSION = "hedge-desk-nightly-2.0.0"
 DEFAULT_WATCHLIST = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA")
 
 
@@ -44,14 +45,34 @@ def run_nightly(
     watchlist: Sequence[str] | None = None,
     artifacts_dir: Path | str = "artifacts",
     transport=None,
+    chain_symbols: Sequence[str] = ("SPY",),
+    chain_transport=None,
 ) -> Dict[str, object]:
-    """Run the EOD batch + premium candidates and write the AM report."""
+    """Run the EOD batch + premium candidates + real chain income, write AM report.
+
+    Real chain income is added for the symbols in ``chain_symbols`` (default SPY)
+    from Cboe delayed quotes, so the AM report's premium desk shows executable
+    net credit, not just collateral. A chain that fails (no OTM window, network
+    error) is reported as blocked — never fabricated.
+    """
     symbols = tuple(watchlist) if watchlist else _watchlist()
     if not symbols:
         raise ValueError("nightly watchlist cannot be empty")
     cutoff = datetime.now(timezone.utc)
     eod = ingest_eod(symbols, cutoff, transport=transport) if transport else ingest_eod(symbols, cutoff)
     candidates = build_premium_candidates(eod)
+
+    chain_results = {}
+    for cs in chain_symbols:
+        cs = str(cs).upper()
+        try:
+            chain_results[cs] = (
+                real_chain_income(cs, cutoff, transport=chain_transport)
+                if chain_transport
+                else real_chain_income(cs, cutoff)
+            )
+        except ValueError as exc:
+            chain_results[cs] = {"mode": "BLOCKED", "reason": str(exc)}
 
     report = {
         "schema_version": NIGHTLY_VERSION,
@@ -64,10 +85,12 @@ def run_nightly(
         "symbol_count": candidates["symbol_count"],
         "candidates": candidates["candidates"],
         "eod_source_results": eod["source_results"],
+        "chain_income": chain_results,
         "note": (
-            "Collateral/margin requirements from real EOD closes. No option "
-            "prices, probability, or Risk of Ruin fabricated. No order placed; "
-            "no trade authorized. Premium income requires a real option chain."
+            "Equity candidates: collateral/margin from real EOD closes. Premium "
+            "desk: executable net credit from REAL Cboe delayed option chains. "
+            "No probability or Risk of Ruin. No order placed; no trade "
+            "authorized (every candidate trade_authorized=False)."
         ),
     }
     # Content-address the stable report body (exclude the hash and the
