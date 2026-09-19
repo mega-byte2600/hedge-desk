@@ -103,6 +103,72 @@ def _earnings_block(earnings: Dict) -> str:
     return "".join(blocks)
 
 
+def _features_block(features: Dict) -> str:
+    feats = features.get("features", {})
+    if not feats:
+        return "<p class='note'>No feature bundle in this report.</p>"
+    rows = []
+    for sym in sorted(feats):
+        f = feats[sym]
+        rows.append(
+            "<tr>"
+            f"<td>{_esc(sym)}</td>"
+            f"<td>{_esc(f.get('return_1d'))}</td>"
+            f"<td>{_esc(f.get('return_5d'))}</td>"
+            f"<td>{_esc(f.get('return_21d'))}</td>"
+            f"<td>{_esc(f.get('realized_vol_21d'))}</td>"
+            f"<td>{_esc(f.get('range_position_21d'))}</td>"
+            f"<td>{_esc(f.get('candle_bias'))}</td>"
+            "</tr>"
+        )
+    return (
+        "<table><thead><tr><th>Symbol</th><th>r1d</th><th>r5d</th><th>r21d</th>"
+        "<th>vol21d</th><th>rangePos21d</th><th>candleBias</th></tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody></table>"
+    )
+
+
+def _csp_block(csp: Dict) -> str:
+    rows = []
+    for sym in sorted(csp):
+        r = csp[sym]
+        if r.get("mode") != "CASH_SECURED_PUT":
+            rows.append(f"<tr><td>{_esc(sym)}</td><td colspan='5' class='note'>[{_esc(r.get('mode'))}]</td></tr>")
+            continue
+        c = r.get("candidate", {})
+        badge = "ok" if r.get("fits_gp_rules") else "warn"
+        rows.append(
+            "<tr>"
+            f"<td>{_esc(sym)}</td><td>{_esc(c.get('strike'))}</td>"
+            f"<td>{_esc(c.get('dte'))}</td>"
+            f"<td>${_esc(c.get('net_credit_per_share'))}</td>"
+            f"<td>${_esc(c.get('collateral_required'))}</td>"
+            f"<td>{_esc(c.get('return_on_capital'))}</td>"
+            f"<td><span class='badge {badge}'>{'FITS' if r.get('fits_gp_rules') else 'no'}</span></td>"
+            f"<td>{_esc(', '.join(r.get('eval_reasons', [])) or '-')}</td>"
+            "</tr>"
+        )
+    return (
+        "<table><thead><tr><th>Symbol</th><th>Strike</th><th>DTE</th><th>Credit</th>"
+        "<th>Capital</th><th>RoC</th><th>GP rules</th><th>Reasons</th></tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody></table>"
+    )
+
+
+def _paper_block(paper: Dict) -> str:
+    counts = paper.get("outcome_counts", {})
+    if not counts:
+        return "<p class='note'>No paper outcomes recorded yet — the loop is armed, waiting for real paper entries.</p>"
+    rows = "".join(
+        f"<tr><td>{_esc(k)}</td><td>{_esc(v)}</td></tr>" for k, v in sorted(counts.items())
+    )
+    return (
+        "<table><thead><tr><th>Outcome</th><th>Count</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table>"
+        f"<div class='note'>{_esc(paper.get('note',''))}</div>"
+    )
+
+
 def build_am_demo_html(
     watchlist=DEFAULT_WATCHLIST, earnings_ciks=DEFAULT_EARNINGS_CIKS
 ) -> Dict[str, object]:
@@ -155,9 +221,18 @@ def build_am_demo_html(
 <th>Max loss</th><th>RoR</th><th>Gate</th><th>Gate reasons</th><th>Trade auth</th></tr></thead>
 <tbody>{_premium_rows(structures)}</tbody></table>
 
+<h2>3. Feature plane (deterministic, from real 3mo EOD)</h2>
+{_features_block(report['features'])}
+
+<h2>4. Cash-secured-put wheel scan (REAL Cboe chains; GP rules)</h2>
+{_csp_block(report['cash_secured_put_scan'])}
+
+<h2>5. Paper-outcome loop (append-only journal)</h2>
+{_paper_block(report['paper_outcome_summary'])}
+
 <div class="grid">
-  <div class="panel"><h2>3. Rates environment (REAL FRED)</h2>{_rates_block(report['rates_environment'])}</div>
-  <div class="panel"><h2>4. Earnings actuals (REAL SEC EDGAR)</h2>{_earnings_block(report['earnings_actuals'])}</div>
+  <div class="panel"><h2>6. Rates environment (REAL FRED)</h2>{_rates_block(report['rates_environment'])}</div>
+  <div class="panel"><h2>7. Earnings actuals (REAL SEC EDGAR)</h2>{_earnings_block(report['earnings_actuals'])}</div>
 </div>
 
 <div class="note" style="margin-top:24px">
