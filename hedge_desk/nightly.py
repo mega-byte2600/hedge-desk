@@ -26,7 +26,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Sequence
 
-from hedge_desk.data.eod_ingest import ingest_eod
+from hedge_desk.data.eod_ingest import EodDay, FEATURE_YAHOO_RANGE, ingest_eod
+from hedge_desk.features import build_feature_bundle_from_days
+from hedge_desk.csp_scan import scan_cash_secured_put
 from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.cboe_chain import real_chain_income
 from hedge_desk.rates_desk import rates_environment
@@ -103,11 +105,6 @@ def _annotate_chain_with_gates(
     )
     out["gate_kill_switch_armed"] = kill_switch_armed
     return out
-    out = dict(chain)
-    out["gated_income_structures"] = gated
-    out["gate_account_equity"] = account_equity
-    out["gate_kill_switch_armed"] = kill_switch_armed
-    return out
 
 
 def run_nightly(
@@ -131,8 +128,28 @@ def run_nightly(
     if not symbols:
         raise ValueError("nightly watchlist cannot be empty")
     cutoff = datetime.now(timezone.utc)
-    eod = ingest_eod(symbols, cutoff, transport=transport) if transport else ingest_eod(symbols, cutoff)
+    # Pull enough history for the feature plane (3mo), not just the 5d batch.
+    eod = (ingest_eod(symbols, cutoff, transport=transport, range_param=FEATURE_YAHOO_RANGE)
+           if transport else ingest_eod(symbols, cutoff, range_param=FEATURE_YAHOO_RANGE))
     candidates = build_premium_candidates(eod)
+
+    # Feature plane (Tier 1): deterministic per-symbol technical context.
+    days_by_symbol = {}
+    for row in eod.get("source_results", []):
+        if isinstance(row, dict) and row.get("status") == "PASS" and row.get("days"):
+            days_by_symbol[str(row["symbol"])] = [
+                EodDay(d["date"], d["close"], d["open"], d["high"], d["low"], d["volume"])
+                for d in row["days"]
+            ]
+    features = build_feature_bundle_from_days(days_by_symbol)
+
+    # Cash-secured-put wheel scan (Tier 2) on the liquid names, no fabricated equity.
+    csp_results = {}
+    for cs in symbols:
+        try:
+            csp_results[cs] = scan_cash_secured_put(cs, cutoff)
+        except ValueError as exc:
+            csp_results[cs] = {"mode": "BLOCKED", "reason": str(exc)}
 
     chain_results = {}
     for cs in chain_symbols:
@@ -181,6 +198,8 @@ def run_nightly(
         "candidates": candidates["candidates"],
         "eod_source_results": eod["source_results"],
         "chain_income": chain_results,
+        "features": features,
+        "cash_secured_put_scan": csp_results,
         "rates_environment": rates,
         "earnings_actuals": earnings_results,
         "note": (
