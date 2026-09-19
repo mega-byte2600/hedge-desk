@@ -31,6 +31,13 @@ from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.cboe_chain import real_chain_income
 from hedge_desk.rates_desk import rates_environment
 from hedge_desk.earnings_desk import earnings_desk
+from hedge_desk.execution_gate import (
+    KillSwitch,
+    build_candidate_from_structure,
+    evaluate_execution,
+)
+from hedge_desk.domain import Account, AccountType
+from decimal import Decimal
 
 NIGHTLY_VERSION = "hedge-desk-nightly-2.0.0"
 DEFAULT_WATCHLIST = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA")
@@ -41,6 +48,44 @@ def _watchlist() -> Sequence[str]:
     if raw.strip():
         return tuple(s.strip().upper() for s in raw.split(",") if s.strip())
     return DEFAULT_WATCHLIST
+
+
+def _annotate_chain_with_gates(
+    chain: Dict[str, object],
+    account_equity: str = "100000",
+    kill_switch_armed: bool = False,
+) -> Dict[str, object]:
+    """Annotate each presented premium structure with its risk+release gate decision."""
+    from datetime import datetime as _dt
+
+    acct = Account(
+        "demo-account", AccountType.INDIVIDUAL,
+        Decimal(account_equity), Decimal(account_equity) / Decimal("2"),
+        options_approved=True,
+    )
+    structures = chain.get("income_structures", [])
+    gated = []
+    now = _dt.now(timezone.utc)
+    for s in structures:
+        try:
+            cand = build_candidate_from_structure(s, quote_timestamp=now)
+            decision = evaluate_execution(
+                candidate=cand,
+                account=acct,
+                evaluated_at=now,
+                validated_risk_of_ruin_after=Decimal("0.01"),
+                kill_switch=KillSwitch(armed=kill_switch_armed),
+            )
+            gated.append({**s, "gate_decision": decision.decision,
+                          "gate_reasons": list(decision.reason_codes),
+                          "kill_switch_armed": decision.kill_switch_armed})
+        except Exception as exc:
+            gated.append({**s, "gate_decision": "ERROR", "gate_reasons": [str(exc)]})
+    out = dict(chain)
+    out["gated_income_structures"] = gated
+    out["gate_account_equity"] = account_equity
+    out["gate_kill_switch_armed"] = kill_switch_armed
+    return out
 
 
 def run_nightly(
@@ -71,11 +116,12 @@ def run_nightly(
     for cs in chain_symbols:
         cs = str(cs).upper()
         try:
-            chain_results[cs] = (
+            chain = (
                 real_chain_income(cs, cutoff, transport=chain_transport)
                 if chain_transport
                 else real_chain_income(cs, cutoff)
             )
+            chain_results[cs] = _annotate_chain_with_gates(chain)
         except ValueError as exc:
             chain_results[cs] = {"mode": "BLOCKED", "reason": str(exc)}
 
