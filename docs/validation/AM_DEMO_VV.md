@@ -66,6 +66,35 @@ pins S5/S6 at the route level (temp-dir patched, CI-safe).
   licensed only for research; nothing is redistributed.
 - The public URL is a tunnel to the local server (dies with the process), not hosting.
 
+## 4b. Real-data surface (data is king) — added 2026-09-19
+
+Beyond the original Yahoo EOD / Cboe chains / FRED rates / SEC EDGAR, the pipeline now
+ingests two more real, free, no-auth sources, each fail-closed:
+
+- **VIX regime** (`vix_regime`): real ^VIX close via the proven Yahoo chart endpoint,
+  labeled LOW/NORMAL/ELEVATED/HIGH (premium-timing context, not a signal). Real today:
+  14.81 LOW. Tests 5/5.
+- **FRED macro desk** (`macro_environment`): CPI YoY inflation, unemployment, and the
+  5y/30y curve points via the same official no-auth FRED CSV transport, with a small
+  retry for transient blips. Real today: CPI YoY 3.35%, unemployment 4.1%, 5y 4.78%,
+  30y 5.29%. Tests 2/2.
+
+Both wired into `run_nightly` (report keys `vix_regime`, `macro_environment`) and the AM
+demo page. A blocked series is reported, never fabricated.
+
+## 4c. Pipeline engineering — added 2026-09-19
+
+- **Data-freshness gate** (`freshness`): the report states whether it is running on
+  today's close or the prior trading day's (at 4:30pm EST the source may not have
+  published today yet). Pure deterministic helper; tests 4/4.
+- **4:30pm EST scheduled batch**: `scripts/run_nightly_batch.sh` + a launchd job
+  (`deploy/com.emporion.nightly.plist`) fire the batch after the close (13:30 local,
+  DST-safe), log each run, and prune old logs. Installed and loaded.
+- **Concurrent fetches**: the independent data fetches run in a ThreadPoolExecutor so
+  one slow/flaky source cannot stall the whole batch (measured ~5.7min sequential with
+  FRED flaky → bounded by the slowest single fetch). `run_nightly` is now fully
+  transport-injectable and the nightly test is fully offline (0.1s, deterministic).
+
 ## 5. Re-run the verification (one command each)
 
 ```bash
