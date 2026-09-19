@@ -108,21 +108,28 @@ def rates_environment(
     end = as_of or _dt.date.today()
     start = end - _dt.timedelta(days=lookback_days)
 
-    ff_date, ff = _fetch_series(FED_FUNDS, start, end, transport)
+    # Fetch the fed funds series ONCE for the whole window; the earliest
+    # observation is the prior-period baseline for the change, and the latest is
+    # the current effective rate. Single fetch, fail closed on non-200 so a
+    # transport error can never fabricate a "0.00 change" in a published report.
+    ff_url = FRED_CSV_URL.format(
+        series=FED_FUNDS, start=start.isoformat(), end=end.isoformat()
+    )
+    ff_status, ff_raw = transport(ff_url)
+    if ff_status != 200 or not ff_raw:
+        raise ValueError(f"fred fetch failed for {FED_FUNDS} (status {ff_status})")
+    ff_series = _parse_fred_csv(ff_raw)
+    if not ff_series:
+        raise ValueError(f"fred series {FED_FUNDS} has no observations")
+    ff_date, ff = ff_series[-1]
+    ff_earliest = ff_series[0][1]
+
     y2_date, y2 = _fetch_series(TWO_YEAR, start, end, transport)
     y10_date, y10 = _fetch_series(TEN_YEAR, start, end, transport)
 
     # 2y vs 10y slope (tenors in years) -> curve shape.
     slope = curve_slope(((2, y2), (10, y10)))
     shape = curve_shape(slope)
-
-    # Fed funds CHANGE: the latest value minus the earliest non-None in the window.
-    ff_all = _parse_fred_csv(
-        transport(FRED_CSV_URL.format(
-            series=FED_FUNDS, start=start.isoformat(), end=end.isoformat()
-        ))[1]
-    )
-    ff_earliest = ff_all[0][1] if ff_all else ff
 
     return {
         "schema_version": "hedge-desk-rates-desk-1.0.0",

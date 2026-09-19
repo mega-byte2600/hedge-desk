@@ -91,7 +91,21 @@ class ExecutionGateTests(unittest.TestCase):
         self.assertEqual(d.decision, "BLOCKED")
         self.assertFalse(d.trade_authorized)
 
-    def test_build_candidate_from_structure(self):
+    def test_absent_ror_blocks_with_risk_input_absent(self):
+        # The desk rule: an agent must never substitute authoritative RoR. Without
+        # a validated RoR artifact the gate must fail closed, not fabricate 0.01.
+        d = evaluate_execution(
+            candidate=_candidate(),
+            account=_account(),
+            evaluated_at=datetime(2026, 9, 19, 15, 30, tzinfo=timezone.utc),
+            validated_risk_of_ruin_after=None,
+            kill_switch=KillSwitch(armed=True),
+        )
+        self.assertEqual(d.decision, "BLOCKED")
+        self.assertIn("RISK_INPUT_ABSENT", d.reason_codes)
+        self.assertFalse(d.trade_authorized)
+
+    def test_build_candidate_from_structure_requires_real_adv(self):
         structure = {
             "contract_id": "SPY261023C00764000--SPY261023C00768000",
             "underlying": "SPY",
@@ -99,10 +113,16 @@ class ExecutionGateTests(unittest.TestCase):
             "net_credit": "224.70",
             "maximum_loss": "175.30",
         }
-        cand = build_candidate_from_structure(structure)
+        # Refuses to invent an ADV (honesty: no fabricated liquidity).
+        with self.assertRaises(ValueError):
+            build_candidate_from_structure(structure)
+        cand = build_candidate_from_structure(
+            structure, average_daily_dollar_volume=Decimal("5000000000")
+        )
         self.assertEqual(cand.symbol, "SPY")
         self.assertEqual(cand.entry_price, Decimal("2.247"))
         self.assertEqual(cand.max_loss, Decimal("175.30"))
+        self.assertEqual(cand.average_daily_dollar_volume, Decimal("5000000000"))
         self.assertEqual(cand.product_type, ProductType.DEFINED_RISK_OPTION)
 
 

@@ -67,20 +67,42 @@ def _annotate_chain_with_gates(
     gated = []
     now = _dt.now(timezone.utc)
     for s in structures:
+        gate_reasons = []
         try:
             cand = build_candidate_from_structure(s, quote_timestamp=now)
-            decision = evaluate_execution(
-                candidate=cand,
-                account=acct,
-                evaluated_at=now,
-                validated_risk_of_ruin_after=Decimal("0.01"),
-                kill_switch=KillSwitch(armed=kill_switch_armed),
+        except (ValueError, TypeError) as exc:
+            # Missing real inputs (e.g. real ADV) -> INDETERMINATE, never ERROR.
+            gate_reasons.append("MISSING_REAL_RISK_INPUT")
+            gated.append(
+                {**s, "gate_decision": "INDETERMINATE",
+                 "gate_reasons": gate_reasons,
+                 "kill_switch_armed": kill_switch_armed}
             )
-            gated.append({**s, "gate_decision": decision.decision,
-                          "gate_reasons": list(decision.reason_codes),
-                          "kill_switch_armed": decision.kill_switch_armed})
-        except Exception as exc:
-            gated.append({**s, "gate_decision": "ERROR", "gate_reasons": [str(exc)]})
+            continue
+        # No validated RoR artifact exists yet, so pass None: the gate fails
+        # closed with RISK_INPUT_ABSENT instead of a fabricated 0.01. No agent
+        # may substitute an authoritative Risk-of-Ruin (AGENTS.md).
+        decision = evaluate_execution(
+            candidate=cand,
+            account=acct,
+            evaluated_at=now,
+            validated_risk_of_ruin_after=None,
+            kill_switch=KillSwitch(armed=kill_switch_armed),
+        )
+        gated.append({**s, "gate_decision": decision.decision,
+                      "gate_reasons": list(decision.reason_codes),
+                      "kill_switch_armed": decision.kill_switch_armed})
+    out = dict(chain)
+    out["gated_income_structures"] = gated
+    out["gate_account_equity"] = account_equity
+    out["gate_risk_input_advanced"] = False
+    out["gate_note"] = (
+        "No validated Risk-of-Ruin artifact and no real account/liquidity are "
+        "wired yet, so gate decisions are INDETERMINATE (missing inputs), never a "
+        "fabricated approval. No order is placed and nothing is trade_authorized."
+    )
+    out["gate_kill_switch_armed"] = kill_switch_armed
+    return out
     out = dict(chain)
     out["gated_income_structures"] = gated
     out["gate_account_equity"] = account_equity

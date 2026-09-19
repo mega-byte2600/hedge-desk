@@ -67,12 +67,20 @@ def evaluate_execution(
     candidate: TradeCandidate,
     account: Account,
     evaluated_at: datetime,
-    validated_risk_of_ruin_after: Decimal,
+    validated_risk_of_ruin_after: Optional[Decimal] = None,
     risk_policy: RiskPolicy = RiskPolicy(),
     kill_switch: KillSwitch = KillSwitch(armed=False),
     release_evidence: Optional[Tuple[ReleaseEvidence, ...]] = None,
 ) -> ExecutionDecision:
-    """Run the full pre-order decision without placing any order."""
+    """Run the full pre-order decision without placing any order.
+
+    Honesty requirement (desk rule, AGENTS.md): agents must never substitute an
+    authoritative Risk-of-Ruin value. Therefore ``validated_risk_of_ruin_after``
+    must be the immutable result of a separately versioned deterministic validator.
+    If it is NOT supplied, the decision is BLOCKED with ``RISK_INPUT_ABSENT`` and
+    the risk gate is never evaluated against a fabricated number. The caller is
+    a validated-input boundary, not a free-form injector.
+    """
     if evaluated_at.tzinfo is None:
         raise ValueError("execution evaluated_at must be timezone-aware")
 
@@ -82,12 +90,18 @@ def evaluate_execution(
     if not kill_switch.armed:
         reasons.append("KILL_SWITCH_OFF")
 
-    # 2. Deterministic risk gate (consumes caller-supplied validated RoR).
-    risk_reasons = tuple(
-        risk_gate(account, candidate, evaluated_at, risk_policy, validated_risk_of_ruin_after)
-    )
-    if risk_reasons:
-        reasons.append("RISK_GATE_BLOCKED")
+    # 2. Deterministic risk gate — ONLY if a validated RoR artifact is supplied.
+    #    Absent a validated input, we fail closed with a reason code rather than
+    #    inject a placeholder (no fabricated risk numbers).
+    risk_reasons: tuple = ()
+    if validated_risk_of_ruin_after is None:
+        reasons.append("RISK_INPUT_ABSENT")
+    else:
+        risk_reasons = tuple(
+            risk_gate(account, candidate, evaluated_at, risk_policy, validated_risk_of_ruin_after)
+        )
+        if risk_reasons:
+            reasons.append("RISK_GATE_BLOCKED")
 
     # 3. Paper-to-live release readiness. If no evidence supplied, use the
     #    reference (all-false) gate -> BLOCKED. This never fabricates evidence.
@@ -95,7 +109,7 @@ def evaluate_execution(
         ReleaseEvidence(r, False, "0" * 64) for r in REQUIRED_RELEASE_EVIDENCE
     )
     release = evaluate_live_release_readiness(evidence)
-    release_ready = release.status.value == "READY_FOR_SEPARATE_AUTHORIZATION"
+    release_ready = release.status.value == "READY_FOR_SEPARATE_LIVE_AUTHORIZATION"
     if not release_ready:
         reasons.append("LIVE_RELEASE_NOT_READY")
 
@@ -137,11 +151,27 @@ def build_candidate_from_structure(
     structure: Dict[str, object],
     quantity: int = 1,
     quote_timestamp: Optional[datetime] = None,
+    average_daily_dollar_volume: Optional[Decimal] = None,
 ) -> TradeCandidate:
     """Map one real premium structure into the domain TradeCandidate the risk
-    gate reads. The structure carries net_credit and maximum_loss as strings."""
+    gate reads. The structure carries net_credit and maximum_loss as strings.
+
+    ``average_daily_dollar_volume`` must be a REAL market/liquidity figure supplied
+    by the caller. It is intentionally NOT defaulted to a synthetic value: a desk
+    that hardcodes liquidity passes every liquidity gate and cannot be trusted.
+    Raising here forces the caller to admit it lacks a real ADV rather than
+    silently swallowing a made-up number.
+    """
     uri = str(structure.get("contract_id", "unknown"))
     symbol = str(structure.get("underlying", uri.split("--")[0][:6]))
+    adv = average_daily_dollar_volume
+    if adv is None:
+        raise ValueError(
+            "average_daily_dollar_volume is required (real liquidity); refusing to "
+            "invent an ADV for risk evaluation"
+        )
+    if not isinstance(adv, Decimal) or not adv.is_finite() or adv <= 0:
+        raise ValueError("average_daily_dollar_volume must be a positive finite Decimal")
     qtime = quote_timestamp or datetime.now(timezone.utc)
     return TradeCandidate(
         candidate_id=uri,
@@ -153,7 +183,7 @@ def build_candidate_from_structure(
         expected_win=Decimal(str(structure.get("net_credit", "0"))),
         win_probability=Decimal("0"),  # not estimated by this harness
         quote_timestamp=qtime,
-        average_daily_dollar_volume=Decimal("100000000"),  # caller must confirm
+        average_daily_dollar_volume=adv,
         thesis="Real defined-risk premium structure from Cboe chain intake.",
         invalidation="Reject if risk or release gate blocks, or kill switch is off.",
     )

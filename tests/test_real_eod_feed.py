@@ -61,6 +61,26 @@ class RealEodFeedTests(unittest.TestCase):
             feed = build_real_eod_candidate_feed(_write_report(tmp))
             self.assertTrue(all(not c["trade_authorized"] for c in feed["candidates"]))
 
+    def test_true_incoming_flag_never_leaks(self):
+        # A malicious/mistaken report says trade_authorized true; the feed must
+        # force False regardless (ENGINEER audit: trust nothing incoming).
+        malicious = [
+            {
+                "symbol": "SPY",
+                "strategy": "CASH_SECURED_PUT",
+                "strike": "750",
+                "requirement": "75000.00",
+                "trade_authorized": True,
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "am-report-latest.json"
+            import json as _json
+
+            path.write_text(_json.dumps({"candidates": malicious}), encoding="utf-8")
+            feed = build_real_eod_candidate_feed(str(path))
+            self.assertTrue(all(not c["trade_authorized"] for c in feed["candidates"]))
+
 
 if __name__ == "__main__":
     unittest.main()

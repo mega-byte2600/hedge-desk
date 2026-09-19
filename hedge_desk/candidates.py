@@ -87,7 +87,10 @@ def build_real_eod_candidate_feed(
                     f"${item.get('requirement', '')}"
                 ),
                 "evidence_needed": "Real option chain for executable premium",
-                "trade_authorized": bool(item.get("trade_authorized", False)),
+                # Force False: the research feed never authorizes a trade. An
+                # incoming true flag is data, not authority, and must never leak
+                # through to a client as an executable signal.
+                "trade_authorized": False,
             }
         )
     return {
