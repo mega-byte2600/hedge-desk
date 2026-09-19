@@ -34,6 +34,7 @@ from hedge_desk.data import (
     validate_local_observation,
     evaluate_pwb_daily_news,
     load_pwb_daily_news,
+    ingest_eod,
 )
 from hedge_desk.options import (
     build_candidate_control_handoffs,
@@ -156,6 +157,15 @@ def main() -> None:
         "--war-games",
         action="store_true",
         help="run every declared synthetic premium-spread stress scenario",
+    )
+    parser.add_argument(
+        "--eod-batch",
+        metavar="SYMBOLS",
+        help="comma-separated watchlist; pull real EOD closes and emit the AM candidate batch",
+    )
+    parser.add_argument(
+        "--eod-cutoff",
+        help="timezone-aware ISO-8601 decision cutoff for the EOD batch (default: now)",
     )
     parser.add_argument(
         "--overnight-report",
@@ -482,6 +492,21 @@ def main() -> None:
         return
     if args.projects:
         print(json.dumps([project.__dict__ for project in MVP_PROJECTS], indent=2))
+        return
+    if args.eod_batch:
+        symbols = tuple(s.strip().upper() for s in args.eod_batch.split(",") if s.strip())
+        if not symbols:
+            parser.error("--eod-batch requires at least one symbol")
+        cutoff = (
+            datetime.fromisoformat(args.eod_cutoff.replace("Z", "+00:00"))
+            if args.eod_cutoff
+            else datetime.now(timezone.utc)
+        )
+        try:
+            result = ingest_eod(symbols, cutoff)
+        except ValueError as exc:
+            parser.error(str(exc))
+        print(json.dumps(result, indent=2))
         return
     if args.overnight_report:
         print(json.dumps(current_morning_report(), indent=2))
