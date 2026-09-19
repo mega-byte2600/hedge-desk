@@ -242,7 +242,8 @@ def build_am_demo_html(
 <header>
   <h1>Emporion — Overnight Desk AM Report</h1>
   <div class="sub">Real end-of-day batch &middot; generated {generated} &middot;
-  eod status {_esc(report['eod_batch_status'])}</div>
+  eod status {_esc(report['eod_batch_status'])} &middot;
+  data as-of {_esc(report['data_freshness']['as_of'])} ({'current' if report['data_freshness']['is_current'] else 'prior trading day'})</div>
 </header>
 <main>
 
