@@ -29,6 +29,7 @@ from typing import Dict, Sequence
 from hedge_desk.data.eod_ingest import EodDay, FEATURE_YAHOO_RANGE, ingest_eod
 from hedge_desk.features import build_feature_bundle_from_days
 from hedge_desk.csp_scan import scan_cash_secured_put
+from hedge_desk.paper_log import summarize as summarize_paper_log
 from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.cboe_chain import real_chain_income
 from hedge_desk.rates_desk import rates_environment
@@ -116,6 +117,7 @@ def run_nightly(
     rates_transport=None,
     earnings_ciks: Sequence[str] = (),
     earnings_transport=None,
+    paper_log_path: Path | str = "artifacts/paper-outcomes.jsonl",
 ) -> Dict[str, object]:
     """Run the EOD batch + premium candidates + real chain income + macro desks.
 
@@ -200,6 +202,7 @@ def run_nightly(
         "chain_income": chain_results,
         "features": features,
         "cash_secured_put_scan": csp_results,
+        "paper_outcome_summary": summarize_paper_log(paper_log_path),
         "rates_environment": rates,
         "earnings_actuals": earnings_results,
         "note": (
