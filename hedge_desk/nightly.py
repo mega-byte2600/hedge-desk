@@ -43,7 +43,7 @@ from hedge_desk.domain import Account, AccountType
 from decimal import Decimal
 
 NIGHTLY_VERSION = "hedge-desk-nightly-2.0.0"
-DEFAULT_WATCHLIST = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA")
+DEFAULT_WATCHLIST = ("NKE", "CCL", "AAL", "LYFT", "NCLH", "F", "DVN")  # sub-$55 GP-fit universe (see docs/MVP_RESCOPE)
 
 
 def _watchlist() -> Sequence[str]:

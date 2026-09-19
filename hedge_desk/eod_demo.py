@@ -21,7 +21,7 @@ from typing import Dict
 from hedge_desk.data.eod_ingest import ingest_eod
 from hedge_desk.premium_candidates import build_premium_candidates
 
-DEFAULT_WATCHLIST = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA")
+DEFAULT_WATCHLIST = ("NKE", "CCL", "AAL", "LYFT", "NCLH", "F", "DVN")
 
 
 def _render_row(c: Dict[str, object]) -> str:

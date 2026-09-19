@@ -64,8 +64,13 @@ def _put_10pct_otm(symbol: str, raw: bytes, now) -> Dict[str, object]:
         "underlying_mid": str(mid),
         "net_credit_per_share": str(net_credit),
         "collateral_required": str((collateral * Decimal("100")).quantize(Decimal("0.01"))),
+        # Return on capital deployed = credit_per_contract / collateral_in_dollars.
+        # Both sides carry the same x100 (strike*100 shares of collateral vs
+        # net_credit_per_share*100 per contract), so it reduces to net_credit /
+        # strike. Dividing by strike*100 instead would report a 100x-too-small
+        # number and flag every candidate RETURN_NOT_IN_GP_BAND (units bug).
         "return_on_capital": str(
-            (net_credit / (collateral * Decimal("100"))).quantize(Decimal("0.0001"))
+            (net_credit / collateral).quantize(Decimal("0.0001"))
         ),
         "max_loss": str((collateral * Decimal("100")).quantize(Decimal("0.01"))),
     }

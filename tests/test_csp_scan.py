@@ -41,9 +41,36 @@ class CspScanTests(unittest.TestCase):
         c = r["candidate"]
         self.assertEqual(c["strike"], "90")
         self.assertEqual(c["net_credit_per_share"], "1.19")
+        # Return on capital deployed = credit/strike (1.19/90 ~ 1.32%), not
+        # credit/(strike*100) which would report ~0.013%.
+        self.assertEqual(c["return_on_capital"], "0.0132")
+        self.assertEqual(r["fits_gp_rules"], False)
         self.assertIn("CAPITAL_OVER_5K", r["eval_reasons"])
+        self.assertNotIn("RETURN_NOT_IN_GP_BAND", r["eval_reasons"])
         self.assertEqual(r["survivability"], "INDETERMINATE")
         self.assertFalse(r["trade_authorized"])
+
+    def test_sub5k_put_in_gp_band_fits_rules(self):
+        from datetime import datetime, timezone
+        # 32 strike put, bid 0.41 -> return on capital 1.28% (in 0.5-2% band),
+        # collateral $3,200 (under $5k) -> fits_gp_rules must be True.
+        payload = {
+            "data": {
+                "symbol": "NKE", "current_price": "36.00", "bid": "36.00", "ask": "36.10",
+                "options": [
+                    _option("NKE261023P00032000", 0.41, 0.45),
+                ],
+            }
+        }
+        r = scan_cash_secured_put("NKE", datetime(2026, 9, 19, tzinfo=timezone.utc),
+                                  transport=_chain(payload))
+        self.assertEqual(r["mode"], "CASH_SECURED_PUT")
+        c = r["candidate"]
+        self.assertEqual(c["strike"], "32")
+        self.assertEqual(c["collateral_required"], "3200.00")
+        self.assertEqual(c["return_on_capital"], "0.0128")
+        self.assertTrue(r["fits_gp_rules"])
+        self.assertEqual(r["eval_reasons"], [])
 
     def test_empty_chain_no_candidate(self):
         from datetime import datetime, timezone

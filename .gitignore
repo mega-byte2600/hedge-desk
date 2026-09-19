@@ -29,3 +29,6 @@ build/
 *.db-wal
 .schwab/
 *env.env
+
+# Generated nightly AM reports / demos (real market data, regenerated each run).
+/artifacts/

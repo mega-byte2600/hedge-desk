@@ -19,7 +19,7 @@ from typing import Any, Dict, Sequence
 
 from hedge_desk.nightly import run_nightly
 
-DEFAULT_WATCHLIST = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA")
+DEFAULT_WATCHLIST = ("NKE", "CCL", "AAL", "LYFT", "NCLH", "F", "DVN")
 DEFAULT_EARNINGS_CIKS = ("0000320193",)  # AAPL
 
 
