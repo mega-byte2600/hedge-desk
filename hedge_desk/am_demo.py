@@ -1,0 +1,192 @@
+"""True-MVP demo: render the full AM report (real data from every desk) as HTML.
+
+Runs the consolidated nightly and renders one page with: EOD equity candidates,
+real premium income (with gate decisions), the rates environment, and earnings
+actuals. This is what the GP opens before the market open.
+
+Honesty: every panel labels its data source; premium spreads show their risk+
+release gate decision (all BLOCKED with kill switch off by default), and nothing
+is trade_authorized. Real data or an explicit BLOCKED reason — never fabricated.
+"""
+
+from __future__ import annotations
+
+import html
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, Sequence
+
+from hedge_desk.nightly import run_nightly
+
+DEFAULT_WATCHLIST = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA")
+DEFAULT_EARNINGS_CIKS = ("0000320193",)  # AAPL
+
+
+def _esc(v: Any) -> str:
+    return html.escape(str(v))
+
+
+def _equity_rows(candidates: Sequence[Dict]) -> str:
+    return "".join(
+        "<tr>"
+        f"<td>{_esc(c['symbol'])}</td><td>{_esc(c['close'])}</td>"
+        f"<td>{_esc(c['strategy'])}</td><td>{_esc(c['strike'])}</td>"
+        f"<td>${_esc(c['requirement'])}</td><td>{_esc(c['policy_version'])}</td>"
+        "<td>NO</td></tr>"
+        for c in candidates
+    )
+
+
+def _premium_rows(structures: Sequence[Dict]) -> str:
+    from decimal import Decimal as _Dec
+
+    rows = []
+    for s in structures:
+        badge = (
+            "ok" if s.get("gate_decision") == "ALLOW_PAPER" else "warn"
+        )
+        credit = f"{float(_Dec(str(s['net_credit']))):.2f}"
+        maxloss = f"{float(_Dec(str(s['maximum_loss']))):.2f}"
+        ror = f"{float(_Dec(str(s['return_on_risk']))):.3f}"
+        rows.append(
+            "<tr>"
+            f"<td>{_esc(s['contract_id'])}</td><td>{_esc(s['expiration'])}</td>"
+            f"<td>{_esc(s['days_to_expiration'])}</td>"
+            f"<td>${_esc(credit)}</td>"
+            f"<td>${_esc(maxloss)}</td>"
+            f"<td>{_esc(ror)}</td>"
+            f"<td><span class='badge {badge}'>{_esc(s.get('gate_decision','-'))}</span></td>"
+            f"<td>{_esc(', '.join(s.get('gate_reasons', [])) or '-')}</td>"
+            "<td>NO</td></tr>"
+        )
+    return "".join(rows)
+
+
+def _rates_block(rates: Dict) -> str:
+    if rates.get("mode") == "BLOCKED":
+        return f"<p class='note'>Rates blocked: {_esc(rates.get('reason'))}</p>"
+    return (
+        "<table><tr><th>Series</th><th>Value</th><th>Date</th></tr>"
+        f"<tr><td>Fed funds effective</td><td>{_esc(rates.get('fed_funds_effective_rate'))}%</td>"
+        f"<td>{_esc(rates.get('fed_funds_latest_date'))}</td></tr>"
+        f"<tr><td>Fed funds change (window)</td><td>{_esc(rates.get('fed_funds_change_over_window'))}%</td><td>-</td></tr>"
+        f"<tr><td>Treasury 2y</td><td>{_esc(rates.get('treasury_2y'))}%</td>"
+        f"<td>{_esc(rates.get('treasury_2y_date'))}</td></tr>"
+        f"<tr><td>Treasury 10y</td><td>{_esc(rates.get('treasury_10y'))}%</td>"
+        f"<td>{_esc(rates.get('treasury_10y_date'))}</td></tr>"
+        f"<tr><td>10y-2y spread</td><td>{_esc(rates.get('spread_10y_2y_points'))}bp</td><td>-</td></tr>"
+        f"<tr><td>Curve shape</td><td>{_esc(rates.get('curve_shape'))}</td><td>-</td></tr>"
+        "</table>"
+    )
+
+
+def _earnings_block(earnings: Dict) -> str:
+    blocks = []
+    for cik, e in earnings.items():
+        if not isinstance(e, dict) or e.get("mode") == "BLOCKED":
+            blocks.append(f"<p class='note'>CIK {_esc(cik)} blocked: "
+                          f"{_esc(e.get('reason')) if isinstance(e, dict) else '-'}</p>")
+            continue
+        obs = e.get("observation", {})
+        blocks.append(
+            "<table><tr><th>Metric</th><th>Value</th></tr>"
+            f"<tr><td>Latest FY EPS</td><td>{_esc(obs.get('latest_fy_eps'))} "
+            f"({_esc(obs.get('latest_fy_period'))})</td></tr>"
+            f"<tr><td>Latest quarter EPS</td><td>{_esc(obs.get('latest_quarterly_eps'))} "
+            f"({_esc(obs.get('latest_quarterly_period'))})</td></tr>"
+            f"<tr><td>Prior quarter EPS</td><td>{_esc(obs.get('prior_quarterly_eps'))} "
+            f"({_esc(obs.get('prior_quarterly_period'))})</td></tr>"
+            f"<tr><td>Quarterly change</td><td>{_esc(e.get('quarterly_eps_change'))}</td></tr>"
+            "</table>"
+        )
+    return "".join(blocks)
+
+
+def build_am_demo_html(
+    watchlist=DEFAULT_WATCHLIST, earnings_ciks=DEFAULT_EARNINGS_CIKS
+) -> Dict[str, object]:
+    report = run_nightly(watchlist=watchlist, earnings_ciks=earnings_ciks)
+    chain = report["chain_income"].get("SPY", {})
+    structures = chain.get("gated_income_structures") or chain.get("income_structures", [])
+    chain_note = chain.get("note", "")
+    if chain.get("mode") == "BLOCKED":
+        chain_note = f"Blocked: {chain.get('reason')}"
+    generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+    page = f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emporion — AM Report (real data)</title>
+<style>
+  body {{ font-family: -apple-system, Segoe UI, Roboto, sans-serif; margin: 0;
+         background: #0d1117; color: #e6edf3; }}
+  header {{ padding: 22px 28px; border-bottom: 1px solid #21262d; }}
+  h1 {{ margin: 0 0 4px; font-size: 22px; }}
+  .sub {{ color: #8b949e; font-size: 13px; }}
+  main {{ padding: 20px 28px; max-width: 1150px; }}
+  h2 {{ font-size: 16px; margin: 26px 0 10px; color: #58a6ff; }}
+  table {{ border-collapse: collapse; width: 100%; font-size: 12px; }}
+  th, td {{ text-align: left; padding: 6px 8px; border-bottom: 1px solid #21262d; }}
+  th {{ color: #8b949e; font-weight: 600; }}
+  .badge {{ display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }}
+  .ok {{ background: #1f6feb22; color: #58a6ff; }}
+  .warn {{ background: #9e6a0322; color: #d29922; }}
+  .note {{ color: #8b949e; font-size: 12px; line-height: 1.5; }}
+  .pill {{ background: #21262d; color: #e6edf3; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-right: 6px; }}
+  .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
+  .panel {{ border: 1px solid #21262d; border-radius: 8px; padding: 14px; }}
+</style></head><body>
+<header>
+  <h1>Emporion — Overnight Desk AM Report</h1>
+  <div class="sub">Real end-of-day batch &middot; generated {generated} &middot;
+  eod status {_esc(report['eod_batch_status'])}</div>
+</header>
+<main>
+
+<h2>1. Equity premium candidates (collateral/margin from real EOD closes)</h2>
+<table><thead><tr><th>Symbol</th><th>Close</th><th>Strategy</th><th>Strike</th>
+<th>Capital required</th><th>Policy</th><th>Trade auth</th></tr></thead>
+<tbody>{_equity_rows(report['candidates'])}</tbody></table>
+
+<h2>2. Premium income — SPY defined-risk spreads (REAL Cboe chain; top by return-on-risk)</h2>
+<div class="note">{_esc(chain_note)}</div>
+<table><thead><tr><th>Contract (short--long)</th><th>Exp</th><th>DTE</th><th>Net credit</th>
+<th>Max loss</th><th>RoR</th><th>Gate</th><th>Gate reasons</th><th>Trade auth</th></tr></thead>
+<tbody>{_premium_rows(structures)}</tbody></table>
+
+<div class="grid">
+  <div class="panel"><h2>3. Rates environment (REAL FRED)</h2>{_rates_block(report['rates_environment'])}</div>
+  <div class="panel"><h2>4. Earnings actuals (REAL SEC EDGAR)</h2>{_earnings_block(report['earnings_actuals'])}</div>
+</div>
+
+<div class="note" style="margin-top:24px">
+  <span class="pill">REAL DATA</span><span class="pill">NO FABRICATED NUMBERS</span>
+  <span class="pill">NO PROBABILITY / RoR</span><span class="pill">NO ORDER</span><br><br>
+  Panel 1: collateral/margin from real EOD closes. Panel 2: executable net credit
+  and max loss from a real Cboe delayed chain, ranked by return-on-risk, each with
+  its execution-gate decision (kill switch OFF by default -> BLOCKED). Panel 3:
+  official FRED observations. Panel 4: official SEC filings. This is research, not
+  income, not advice, and not an order. Every trade_authorized field reads NO.
+</div>
+</main></body></html>
+"""
+    return {
+        "eod_status": report["eod_batch_status"],
+        "candidate_count": report["candidate_count"],
+        "premium_count": len(structures),
+        "html": page,
+    }
+
+
+def main() -> None:
+    out = Path("artifacts/am-demo.html")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    result = build_am_demo_html()
+    out.write_text(result["html"], encoding="utf-8")
+    print(f"wrote {out}: {result['candidate_count']} equity candidates, "
+          f"{result['premium_count']} premium structures, EOD {result['eod_status']}")
+
+
+if __name__ == "__main__":
+    main()
