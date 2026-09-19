@@ -247,6 +247,9 @@ def real_chain_income(
                 "maximum_loss": str(calc.maximum_loss),
                 "break_even": str(calc.break_even),
                 "return_on_risk": str(calc.return_on_risk),
+                # data the scanner already has, needed for rule-based ranking
+                # (collateral for a credit spread = its width, not a strike)
+                "spread_width": str(calc.width_per_share),
                 "trade_authorized": False,
             }
         )
