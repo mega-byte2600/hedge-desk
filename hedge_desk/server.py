@@ -19,6 +19,7 @@ from hedge_desk.auth_app import make_auth_app, default_membership_store
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
 WEB = DEPLOY_ROOT / "dist" if (DEPLOY_ROOT / "dist").is_dir() else PACKAGE_ROOT / "dist"
+ARTIFACTS = PACKAGE_ROOT / "artifacts"
 API_CACHE_SECONDS = max(0.0, float(os.getenv("EMPORION_API_CACHE_SECONDS", "15")))
 
 # Lazy singleton for the membership/auth app. The store is only opened on the
@@ -88,6 +89,36 @@ def _json(start_response, payload, status="200 OK"):
             ("Content-Type", "application/json"),
             ("Content-Length", str(len(body))),
             ("Cache-Control", "no-store"),
+        ],
+    )
+    return [body]
+
+
+def _serve_artifact(start_response, path: Path, as_json: bool = False):
+    """Serve a regenerated artifacts/ file (AM demo page or live report JSON).
+
+    The web console is built from dist/, but the true-MVP AM report is produced
+    into artifacts/ by the nightly run. Directly serving that file (rather than
+    copying it into dist/) keeps generated output out of the static bundle and
+    always surfaces the latest regenerated report. Fails closed to 404 if the
+    artifact has not been generated yet.
+    """
+    try:
+        body = path.read_bytes()
+    except (OSError, ValueError):
+        return _json(start_response, {"error": "artifact_missing", "path": path.name},
+                     "404 Not Found")
+    content_type = (
+        "application/json" if as_json
+        else mimetypes.guess_type(str(path))[0] or "text/html; charset=utf-8"
+    )
+    start_response(
+        "200 OK",
+        [
+            ("Content-Type", content_type),
+            ("Content-Length", str(len(body))),
+            ("Cache-Control", "no-store"),
+            ("ETag", _etag_for(path)),
         ],
     )
     return [body]
@@ -209,6 +240,12 @@ def _dispatch(environ, start_response):
         return _json(start_response, {"display_name": "mbolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
     if path == "/api/report":
         return _json(start_response, _cached("console-report", build_live_console_payload))
+    # True-MVP demo: serve the regenerated AM report page / live report JSON
+    # straight from artifacts/ (the real EOD -> overnight -> AM candidate output).
+    if path in ("/am-demo.html", "/am-demo"):
+        return _serve_artifact(start_response, ARTIFACTS / "am-demo.html")
+    if path == "/api/am-report":
+        return _serve_artifact(start_response, ARTIFACTS / "am-report-latest.json", as_json=True)
     relative = "index.html" if path in ("/", "") else path.lstrip("/")
     target = (WEB / relative).resolve()
     if WEB.resolve() not in target.parents and target != WEB.resolve():

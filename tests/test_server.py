@@ -156,6 +156,36 @@ class ServerTests(unittest.TestCase):
             self.assertEqual(status, '200 OK', path)
             self.assertIsInstance(payload, dict)
 
+    def test_am_demo_routes_serve_real_artifacts_and_fail_closed(self):
+        # The true-MVP routes serve the regenerated AM demo page / live report
+        # JSON straight from artifacts/ (not dist/), and a missing artifact must
+        # be an honest 404, never the SPA shell.
+        import os, tempfile
+        from unittest.mock import patch
+        from hedge_desk import server as srv
+
+        demo_marker = "<html><body>DEMO-FITS-MARKER</body></html>"
+        report = {"schema_version": "x", "watchlist": ["NKE"],
+                  "cash_secured_put_scan": {"NKE": {"fits_gp_rules": True}}}
+        with tempfile.TemporaryDirectory() as td:
+            open(os.path.join(td, "am-demo.html"), "w").write(demo_marker)
+            open(os.path.join(td, "am-report-latest.json"), "w").write(
+                __import__("json").dumps(report))
+            with patch.object(srv, "ARTIFACTS", __import__("pathlib").Path(td)):
+                st_html, body = self.raw("/am-demo.html")
+                self.assertEqual(st_html, "200 OK")
+                self.assertEqual(body.decode(), demo_marker)
+
+                st_rep, payload = self.request("/api/am-report")
+                self.assertEqual(st_rep, "200 OK")
+                self.assertTrue(payload["cash_secured_put_scan"]["NKE"]["fits_gp_rules"])
+
+                # a missing am-report -> honest JSON 404 (artifacts not generated yet)
+                os.remove(os.path.join(td, "am-report-latest.json"))
+                st_miss, body_miss = self.raw("/api/am-report")
+                self.assertEqual(st_miss, "404 Not Found")
+                self.assertEqual(json.loads(body_miss).get("error"), "artifact_missing")
+
     def raw(self, path):
         """Request without assuming a JSON body (the shell is HTML)."""
         from hedge_desk.server import application
