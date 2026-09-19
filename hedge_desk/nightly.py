@@ -70,8 +70,13 @@ def run_nightly(
             "no trade authorized. Premium income requires a real option chain."
         ),
     }
-    # Content-address the report body (without the hash field itself).
-    body = {k: v for k, v in report.items() if k != "report_sha256"}
+    # Content-address the stable report body (exclude the hash and the
+    # runtime path fields so the hash is reproducible across runs).
+    body = {
+        k: v
+        for k, v in report.items()
+        if k not in ("report_sha256", "report_path", "latest_path")
+    }
     report["report_sha256"] = hashlib.sha256(
         json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
@@ -85,7 +90,13 @@ def run_nightly(
         json.dumps(report, indent=2) + "\n", encoding="utf-8"
     )
     os.replace(tmp_path, final_path)  # atomic
+    # Stable "latest" pointer so the web/iOS feed can read today's report.
+    latest_path = root / "am-report-latest.json"
+    latest_tmp = root / ".am-report-latest.tmp"
+    latest_tmp.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    os.replace(latest_tmp, latest_path)
     report["report_path"] = str(final_path)
+    report["latest_path"] = str(latest_path)
     return report
 
 

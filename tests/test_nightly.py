@@ -60,7 +60,7 @@ class NightlyTests(unittest.TestCase):
             body = {
                 k: v
                 for k, v in report.items()
-                if k not in ("report_sha256", "report_path")
+                if k not in ("report_sha256", "report_path", "latest_path")
             }
             expected = hashlib.sha256(
                 json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")

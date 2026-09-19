@@ -10,7 +10,7 @@ from time import monotonic, perf_counter
 from urllib.request import Request, urlopen
 from wsgiref.simple_server import WSGIServer, make_server
 
-from hedge_desk.candidates import build_candidate_feed
+from hedge_desk.candidates import build_candidate_feed, build_real_eod_candidate_feed
 from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
 from hedge_desk.console_report import build_console_payload
 from hedge_desk.overnight import current_morning_report
@@ -201,6 +201,8 @@ def _dispatch(environ, start_response):
         return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _cached("supabase-status", _supabase_status)})
     if path == "/api/candidates":
         return _json(start_response, _cached("candidates", build_candidate_feed))
+    if path == "/api/eod-candidates":
+        return _json(start_response, _cached("eod-candidates", build_real_eod_candidate_feed))
     if path == "/api/risk-dashboard":
         return _json(start_response, _cached("risk-dashboard", build_candidate_risk_dashboard))
     if path == "/api/about":

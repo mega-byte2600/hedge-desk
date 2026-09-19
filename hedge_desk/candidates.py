@@ -38,3 +38,62 @@ def build_candidate_feed() -> Dict[str, object]:
         "candidate_definition": "SEED_UNIVERSE_NOT_METHOD_QUALIFIED",
         "candidates": [asdict(candidate) for candidate in SEED_CANDIDATES],
     }
+
+
+def build_real_eod_candidate_feed(
+    report_path: str = "artifacts/am-report-latest.json",
+) -> Dict[str, object]:
+    """Serve the latest real-EOD premium candidates from the nightly AM report.
+
+    Reads the content-addressed AM report written by ``hedge_desk.nightly`` and
+    maps each premium candidate into the shared ResearchCandidate contract so the
+    web console and iOS app can render real data. Fails closed: if the report is
+    missing or unreadable, returns an empty feed with a clear reason — never
+    fabricated candidates.
+    """
+    import json as _json
+    from pathlib import Path as _Path
+
+    path = _Path(report_path)
+    if not path.is_file():
+        return {
+            "schema_version": CANDIDATE_SCHEMA_VERSION,
+            "mode": "REAL_EOD",
+            "candidate_definition": "NIGHTLY_REPORT_MISSING",
+            "candidates": [],
+            "reason": "am-report-latest.json not found; run the nightly orchestrator",
+        }
+    try:
+        report = _json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, _json.JSONDecodeError):
+        return {
+            "schema_version": CANDIDATE_SCHEMA_VERSION,
+            "mode": "REAL_EOD",
+            "candidate_definition": "NIGHTLY_REPORT_UNREADABLE",
+            "candidates": [],
+            "reason": "am-report-latest.json unreadable",
+        }
+    candidates = []
+    for item in report.get("candidates", []):
+        candidates.append(
+            {
+                "desk_id": "overnight-premium-desk",
+                "symbol": item.get("symbol", ""),
+                "instrument_type": "EQUITY_OPTIONS",
+                "stage": "REAL_EOD_CANDIDATE",
+                "method": (
+                    f"{item.get('strategy', '')} defined-risk premium; "
+                    f"strike {item.get('strike', '')}; capital required "
+                    f"${item.get('requirement', '')}"
+                ),
+                "evidence_needed": "Real option chain for executable premium",
+                "trade_authorized": bool(item.get("trade_authorized", False)),
+            }
+        )
+    return {
+        "schema_version": CANDIDATE_SCHEMA_VERSION,
+        "mode": "REAL_EOD",
+        "candidate_definition": "REAL_EOD_PREMIUM_CANDIDATES",
+        "report_sha256": report.get("report_sha256", ""),
+        "candidates": candidates,
+    }
