@@ -227,7 +227,11 @@ def ingest_eod(
         results.append(
             EodSymbolResult(
                 symbol, SourceBatchStatus.PASS, (), days, artifact_hash,
-                decision_cutoff, received_at,
+                # Real source as-of: the last trading day's date, NOT the moment
+                # we asked. Stamping decision_cutoff here would make the freshness
+                # gate trivially pass and misrepresent the data's actual age.
+                datetime.fromisoformat(last_day.date + "T00:00:00+00:00"),
+                received_at,
             )
         )
 
