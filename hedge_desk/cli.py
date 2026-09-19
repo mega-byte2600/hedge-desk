@@ -36,6 +36,7 @@ from hedge_desk.data import (
     load_pwb_daily_news,
     ingest_eod,
 )
+from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.options import (
     build_candidate_control_handoffs,
     parse_option_snapshot,
@@ -506,7 +507,8 @@ def main() -> None:
             result = ingest_eod(symbols, cutoff)
         except ValueError as exc:
             parser.error(str(exc))
-        print(json.dumps(result, indent=2))
+        candidates = build_premium_candidates(result)
+        print(json.dumps({"eod_batch": result, "premium_candidates": candidates}, indent=2))
         return
     if args.overnight_report:
         print(json.dumps(current_morning_report(), indent=2))
