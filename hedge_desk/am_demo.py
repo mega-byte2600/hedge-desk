@@ -81,6 +81,36 @@ def _rates_block(rates: Dict) -> str:
     )
 
 
+def _vix_block(vix: Dict) -> str:
+    if vix.get("mode") == "BLOCKED":
+        return f"<p class='note'>VIX blocked: {_esc(vix.get('reason'))}</p>"
+    return (
+        "<table><tr><th>Series</th><th>Value</th><th>Date</th><th>Regime</th></tr>"
+        f"<tr><td>VIX (implied vol)</td><td>{_esc(vix.get('last_close'))}</td>"
+        f"<td>{_esc(vix.get('last_day'))}</td>"
+        f"<td><span class='badge warn'>{_esc(vix.get('regime'))}</span></td></tr>"
+        "</table>"
+    )
+
+
+def _macro_block(macro: Dict) -> str:
+    if macro.get("mode") == "BLOCKED":
+        return f"<p class='note'>Macro blocked: {_esc(macro.get('reason'))}</p>"
+    rows = [
+        ("CPI YoY (inflation)", macro.get("cpi_yoy_pct"), macro.get("cpi_latest_date")),
+        ("Unemployment", macro.get("unemployment_rate_pct"), macro.get("unemployment_date")),
+        ("Treasury 5y", macro.get("treasury_5y"), macro.get("treasury_5y_date")),
+        ("Treasury 30y", macro.get("treasury_30y"), macro.get("treasury_30y_date")),
+    ]
+    body = "".join(
+        f"<tr><td>{_esc(k)}</td><td>{_esc(v)}</td><td>{_esc(d)}</td></tr>"
+        for k, v, d in rows if v is not None
+    )
+    blocked = macro.get("blocked") or []
+    note = f"<div class='note'>Blocked series: {_esc(', '.join(blocked))}</div>" if blocked else ""
+    return f"<table><tr><th>Series</th><th>Value</th><th>Date</th></tr>{body}</table>{note}"
+
+
 def _earnings_block(earnings: Dict) -> str:
     blocks = []
     for cik, e in earnings.items():
@@ -237,7 +267,9 @@ def build_am_demo_html(
 {_paper_block(report['paper_outcome_summary'])}
 
 <div class="grid">
-  <div class="panel"><h2>6. Rates environment (REAL FRED)</h2>{_rates_block(report['rates_environment'])}</div>
+  <div class="panel"><h2>6. Rates environment (REAL FRED)</h2>{_rates_block(report['rates_environment'])}
+  <h2 style="margin-top:18px">VIX regime (REAL)</h2>{_vix_block(report['vix_regime'])}
+  <h2 style="margin-top:18px">Macro (REAL FRED)</h2>{_macro_block(report['macro_environment'])}</div>
   <div class="panel"><h2>7. Earnings actuals (REAL SEC EDGAR)</h2>{_earnings_block(report['earnings_actuals'])}</div>
 </div>
 

@@ -33,6 +33,8 @@ from hedge_desk.paper_log import summarize as summarize_paper_log
 from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.cboe_chain import real_chain_income
 from hedge_desk.rates_desk import rates_environment
+from hedge_desk.vix_regime import vix_regime
+from hedge_desk.macro_desk import macro_environment
 from hedge_desk.earnings_desk import earnings_desk
 from hedge_desk.execution_gate import (
     KillSwitch,
@@ -176,6 +178,18 @@ def run_nightly(
     except ValueError as exc:
         rates = {"mode": "BLOCKED", "reason": str(exc)}
 
+    # Real VIX regime (premium-timing context) from the public chart endpoint.
+    try:
+        vix = vix_regime(cutoff)
+    except ValueError as exc:
+        vix = {"mode": "BLOCKED", "reason": str(exc)}
+
+    # Real macro desk (inflation, unemployment, fuller curve) from FRED.
+    try:
+        macro = macro_environment()
+    except ValueError as exc:
+        macro = {"mode": "BLOCKED", "reason": str(exc)}
+
     # Real earnings actuals (SEC EDGAR) per supplied CIK.
     earnings_results = {}
     for cik in earnings_ciks:
@@ -204,6 +218,8 @@ def run_nightly(
         "cash_secured_put_scan": csp_results,
         "paper_outcome_summary": summarize_paper_log(paper_log_path),
         "rates_environment": rates,
+        "vix_regime": vix,
+        "macro_environment": macro,
         "earnings_actuals": earnings_results,
         "note": (
             "Equity candidates: collateral/margin from real EOD closes. Premium "
