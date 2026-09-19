@@ -42,7 +42,9 @@ from hedge_desk.data.contracts import DataArtifact
 
 EOD_INGEST_VERSION = "hedge-desk-eod-ingest-1.0.0"
 EOD_SOURCE_ID = "yahoo-public-chart-v8"
-YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?range=5d&interval=1d"
+YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?range={range_param}&interval=1d"
+DEFAULT_YAHOO_RANGE = "5d"   # lightweight daily batch
+FEATURE_YAHOO_RANGE = "3mo"  # enough history for 1/5/21-day + realized-vol features
 
 # Transport injection for deterministic tests.
 Transport = Callable[[str], Tuple[int, bytes]]
@@ -170,12 +172,15 @@ def ingest_eod(
     decision_cutoff: datetime,
     transport: Transport = _default_transport,
     prior_manifest_sha256: str = "0" * 64,
+    range_param: str = DEFAULT_YAHOO_RANGE,
 ) -> Dict[str, object]:
     """Pull EOD daily bars for a watchlist and return a validated batch result.
 
     Returns a plain dict (schema-versioned) so callers are not coupled to a
     parsed dataclass. Each symbol's row carries its own PASS/QUARANTINE/REJECT
     status; the aggregate ``BatchManifest`` decides READY/INCOMPLETE/etc.
+    ``range_param`` controls the Yahoo window (default 5d; use FEATURE_YAHOO_RANGE
+    for a feature plane that needs 1/5/21-day history).
     """
     if not symbols:
         raise ValueError("eod watchlist cannot be empty")
@@ -187,7 +192,7 @@ def ingest_eod(
     results: list[EodSymbolResult] = []
     in_epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
     for symbol in symbols:
-        url = YAHOO_CHART_URL.format(symbol=symbol)
+        url = YAHOO_CHART_URL.format(symbol=symbol, range_param=range_param)
         status, raw = transport(url)
         received_at = datetime.now(timezone.utc)
         if status != 200 or not raw:
@@ -277,6 +282,13 @@ def ingest_eod(
                 "days_count": len(item.days),
                 "last_day_close": item.days[-1].close if item.days else None,
                 "last_day": item.days[-1].date if item.days else None,
+                "days": [
+                    {
+                        "date": d.date, "close": d.close, "open": d.open,
+                        "high": d.high, "low": d.low, "volume": d.volume,
+                    }
+                    for d in item.days
+                ],
             }
             for item in ordered
         ],
