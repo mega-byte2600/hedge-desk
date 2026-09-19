@@ -137,13 +137,19 @@ def _csp_block(csp: Dict) -> str:
             continue
         c = r.get("candidate", {})
         badge = "ok" if r.get("fits_gp_rules") else "warn"
+        # return_on_capital is a decimal fraction (0.0128 = 1.28%); show it as a
+        # clean percent so the GP reads 1.28%, not a misread 0.0128%.
+        try:
+            roc_pct = f"{float(c.get('return_on_capital')) * 100:.2f}%"
+        except (TypeError, ValueError):
+            roc_pct = _esc(c.get("return_on_capital")) or "-"
         rows.append(
             "<tr>"
             f"<td>{_esc(sym)}</td><td>{_esc(c.get('strike'))}</td>"
             f"<td>{_esc(c.get('dte'))}</td>"
             f"<td>${_esc(c.get('net_credit_per_share'))}</td>"
             f"<td>${_esc(c.get('collateral_required'))}</td>"
-            f"<td>{_esc(c.get('return_on_capital'))}</td>"
+            f"<td>{_esc(roc_pct)}</td>"
             f"<td><span class='badge {badge}'>{'FITS' if r.get('fits_gp_rules') else 'no'}</span></td>"
             f"<td>{_esc(', '.join(r.get('eval_reasons', [])) or '-')}</td>"
             "</tr>"
