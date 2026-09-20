@@ -8,6 +8,8 @@ measured by a command; VALIDATED = matches the GP's stated expectations. Full su
 
 | Commit | Type | What it did | Verified by |
 |---|---|---|---|
+| 5799682 | feat(risk) | Real account-equity input → survivability evaluates (PASS/FAIL) instead of INDETERMINATE; privacy-safe (raw equity never committed/shown) | account 5/5, nightly 2/2 |
+| 46dc180 | docs(status) | BML progress dashboard — 18 commits, loop state, next increments | doc review |
 | fc14b1b | fix(data) | DATA peer-review: macro mode→BLOCKED when all blocked; CPI YoY from one fetch; retry-sleep fix; `_safe` broadened to any Exception | macro 3/3, suite 738 |
 | 8abdf95 | docs(vv) | RESEARCH peer-review: don't present blocked FRED snapshot as current reality | doc review |
 | 906ac46 | docs(vv) | ENGINEER peer-review: scope the "bounded batch" claim honestly | doc review |
@@ -42,6 +44,13 @@ measured by a command; VALIDATED = matches the GP's stated expectations. Full su
 ## Next increments (dependency order)
 
 1. GP records one decision (closes the Learn loop) — the actionable measure.
-2. Real account-equity input → survivability evaluates instead of INDETERMINATE.
-3. Forward-earnings calendar (free sources currently 401/404-gated; retry).
-4. Risk-gated Schwab execution (the gated release behind the risk engine + kill switch).
+2. Forward-earnings calendar (free sources currently 401/404-gated; retry).
+3. Risk-gated Schwab execution (the gated release behind the risk engine + kill switch).
+
+## LEARN this cycle
+
+Wiring real account equity surfaced an honest truth: the 2%-of-equity max-loss rule
+means a $3,200 cash-secured-put needs ~$160k equity to pass survivability. At a small
+account, every candidate fails survivability even though it fits the wheel's capital
+and return rules. That is the GP's conservative rule working as intended — the desk
+now surfaces it instead of hiding behind INDETERMINATE.
