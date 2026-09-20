@@ -235,6 +235,24 @@ def _csp_top_pick(csp: Dict) -> str:
     )
 
 
+def _scale_path_block(scale: Dict) -> str:
+    if not scale:
+        return "<p class='note'>Compounding scale: configure account equity to see how position size grows with the account.</p>"
+    rows = "".join(
+        f"<tr><td>${int(p['equity']):,}</td><td>{p['contracts']}</td></tr>"
+        for p in scale.get("path", [])
+    )
+    return (
+        f"<p class='note'>Top fit: {_esc(scale.get('symbol'))} at strike "
+        f"{_esc(scale.get('strike'))}, {_esc(scale.get('capital_per_contract'))} "
+        f"capital/contract. Holding the 2%-of-equity rule, contracts scale as the "
+        f"account grows:</p>"
+        f"<table><thead><tr><th>Account equity</th><th>Contracts</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table>"
+        f"<div class='note'>{_esc(scale.get('note',''))}</div>"
+    )
+
+
 def _paper_block(paper: Dict) -> str:
     counts = paper.get("outcome_counts", {})
     if not counts:
@@ -309,6 +327,8 @@ def build_am_demo_html(
 <h2>4. Cash-secured-put wheel scan (REAL Cboe chains; GP rules)</h2>
 {_csp_top_pick(report['cash_secured_put_scan'])}
 {_csp_block(report['cash_secured_put_scan'])}
+
+<div class="panel" style="margin-top:16px"><h2>4b. Compounding scale (hold the rule, size to grow)</h2>{_scale_path_block(report.get('scale_path'))}</div>
 
 <h2>5. Paper-outcome loop (append-only journal)</h2>
 {_paper_block(report['paper_outcome_summary'])}

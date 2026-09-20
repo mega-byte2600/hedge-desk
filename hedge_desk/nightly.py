@@ -37,7 +37,7 @@ from hedge_desk.vix_regime import vix_regime, apply_vix_regime_filter
 from hedge_desk.macro_desk import macro_environment
 from hedge_desk.freshness import freshness_summary
 from hedge_desk.account import read_account_equity
-from hedge_desk.position_sizing import wheel_fit_for_equity
+from hedge_desk.position_sizing import wheel_fit_for_equity, scale_position_to_equity
 from hedge_desk.earnings_desk import earnings_desk
 from hedge_desk.execution_gate import (
     KillSwitch,
@@ -242,6 +242,38 @@ def run_nightly(
     # a HIGH regime flags/forces fits_gp_rules=False; ELEVATED warns.
     csp_results = apply_vix_regime_filter(vix, csp_results)
 
+    # Compounding scale path for the top GP-fit candidate: how contracts scale
+    # as the account grows, holding the 2%-of-equity rule. Purely conditional on
+    # equity milestones; no performance projected or claimed.
+    scale_path = None
+    top_fit = None
+    best_roc = -1.0
+    for sym, r in csp_results.items():
+        if r.get("mode") == "CASH_SECURED_PUT" and r.get("fits_gp_rules"):
+            c = r.get("candidate", {})
+            try:
+                roc = float(c.get("return_on_capital"))
+            except (TypeError, ValueError):
+                roc = -1.0
+            if roc > best_roc:
+                best_roc = roc
+                top_fit = (sym, c)
+    if top_fit is not None:
+        sym, c = top_fit
+        capital = c.get("collateral_required") or c.get("max_loss")
+        scale_path = {
+            "symbol": sym,
+            "strike": c.get("strike"),
+            "capital_per_contract": capital,
+            "path": [
+                {"equity": str(eq), "contracts": scale_position_to_equity(
+                    capital, capital, str(eq))["max_contracts"]}
+                for eq in (100000, 250000, 500000, 1000000)
+            ],
+            "note": ("Conditional on real account equity; holds the 2%-of-equity "
+                     "max-loss rule. Sizing design, not a performance projection."),
+        }
+
     report = {
         "schema_version": NIGHTLY_VERSION,
         "mode": "REAL_EOD_NIGHTLY",
@@ -258,6 +290,7 @@ def run_nightly(
         "features": features,
         "cash_secured_put_scan": csp_results,
         "account_equity_configured": account_equity is not None,
+        "scale_path": scale_path,
         "wheel_fit": (
             wheel_fit_for_equity(str(account_equity))
             if account_equity is not None
