@@ -2,12 +2,13 @@
 
 Build-Measure-Learn loop status. Each row is a committed, verified slice. VERIFIED =
 measured by a command; VALIDATED = matches the GP's stated expectations. Full suite:
-**745/745 tests green** (7s, offline/deterministic).
+**747/747 tests green** (7s, offline/deterministic).
 
 ## Commits (newest first)
 
 | Commit | Type | What it did | Verified by |
 |---|---|---|---|
+| 7a8d9fb | feat(risk) | scale_position_to_equity — size contracts up as the account compounds (holds 2%-of-equity, scales to get big) | position_sizing suite, full 747 |
 | 3d518a6 | feat(risk) | wheel-fit-for-equity — states how the wheel sizes to the GP's account (2%-of-equity → max position) | position_sizing suite, full 745 |
 | 9b71a46 | feat(demo) | Surface survivability per candidate in the CSP panel (PASS/FAIL/INDETERMINATE) | am_demo 3/3 |
 | fe249a9 | docs(status) | Dashboard + survivability LEARN (2%-of-equity rule needs ~$160k for a $3.2k CSP) | doc review |
@@ -57,3 +58,10 @@ means a $3,200 cash-secured-put needs ~$160k equity to pass survivability. At a 
 account, every candidate fails survivability even though it fits the wheel's capital
 and return rules. That is the GP's conservative rule working as intended — the desk
 now surfaces it instead of hiding behind INDETERMINATE.
+
+**Design decision (GP): keep that scale, design to get big.** The 2%-of-equity
+discipline is the immutable safety rail; the sizing is designed to compound — as the
+account grows (premium collection + capital), `scale_position_to_equity` scales
+contracts up automatically (a $3,200 CSP: 0 contracts at $25k, 1 at $250k, 6 at
+$1M). No performance is projected or claimed; the scale path is purely conditional
+on real equity.
