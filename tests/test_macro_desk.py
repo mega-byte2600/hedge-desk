@@ -35,6 +35,13 @@ class MacroDeskTests(unittest.TestCase):
         self.assertFalse(r["trade_authorized"])
         self.assertEqual(r["blocked"], [])
 
+    def test_all_blocked_flips_mode_to_blocked(self):
+        # DATA peer-review: if every series is blocked, the desk must not claim
+        # REAL_FRED_MACRO — it reports mode BLOCKED.
+        r = macro_environment(transport=_FakeTransport({}), as_of=date(2026, 9, 17))
+        self.assertEqual(r["mode"], "BLOCKED")
+        self.assertIn("all_fred_series_blocked", r.get("reason", ""))
+
     def test_missing_series_is_blocked_not_fabricated(self):
         data = {
             "CPIAUCSL": "observation_date,CPIAUCSL\n2026-08-01,334.131\n",

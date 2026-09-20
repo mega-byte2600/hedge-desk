@@ -166,9 +166,13 @@ def run_nightly(
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     def _safe(fn, *args, **kwargs):
+        # DATA peer-review: catch any exception (not just ValueError) so a
+        # KeyError/TypeError from one desk cannot escape fut.result() and kill
+        # the whole batch before the report is written. Fail-stop is honest, but
+        # one flaky source should not cost the AM report.
         try:
             return fn(*args, **kwargs)
-        except ValueError as exc:
+        except Exception as exc:
             return {"mode": "BLOCKED", "reason": str(exc)}
 
     csp_results: dict = {}

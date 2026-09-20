@@ -77,9 +77,11 @@ ingests two more real, free, no-auth sources, each fail-closed:
 - **FRED macro desk** (`macro_environment`): CPI YoY inflation, unemployment, and the
   5y/30y curve points via the same official no-auth FRED CSV transport, with a small
   retry for transient blips. When FRED is reachable it returns real values (example
-  from a working run on 2026-09-19: CPI YoY 3.35%, unemployment 4.1%, 5y 4.78%,
+  from a working run earlier on 2026-09-19: CPI YoY 3.35%, unemployment 4.1%, 5y 4.78%,
   30y 5.29%); when FRED is flaky the series are reported blocked, never fabricated.
-  Tests 2/2.
+  Lineage: the current run is captured at `artifacts/macro-2026-09-19.json` (mode
+  BLOCKED — FRED was flaky at capture; the desk correctly refuses to fabricate).
+  Tests 3/3.
 
 Both wired into `run_nightly` (report keys `vix_regime`, `macro_environment`) and the AM
 demo page. A blocked series is reported, never fabricated.
