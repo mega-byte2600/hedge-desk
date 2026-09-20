@@ -80,4 +80,33 @@ def vix_regime(
     }
 
 
-__all__ = ["VIX_VERSION", "VIX_SYMBOL", "vix_regime"]
+def apply_vix_regime_filter(vix: Dict[str, object], csp_results: Dict[str, object]) -> Dict[str, object]:
+    """Apply the VIX regime as a risk filter on the cash-secured-put candidates.
+
+    RISK peer-review finding: the regime was context only, so a HIGH-VIX (fear)
+    environment still recommended selling puts with no vol-regime flag. Now a HIGH
+    regime adds VIX_HIGH_REGIME to each candidate's eval_reasons and forces
+    fits_gp_rules=False (fail-closed on the risk filter); ELEVATED adds a warning
+    but keeps the candidate. LOW/NORMAL and BLOCKED (no regime) leave candidates
+    unchanged. Returns a new dict; never mutates the input.
+    """
+    regime = vix.get("regime") if vix.get("mode") == "REAL_VIX" else None
+    if regime not in ("HIGH", "ELEVATED"):
+        return dict(csp_results)
+    out = {}
+    for sym, r in csp_results.items():
+        r = dict(r)
+        if r.get("mode") == "CASH_SECURED_PUT":
+            reasons = list(r.get("eval_reasons", []))
+            if regime == "HIGH":
+                if "VIX_HIGH_REGIME" not in reasons:
+                    reasons.append("VIX_HIGH_REGIME")
+                r["fits_gp_rules"] = False
+            elif regime == "ELEVATED" and "VIX_ELEVATED_REGIME" not in reasons:
+                reasons.append("VIX_ELEVATED_REGIME")
+            r["eval_reasons"] = reasons
+        out[sym] = r
+    return out
+
+
+__all__ = ["VIX_VERSION", "VIX_SYMBOL", "vix_regime", "apply_vix_regime_filter"]

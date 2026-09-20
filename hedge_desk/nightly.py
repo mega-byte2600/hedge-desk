@@ -33,7 +33,7 @@ from hedge_desk.paper_log import summarize as summarize_paper_log
 from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.cboe_chain import real_chain_income
 from hedge_desk.rates_desk import rates_environment
-from hedge_desk.vix_regime import vix_regime
+from hedge_desk.vix_regime import vix_regime, apply_vix_regime_filter
 from hedge_desk.macro_desk import macro_environment
 from hedge_desk.freshness import freshness_summary
 from hedge_desk.earnings_desk import earnings_desk
@@ -226,6 +226,10 @@ def run_nightly(
                 macro = res
             elif kind == "earnings":
                 earnings_results[key] = res
+
+    # VIX regime as a risk filter on the CSP candidates (RISK peer-review):
+    # a HIGH regime flags/forces fits_gp_rules=False; ELEVATED warns.
+    csp_results = apply_vix_regime_filter(vix, csp_results)
 
     report = {
         "schema_version": NIGHTLY_VERSION,

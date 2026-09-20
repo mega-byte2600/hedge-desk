@@ -28,6 +28,16 @@ class PremiumFilterTests(unittest.TestCase):
     def test_never_authorizes(self):
         self.assertFalse(evaluate_premium("40", "200", "45", "25000", 34)["trade_authorized"])
 
+    def test_return_on_capital_is_per_contract_over_dollar_collateral(self):
+        # Reference case (NKE): credit 0.41/share, strike 32.
+        # collateral = (32 - 0.41)*100 = 3159.00; return_on_capital =
+        # credit_per_contract / collateral = 41 / 3159 = 1.298% (in the 0.5-2% band).
+        # Regression: this was credit/collateral = 0.41/3159 = 0.013% (100x too small).
+        r = evaluate_premium("0.41", "3159", "32", "25000", 34)
+        self.assertEqual(r["collateral_required"], "3159.00")
+        self.assertEqual(r["return_on_capital"], "0.0130")
+        self.assertNotIn("RETURN_NOT_IN_GP_BAND", r["reasons"])
+
 
 if __name__ == "__main__":
     unittest.main()

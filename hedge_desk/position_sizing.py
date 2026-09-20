@@ -40,7 +40,12 @@ def evaluate_premium(
         Decimal(short_strike), credit, 1
     ).requirement
 
-    return_on_capital = credit / collateral if collateral else Decimal("0")
+    # Return on capital deployed = credit_per_contract / collateral_in_dollars.
+    # credit is per-share; collateral is dollars (strike*100 - credit*100), so
+    # multiply credit by 100 to keep both sides in dollars (the x100 cancels to
+    # credit/(strike-credit)). Dividing per-share credit by dollar collateral
+    # would report a 100x-too-small number (the units bug QUANT caught).
+    return_on_capital = (credit * Decimal("100")) / collateral if collateral else Decimal("0")
     loss_fraction = loss / equity
     reasons: list[str] = []
     if loss_fraction > MAX_LOSS_FRACTION_EQUITY:

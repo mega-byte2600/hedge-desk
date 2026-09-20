@@ -4,7 +4,7 @@ import json
 import unittest
 from datetime import datetime, timezone
 
-from hedge_desk.vix_regime import vix_regime
+from hedge_desk.vix_regime import apply_vix_regime_filter, vix_regime
 
 
 def _chart(close, symbol="^VIX", day="2026-09-18"):
@@ -53,6 +53,28 @@ class VixRegimeTests(unittest.TestCase):
     def test_rejects_naive_cutoff(self):
         with self.assertRaises(ValueError):
             vix_regime(datetime(2026, 9, 19))
+
+
+    def test_high_vix_regime_blocks_csp_candidates(self):
+        csp = {"NKE": {"mode": "CASH_SECURED_PUT", "fits_gp_rules": True,
+                       "eval_reasons": []}}
+        vix = {"mode": "REAL_VIX", "regime": "HIGH"}
+        out = apply_vix_regime_filter(vix, csp)
+        self.assertFalse(out["NKE"]["fits_gp_rules"])
+        self.assertIn("VIX_HIGH_REGIME", out["NKE"]["eval_reasons"])
+
+    def test_low_vix_regime_leaves_candidates_unchanged(self):
+        csp = {"NKE": {"mode": "CASH_SECURED_PUT", "fits_gp_rules": True,
+                       "eval_reasons": []}}
+        out = apply_vix_regime_filter({"mode": "REAL_VIX", "regime": "LOW"}, csp)
+        self.assertTrue(out["NKE"]["fits_gp_rules"])
+        self.assertEqual(out["NKE"]["eval_reasons"], [])
+
+    def test_blocked_vix_leaves_candidates_unchanged(self):
+        csp = {"NKE": {"mode": "CASH_SECURED_PUT", "fits_gp_rules": True,
+                       "eval_reasons": []}}
+        out = apply_vix_regime_filter({"mode": "BLOCKED"}, csp)
+        self.assertTrue(out["NKE"]["fits_gp_rules"])
 
 
 if __name__ == "__main__":
