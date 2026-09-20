@@ -13,6 +13,7 @@ from **real data** — no synthetic fixtures, no invented numbers.
 real EOD closes (Yahoo) ──▶ feature plane ──▶ premium candidates
 real Cboe delayed option chains ──▶ cash-secured-put wheel scan (GP-fit)
 real FRED rates ──▶ rates environment      real SEC EDGAR ──▶ earnings actuals
+real VIX ──▶ premium-timing regime         real FRED ──▶ macro (CPI, unemployment, 5y/30y)
 append-only paper journal ──▶ learning loop
 ```
 
@@ -33,6 +34,22 @@ bash scripts/demo.sh
 `demo.sh` regenerates the report from the live pipeline before serving, so the page is
 always fresh. Health check: `/api/health` returns `mode: "paper"`,
 `live_orders_enabled: false`.
+
+### Scheduled batch (4:30pm EST after close)
+
+The pipeline is meant to run after the market close and work until the batch is done.
+A launchd job fires it automatically at **4:30pm EST** (13:30 local — both US coasts
+shift DST together, so 16:30 Eastern is always 13:30 local year-round):
+
+```bash
+launchctl list | grep emporion        # com.emporion.nightly should be present
+bash scripts/run_nightly_batch.sh     # run it manually right now
+```
+
+Each run writes a timestamped log to `artifacts/logs/nightly-<ts>.log` (last 30 kept)
+and regenerates `am-report-latest.json` + `am-demo.html`, which the server serves live.
+The report's `data_freshness` field states whether it is running on today's close or the
+prior trading day's (at 4:30pm the source may not have published today's bar yet).
 
 ### Public URL (this Mac, while the server runs)
 
