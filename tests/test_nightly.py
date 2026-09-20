@@ -79,15 +79,35 @@ def _fake_rates_transport(url):
     return 200, f"observation_date,{series}\n2026-09-17,{v}\n".encode("utf-8")
 
 
+def _fake_vix_transport(url):
+    # A low VIX (14.81 -> LOW regime) so the regime risk filter does not block
+    # the CSP candidates in the offline nightly test.
+    import json
+    ts = 1789761600
+    payload = {
+        "chart": {"result": [{
+            "meta": {"symbol": "^VIX"},
+            "timestamp": [ts],
+            "indicators": {"quote": [{
+                "open": [14.5], "high": [15.0], "low": [14.4],
+                "close": [14.81], "volume": [1000000],
+            }]},
+        }]}
+    }
+    return 200, json.dumps(payload).encode("utf-8")
+
+
 def _fake_csp_transport(url):
-    # A Cboe-chain-shaped payload with a ~10% OTM put so the CSP scan finds a
-    # candidate offline (symbol-agnostic; the scan reads the payload).
+    # A Cboe-chain-shaped payload with a ~10% OTM put that FITS the GP wheel
+    # (sub-$5k collateral, return-on-capital in band) so the CSP scan finds a
+    # fits_gp_rules candidate offline. current_price 36 -> target strike ~32.4,
+    # nearest 32; bid 0.41 -> collateral $3,200, RoC 1.28% (in 0.5-2% band).
     import json
     payload = {
         "data": {
-            "symbol": "AAPL", "current_price": "100.00", "bid": "100.00", "ask": "100.00",
+            "symbol": "AAPL", "current_price": "36.00", "bid": "36.00", "ask": "36.10",
             "options": [
-                {"option": "AAPL261023P00090000", "bid": 1.19, "ask": 1.25,
+                {"option": "AAPL261023P00032000", "bid": 0.41, "ask": 0.45,
                  "bid_size": 25, "ask_size": 30, "open_interest": 500, "volume": 200},
             ],
         }
@@ -101,7 +121,7 @@ class NightlyTests(unittest.TestCase):
             report = run_nightly(["AAPL"], artifacts_dir=tmp, transport=_fake_transport,
                        chain_transport=_fake_chain_transport, csp_transport=_fake_csp_transport,
                        rates_transport=_fake_rates_transport,
-                       vix_transport=_fake_transport, macro_transport=_fake_rates_transport)
+                       vix_transport=_fake_vix_transport, macro_transport=_fake_rates_transport)
             self.assertEqual(report["schema_version"], NIGHTLY_VERSION)
             self.assertEqual(report["mode"], "REAL_EOD_NIGHTLY")
             self.assertEqual(len(report["report_sha256"]), 64)
@@ -116,13 +136,28 @@ class NightlyTests(unittest.TestCase):
             self.assertTrue(
                 all(not c["trade_authorized"] for c in report["candidates"])
             )
+            # ENGINEER peer-review: green must mean the desk WORKED, not just that
+            # a report-shaped object was produced. Assert real content.
+            self.assertGreaterEqual(len(report["candidates"]), 1,
+                                    "nightly produced no equity candidates")
+            self.assertTrue(report["candidates"][0]["symbol"],
+                            "candidate missing symbol")
+            # the fake csp transport returns a ~10% OTM put -> must fit the wheel
+            csp = report["cash_secured_put_scan"]
+            self.assertTrue(any(v.get("fits_gp_rules") for v in csp.values()),
+                            "no cash-secured-put candidate fits the GP wheel")
+            # real-data desks present and honest
+            self.assertEqual(report["vix_regime"]["mode"], "REAL_VIX")
+            self.assertIn("macro_environment", report)
+            self.assertIn("data_freshness", report)
+            self.assertIsInstance(report["data_freshness"]["is_current"], bool)
 
     def test_report_is_verifiable(self):
         with tempfile.TemporaryDirectory() as tmp:
             report = run_nightly(["AAPL"], artifacts_dir=tmp, transport=_fake_transport,
                        chain_transport=_fake_chain_transport, csp_transport=_fake_csp_transport,
                        rates_transport=_fake_rates_transport,
-                       vix_transport=_fake_transport, macro_transport=_fake_rates_transport)
+                       vix_transport=_fake_vix_transport, macro_transport=_fake_rates_transport)
             body = {
                 k: v
                 for k, v in report.items()
