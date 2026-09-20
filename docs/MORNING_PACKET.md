@@ -41,7 +41,7 @@ The Measure side of the loop is empty: 0 decisions recorded. To close it:
     --invalidation "Underlying gaps below 32 within the DTE." \
     --planned-exit "Expire worthless at 34 DTE."
 And set real account equity so survivability evaluates:
-  export ACCOUNT_EQUITY=25000   (or put it in data/account_equity.txt, gitignored)
+  export ACCOUNT_EQUITY=<your_real_equity>   (or put it in data/account_equity.txt, gitignored)
 
 ## Honest limits (unchanged)
 

@@ -61,7 +61,7 @@ def _watchlist() -> Sequence[str]:
 
 def _annotate_chain_with_gates(
     chain: Dict[str, object],
-    account_equity: str = "100000",
+    demo_account_equity: str = "100000",
     kill_switch_armed: bool = False,
 ) -> Dict[str, object]:
     """Annotate each presented premium structure with its risk+release gate decision."""
@@ -69,7 +69,7 @@ def _annotate_chain_with_gates(
 
     acct = Account(
         "demo-account", AccountType.INDIVIDUAL,
-        Decimal(account_equity), Decimal(account_equity) / Decimal("2"),
+        Decimal(demo_account_equity), Decimal(demo_account_equity) / Decimal("2"),
         options_approved=True,
     )
     structures = chain.get("income_structures", [])
@@ -103,12 +103,15 @@ def _annotate_chain_with_gates(
                       "kill_switch_armed": decision.kill_switch_armed})
     out = dict(chain)
     out["gated_income_structures"] = gated
-    out["gate_account_equity"] = account_equity
+    # DATA peer-review: this is a DEMO default (drives the fail-closed gates to
+    # INDETERMINATE); never present it as the GP's validated account balance.
+    out["gate_demo_account_equity"] = demo_account_equity
     out["gate_risk_input_advanced"] = False
     out["gate_note"] = (
         "No validated Risk-of-Ruin artifact and no real account/liquidity are "
         "wired yet, so gate decisions are INDETERMINATE (missing inputs), never a "
-        "fabricated approval. No order is placed and nothing is trade_authorized."
+        "fabricated approval. gate_demo_account_equity is a DEMO default, NOT the "
+        "GP's real balance. No order is placed and nothing is trade_authorized."
     )
     out["gate_kill_switch_armed"] = kill_switch_armed
     return out
