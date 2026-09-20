@@ -8,6 +8,7 @@ measured by a command; VALIDATED = matches the GP's stated expectations. Full su
 
 | Commit | Type | What it did | Verified by |
 |---|---|---|---|
+| 665027f | feat(demo) | Compounding scale wired into AM report + demo (AAL: 1 contract @$100k, 4 @$250k, 8 @$500k, 17 @$1M) — proven on served page | full 747 |
 | 7a8d9fb | feat(risk) | scale_position_to_equity — size contracts up as the account compounds (holds 2%-of-equity, scales to get big) | position_sizing suite, full 747 |
 | 3d518a6 | feat(risk) | wheel-fit-for-equity — states how the wheel sizes to the GP's account (2%-of-equity → max position) | position_sizing suite, full 745 |
 | 9b71a46 | feat(demo) | Surface survivability per candidate in the CSP panel (PASS/FAIL/INDETERMINATE) | am_demo 3/3 |
