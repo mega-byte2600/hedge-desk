@@ -8,6 +8,7 @@ measured by a command; VALIDATED = matches the GP's stated expectations. Full su
 
 | Commit | Type | What it did | Verified by |
 |---|---|---|---|
+| 2c41b4a | fix(data) | Don't present the demo $100k as the GP's real account balance (DATA peer-review) | full 753 |
 | 0d2cee2 | fix(decision) | CLI validates input semantically BEFORE any vault write (ENGINEER peer-review) | manual reject tests |
 | ab8a070 | fix(quant) | csp_scan collateral now credit-offset, consistent with evaluate_premium (QUANT+RISK) | csp 4/4, full 753 |
 | 04c4952 | docs(morning) | one-page overnight build review for the GP | doc review |
