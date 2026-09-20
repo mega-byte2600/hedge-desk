@@ -6,8 +6,8 @@ Open the demo: https://astra-mini.tail16a2cd.ts.net:8443/am-demo.html
 ## What you're looking at (the Overnight Premium Desk AM report)
 
 - 7 cash-secured-put candidates that fit your wheel (ranked best-first by
-  return-on-capital): AAL 1.39%, LYFT 1.26%, NKE 1.28%, NCLH 1.23%, CCL 1.15%,
-  F 0.83%, DVN 0.55% — all <$5k capital, 34 DTE, real Cboe delayed chains.
+  return-on-capital, credit-offset): AAL 1.41%, NKE 1.30%, 1.25%, 1.16%, 0.84%,
+  0.82%, DVN 0.55% — all <$5k capital, 34 DTE, real Cboe delayed chains.
 - Survivability per candidate (PASS/FAIL/INDETERMINATE) — INDETERMINATE until you
   set real account equity.
 - **Compounding scale** (the "get big" design, holding the 2%-of-equity rule):
