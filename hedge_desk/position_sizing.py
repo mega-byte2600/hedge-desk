@@ -67,4 +67,28 @@ def evaluate_premium(
     }
 
 
-__all__ = ["evaluate_premium"]
+def wheel_fit_for_equity(account_equity: str) -> Dict[str, object]:
+    """Given real account equity, state how the cash-secured-put wheel fits.
+
+    The 2%-of-equity max-loss rule means a position's worst-case loss (its
+    collateral, e.g. a $3,200 cash-secured put) must stay under 2% of the account.
+    This surfaces the honest consequence: at a small account the wheel's $1k-4.4k
+    candidates are blocked by survivability, and a larger account is needed to run
+    any of them. Returns the max allowed position size and an explanation.
+    """
+    equity = Decimal(account_equity)
+    if equity <= 0:
+        raise ValueError("account_equity must be positive")
+    max_allowed_loss = equity * MAX_LOSS_FRACTION_EQUITY
+    return {
+        "max_position_collateral": str(max_allowed_loss.quantize(Decimal("0.01"))),
+        "explanation": (
+            f"2% of equity = ${max_allowed_loss.quantize(Decimal('0.01')):.2f} "
+            "worst-case position loss allowed. Any candidate whose worst-case "
+            "loss exceeds this fails survivability - the wheel needs an account "
+            "roughly 50x the position size."
+        ),
+    }
+
+
+__all__ = ["evaluate_premium", "wheel_fit_for_equity"]

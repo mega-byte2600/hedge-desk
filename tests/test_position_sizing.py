@@ -1,7 +1,7 @@
 """Deterministic tests for the small-desk position filter (GP rules)."""
 
 import unittest
-from hedge_desk.position_sizing import evaluate_premium
+from hedge_desk.position_sizing import evaluate_premium, wheel_fit_for_equity
 
 
 class PremiumFilterTests(unittest.TestCase):
@@ -37,6 +37,16 @@ class PremiumFilterTests(unittest.TestCase):
         self.assertEqual(r["collateral_required"], "3159.00")
         self.assertEqual(r["return_on_capital"], "0.0130")
         self.assertNotIn("RETURN_NOT_IN_GP_BAND", r["reasons"])
+
+
+    def test_wheel_fit_scales_with_equity(self):
+        # 2% of $25k = $500 max position; 2% of $250k = $5,000.
+        self.assertEqual(wheel_fit_for_equity("25000")["max_position_collateral"], "500.00")
+        self.assertEqual(wheel_fit_for_equity("250000")["max_position_collateral"], "5000.00")
+
+    def test_wheel_fit_rejects_non_positive_equity(self):
+        with self.assertRaises(ValueError):
+            wheel_fit_for_equity("0")
 
 
 if __name__ == "__main__":

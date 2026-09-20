@@ -37,6 +37,7 @@ from hedge_desk.vix_regime import vix_regime, apply_vix_regime_filter
 from hedge_desk.macro_desk import macro_environment
 from hedge_desk.freshness import freshness_summary
 from hedge_desk.account import read_account_equity
+from hedge_desk.position_sizing import wheel_fit_for_equity
 from hedge_desk.earnings_desk import earnings_desk
 from hedge_desk.execution_gate import (
     KillSwitch,
@@ -257,6 +258,12 @@ def run_nightly(
         "features": features,
         "cash_secured_put_scan": csp_results,
         "account_equity_configured": account_equity is not None,
+        "wheel_fit": (
+            wheel_fit_for_equity(str(account_equity))
+            if account_equity is not None
+            else {"max_position_collateral": None,
+                  "explanation": "Account equity not configured; survivability is INDETERMINATE."}
+        ),
         "paper_outcome_summary": summarize_paper_log(paper_log_path),
         "rates_environment": rates,
         "vix_regime": vix,
