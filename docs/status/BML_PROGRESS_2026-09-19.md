@@ -2,12 +2,15 @@
 
 Build-Measure-Learn loop status. Each row is a committed, verified slice. VERIFIED =
 measured by a command; VALIDATED = matches the GP's stated expectations. Full suite:
-**747/747 tests green** (7s, offline/deterministic).
+**753/753 tests green** (7s, offline/deterministic).
 
 ## Commits (newest first)
 
 | Commit | Type | What it did | Verified by |
 |---|---|---|---|
+| 04c4952 | docs(morning) | one-page overnight build review for the GP | doc review |
+| c8e77ed | docs(demo) | document VIX + FRED macro + 4:30pm EST scheduled batch | doc review |
+| f667c96 | feat(decision) | Yellow Sheet — the GP's decision document (thesis/evidence/invalidation/exit + auto risk), not a paper-log line | yellow_sheet 6/6, full 753 |
 | 665027f | feat(demo) | Compounding scale wired into AM report + demo (AAL: 1 contract @$100k, 4 @$250k, 8 @$500k, 17 @$1M) — proven on served page | full 747 |
 | 7a8d9fb | feat(risk) | scale_position_to_equity — size contracts up as the account compounds (holds 2%-of-equity, scales to get big) | position_sizing suite, full 747 |
 | 3d518a6 | feat(risk) | wheel-fit-for-equity — states how the wheel sizes to the GP's account (2%-of-equity → max position) | position_sizing suite, full 745 |
