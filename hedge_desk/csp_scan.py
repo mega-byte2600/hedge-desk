@@ -24,6 +24,7 @@ from hedge_desk.cboe_chain import (
 )
 from hedge_desk.position_sizing import evaluate_premium
 from hedge_desk.options import OptionType
+from hedge_desk.options.requirements import cash_secured_put_collateral
 
 CSP_VERSION = "hedge-desk-cash-secured-put-1.0.0"
 
@@ -54,7 +55,7 @@ def _put_10pct_otm(symbol: str, raw: bytes, now) -> Dict[str, object]:
     credit = best.ask  # we SELL -> collect the bid-side? We sell at the bid.
     # Selling a put: we receive the BID. But executable realism = use bid.
     net_credit = best.bid
-    collateral = best.strike
+    collateral = cash_secured_put_collateral(best.strike, net_credit, 1).requirement
     return {
         "found": True,
         "contract_id": best.contract_id,
@@ -63,16 +64,17 @@ def _put_10pct_otm(symbol: str, raw: bytes, now) -> Dict[str, object]:
         "dte": (best.expiration - today).days,
         "underlying_mid": str(mid),
         "net_credit_per_share": str(net_credit),
-        "collateral_required": str((collateral * Decimal("100")).quantize(Decimal("0.01"))),
-        # Return on capital deployed = credit_per_contract / collateral_in_dollars.
-        # Both sides carry the same x100 (strike*100 shares of collateral vs
-        # net_credit_per_share*100 per contract), so it reduces to net_credit /
-        # strike. Dividing by strike*100 instead would report a 100x-too-small
-        # number and flag every candidate RETURN_NOT_IN_GP_BAND (units bug).
+        # QUANT finding: use the same credit-offset collateral as evaluate_premium
+        # (strike - credit)*100, so both paths report the same return-on-capital for
+        # the same put (was gross strike*100 in the scan, ~1.3bps off, could flip a
+        # near-boundary candidate).
+        "collateral_required": str(collateral.quantize(Decimal("0.01"))),
+        # Return on capital deployed = credit_per_contract / collateral_in_dollars
+        # (net_credit*100 / (strike-credit)*100 = net_credit/(strike-credit)).
         "return_on_capital": str(
-            (net_credit / collateral).quantize(Decimal("0.0001"))
+            (net_credit * Decimal("100") / collateral).quantize(Decimal("0.0001"))
         ),
-        "max_loss": str((collateral * Decimal("100")).quantize(Decimal("0.01"))),
+        "max_loss": str(collateral.quantize(Decimal("0.01"))),
     }
 
 

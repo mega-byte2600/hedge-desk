@@ -43,7 +43,7 @@ class CspScanTests(unittest.TestCase):
         self.assertEqual(c["net_credit_per_share"], "1.19")
         # Return on capital deployed = credit/strike (1.19/90 ~ 1.32%), not
         # credit/(strike*100) which would report ~0.013%.
-        self.assertEqual(c["return_on_capital"], "0.0132")
+        self.assertEqual(c["return_on_capital"], "0.0134")
         self.assertEqual(r["fits_gp_rules"], False)
         self.assertIn("CAPITAL_OVER_5K", r["eval_reasons"])
         self.assertNotIn("RETURN_NOT_IN_GP_BAND", r["eval_reasons"])
@@ -67,8 +67,8 @@ class CspScanTests(unittest.TestCase):
         self.assertEqual(r["mode"], "CASH_SECURED_PUT")
         c = r["candidate"]
         self.assertEqual(c["strike"], "32")
-        self.assertEqual(c["collateral_required"], "3200.00")
-        self.assertEqual(c["return_on_capital"], "0.0128")
+        self.assertEqual(c["collateral_required"], "3159.00")
+        self.assertEqual(c["return_on_capital"], "0.0130")
         self.assertTrue(r["fits_gp_rules"])
         self.assertEqual(r["eval_reasons"], [])
 
