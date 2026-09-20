@@ -17,11 +17,14 @@ class AmDemoRenderTests(unittest.TestCase):
                     "collateral_required": "3200.00", "return_on_capital": "0.0128",
                 },
                 "fits_gp_rules": True,
+                "survivability": "PASS",
                 "eval_reasons": [],
             }
         }
         html = _csp_block(csp)
         self.assertIn("<strong>1.28%</strong>", html)
+        self.assertIn("<td>PASS</td>", html)
+        self.assertIn("<th>Survivability</th>", html)
         self.assertNotIn(">0.0128</td>", html)
         self.assertIn("badge ok'>FITS", html)
 

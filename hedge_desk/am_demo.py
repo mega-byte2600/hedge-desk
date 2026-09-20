@@ -191,6 +191,7 @@ def _csp_block(csp: Dict) -> str:
             f"<td>${_esc(c.get('net_credit_per_share'))}</td>"
             f"<td>${_esc(c.get('collateral_required'))}</td>"
             f"<td><strong>{_esc(roc_pct)}</strong></td>"
+            f"<td>{_esc(r.get('survivability', 'INDETERMINATE'))}</td>"
             f"<td><span class='badge {badge}'>{'FITS' if r.get('fits_gp_rules') else 'no'}</span></td>"
             f"<td>{_esc(', '.join(r.get('eval_reasons', [])) or '-')}</td>"
             "</tr>"
@@ -201,7 +202,7 @@ def _csp_block(csp: Dict) -> str:
             rows.append(f"<tr><td>{_esc(sym)}</td><td colspan='5' class='note'>[{_esc(r.get('mode'))}]</td></tr>")
     return (
         "<table><thead><tr><th>Symbol</th><th>Strike</th><th>DTE</th><th>Credit</th>"
-        "<th>Capital</th><th>RoC</th><th>GP rules</th><th>Reasons</th></tr></thead>"
+        "<th>Capital</th><th>RoC</th><th>Survivability</th><th>GP rules</th><th>Reasons</th></tr></thead>"
         f"<tbody>{''.join(rows)}</tbody></table>"
     )
 
