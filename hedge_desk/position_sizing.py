@@ -91,4 +91,36 @@ def wheel_fit_for_equity(account_equity: str) -> Dict[str, object]:
     }
 
 
-__all__ = ["evaluate_premium", "wheel_fit_for_equity"]
+def scale_position_to_equity(
+    max_loss_per_contract: str,
+    capital_per_contract: str,
+    account_equity: str,
+) -> Dict[str, object]:
+    """Size how many contracts the GP can sell so total worst-case loss stays <= 2% of equity.
+
+    Keeps the small-desk 2%-of-equity max-loss discipline (the scale) while
+    scaling position size up automatically as the account grows (the compounding
+    path to "get big"). For a cash-secured put, worst-case loss per contract is
+    the collateral (stock -> $0), so contracts = floor(2% of equity / capital per
+    contract). At a small account this is 0; as equity compounds, more contracts
+    fit. Returns plain derived numbers, no fabricated P&L, no performance claim.
+    """
+    mloss = Decimal(max_loss_per_contract)
+    capital = Decimal(capital_per_contract)
+    equity = Decimal(account_equity)
+    if equity <= 0 or mloss <= 0 or capital <= 0:
+        raise ValueError("equity, max_loss, and capital must be positive")
+    budget = equity * MAX_LOSS_FRACTION_EQUITY
+    contracts = int(budget / mloss)  # floor
+    return {
+        "max_contracts": contracts,
+        "position_capital": str((capital * contracts).quantize(Decimal("0.01"))),
+        "max_contracts_explanation": (
+            f"2% of equity = ${budget.quantize(Decimal('0.01'))} max total loss; "
+            f"each contract risks ${mloss.quantize(Decimal('0.01'))}, so up to "
+            f"{contracts} contract(s) fit. Contracts scale up as equity compounds."
+        ),
+    }
+
+
+__all__ = ["evaluate_premium", "wheel_fit_for_equity", "scale_position_to_equity"]

@@ -1,7 +1,7 @@
 """Deterministic tests for the small-desk position filter (GP rules)."""
 
 import unittest
-from hedge_desk.position_sizing import evaluate_premium, wheel_fit_for_equity
+from hedge_desk.position_sizing import evaluate_premium, scale_position_to_equity, wheel_fit_for_equity
 
 
 class PremiumFilterTests(unittest.TestCase):
@@ -47,6 +47,19 @@ class PremiumFilterTests(unittest.TestCase):
     def test_wheel_fit_rejects_non_positive_equity(self):
         with self.assertRaises(ValueError):
             wheel_fit_for_equity("0")
+
+    def test_scale_position_scales_contracts_with_equity(self):
+        # Keeps 2%-of-equity max loss; scales contracts up as equity compounds.
+        # A $3,200 CSP needs ~$160k to trade 1; $1M fits 6.
+        self.assertEqual(scale_position_to_equity("3200", "3200", "25000")["max_contracts"], 0)
+        self.assertEqual(scale_position_to_equity("3200", "3200", "250000")["max_contracts"], 1)
+        self.assertEqual(scale_position_to_equity("3200", "3200", "1000000")["max_contracts"], 6)
+
+    def test_scale_position_rejects_bad_inputs(self):
+        for kw in ({"max_loss_per_contract": "0", "capital_per_contract": "3200", "account_equity": "25000"},
+                   {"max_loss_per_contract": "3200", "capital_per_contract": "3200", "account_equity": "0"}):
+            with self.assertRaises(ValueError):
+                scale_position_to_equity(**kw)
 
 
 if __name__ == "__main__":
