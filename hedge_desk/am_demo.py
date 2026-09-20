@@ -235,6 +235,24 @@ def _csp_top_pick(csp: Dict) -> str:
     )
 
 
+def _yellow_sheet_block(ys: Dict) -> str:
+    if not ys or ys.get("sheet_count", 0) == 0:
+        return ("<p class='note'>No Yellow Sheets yet. The GP records a decision "
+                "as a Yellow Sheet (thesis, evidence, invalidation, exit plan) — "
+                "the product's decision document, bound to this report hash.</p>")
+    rows = "".join(
+        f"<tr><td>{_esc(k)}</td><td>{_esc(v)}</td></tr>"
+        for k, v in sorted((ys.get("by_decision") or {}).items())
+    )
+    return (
+        f"<p class='note'>Yellow Sheets recorded: {_esc(ys.get('sheet_count'))} "
+        f"across {_esc(ys.get('symbol_count'))} symbols.</p>"
+        f"<table><thead><tr><th>Decision</th><th>Count</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table>"
+        f"<div class='note'>{_esc(ys.get('note',''))}</div>"
+    )
+
+
 def _scale_path_block(scale: Dict) -> str:
     if not scale:
         return "<p class='note'>Compounding scale: configure account equity to see how position size grows with the account.</p>"
@@ -330,7 +348,10 @@ def build_am_demo_html(
 
 <div class="panel" style="margin-top:16px"><h2>4b. Compounding scale (hold the rule, size to grow)</h2>{_scale_path_block(report.get('scale_path'))}</div>
 
-<h2>5. Paper-outcome loop (append-only journal)</h2>
+<h2>5. Decision ledger — Yellow Sheets</h2>
+{_yellow_sheet_block(report['yellow_sheets'])}
+
+<h2>6. Paper-outcome loop (append-only journal)</h2>
 {_paper_block(report['paper_outcome_summary'])}
 
 <div class="grid">
