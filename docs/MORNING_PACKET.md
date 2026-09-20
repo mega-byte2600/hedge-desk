@@ -27,6 +27,11 @@ Highlights:
 - account-equity input → survivability + wheel_fit + scale_position (compounding)
 - Yellow Sheet decision artifact + CLI + ledger
 - peer review (6 SOUL profiles, 6 model families) caught 5 real defects — all fixed
+- overnight peer review (4 specialists) caught and fixed two more:
+  - QUANT/RISK: csp_scan collateral was gross strike×100 while evaluate_premium
+    offsets credit — same put showed 1.281% vs 1.298%. Now consistent (credit-offset).
+  - ENGINEER: the record CLI wrote before validating input. Now validates strike/DTE/
+    report/symbol-match before any vault write.
 
 ## What needs YOU (the only thing I won't fake)
 
