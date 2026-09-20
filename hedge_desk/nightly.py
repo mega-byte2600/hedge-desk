@@ -36,6 +36,7 @@ from hedge_desk.rates_desk import rates_environment
 from hedge_desk.vix_regime import vix_regime, apply_vix_regime_filter
 from hedge_desk.macro_desk import macro_environment
 from hedge_desk.freshness import freshness_summary
+from hedge_desk.account import read_account_equity
 from hedge_desk.earnings_desk import earnings_desk
 from hedge_desk.execution_gate import (
     KillSwitch,
@@ -136,6 +137,10 @@ def run_nightly(
     if not symbols:
         raise ValueError("nightly watchlist cannot be empty")
     cutoff = datetime.now(timezone.utc)
+    # Real account equity (local, gitignored) so survivability can evaluate
+    # instead of INDETERMINATE. Raw value is never put in the report.
+    account_equity = read_account_equity()
+
     # Pull enough history for the feature plane (3mo), not just the 5d batch.
     eod = (ingest_eod(symbols, cutoff, transport=transport, range_param=FEATURE_YAHOO_RANGE)
            if transport else ingest_eod(symbols, cutoff, range_param=FEATURE_YAHOO_RANGE))
@@ -187,9 +192,10 @@ def run_nightly(
         for cs in symbols:
             if csp_transport:
                 futures[ex.submit(_safe, scan_cash_secured_put, cs, cutoff,
-                                  csp_transport)] = ("csp", cs)
+                                  csp_transport, account_equity)] = ("csp", cs)
             else:
-                futures[ex.submit(_safe, scan_cash_secured_put, cs, cutoff)] = ("csp", cs)
+                futures[ex.submit(_safe, scan_cash_secured_put, cs, cutoff,
+                                  account_equity=account_equity)] = ("csp", cs)
         for cs in chain_symbols:
             cs = str(cs).upper()
             if chain_transport:
@@ -250,6 +256,7 @@ def run_nightly(
         "chain_income": chain_results,
         "features": features,
         "cash_secured_put_scan": csp_results,
+        "account_equity_configured": account_equity is not None,
         "paper_outcome_summary": summarize_paper_log(paper_log_path),
         "rates_environment": rates,
         "vix_regime": vix,
