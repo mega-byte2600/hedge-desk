@@ -94,6 +94,10 @@ demo page. A blocked series is reported, never fabricated.
   one slow/flaky source cannot stall the whole batch (measured ~5.7min sequential with
   FRED flaky → bounded by the slowest single fetch). `run_nightly` is now fully
   transport-injectable and the nightly test is fully offline (0.1s, deterministic).
+  Honest scope of the "bounded" claim: the 8s FRED timeout bounds each fetch and the
+  parallel executor means the batch waits on the slowest single fetch, not the sum —
+  but there is no hard overall deadline, and a source that hangs inside its own retry
+  loop still delays the batch. A hard deadline is a future increment, not claimed here.
 
 ## 5. Re-run the verification (one command each)
 
