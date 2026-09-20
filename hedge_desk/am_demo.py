@@ -159,16 +159,27 @@ def _features_block(features: Dict) -> str:
 
 
 def _csp_block(csp: Dict) -> str:
+    # Rank the GP-fit candidates best-trade-first (highest return-on-capital) so
+    # the top of the table is the best actionable trade, not the alphabet. Non-fit
+    # names follow sorted by symbol.
+    def _roc(sym: str) -> float:
+        try:
+            return float(csp[sym]["candidate"].get("return_on_capital"))
+        except (TypeError, ValueError, KeyError):
+            return -1.0
+
+    fits = sorted(
+        (s for s, r in csp.items() if r.get("mode") == "CASH_SECURED_PUT" and r.get("fits_gp_rules")),
+        key=_roc, reverse=True,
+    )
+    non_fits = sorted(
+        (s for s, r in csp.items() if r.get("mode") == "CASH_SECURED_PUT" and not r.get("fits_gp_rules")),
+    )
     rows = []
-    for sym in sorted(csp):
+    for sym in fits + non_fits:
         r = csp[sym]
-        if r.get("mode") != "CASH_SECURED_PUT":
-            rows.append(f"<tr><td>{_esc(sym)}</td><td colspan='5' class='note'>[{_esc(r.get('mode'))}]</td></tr>")
-            continue
         c = r.get("candidate", {})
         badge = "ok" if r.get("fits_gp_rules") else "warn"
-        # return_on_capital is a decimal fraction (0.0128 = 1.28%); show it as a
-        # clean percent so the GP reads 1.28%, not a misread 0.0128%.
         try:
             roc_pct = f"{float(c.get('return_on_capital')) * 100:.2f}%"
         except (TypeError, ValueError):
@@ -179,15 +190,47 @@ def _csp_block(csp: Dict) -> str:
             f"<td>{_esc(c.get('dte'))}</td>"
             f"<td>${_esc(c.get('net_credit_per_share'))}</td>"
             f"<td>${_esc(c.get('collateral_required'))}</td>"
-            f"<td>{_esc(roc_pct)}</td>"
+            f"<td><strong>{_esc(roc_pct)}</strong></td>"
             f"<td><span class='badge {badge}'>{'FITS' if r.get('fits_gp_rules') else 'no'}</span></td>"
             f"<td>{_esc(', '.join(r.get('eval_reasons', [])) or '-')}</td>"
             "</tr>"
         )
+    for sym in sorted(csp):
+        r = csp[sym]
+        if r.get("mode") != "CASH_SECURED_PUT":
+            rows.append(f"<tr><td>{_esc(sym)}</td><td colspan='5' class='note'>[{_esc(r.get('mode'))}]</td></tr>")
     return (
         "<table><thead><tr><th>Symbol</th><th>Strike</th><th>DTE</th><th>Credit</th>"
         "<th>Capital</th><th>RoC</th><th>GP rules</th><th>Reasons</th></tr></thead>"
         f"<tbody>{''.join(rows)}</tbody></table>"
+    )
+
+
+def _csp_top_pick(csp: Dict) -> str:
+    """One-line top pick from the ranked fits (best return-on-capital, <$5k)."""
+    best = None
+    best_roc = -1.0
+    for sym, r in csp.items():
+        if r.get("mode") != "CASH_SECURED_PUT" or not r.get("fits_gp_rules"):
+            continue
+        try:
+            roc = float(r["candidate"].get("return_on_capital"))
+        except (TypeError, ValueError, KeyError):
+            continue
+        if roc > best_roc:
+            best_roc = roc
+            best = (sym, r["candidate"])
+    if not best:
+        return "<p class='note'>No candidate currently fits the GP wheel.</p>"
+    sym, c = best
+    try:
+        roc_pct = f"{float(c.get('return_on_capital')) * 100:.2f}%"
+    except (TypeError, ValueError):
+        roc_pct = str(c.get("return_on_capital"))
+    return (
+        f"<p class='top'><strong>Top fit: {_esc(sym)}</strong> — "
+        f"cash-secured put at {_esc(c.get('strike'))}, {_esc(c.get('dte'))} DTE, "
+        f"${_esc(c.get('collateral_required'))} capital, {_esc(roc_pct)} return-on-capital.</p>"
     )
 
 
@@ -236,6 +279,7 @@ def build_am_demo_html(
   .warn {{ background: #9e6a0322; color: #d29922; }}
   .note {{ color: #8b949e; font-size: 12px; line-height: 1.5; }}
   .pill {{ background: #21262d; color: #e6edf3; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-right: 6px; }}
+  .top {{ background: #1f6feb11; color: #58a6ff; padding: 8px 12px; border: 1px solid #1f6feb55; border-radius: 8px; font-size: 13px; }}
   .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
   .panel {{ border: 1px solid #21262d; border-radius: 8px; padding: 14px; }}
 </style></head><body>
@@ -262,6 +306,7 @@ def build_am_demo_html(
 {_features_block(report['features'])}
 
 <h2>4. Cash-secured-put wheel scan (REAL Cboe chains; GP rules)</h2>
+{_csp_top_pick(report['cash_secured_put_scan'])}
 {_csp_block(report['cash_secured_put_scan'])}
 
 <h2>5. Paper-outcome loop (append-only journal)</h2>
