@@ -8,6 +8,8 @@ measured by a command; VALIDATED = matches the GP's stated expectations. Full su
 
 | Commit | Type | What it did | Verified by |
 |---|---|---|---|
+| 0d2cee2 | fix(decision) | CLI validates input semantically BEFORE any vault write (ENGINEER peer-review) | manual reject tests |
+| ab8a070 | fix(quant) | csp_scan collateral now credit-offset, consistent with evaluate_premium (QUANT+RISK) | csp 4/4, full 753 |
 | 04c4952 | docs(morning) | one-page overnight build review for the GP | doc review |
 | c8e77ed | docs(demo) | document VIX + FRED macro + 4:30pm EST scheduled batch | doc review |
 | f667c96 | feat(decision) | Yellow Sheet — the GP's decision document (thesis/evidence/invalidation/exit + auto risk), not a paper-log line | yellow_sheet 6/6, full 753 |
