@@ -8,6 +8,8 @@ measured by a command; VALIDATED = matches the GP's stated expectations. Full su
 
 | Commit | Type | What it did | Verified by |
 |---|---|---|---|
+| 9b71a46 | feat(demo) | Surface survivability per candidate in the CSP panel (PASS/FAIL/INDETERMINATE) | am_demo 3/3 |
+| fe249a9 | docs(status) | Dashboard + survivability LEARN (2%-of-equity rule needs ~$160k for a $3.2k CSP) | doc review |
 | 5799682 | feat(risk) | Real account-equity input → survivability evaluates (PASS/FAIL) instead of INDETERMINATE; privacy-safe (raw equity never committed/shown) | account 5/5, nightly 2/2 |
 | 46dc180 | docs(status) | BML progress dashboard — 18 commits, loop state, next increments | doc review |
 | fc14b1b | fix(data) | DATA peer-review: macro mode→BLOCKED when all blocked; CPI YoY from one fetch; retry-sleep fix; `_safe` broadened to any Exception | macro 3/3, suite 738 |
