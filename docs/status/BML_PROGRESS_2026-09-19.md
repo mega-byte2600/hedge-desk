@@ -2,12 +2,13 @@
 
 Build-Measure-Learn loop status. Each row is a committed, verified slice. VERIFIED =
 measured by a command; VALIDATED = matches the GP's stated expectations. Full suite:
-**738/738 tests green** (7s, offline/deterministic).
+**745/745 tests green** (7s, offline/deterministic).
 
 ## Commits (newest first)
 
 | Commit | Type | What it did | Verified by |
 |---|---|---|---|
+| 3d518a6 | feat(risk) | wheel-fit-for-equity — states how the wheel sizes to the GP's account (2%-of-equity → max position) | position_sizing suite, full 745 |
 | 9b71a46 | feat(demo) | Surface survivability per candidate in the CSP panel (PASS/FAIL/INDETERMINATE) | am_demo 3/3 |
 | fe249a9 | docs(status) | Dashboard + survivability LEARN (2%-of-equity rule needs ~$160k for a $3.2k CSP) | doc review |
 | 5799682 | feat(risk) | Real account-equity input → survivability evaluates (PASS/FAIL) instead of INDETERMINATE; privacy-safe (raw equity never committed/shown) | account 5/5, nightly 2/2 |
