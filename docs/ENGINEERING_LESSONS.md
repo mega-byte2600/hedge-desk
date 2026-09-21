@@ -96,7 +96,26 @@ hand-computable reference cases (a par bond prices at exactly 1000.00; a 5-wide 
 at 2.60 credit risks exactly 240.00 per contract). A plausible-looking number is not a test.
 Agents never compute, infer, or substitute a Risk of Ruin value.
 
-## 8. Reporting
+## 8. Consistency is not correctness: a both-sides-wrong pair passes a diff check
+
+**What happened.** The AM demo page shipped two consecutive `6.` section headings
+(`Paper-outcome loop` and `Rates environment`). The V&V measure certified the page via a
+served-versus-disk `cmp` (byte-identical) — but both copies were rendered from the same
+defective template, so equality held while the defect sailed through. The per-panel unit
+tests exercised only isolated helpers (`_csp_block`, `_csp_top_pick`) with synthetic dicts
+and never rendered the full document, so no test ever read the heading sequence. Numbering,
+being presentation rather than data, had zero coverage: 753+ tests green and "VERIFIED"
+were both true and both blind to it.
+
+**Rule.** A check that compares the artifact to itself (served == disk, rendered twice,
+round-trip) proves consistency, never correctness — if both sides share the defect it
+passes anyway. Structural integrity must be asserted against an independent expectation
+(for a page: the exact ordered heading sequence, uniqueness of numbers), and the full
+artifact, not just extracted per-panel helpers, must be what a test renders. Where a render
+function shells out to a network pipeline, extract a pure render path so the whole document
+is deterministically testable.
+
+## 9. Reporting
 
 **Rule.** Report the **diff**, measured the same way before and after, and state what did not
 move. "Gap 0px to 16px, and the neighbouring element moved by exactly the same 16px" is
