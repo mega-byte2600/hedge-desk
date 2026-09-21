@@ -355,10 +355,10 @@ def build_am_demo_html(
 {_paper_block(report['paper_outcome_summary'])}
 
 <div class="grid">
-  <div class="panel"><h2>6. Rates environment (REAL FRED)</h2>{_rates_block(report['rates_environment'])}
+  <div class="panel"><h2>7. Rates environment (REAL FRED)</h2>{_rates_block(report['rates_environment'])}
   <h2 style="margin-top:18px">VIX regime (REAL)</h2>{_vix_block(report['vix_regime'])}
   <h2 style="margin-top:18px">Macro (REAL FRED)</h2>{_macro_block(report['macro_environment'])}</div>
-  <div class="panel"><h2>7. Earnings actuals (REAL SEC EDGAR)</h2>{_earnings_block(report['earnings_actuals'])}</div>
+  <div class="panel"><h2>8. Earnings actuals (REAL SEC EDGAR)</h2>{_earnings_block(report['earnings_actuals'])}</div>
 </div>
 
 <div class="note" style="margin-top:24px">
