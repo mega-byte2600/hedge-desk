@@ -296,8 +296,30 @@ def build_am_demo_html(
         chain_note = f"Blocked: {chain.get('reason')}"
     generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-    page = f"""<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8">
+    page = _render_report_page(
+        report, chain_note=chain_note, structures=structures, generated=generated
+    )
+
+    return {
+        "eod_status": report["eod_batch_status"],
+        "candidate_count": report["candidate_count"],
+        "premium_count": len(structures),
+        "html": page,
+    }
+
+
+def _render_report_page(
+    report: Dict, *, chain_note: str, structures: Sequence[Dict], generated: str
+) -> str:
+    """Render the full AM report page from a populated report dict.
+
+    Pure/deterministic given (report, chain_note, structures, generated) so the
+    document's structural integrity (unique, sequential numbered section
+    headings) is unit-testable without touching the network pipeline.
+    build_am_demo_html fills these from the nightly run, then delegates here.
+    """
+    return f"""<!DOCTYPE html>
+    <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Emporion — AM Report (real data)</title>
 <style>
@@ -372,12 +394,6 @@ def build_am_demo_html(
 </div>
 </main></body></html>
 """
-    return {
-        "eod_status": report["eod_batch_status"],
-        "candidate_count": report["candidate_count"],
-        "premium_count": len(structures),
-        "html": page,
-    }
 
 
 def main() -> None:
