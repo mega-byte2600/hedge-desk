@@ -26,6 +26,12 @@ from .workflow import (
     evaluate_plan_lifecycle,
     reject_paper_trade,
 )
+from .runner import (
+    advance_paper_lifecycle,
+    close_paper_position,
+    list_pending_escalations,
+    parse_option_quote,
+)
 
 __all__ = [
     "HumanAuthorization",
@@ -39,14 +45,18 @@ __all__ = [
     "PaperTradePlan",
     "PLAN_FILE_ENVIRONMENT",
     "PLAN_FILE_SCHEMA_VERSION",
+    "advance_paper_lifecycle",
     "approve_paper_trade",
+    "close_paper_position",
     "close_paper_trade",
     "create_paper_trade_plan",
     "execute_paper_open",
     "evaluate_paper_fill",
     "evaluate_paper_lifecycle",
     "evaluate_plan_lifecycle",
+    "list_pending_escalations",
     "load_plan_file",
+    "parse_option_quote",
     "reject_paper_trade",
     "submit_plan_for_review",
     "write_plan_file",

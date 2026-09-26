@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timezone
 from datetime import timedelta
+from decimal import Decimal
 from hashlib import sha256
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -36,7 +37,14 @@ from hedge_desk.data import (
     load_pwb_daily_news,
     ingest_eod,
 )
-from hedge_desk.paper import PaperReviewQueue, load_plan_file
+from hedge_desk.paper import (
+    PaperReviewQueue,
+    advance_paper_lifecycle,
+    close_paper_position,
+    list_pending_escalations,
+    load_plan_file,
+    parse_option_quote,
+)
 from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.options import (
     build_candidate_control_handoffs,
@@ -213,6 +221,46 @@ def main() -> None:
         "--decided-at",
         metavar="ISO",
         help="override the decision timestamp (default: current UTC time)",
+    )
+    parser.add_argument(
+        "--paper-tick",
+        action="store_true",
+        help="advance the paper lifecycle one tick from --plans-dir into --state",
+    )
+    parser.add_argument(
+        "--plans-dir",
+        metavar="DIR",
+        help="directory of paper plan files for --paper-tick/--paper-close",
+    )
+    parser.add_argument(
+        "--state",
+        metavar="FILE",
+        help="paper runner state file for --paper-tick/--paper-close/--paper-escalations",
+    )
+    parser.add_argument(
+        "--now",
+        metavar="ISO",
+        help="timezone-aware ISO-8601 tick timestamp for --paper-tick (default: current UTC time)",
+    )
+    parser.add_argument(
+        "--paper-close",
+        metavar="PLAN_ID",
+        help="record a human close of an OPEN paper position",
+    )
+    parser.add_argument(
+        "--quotes-json",
+        metavar="FILE",
+        help="JSON file with {short, long} option quotes for --paper-close",
+    )
+    parser.add_argument(
+        "--exit-commission-per-contract",
+        metavar="DECIMAL",
+        help="exit commission per contract (Decimal) for --paper-close",
+    )
+    parser.add_argument(
+        "--paper-escalations",
+        action="store_true",
+        help="list paper escalations awaiting a human from --state",
     )
     parser.add_argument(
         "--report-input",
@@ -551,6 +599,77 @@ def main() -> None:
         parser.error("--report-input requires --morning-markdown")
     if args.war_games:
         print(json.dumps(build_war_game_report(), indent=2))
+        return
+    if args.paper_tick:
+        try:
+            if not args.plans_dir:
+                raise ValueError("--plans-dir is required with --paper-tick")
+            if not args.state:
+                raise ValueError("--state is required with --paper-tick")
+            tick_now = datetime.now(timezone.utc)
+            if args.now:
+                tick_now = datetime.fromisoformat(args.now)
+                if tick_now.tzinfo is None:
+                    raise ValueError("--now must be timezone-aware")
+            # The 15-minute runner ships no market-data provider; the default
+            # provider returns (0, None), so a bare tick is fail-closed: it
+            # monitors and escalates, and only opens when a provider is
+            # injected (tests or a later market-data settler).
+            report = advance_paper_lifecycle(args.plans_dir, args.state, now=tick_now)
+            print(json.dumps(report, indent=2))
+        except (ValueError, PermissionError, KeyError) as exc:
+            parser.error(str(exc))
+        return
+    if args.paper_close:
+        try:
+            if not args.plans_dir:
+                raise ValueError("--plans-dir is required with --paper-close")
+            if not args.state:
+                raise ValueError("--state is required with --paper-close")
+            if not args.human_id.strip():
+                raise ValueError("--human-id is required with --paper-close")
+            if not args.quotes_json:
+                raise ValueError("--quotes-json is required with --paper-close")
+            if not args.exit_commission_per_contract:
+                raise ValueError(
+                    "--exit-commission-per-contract is required with --paper-close"
+                )
+            decided_at = datetime.now(timezone.utc)
+            if args.decided_at:
+                decided_at = datetime.fromisoformat(args.decided_at)
+                if decided_at.tzinfo is None:
+                    raise ValueError("--decided-at must be timezone-aware")
+            reason_codes = tuple(
+                code.strip()
+                for code in (args.reason_codes or "").split(",")
+                if code.strip()
+            )
+            quotes_payload = json.loads(Path(args.quotes_json).read_text(encoding="utf-8"))
+            # Close quotes are supplied by the human (CI/tests pass a fixture
+            # file). A later market-data settler (Move #3) may provide them
+            # mechanically, but the human decision gate stays.
+            closed = close_paper_position(
+                args.plans_dir,
+                args.state,
+                args.paper_close,
+                args.human_id,
+                decided_at,
+                reason_codes,
+                parse_option_quote(quotes_payload["short"]),
+                parse_option_quote(quotes_payload["long"]),
+                Decimal(args.exit_commission_per_contract),
+            )
+            print(json.dumps(closed, indent=2))
+        except (ValueError, PermissionError, KeyError) as exc:
+            parser.error(str(exc))
+        return
+    if args.paper_escalations:
+        try:
+            if not args.state:
+                raise ValueError("--state is required with --paper-escalations")
+            print(json.dumps(list_pending_escalations(args.state), indent=2))
+        except (ValueError, PermissionError, KeyError) as exc:
+            parser.error(str(exc))
         return
     if args.paper_review or args.paper_decide:
         try:
