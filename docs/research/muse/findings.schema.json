@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mega-byte2600/hedge-desk/docs/research/muse/findings.schema.json",
+  "title": "Muse research findings intake",
+  "description": "Schema for research findings contributed by Muse (a meta agent app) via the GitHub API. Findings are research input, never trusted desk output: they become candidates or Yellow Sheets only after independent review. No fabricated numbers, no probability/RoR claims on delayed data, no trade authorization, no secrets/PII.",
+  "type": "object",
+  "required": ["schema_version", "author", "session", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "muse-findings-1.0.0"
+    },
+    "author": {
+      "const": "muse"
+    },
+    "session": {
+      "type": "string",
+      "description": "Market session the findings were produced for, e.g. 2026-09-25 (close).",
+      "minLength": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "findings": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/finding" }
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "required": ["id", "kind", "symbol", "title", "summary", "sources"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "Stable slug, unique within the session."
+        },
+        "kind": {
+          "enum": ["fundamental_brief", "competitive", "event_watch", "risk_flag"]
+        },
+        "symbol": {
+          "type": "string",
+          "pattern": "^[A-Z]{1,5}$",
+          "description": "Uppercase ticker. Use 'MARKET' for market-wide, 'PRODUCT' for Emporion product-level."
+        },
+        "title": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^https://"
+          },
+          "description": "Every claim must cite a public https source. No fabricated numbers."
+        },
+        "catalysts": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "risk_flags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Concrete risks, e.g. 'earnings 2026-10-16 falls inside 33-DTE window'."
+        },
+        "invalidation_threshold": {
+          "type": "string",
+          "description": "The condition under which this finding stops being relevant."
+        }
+      }
+    }
+  }
+}
