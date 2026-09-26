@@ -45,6 +45,14 @@ from .eod_ingest import (
     EodSymbolResult,
     ingest_eod,
 )
+from .providers import (
+    ProviderSpec,
+    all_providers,
+    missing_auth_env,
+    provider,
+    providers_for_asset_class,
+    providers_for_capability,
+)
 
 __all__ = [
     "DataArtifact", "DataGateResult", "validate_data_artifact",
@@ -63,4 +71,6 @@ __all__ = [
     "evaluate_pwb_daily_news", "load_pwb_daily_news",
     "EOD_INGEST_VERSION", "EOD_SOURCE_ID", "STOOQ_SOURCE_ID", "EodDay", "EodSymbolResult",
     "ingest_eod",
+    "ProviderSpec", "all_providers", "missing_auth_env", "provider",
+    "providers_for_asset_class", "providers_for_capability",
 ]
