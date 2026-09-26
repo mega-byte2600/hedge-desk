@@ -26,7 +26,7 @@ function polishCopy() {
       const eyebrow = about.querySelector('.eyebrow');
       setText(eyebrow, 'FOUNDER / BUILDER');
       const paragraphs = about.querySelectorAll('p');
-      setText(paragraphs[0], 'Emporion is an independent, paper-only market research and decision platform built around six specialized research workflows, explicit evidence requirements, deterministic controls, and human judgment.');
+      setText(paragraphs[0], 'Emporion is an independent market research platform built around six specialized research workflows, explicit evidence requirements, deterministic controls, and human judgment.');
       setText(paragraphs[1], 'Research automation remains separate from deterministic portfolio-survival controls. Live trading and fully autonomous execution are outside the current MVP.');
     }
   }

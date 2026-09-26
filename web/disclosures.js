@@ -28,8 +28,6 @@ function disclosureMarkup(payload) {
       <div class="panel-head"><div>
         <div class="eyebrow">DISCLOSURES · VERSION ${escapeText(payload.disclosure_version)}</div>
         <h2 id="disclosures-title">What this desk is and is not</h2>
-        <p>Effective ${escapeText(payload.effective)}. Stated plainly, because a research tool that
-        hides its boundaries is not usable for real decisions.</p>
       </div></div>
       <div class="panel-body">${items}</div>
     </section>`;

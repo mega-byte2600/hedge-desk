@@ -196,7 +196,10 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("REAL EOD CANDIDATES", app)
         self.assertIn("Real overnight wheel candidates from the nightly batch", app)
         self.assertIn("Method-qualified picks',rows.filter", app)
-        self.assertIn("Trade authorization','0'", app)
+        # The internal "Trade authorization 0" stat was UI slop (user-directed
+        # removal 2026-09-26); the no-orders boundary is stated once in
+        # disclosures.json and enforced in the API payload contract.
+        self.assertNotIn("Trade authorization','0'", app)
         self.assertNotIn("automatically executes", explainer.lower())
         self.assertNotIn("live candidate scoring", explainer.lower())
         self.assertNotIn("guaranteed alpha", explainer.lower())

@@ -89,7 +89,7 @@ export function renderSouls(_timeline) {
 
   return `
   ${headHTML()}
-  <div class="notice"><strong>MULTI-AGENT RESEARCH DESK</strong><span>Six specialists staff this desk. Each works independently of the others, and none of them can place a trade.</span><span class="tag">PAPER_ONLY</span></div>
+  <div class="notice"><strong>MULTI-AGENT RESEARCH DESK</strong><span>Six specialists staff this desk. Each works independently of the others, and none of them can place a trade.</span></div>
 
   <div class="stats">
     <div class="stat"><div class="eyebrow">Agents</div><div class="stat-value">6</div><div class="stat-foot">Separate profiles, separate state</div></div>

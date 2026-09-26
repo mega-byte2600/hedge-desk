@@ -95,8 +95,7 @@ def freshness_strip(r: dict) -> str:
         f"{esc(r.get('candidate_count'))} candidates &middot; {esc(r.get('mode'))} &middot; "
         f"eod {esc(r.get('eod_batch_status'))} &middot; "
         f"trading day {esc(f.get('expected_trading_day'))} "
-        f"({'current' if f.get('is_current') else 'STALE'}) &middot; "
-        f"paper-only &middot; every candidate trade_authorized=False</p>"
+        f"({'current' if f.get('is_current') else 'STALE'})</p>"
     )
 
 
@@ -559,7 +558,7 @@ td.ok{{color:#27ae60}} td.warn{{color:#f39c12}}
 @media(max-width:900px){{.grid{{grid-template-columns:1fr}}.grid{{padding:0 12px 12px}}header{{padding:14px 12px}}.ts{{padding:8px 12px}}}}
 </style></head><body>
 <header><span style="font-size:26px">⚓</span><div><h1>Emporion Overnight Desk</h1>
-<div class="tag">compass · real data · paper-only</div></div>
+<div class="tag">compass · real data</div></div>
 <a class="gbtn" href="/guide/selling-options-premium">📘 Selling Options Premium — visual guide</a></header>
 {freshness_strip(r)}
 <div class="grid">
