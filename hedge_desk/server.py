@@ -261,7 +261,9 @@ def _dispatch(environ, start_response):
         return _serve_artifact(start_response, ARTIFACTS / "am-report-latest.json", as_json=True)
     # Muse/Toby's Selling Options Premium visual guide (static, self-contained).
     if path in ("/guide/selling-options-premium", "/guide/selling-options-premium.html"):
-        guide = PACKAGE_ROOT / "docs" / "guides" / "selling-options-premium-visual-guide.html"
+        guide = DEPLOY_ROOT / "docs" / "guides" / "selling-options-premium-visual-guide.html"
+        if not guide.is_file():
+            guide = PACKAGE_ROOT / "docs" / "guides" / "selling-options-premium-visual-guide.html"
         if guide.is_file():
             return _serve_artifact(start_response, guide)
         return _json(start_response, {"error": "artifact_missing", "path": "guide"}, "404 Not Found")
