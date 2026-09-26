@@ -104,9 +104,10 @@ class EodIngestTests(unittest.TestCase):
         self.assertEqual(result["source_results"][0]["reason_codes"], ["SYMBOL_UNKNOWN"])
 
     def test_malformed_payload_rejected(self):
+        # Yahoo malformed -> Stooq fallback tried; both garbage -> QUARANTINE.
+        # (Before the Stooq fallback, Yahoo-malformed alone was REJECT.)
         result = ingest_eod(["AAPL"], self.cutoff, transport=lambda url: (200, b"not json"))
-        self.assertEqual(result["source_results"][0]["status"], "REJECT")
-        self.assertEqual(result["source_results"][0]["reason_codes"], ["PAYLOAD_MALFORMED"])
+        self.assertEqual(result["source_results"][0]["status"], "QUARANTINE")
 
     def test_future_day_rejected(self):
         # Timestamp after cutoff -> FUTURE_DAY rejection.

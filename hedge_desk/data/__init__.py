@@ -40,6 +40,7 @@ from .pwb_news import (
 from .eod_ingest import (
     EOD_INGEST_VERSION,
     EOD_SOURCE_ID,
+    STOOQ_SOURCE_ID,
     EodDay,
     EodSymbolResult,
     ingest_eod,
@@ -60,6 +61,6 @@ __all__ = [
     "NewsBatchGate", "NewsObservation", "NewsTransport", "evaluate_news_batch",
     "PWB_DAILY_NEWS_DATASET", "PwbDailyNewsResult", "PwbSymbolNewsFeature",
     "evaluate_pwb_daily_news", "load_pwb_daily_news",
-    "EOD_INGEST_VERSION", "EOD_SOURCE_ID", "EodDay", "EodSymbolResult",
+    "EOD_INGEST_VERSION", "EOD_SOURCE_ID", "STOOQ_SOURCE_ID", "EodDay", "EodSymbolResult",
     "ingest_eod",
 ]
