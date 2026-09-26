@@ -12,12 +12,6 @@ Honesty and safety:
   outcome can only be recorded when the user supplies the actual market outcome.
 - Never estimates Risk of Ruin. trade_authorized is not a thing here — this is
   the recording layer AFTER a paper decision, not an order.
-
-The Move-3 settler (hedge_desk.paper.settler) replaces the user-supplied
-market outcome with observed evidence: closed outcomes are recorded from the
-human paper close artifact, and expiration outcomes (expired worthless /
-assigned / unknown) from read-only market data observed at expiration. Either
-way, nothing is inferred and nothing is fabricated.
 """
 
 from __future__ import annotations
@@ -84,23 +78,14 @@ def append_outcome(
     exit_price: str | None = None,
     premium_received: str | None = None,
     recorded_at: datetime | None = None,
-    provenance: Mapping[str, object] | None = None,
 ) -> dict:
-    """Append one observed paper outcome to the journal (append-only, hashed).
-
-    ``provenance`` is an optional free-form mapping (plan id/hash, close
-    artifact hash, human decision, observed market data) carried inside the
-    content-addressed entry so a later reader can reproduce how the outcome
-    was settled.
-    """
+    """Append one observed paper outcome to the journal (append-only, hashed)."""
     reasons = _validate_entry(
         candidate_id=candidate_id, symbol=symbol, strategy=strategy, outcome=outcome,
         entered_at=entered_at, exit_price=exit_price, premium_received=premium_received,
     )
     if reasons:
         raise ValueError("paper outcome invalid: " + ",".join(reasons))
-    if provenance is not None and not isinstance(provenance, Mapping):
-        raise ValueError("paper outcome provenance must be a mapping")
     path = Path(log_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     recorded_at = recorded_at or datetime.now(timezone.utc)
@@ -122,7 +107,6 @@ def append_outcome(
         "premium_received": premium_received,
         "recorded_at": recorded_at.isoformat(),
         "trade_authorized": False,
-        "provenance": dict(provenance) if provenance is not None else None,
     }
     entry["entry_sha256"] = _hash_entry(entry)
     with path.open("a", encoding="utf-8") as fh:
