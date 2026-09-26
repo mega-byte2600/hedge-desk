@@ -35,6 +35,15 @@ FRED_CSV_URL = (
     "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}"
     "&cosd={start}&coed={end}"
 )
+# Official FRED API (api.stlouisfed.org). The no-auth CSV endpoint above is the
+# default; when FRED_API_KEY is set in the environment, the keyed JSON API is
+# used instead — same official source, alternate route for networks where the
+# CSV download stalls. Key is free at https://fred.stlouisfed.org/docs/api/api_key.html
+FRED_API_URL = (
+    "https://api.stlouisfed.org/fred/series/observations"
+    "?series_id={series}&observation_start={start}&observation_end={end}"
+    "&file_type=json&api_key={key}"
+)
 Transport = Callable[[str], Tuple[int, bytes]]
 
 # Official FRED series ids.
@@ -85,6 +94,45 @@ def _parse_fred_csv(raw: bytes) -> Tuple[Tuple[str, Decimal], ...]:
     return tuple(rows)
 
 
+def _parse_fred_json(raw: bytes) -> Tuple[Tuple[str, Decimal], ...]:
+    """Parse the official FRED API JSON (observations: [{date, value}, ...])."""
+    rows = []
+    payload = json.loads(raw.decode("utf-8"))
+    for obs in payload.get("observations", []):
+        value = _num(str(obs.get("value", "")))
+        if value is None:
+            continue
+        rows.append((str(obs.get("date", "")), value))
+    return tuple(rows)
+
+
+def _fred_url(series: str, start: _dt.date, end: _dt.date) -> Tuple[str, bool]:
+    """Build the FRED fetch URL, preferring the keyed API when configured.
+
+    Returns (url, is_keyed). The no-auth CSV endpoint is the default; when
+    FRED_API_KEY is set, the official JSON API is used instead — same source,
+    alternate route for networks where the CSV download stalls. The key lives
+    only in the URL passed to the transport; never log the URL when keyed.
+    """
+    key = os.environ.get("FRED_API_KEY", "").strip()
+    if key:
+        return (
+            FRED_API_URL.format(
+                series=series,
+                start=start.isoformat(),
+                end=end.isoformat(),
+                key=key,
+            ),
+            True,
+        )
+    return (
+        FRED_CSV_URL.format(
+            series=series, start=start.isoformat(), end=end.isoformat()
+        ),
+        False,
+    )
+
+
 def _cache_dir() -> Path | None:
     """Root dir for the FRED observation cache. None disables caching."""
     raw = os.environ.get("HEDGE_DESK_CACHE_DIR", "").strip()
@@ -131,7 +179,8 @@ def fred_series_rows(
                 )
         except (ValueError, KeyError, TypeError, ArithmeticError):
             pass  # corrupt cache entry -> fall through to a fresh fetch
-    url = FRED_CSV_URL.format(series=series, start=start.isoformat(), end=end.isoformat())
+    url, is_keyed = _fred_url(series, start, end)
+    parse = _parse_fred_json if is_keyed else _parse_fred_csv
     last_status: int | None = None
     rows: Tuple[Tuple[str, Decimal], ...] = ()
     for attempt in range(retries + 1):
@@ -141,7 +190,7 @@ def fred_series_rows(
             status, raw = 0, b""
         last_status = status
         if status == 200 and raw:
-            rows = _parse_fred_csv(raw)
+            rows = parse(raw)
             if rows:
                 break
             raise ValueError(f"fred series {series} has no observations")
