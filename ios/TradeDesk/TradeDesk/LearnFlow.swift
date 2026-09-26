@@ -347,46 +347,45 @@ struct LearnChapter4: View {
 }
 
 // MARK: - Chapter 5: Best contracts right now
+//
+// Rankings here are real pipeline output, not editorial grades: each figure
+// shows its as-of date and source. Screened contracts are research output
+// only — nothing here is a trade recommendation.
 
-struct UnderlyingScore: Identifiable {
-    var id: String { ticker }
-    let grade: String
-    let ticker: String
-    let name: String
-    let note: String
+/// Plain-English rendering of pipeline screen-out reasons.
+func screenOutNote(_ reason: String?) -> String {
+    switch reason {
+    case "RETURN_NOT_IN_GP_BAND": return "Premium below the desk's return band"
+    case "INSUFFICIENT_LIQUIDITY": return "Not enough liquidity"
+    case "EVENT_RISK": return "Binary event inside the window"
+    case nil, .some(""): return "Did not pass the screen"
+    default: return readable(reason ?? "")
+    }
 }
 
-struct GradeBadge: View {
-    let grade: String
-    var color: Color {
-        if grade.hasPrefix("A") { return .green }
-        if grade.hasPrefix("B") { return .blue }
-        return .orange
-    }
+struct ScreenVerdictBadge: View {
+    let fits: Bool
     var body: some View {
-        Text(grade)
-            .font(.headline.weight(.bold))
+        Text(fits ? "Passes screen" : "Screened out")
+            .font(.caption.weight(.bold))
             .foregroundColor(.white)
-            .frame(width: 44, height: 44)
-            .background(color, in: RoundedRectangle(cornerRadius: 10))
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .background(fits ? Color.green : Color.orange, in: RoundedRectangle(cornerRadius: 8))
     }
 }
 
 struct LearnChapter5: View {
-    let scores: [UnderlyingScore] = [
-        UnderlyingScore(grade: "A", ticker: "SPY", name: "S&P 500 ETF",
-                        note: "The default. Broad diversification, tightest spreads, no earnings to dodge."),
-        UnderlyingScore(grade: "A", ticker: "QQQ", name: "Nasdaq 100 ETF",
-                        note: "Same playbook with a tech tilt. No earnings, deep liquidity."),
-        UnderlyingScore(grade: "B", ticker: "MSFT", name: "Microsoft",
-                        note: "Liquid mega-cap — but earnings Oct 27/28 fall inside a 30–45 day window. Wait it out or go shorter."),
-        UnderlyingScore(grade: "B", ticker: "AAPL", name: "Apple",
-                        note: "Same flag: earnings Oct 29 inside the window. Fine name, wrong week."),
-        UnderlyingScore(grade: "B−", ticker: "NVDA", name: "Nvidia",
-                        note: "Richer premiums, violent moves. Earnings Nov 25 are clear of the window — size small."),
-        UnderlyingScore(grade: "C", ticker: "TSLA", name: "Tesla",
-                        note: "Deliveries report ~Oct 2 is a binary event inside the window. Stand aside until it passes."),
-    ]
+    let snapshot = LearnSnapshot.load()
+
+    @ViewBuilder
+    private func weatherRow(label: String, text: String, source: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.caption.weight(.bold)).foregroundColor(.secondary)
+            Text(text).font(.subheadline)
+            Text(source).font(.caption2).foregroundColor(.secondary)
+        }
+    }
+
     var body: some View {
         ChapterShell(kicker: "Chapter 5", title: "Best contracts right now") {
             LearnCard(title: "What makes a good underlying", systemImage: "checklist") {
@@ -398,25 +397,83 @@ struct LearnChapter5: View {
                 }
                 .foregroundColor(.secondary)
             }
-            ForEach(scores) { s in
-                HStack(alignment: .top, spacing: 12) {
-                    GradeBadge(grade: s.grade)
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            Text(s.ticker).font(.headline)
-                            Text(s.name).font(.caption).foregroundColor(.secondary)
+            if let snap = snapshot {
+                LearnCard(title: "Latest screen", systemImage: "magnifyingglass", accent: .blue) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Cash-secured puts the desk actually screened — \(snap.cspScreen.count) shown, as of \(prettyDate(snap.asOf)).")
+                            .font(.subheadline)
+                        Text("Source: \(snap.cspScreen.first?.source ?? "nightly pipeline")")
+                            .font(.caption).foregroundColor(.secondary)
+                        if let count = snap.candidateCount {
+                            Text("\(count) equity candidates screened · EOD \(readable(snap.eodStatus))")
+                                .font(.caption).foregroundColor(.secondary)
                         }
-                        Text(s.note).font(.subheadline).foregroundColor(.secondary)
                     }
                 }
-                .padding()
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(14)
-            }
-            LearnCard(title: "Today's weather", systemImage: "cloud.sun", accent: .blue) {
-                Text("VIX sits near 52-week lows (~15 at last close) — absolute premiums are thin right now. The edge persists, but the paychecks are smaller. As of Fri Sep 25 close; the desk re-scores this daily.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                ForEach(snap.cspScreen) { c in
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text(c.symbol).font(.headline)
+                            Spacer()
+                            ScreenVerdictBadge(fits: c.fitsRules)
+                        }
+                        if let strike = c.strike, let exp = c.expiration, let dte = c.dte {
+                            Text("$\(strike) put · exp \(prettyDate(exp)) · \(dte) days out")
+                                .font(.subheadline).foregroundColor(.secondary)
+                        }
+                        HStack(spacing: 18) {
+                            if let credit = c.creditPerShare {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Credit").font(.caption).foregroundColor(.secondary)
+                                    Text("$\(credit)").font(.subheadline.weight(.semibold))
+                                }
+                            }
+                            if let roc = c.returnOnCollateral {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Return on collateral").font(.caption).foregroundColor(.secondary)
+                                    Text(String(format: "%.2f%%", roc * 100)).font(.subheadline.weight(.semibold))
+                                }
+                            }
+                            if let coll = c.collateral {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Collateral").font(.caption).foregroundColor(.secondary)
+                                    Text("$\(coll)").font(.subheadline.weight(.semibold))
+                                }
+                            }
+                        }
+                        if !c.fitsRules {
+                            Text(screenOutNote(c.screenOutReason)).font(.caption).foregroundColor(.orange)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(14)
+                }
+                LearnCard(title: "Market weather", systemImage: "cloud.sun", accent: .blue) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        if let vix = snap.vix.level {
+                            weatherRow(label: "VIX", text: String(format: "%.2f, as of %@", vix, prettyDate(snap.vix.asOf)), source: snap.vix.source)
+                        } else {
+                            weatherRow(label: "VIX", text: "Unavailable in the latest run", source: snap.vix.source)
+                        }
+                        if let wti = snap.wti.level {
+                            weatherRow(label: "WTI crude", text: String(format: "$%.2f, as of %@", wti, prettyDate(snap.wti.asOf)), source: snap.wti.source)
+                        }
+                        weatherRow(label: "SPY option chain",
+                                   text: "\(snap.spyChain.structures) real structures · \(readable(snap.spyChain.mode))",
+                                   source: "\(snap.spyChain.source), as of \(prettyDate(snap.spyChain.asOf))")
+                        weatherRow(label: "Treasury rates",
+                                   text: readable(snap.rates.mode),
+                                   source: snap.rates.note)
+                        Text("Paper-only education. Nothing here is a trade recommendation, and research is input — not performance, not income.")
+                            .font(.caption).foregroundColor(.secondary).padding(.top, 4)
+                    }
+                }
+            } else {
+                LearnCard(title: "Snapshot unavailable", systemImage: "exclamationmark.triangle", accent: .orange) {
+                    Text("The bundled market snapshot is missing, so no current figures are shown. The checklist above still applies — figures return once the snapshot ships with the app.")
+                        .font(.subheadline).foregroundColor(.secondary)
+                }
             }
         }
     }
