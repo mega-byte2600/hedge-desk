@@ -39,6 +39,7 @@ from hedge_desk.macro_desk import macro_environment
 from hedge_desk.freshness import freshness_summary
 from hedge_desk.account import read_account_equity
 from hedge_desk.position_sizing import wheel_fit_for_equity, scale_position_to_equity
+from hedge_desk.oil_desk import oil_market
 from hedge_desk.earnings_desk import earnings_desk
 from hedge_desk.execution_gate import (
     KillSwitch,
@@ -127,6 +128,7 @@ def run_nightly(
     rates_transport=None,
     vix_transport=None,
     macro_transport=None,
+    oil_transport=None,
     earnings_ciks: Sequence[str] = (),
     earnings_transport=None,
     paper_log_path: Path | str = "artifacts/paper-outcomes.jsonl",
@@ -135,9 +137,9 @@ def run_nightly(
     """Run the EOD batch + premium candidates + real chain income + macro desks.
 
     Real chain income (Cboe) for ``chain_symbols``; a real rates environment
-    (FRED); and real earnings actuals (SEC EDGAR, by 10-digit CIK in
-    ``earnings_ciks``). Anything that fails is reported blocked — never
-    fabricated.
+    (FRED); front-month WTI oil observations (Yahoo); and real earnings
+    actuals (SEC EDGAR, by 10-digit CIK in ``earnings_ciks``). Anything that
+    fails is reported blocked — never fabricated.
     """
     symbols = tuple(watchlist) if watchlist else _watchlist()
     if not symbols:
@@ -149,7 +151,7 @@ def run_nightly(
 
     # Pull enough history for the feature plane (3mo), not just the 5d batch.
     eod = (ingest_eod(symbols, cutoff, transport=transport, range_param=FEATURE_YAHOO_RANGE)
-           if transport else ingest_eod(symbols, cutoff, range_param=FEATURE_YAHOO_RANGE))
+    if transport else ingest_eod(symbols, cutoff, range_param=FEATURE_YAHOO_RANGE))
     candidates = build_premium_candidates(eod)
 
     # Data-freshness gate: is the batch running on today's close or the prior
@@ -192,6 +194,7 @@ def run_nightly(
     vix: dict = {}
     macro: dict = {}
     earnings_results: dict = {}
+    oil: dict = {}
 
     with ThreadPoolExecutor(max_workers=8) as ex:
         futures = {}
@@ -221,6 +224,10 @@ def run_nightly(
             futures[ex.submit(_safe, macro_environment, macro_transport)] = ("macro", None)
         else:
             futures[ex.submit(_safe, macro_environment)] = ("macro", None)
+        if oil_transport:
+            futures[ex.submit(_safe, oil_market, transport=oil_transport)] = ("oil", None)
+        else:
+            futures[ex.submit(_safe, oil_market)] = ("oil", None)
         for cik in earnings_ciks:
             if earnings_transport:
                 futures[ex.submit(_safe, earnings_desk, cik, earnings_transport)] = ("earnings", cik)
@@ -240,6 +247,8 @@ def run_nightly(
                 vix = res
             elif kind == "macro":
                 macro = res
+            elif kind == "oil":
+                oil = res
             elif kind == "earnings":
                 earnings_results[key] = res
 
@@ -307,13 +316,16 @@ def run_nightly(
         "rates_environment": rates,
         "vix_regime": vix,
         "macro_environment": macro,
+        "oil_market": oil,
         "earnings_actuals": earnings_results,
         "note": (
             "Equity candidates: collateral/margin from real EOD closes. Premium "
             "desk: executable net credit from REAL Cboe delayed option chains. "
-            "Rates: real FRED observations. Earnings: real SEC EDGAR actuals. "
+    "Rates: real FRED observations. Oil: front-month WTI (CL=F) "
+            "observations from public Yahoo chart data. Earnings: real SEC "
+            "EDGAR actuals. "
             "No probability or Risk of Ruin. No order placed; no trade "
-            "authorized (every candidate trade_authorized=False)."
+    "authorized (every candidate trade_authorized=False)."
         ),
     }
     # Content-address the stable report body (exclude the hash and the
@@ -324,7 +336,7 @@ def run_nightly(
         if k not in ("report_sha256", "report_path", "latest_path")
     }
     report["report_sha256"] = hashlib.sha256(
-        json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
 
     root = Path(artifacts_dir)
@@ -333,7 +345,7 @@ def run_nightly(
     final_path = root / f"am-report-{date_stamp}.json"
     tmp_path = root / f".am-report-{date_stamp}.tmp"
     tmp_path.write_text(
-        json.dumps(report, indent=2) + "\n", encoding="utf-8"
+    json.dumps(report, indent=2) + "\n", encoding="utf-8"
     )
     os.replace(tmp_path, final_path)  # atomic
     # Stable "latest" pointer so the web/iOS feed can read today's report.
