@@ -1,5 +1,13 @@
 """Human-gated paper execution records and deterministic simulation."""
 
+from .review import (
+    PLAN_FILE_ENVIRONMENT,
+    PLAN_FILE_SCHEMA_VERSION,
+    PaperReviewQueue,
+    load_plan_file,
+    submit_plan_for_review,
+    write_plan_file,
+)
 from .workflow import (
     HumanAuthorization,
     HumanAuthorizationStatus,
@@ -16,6 +24,7 @@ from .workflow import (
     evaluate_paper_fill,
     evaluate_paper_lifecycle,
     evaluate_plan_lifecycle,
+    reject_paper_trade,
 )
 
 __all__ = [
@@ -26,7 +35,10 @@ __all__ = [
     "PaperFillCheck",
     "PaperLifecycleCheck",
     "PaperOpen",
+    "PaperReviewQueue",
     "PaperTradePlan",
+    "PLAN_FILE_ENVIRONMENT",
+    "PLAN_FILE_SCHEMA_VERSION",
     "approve_paper_trade",
     "close_paper_trade",
     "create_paper_trade_plan",
@@ -34,4 +46,8 @@ __all__ = [
     "evaluate_paper_fill",
     "evaluate_paper_lifecycle",
     "evaluate_plan_lifecycle",
+    "load_plan_file",
+    "reject_paper_trade",
+    "submit_plan_for_review",
+    "write_plan_file",
 ]

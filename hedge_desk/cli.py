@@ -36,6 +36,7 @@ from hedge_desk.data import (
     load_pwb_daily_news,
     ingest_eod,
 )
+from hedge_desk.paper import PaperReviewQueue, load_plan_file
 from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.options import (
     build_candidate_control_handoffs,
@@ -187,6 +188,31 @@ def main() -> None:
         "--human-id",
         default="",
         help="required human identity when --approve is supplied",
+    )
+    parser.add_argument(
+        "--paper-review",
+        metavar="PLAN_FILE",
+        help="submit a paper plan file to the review queue and list pending plans",
+    )
+    parser.add_argument(
+        "--paper-decide",
+        metavar="PLAN_FILE",
+        help="submit a paper plan file and record a human decision on it",
+    )
+    parser.add_argument(
+        "--reject",
+        action="store_true",
+        help="record a REJECT decision with --paper-decide (default is approve)",
+    )
+    parser.add_argument(
+        "--reason-codes",
+        metavar="CODES",
+        help="comma-separated reason codes (required with --reject --paper-decide)",
+    )
+    parser.add_argument(
+        "--decided-at",
+        metavar="ISO",
+        help="override the decision timestamp (default: current UTC time)",
     )
     parser.add_argument(
         "--report-input",
@@ -525,6 +551,47 @@ def main() -> None:
         parser.error("--report-input requires --morning-markdown")
     if args.war_games:
         print(json.dumps(build_war_game_report(), indent=2))
+        return
+    if args.paper_review or args.paper_decide:
+        try:
+            plan_file = args.paper_review or args.paper_decide
+            queue = PaperReviewQueue()
+            plan = load_plan_file(plan_file)
+            queue.submit(plan)
+            if args.paper_review:
+                print(json.dumps({"pending": queue.pending()}, indent=2))
+                return
+            if not args.human_id.strip():
+                raise ValueError("--human-id is required with --paper-decide")
+            decided_at = datetime.now(timezone.utc)
+            if args.decided_at:
+                decided_at = datetime.fromisoformat(args.decided_at)
+                if decided_at.tzinfo is None:
+                    raise ValueError("--decided-at must be timezone-aware")
+            reason_codes = tuple(
+                code.strip()
+                for code in (args.reason_codes or "").split(",")
+                if code.strip()
+            )
+            decided = queue.decide(
+                plan.plan_id,
+                args.human_id,
+                decided_at,
+                approve=not args.reject,
+                reason_codes=reason_codes,
+            )
+            authorization = decided.authorization
+            print(json.dumps({
+                "plan_id": decided.plan_id,
+                "plan_hash": decided.plan_hash,
+                "status": authorization.status.value,
+                "human_id": authorization.human_id,
+                "decided_at": authorization.decided_at.isoformat(),
+                "reason_codes": list(authorization.reason_codes),
+                "environment": "paper",
+            }, indent=2))
+        except (ValueError, PermissionError, KeyError) as exc:
+            parser.error(str(exc))
         return
     if args.approve and not args.human_id.strip():
         parser.error("--human-id is required with --approve")
