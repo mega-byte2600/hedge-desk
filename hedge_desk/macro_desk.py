@@ -21,7 +21,7 @@ import datetime as _dt
 from decimal import Decimal
 from typing import Callable, Dict, Sequence, Tuple
 
-from hedge_desk.rates_desk import FRED_CSV_URL, _default_transport, _parse_fred_csv
+from hedge_desk.rates_desk import _default_transport, fred_series_rows
 
 MACRO_VERSION = "hedge-desk-macro-desk-1.0.0"
 
@@ -41,15 +41,16 @@ def _fetch(series: str, start: _dt.date, end: _dt.date, transport) -> Sequence[T
     Returns the full (date, value) rows so callers can slice locally (e.g. the
     CPI YoY baseline) without a second network fetch. A persistent failure
     returns None (blocked), never a fabricated number. The retry sleeps only
-    BETWEEN attempts, not after the final one.
+    BETWEEN attempts, not after the final one. Observations are cached on disk
+    (see rates_desk.fred_series_rows) so re-runs skip the network.
     """
-    url = FRED_CSV_URL.format(series=series, start=start.isoformat(), end=end.isoformat())
     for attempt in range(2):
-        status, raw = transport(url)
-        if status == 200 and raw:
-            rows = _parse_fred_csv(raw)
-            if rows:
-                return rows
+        try:
+            rows = fred_series_rows(series, start, end, transport)
+        except ValueError:
+            rows = ()
+        if rows:
+            return rows
         if attempt < 1:  # sleep only between attempts, not after the last
             import time as _time
             _time.sleep(0.5 * (attempt + 1))

@@ -25,6 +25,7 @@ artifact boundary. It does not estimate market value or make a trade decision.
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -167,6 +168,57 @@ def _parse_chart_payload(symbol: str, raw: bytes) -> Tuple[Tuple[EodDay, ...], s
     return tuple(rows), ""
 
 
+def _fetch_one_symbol(
+    symbol: str,
+    transport: Transport,
+    range_param: str,
+    decision_cutoff: datetime,
+) -> EodSymbolResult:
+    """Fetch and validate one symbol's EOD bars.
+
+    Pure per-symbol work with no shared state, so the batch can run symbols
+    concurrently. A transport exception propagates (fail-stop), exactly as in
+    the sequential version; HTTP-level failures become QUARANTINE/REJECT rows.
+    """
+    url = YAHOO_CHART_URL.format(symbol=symbol, range_param=range_param)
+    status, raw = transport(url)
+    received_at = datetime.now(timezone.utc)
+    epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    if status != 200 or not raw:
+        return EodSymbolResult(
+            symbol,
+            SourceBatchStatus.QUARANTINE,
+            ("TRANSPORT_FAILED",) if status not in (404,) else ("SYMBOL_UNKNOWN",),
+            (),
+            "0" * 64,
+            epoch,
+            received_at,
+        )
+    days, reason = _parse_chart_payload(symbol, raw)
+    if not days:
+        return EodSymbolResult(
+            symbol, SourceBatchStatus.REJECT, (reason,), (), "0" * 64,
+            epoch, received_at,
+        )
+    payload_text = _canonical_payload(symbol, days)
+    artifact_hash = sha256(payload_text.encode("utf-8")).hexdigest()
+    # Point-in-time: last day's date must not be after the decision cutoff.
+    last_day = max(days, key=lambda d: d.date)
+    if last_day.date > decision_cutoff.date().isoformat():
+        return EodSymbolResult(
+            symbol, SourceBatchStatus.REJECT, ("FUTURE_DAY",), (), "0" * 64,
+            epoch, received_at,
+        )
+    return EodSymbolResult(
+        symbol, SourceBatchStatus.PASS, (), days, artifact_hash,
+        # Real source as-of: the last trading day's date, NOT the moment
+        # we asked. Stamping decision_cutoff here would make the freshness
+        # gate trivially pass and misrepresent the data's actual age.
+        datetime.fromisoformat(last_day.date + "T00:00:00+00:00"),
+        received_at,
+    )
+
+
 def ingest_eod(
     symbols: Sequence[str],
     decision_cutoff: datetime,
@@ -191,52 +243,14 @@ def ingest_eod(
 
     results: list[EodSymbolResult] = []
     in_epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
-    for symbol in symbols:
-        url = YAHOO_CHART_URL.format(symbol=symbol, range_param=range_param)
-        status, raw = transport(url)
-        received_at = datetime.now(timezone.utc)
-        if status != 200 or not raw:
-            results.append(
-                EodSymbolResult(
-                    symbol,
-                    SourceBatchStatus.QUARANTINE,
-                    ("TRANSPORT_FAILED",) if status not in (404,) else ("SYMBOL_UNKNOWN",),
-                    (),
-                    "0" * 64,
-                    datetime(1970, 1, 1, tzinfo=timezone.utc),
-                    received_at,
-                )
-            )
-            continue
-        days, reason = _parse_chart_payload(symbol, raw)
-        if not days:
-            results.append(
-                EodSymbolResult(
-                    symbol, SourceBatchStatus.REJECT, (reason,), (), "0" * 64,
-                    datetime(1970, 1, 1, tzinfo=timezone.utc), received_at,
-                )
-            )
-            continue
-        payload_text = _canonical_payload(symbol, days)
-        artifact_hash = sha256(payload_text.encode("utf-8")).hexdigest()
-        # Point-in-time: last day's date must not be after the decision cutoff.
-        last_day = max(days, key=lambda d: d.date)
-        if last_day.date > decision_cutoff.date().isoformat():
-            results.append(
-                EodSymbolResult(
-                    symbol, SourceBatchStatus.REJECT, ("FUTURE_DAY",), (), "0" * 64,
-                    datetime(1970, 1, 1, tzinfo=timezone.utc), received_at,
-                )
-            )
-            continue
-        results.append(
-            EodSymbolResult(
-                symbol, SourceBatchStatus.PASS, (), days, artifact_hash,
-                # Real source as-of: the last trading day's date, NOT the moment
-                # we asked. Stamping decision_cutoff here would make the freshness
-                # gate trivially pass and misrepresent the data's actual age.
-                datetime.fromisoformat(last_day.date + "T00:00:00+00:00"),
-                received_at,
+    # Per-symbol fetches are independent: run them concurrently so one slow
+    # Yahoo response does not stall the whole batch. Results are sorted by
+    # symbol below, so ordering stays deterministic for tests and manifests.
+    with ThreadPoolExecutor(max_workers=max(1, min(8, len(symbols)))) as ex:
+        results = list(
+            ex.map(
+                lambda s: _fetch_one_symbol(s, transport, range_param, decision_cutoff),
+                symbols,
             )
         )
 

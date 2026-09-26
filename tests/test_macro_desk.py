@@ -1,5 +1,6 @@
 """Deterministic tests for the FRED macro desk (no network)."""
 
+import os
 import unittest
 from datetime import date
 
@@ -17,6 +18,16 @@ class _FakeTransport:
 
 
 class MacroDeskTests(unittest.TestCase):
+    def setUp(self):
+        # Disable the FRED disk cache so fixtures cannot leak between tests.
+        self._old_cache = os.environ.get("HEDGE_DESK_CACHE_DIR")
+        os.environ["HEDGE_DESK_CACHE_DIR"] = "off"
+
+    def tearDown(self):
+        if self._old_cache is None:
+            os.environ.pop("HEDGE_DESK_CACHE_DIR", None)
+        else:
+            os.environ["HEDGE_DESK_CACHE_DIR"] = self._old_cache
     def test_reports_inflation_unemployment_and_curve(self):
         data = {
             "CPIAUCSL": "observation_date,CPIAUCSL\n"
