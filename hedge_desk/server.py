@@ -18,7 +18,7 @@ from hedge_desk.auth_app import make_auth_app, default_membership_store
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
-WEB = DEPLOY_ROOT / "dist" if (DEPLOY_ROOT / "dist").is_dir() else PACKAGE_ROOT / "dist"
+WEB = DEPLOY_ROOT / "web" if (DEPLOY_ROOT / "web").is_dir() else PACKAGE_ROOT / "web"
 # Prefer the repo-root artifacts (where the nightly batch / committed report
 # live) over the installed-package dir, so Render serves the real report.
 ARTIFACTS = (DEPLOY_ROOT / "artifacts") if (DEPLOY_ROOT / "artifacts").is_dir() else PACKAGE_ROOT / "artifacts"
