@@ -102,12 +102,17 @@ def _fake_csp_transport(url):
     # (sub-$5k collateral, return-on-capital in band) so the CSP scan finds a
     # fits_gp_rules candidate offline. current_price 36 -> target strike ~32.4,
     # nearest 32; bid 0.41 -> collateral $3,200, RoC 1.28% (in 0.5-2% band).
+    # Expiration is computed RELATIVE to today (38 DTE) so the fixture stays in
+    # the 30-45 DTE window no matter when the test runs — a hardcoded date drifts
+    # out of band as real time advances (was 2026-10-23, broke after 2026-09-25).
     import json
+    from datetime import datetime, timedelta, timezone
+    exp = (datetime.now(timezone.utc) + timedelta(days=38)).strftime("%y%m%d")
     payload = {
         "data": {
             "symbol": "AAPL", "current_price": "36.00", "bid": "36.00", "ask": "36.10",
             "options": [
-                {"option": "AAPL261023P00032000", "bid": 0.41, "ask": 0.45,
+                {"option": f"AAPL{exp}P00032000", "bid": 0.41, "ask": 0.45,
                  "bid_size": 25, "ask_size": 30, "open_interest": 500, "volume": 200},
             ],
         }
