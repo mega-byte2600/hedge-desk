@@ -6,6 +6,7 @@ struct TradeDeskApp: App {
     var body: some Scene {
         WindowGroup {
             TabView {
+                LearnHome().tabItem { Label("Learn", systemImage: "graduationcap") }
                 DeskList().tabItem { Label("Desks", systemImage: "square.grid.2x2") }
                 ScenarioList().tabItem { Label("Scenarios", systemImage: "waveform.path.ecg") }
                 NotesList().tabItem { Label("Yellow Sheets", systemImage: "note.text") }
