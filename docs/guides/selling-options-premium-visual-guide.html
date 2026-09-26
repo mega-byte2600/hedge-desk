@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <title>Selling Options Premium — Visual Guide</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --ink: #14211b;
+      --muted: #53645b;
+      --faint: #748078;
+      --paper: #f3f5f0;
+      --surface: #ffffff;
+      --surface-2: #e8ece5;
+      --line: #cdd5ce;
+      --green: #0b7150;
+      --green-2: #d9eee5;
+      --green-3: #b9decf;
+      --orange: #b84d18;
+      --orange-2: #f8e2d4;
+      --yellow: #bd7a08;
+      --yellow-2: #f5e9c9;
+      --red: #a63232;
+      --red-2: #f7dddd;
+      --navy: #16324a;
+      --shadow: 0 10px 28px rgba(20,33,27,.08);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --sans: "Avenir Next", Avenir, "Segoe UI", Helvetica, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e9f0eb;
+        --muted: #b9c6bd;
+        --faint: #92a198;
+        --paper: #0e1713;
+        --surface: #16221c;
+        --surface-2: #1d2d25;
+        --line: #34483d;
+        --green: #67d6ab;
+        --green-2: #173a2c;
+        --green-3: #285c48;
+        --orange: #ff9c69;
+        --orange-2: #42271c;
+        --yellow: #efc565;
+        --yellow-2: #3a321d;
+        --red: #ff9191;
+        --red-2: #442222;
+        --navy: #a8d5ff;
+        --shadow: 0 12px 30px rgba(0,0,0,.22);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.45;
+    }
+    button, input { font: inherit; }
+    a { color: inherit; }
+    .app { max-width: 1180px; margin: 0 auto; padding: 18px 22px 108px; }
+    .topline {
+      display: flex; align-items: center; justify-content: space-between; gap: 18px;
+      padding: 8px 0 26px;
+    }
+    .market-note { font-size: 13px; color: var(--muted); max-width: 590px; }
+    .mode-chip {
+      flex: 0 0 auto; padding: 8px 11px; background: var(--surface-2); border-radius: 99px;
+      font-family: var(--mono); font-size: 11px; color: var(--muted);
+    }
+    .hero {
+      display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(310px, .65fr);
+      gap: 24px; align-items: stretch; margin-bottom: 28px;
+    }
+    .hero-main {
+      position: relative; overflow: hidden; min-height: 430px; padding: clamp(28px, 5vw, 58px);
+      border-radius: 28px 8px 28px 8px; color: #f5fff9; background: #0d5f45;
+    }
+    .hero-main::after {
+      content: ""; position: absolute; width: 290px; height: 290px; right: -110px; bottom: -130px;
+      border: 34px solid rgba(255,255,255,.08); border-radius: 50%;
+    }
+    .kicker { margin: 0 0 18px; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; opacity: .86; }
+    h1 { margin: 0; max-width: 720px; font-size: clamp(38px, 6.5vw, 76px); line-height: .96; letter-spacing: -.045em; font-weight: 760; }
+    .hero-copy { max-width: 610px; margin: 24px 0 28px; font-size: clamp(17px, 2vw, 21px); color: #dcefe7; }
+    .hero-rule { display: inline-flex; gap: 10px; align-items: center; padding: 11px 14px; background: #f1fff8; color: #163d2f; border-radius: 6px 16px 16px 6px; font-weight: 720; font-size: 14px; }
+    .hero-rule svg { flex: 0 0 auto; }
+    .hero-side { display: grid; grid-template-rows: 1fr auto; gap: 14px; }
+    .premium-card { padding: 24px; border-radius: 8px 24px 8px 24px; background: var(--surface); box-shadow: var(--shadow); border: 1px solid var(--line); }
+    .eyebrow { font-family: var(--mono); font-size: 11px; color: var(--faint); letter-spacing: .065em; text-transform: uppercase; }
+    .premium-big { margin-top: 22px; font-size: 66px; line-height: 1; letter-spacing: -.06em; font-weight: 760; color: var(--green); }
+    .premium-caption { color: var(--muted); margin-top: 8px; }
+    .premium-path { margin-top: 24px; display: grid; gap: 12px; }
+    .path-row { display: grid; grid-template-columns: 42px 1fr; gap: 11px; align-items: center; }
+    .path-icon { width: 42px; height: 42px; display:grid; place-items:center; background: var(--green-2); color: var(--green); border-radius: 12px 4px 12px 4px; font-weight: 800; }
+    .path-row strong { display:block; font-size: 14px; }
+    .path-row span { font-size: 12px; color: var(--muted); }
+    .truth-card { padding: 18px 20px; border-radius: 18px 6px; color: var(--ink); background: var(--yellow-2); border: 1px solid color-mix(in srgb, var(--yellow) 35%, transparent); }
+    .truth-card strong { display:block; margin-bottom: 3px; color: var(--yellow); }
+
+    .section { margin-top: 40px; scroll-margin-top: 74px; }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 18px; }
+    .section-head h2 { margin: 0; font-size: clamp(26px, 4vw, 40px); letter-spacing: -.035em; line-height: 1.05; }
+    .section-head p { margin: 0; max-width: 490px; color: var(--muted); font-size: 14px; }
+
+    .flow { background: var(--surface); border: 1px solid var(--line); border-radius: 26px 8px; padding: 24px; box-shadow: var(--shadow); }
+    .flow-track { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .flow-step { position: relative; min-width: 0; padding: 18px 15px; background: var(--surface-2); border-radius: 16px 5px; }
+    .flow-step:not(:last-child)::after { content:"→"; position:absolute; right:-10px; top:50%; z-index:2; transform: translateY(-50%); width:20px; height:20px; display:grid; place-items:center; border-radius:50%; background:var(--green); color:#fff; font-weight:800; }
+    .flow-num { font-family: var(--mono); font-size: 11px; color: var(--green); }
+    .flow-step h3 { margin: 8px 0 6px; font-size: 16px; }
+    .flow-step p { margin: 0; color: var(--muted); font-size: 12px; }
+    .flow-return { margin-top: 16px; display:flex; gap:10px; align-items:center; padding: 14px 16px; border: 1px dashed var(--green); border-radius: 8px 16px; color: var(--muted); font-size: 13px; }
+    .flow-return b { color: var(--green); }
+
+    .strategy-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 20px; }
+    .strategy-picks { display: grid; gap: 10px; }
+    .strategy-btn { width: 100%; text-align:left; border:1px solid var(--line); color:var(--ink); background:var(--surface); padding:18px; border-radius:16px 5px; cursor:pointer; transition: border-color .2s, background .2s; }
+    .strategy-btn:hover, .strategy-btn:focus-visible { border-color: var(--green); outline:none; }
+    .strategy-btn.active { background: var(--green); color:#fff; border-color:var(--green); }
+    .strategy-btn span { display:block; font-size:12px; margin-top:5px; color:var(--muted); }
+    .strategy-btn.active span { color:#d9f3e8; }
+    .strategy-stage { background:var(--surface); border:1px solid var(--line); border-radius:8px 26px; padding:26px; min-height:360px; box-shadow:var(--shadow); }
+    .stage-top { display:flex; justify-content:space-between; align-items:start; gap:16px; }
+    .stage-title { margin:4px 0 0; font-size:28px; letter-spacing:-.03em; }
+    .risk-tag { padding:6px 10px; border-radius:99px; font-family:var(--mono); font-size:11px; background:var(--green-2); color:var(--green); white-space:nowrap; }
+    .contract-line { margin:28px 0; display:grid; grid-template-columns:1fr auto 1fr auto 1fr; align-items:center; gap:10px; }
+    .contract-node { padding:16px 12px; text-align:center; background:var(--surface-2); border-radius:12px 4px; }
+    .contract-node b { display:block; font-size:14px; }
+    .contract-node small { color:var(--muted); font-size:11px; }
+    .contract-arrow { color:var(--green); font-weight:800; }
+    .outcome-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .outcome { padding:14px; border-top:3px solid var(--line); background:var(--paper); }
+    .outcome.good { border-color:var(--green); }
+    .outcome.warn { border-color:var(--yellow); }
+    .outcome.bad { border-color:var(--red); }
+    .outcome b { display:block; font-size:13px; margin-bottom:4px; }
+    .outcome span { font-size:12px; color:var(--muted); }
+    .stage-foot { margin-top:18px; font-size:13px; color:var(--muted); }
+
+    .desk-grid { display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; }
+    .desk { position:relative; background:var(--surface); border:1px solid var(--line); border-radius:16px 5px; padding:17px 15px 15px; min-height:170px; }
+    .desk-no { font-family:var(--mono); color:var(--green); font-size:11px; }
+    .desk h3 { margin:10px 0 8px; font-size:15px; }
+    .desk p { margin:0; font-size:12px; color:var(--muted); }
+    .desk .gate { position:absolute; bottom:13px; left:15px; right:15px; padding-top:9px; border-top:1px solid var(--line); font-family:var(--mono); font-size:10px; color:var(--faint); }
+
+    .selector { display:grid; grid-template-columns: 1fr 1fr; gap:20px; }
+    .quality, .universe { background:var(--surface); border:1px solid var(--line); padding:24px; }
+    .quality { border-radius:24px 7px; }
+    .universe { border-radius:7px 24px; }
+    .panel-title { margin:0 0 4px; font-size:22px; letter-spacing:-.025em; }
+    .panel-sub { margin:0 0 20px; color:var(--muted); font-size:13px; }
+    .score-list { display:grid; gap:9px; }
+    .score-row { display:grid; grid-template-columns:28px 1fr auto; gap:10px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); }
+    .score-row:last-child { border-bottom:0; }
+    .score-icon { width:25px; height:25px; border-radius:50%; display:grid; place-items:center; background:var(--green-2); color:var(--green); font-size:13px; font-weight:800; }
+    .score-text b { display:block; font-size:13px; }
+    .score-text span { display:block; color:var(--muted); font-size:11px; }
+    .score-tag { font-family:var(--mono); font-size:10px; color:var(--green); }
+    .universe-bands { display:grid; gap:12px; }
+    .band { padding:15px 16px; border-radius:8px 16px; }
+    .band.core { background:var(--green-2); }
+    .band.selective { background:var(--yellow-2); }
+    .band.avoid { background:var(--red-2); }
+    .band-top { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+    .band strong { font-size:14px; }
+    .tickers { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--green); }
+    .band.selective .tickers { color:var(--yellow); }
+    .band.avoid .tickers { color:var(--red); }
+    .band p { margin:6px 0 0; font-size:12px; color:var(--muted); }
+    .universe-note { margin-top:14px; font-size:12px; color:var(--muted); }
+
+    .snapshot-headline { margin:0 0 14px; padding:15px 18px; border-radius:8px 18px; background:var(--yellow-2); color:var(--ink); font-size:14px; }
+    .snapshot-headline strong { color:var(--yellow); }
+    .market-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px; }
+    .market-stat { padding:14px 16px; background:var(--surface); border:1px solid var(--line); border-radius:14px 5px; }
+    .market-stat span { display:block; color:var(--muted); font-size:11px; }
+    .market-stat b { display:block; margin-top:3px; font-family:var(--mono); font-size:22px; color:var(--green); }
+    .market-stat small { display:block; margin-top:3px; color:var(--faint); font-size:10px; }
+    .contract-snapshot { display:grid; grid-template-columns:minmax(190px,.7fr) minmax(0,1.3fr); gap:20px; padding:22px; background:var(--surface); border:1px solid var(--line); border-radius:24px 7px; box-shadow:var(--shadow); }
+    .contract-identity { padding-right:20px; border-right:1px solid var(--line); }
+    .contract-identity h3 { margin:6px 0 4px; font-size:30px; letter-spacing:-.04em; }
+    .contract-identity p { margin:0; color:var(--muted); font-size:13px; }
+    .quote { margin:20px 0 3px; font-family:var(--mono); font-size:30px; color:var(--green); font-weight:800; }
+    .quote-label { color:var(--muted); font-size:11px; }
+    .real-data-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px 16px; }
+    .datum span { display:block; color:var(--faint); font-size:10px; text-transform:uppercase; letter-spacing:.045em; }
+    .datum b { display:block; margin-top:2px; font-family:var(--mono); font-size:14px; }
+    .snapshot-source { grid-column:1 / -1; display:flex; justify-content:space-between; gap:16px; align-items:start; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; }
+    .snapshot-source a { color:var(--green); text-underline-offset:3px; }
+    .dash { margin-top:14px; display:grid; grid-template-columns:minmax(240px,.55fr) minmax(0,1.45fr); gap:14px; }
+    .controls { padding:22px; background:var(--surface); border:1px solid var(--line); border-radius:22px 7px; }
+    .control-state { display:flex; justify-content:space-between; gap:10px; align-items:start; }
+    .state-chip { padding:6px 9px; border-radius:99px; background:var(--green-2); color:var(--green); font:700 10px/1.2 var(--mono); text-align:right; }
+    .state-chip.hypothetical { background:var(--yellow-2); color:var(--yellow); }
+    .field { margin-top:19px; }
+    .field label { display:flex; justify-content:space-between; gap:14px; font-size:13px; font-weight:650; margin-bottom:9px; }
+    .field output { color:var(--green); font-family:var(--mono); font-weight:800; }
+    .field input[type="range"] { width:100%; height:28px; margin:0; accent-color:var(--green); cursor:pointer; }
+    .range-limits { display:flex; justify-content:space-between; color:var(--faint); font:10px var(--mono); }
+    .reset-btn { width:100%; margin-top:22px; padding:11px 14px; color:var(--ink); background:var(--surface-2); border:1px solid var(--line); border-radius:7px 14px; cursor:pointer; font-weight:700; }
+    .reset-btn:hover, .reset-btn:focus-visible { border-color:var(--green); outline:none; }
+    .results { margin-top:18px; padding-top:16px; border-top:1px solid var(--line); }
+    .result-main { display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:12px; }
+    .result-main span { display:block; color:var(--muted); font-size:11px; }
+    .result-main strong { font-family:var(--mono); font-size:30px; color:var(--green); letter-spacing:-.04em; }
+    .result-list { display:grid; gap:8px; }
+    .result-row { display:flex; justify-content:space-between; gap:15px; padding-bottom:8px; border-bottom:1px solid var(--line); font-size:12px; }
+    .result-row span { color:var(--muted); }
+    .result-row b { font-family:var(--mono); }
+    .charts { display:grid; gap:14px; min-width:0; }
+    .chart-card { min-width:0; padding:18px 18px 10px; background:var(--surface); border:1px solid var(--line); border-radius:7px 22px; }
+    .chart-head { display:flex; justify-content:space-between; gap:18px; align-items:start; margin-bottom:4px; }
+    .chart-head h3 { margin:0; font-size:18px; }
+    .chart-head p { margin:3px 0 0; color:var(--muted); font-size:11px; }
+    .chart-value { flex:0 0 auto; font-family:var(--mono); color:var(--green); font-weight:800; }
+    .plot { width:100%; height:330px; }
+    .model-note { padding:0 4px 5px; color:var(--muted); font-size:10px; }
+    .neighbor { margin-top:12px; padding:12px 14px; background:var(--surface-2); border-radius:7px 14px; color:var(--muted); font-size:11px; }
+    .neighbor b { color:var(--ink); }
+
+    .ticket { display:grid; grid-template-columns:.95fr 1.05fr; gap:0; overflow:hidden; border:1px solid var(--line); border-radius:26px 8px; background:var(--surface); box-shadow:var(--shadow); }
+    .ticket-code { padding:28px; background:#17241e; color:#f5fff9; }
+    .ticket-string { font-family:var(--mono); font-size:clamp(22px,4vw,38px); font-weight:800; letter-spacing:-.04em; word-break:break-word; }
+    .ticket-string span { color:#70dbb2; }
+    .ticket-code p { color:#c6d9cf; font-size:13px; margin:14px 0 0; }
+    .ticket-parts { padding:24px 28px; display:grid; gap:12px; }
+    .part { display:grid; grid-template-columns:34px 1fr; gap:10px; }
+    .part-no { width:28px; height:28px; border-radius:50%; display:grid; place-items:center; background:var(--green-2); color:var(--green); font-family:var(--mono); font-size:11px; font-weight:800; }
+    .part b { display:block; font-size:13px; }
+    .part span { display:block; color:var(--muted); font-size:12px; }
+
+    .guardrails { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .guard { padding:18px; border-radius:16px 5px; background:var(--red-2); }
+    .guard strong { display:block; color:var(--red); margin-bottom:6px; font-size:14px; }
+    .guard span { color:var(--muted); font-size:12px; }
+    .closing { margin-top:38px; display:flex; justify-content:space-between; gap:20px; padding:23px 0; border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
+    .sources { display:flex; gap:14px; flex-wrap:wrap; }
+    .sources a { text-decoration-thickness:1px; text-underline-offset:3px; }
+
+    .bottom-nav { display:none; }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns:1fr; }
+      .hero-main { min-height:0; }
+      .hero-side { grid-template-columns:1fr 1fr; grid-template-rows:auto; }
+      .flow-track { grid-template-columns:1fr 1fr; }
+      .flow-step:not(:last-child)::after { display:none; }
+      .flow-step:last-child { grid-column:1 / -1; }
+      .desk-grid { grid-template-columns:repeat(3,1fr); }
+      .selector, .ticket, .dash { grid-template-columns:1fr; }
+      .contract-snapshot { grid-template-columns:1fr; }
+      .contract-identity { padding-right:0; padding-bottom:16px; border-right:0; border-bottom:1px solid var(--line); }
+      .guardrails { grid-template-columns:1fr 1fr; }
+    }
+    @media (max-width: 620px) {
+      .app { padding:12px 14px 92px; }
+      .topline { padding-bottom:16px; }
+      .mode-chip { display:none; }
+      .hero { gap:12px; }
+      .hero-main { padding:28px 22px 30px; border-radius:22px 6px; }
+      h1 { font-size:43px; }
+      .hero-copy { font-size:17px; }
+      .hero-side { grid-template-columns:1fr; }
+      .premium-big { font-size:54px; }
+      .section { margin-top:32px; }
+      .section-head { display:block; }
+      .section-head p { margin-top:8px; }
+      .flow { padding:15px; }
+      .flow-track { grid-template-columns:1fr; }
+      .flow-step:last-child { grid-column:auto; }
+      .strategy-layout { grid-template-columns:1fr; }
+      .strategy-picks { grid-template-columns:repeat(3,1fr); gap:6px; }
+      .strategy-btn { padding:12px 10px; min-height:84px; }
+      .strategy-btn strong { font-size:12px; }
+      .strategy-btn span { display:none; }
+      .strategy-stage { padding:20px 16px; }
+      .stage-top { display:block; }
+      .risk-tag { display:inline-block; margin-top:10px; }
+      .contract-line { grid-template-columns:1fr; }
+      .contract-arrow { transform:rotate(90deg); text-align:center; }
+      .outcome-grid { grid-template-columns:1fr; }
+      .desk-grid { grid-template-columns:1fr 1fr; }
+      .desk { min-height:180px; }
+      .market-strip { grid-template-columns:1fr; }
+      .contract-snapshot { padding:18px 16px; }
+      .real-data-grid { grid-template-columns:repeat(2,1fr); }
+      .snapshot-source { display:block; }
+      .snapshot-source span { display:block; margin-top:6px; }
+      .control-state, .chart-head { display:block; }
+      .state-chip { display:inline-block; margin-top:8px; text-align:left; }
+      .plot { height:300px; }
+      .guardrails { grid-template-columns:1fr; }
+      .closing { display:block; }
+      .sources { margin-top:12px; }
+      .bottom-nav { display:grid; position:fixed; bottom:0; left:0; right:0; z-index:20; grid-template-columns:repeat(4,1fr); padding:8px 8px calc(8px + env(safe-area-inset-bottom)); background:color-mix(in srgb, var(--surface) 94%, transparent); border-top:1px solid var(--line); box-shadow:0 -8px 20px rgba(0,0,0,.08); }
+      .bottom-nav a { text-decoration:none; text-align:center; color:var(--muted); font-size:10px; font-weight:700; padding:7px 2px; }
+      .bottom-nav svg { display:block; margin:0 auto 3px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior:auto; } * { transition:none !important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topline">
+      <div class="market-note"><strong>Market snapshot:</strong> SPY and CBOE chain data as of Friday, September 25, 2026 close. Verify current quotes with your broker.</div>
+      <div class="mode-chip">DEFINED RISK FIRST</div>
+    </div>
+
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-main">
+        <p class="kicker">THE ONE-SENTENCE MODEL</p>
+        <h1 id="hero-title">Get paid now for accepting an obligation later.</h1>
+        <p class="hero-copy">You sell an option, collect a premium, and accept a clearly defined obligation. Time decay can help—but price moves, volatility, and assignment can overpower it.</p>
+        <div class="hero-rule">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v18M7 7h8.5a3.5 3.5 0 0 1 0 7H8.5a3.5 3.5 0 0 0 0 7H18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Premium is payment for risk—not free income.
+        </div>
+      </div>
+      <div class="hero-side">
+        <div class="premium-card">
+          <div class="eyebrow">One contract, simplified</div>
+          <div class="premium-big">×100</div>
+          <div class="premium-caption">A standard equity option generally represents 100 shares.</div>
+          <div class="premium-path">
+            <div class="path-row"><div class="path-icon">$</div><div><strong>Credit arrives</strong><span>Premium is collected when the order fills.</span></div></div>
+            <div class="path-row"><div class="path-icon">⌁</div><div><strong>Time passes</strong><span>All else equal, time value tends to decay.</span></div></div>
+            <div class="path-row"><div class="path-icon">↳</div><div><strong>Obligation remains</strong><span>Close, expire, roll, or accept assignment.</span></div></div>
+          </div>
+        </div>
+        <div class="truth-card"><strong>The desk’s job</strong>Find a price worth owning or selling, then check whether the option pays enough for the obligation.</div>
+      </div>
+    </section>
+
+    <section class="section" id="workflow">
+      <div class="section-head"><h2>The premium workflow</h2><p>A repeatable path from business thesis to exit. Every arrow is a gate; failing a gate means no trade.</p></div>
+      <div class="flow">
+        <div class="flow-track">
+          <div class="flow-step"><span class="flow-num">01</span><h3>Value first</h3><p>Would you own 100 shares at the put strike—or sell 100 at the call strike?</p></div>
+          <div class="flow-step"><span class="flow-num">02</span><h3>Event check</h3><p>Locate earnings, dividends, Fed decisions and other gap-risk dates.</p></div>
+          <div class="flow-step"><span class="flow-num">03</span><h3>Price the risk</h3><p>Compare premium, implied volatility, breakeven and collateral.</p></div>
+          <div class="flow-step"><span class="flow-num">04</span><h3>Build the contract</h3><p>Choose strike and expiry; prefer liquid chains and limit orders.</p></div>
+          <div class="flow-step"><span class="flow-num">05</span><h3>Manage the promise</h3><p>Write the close, roll and assignment plan before entry.</p></div>
+        </div>
+        <div class="flow-return"><b>Repeatable edge:</b> sell only when the premium compensates for a risk you already understand and can fund.</div>
+      </div>
+    </section>
+
+    <section class="section" id="strategies">
+      <div class="section-head"><h2>Pick the obligation you want</h2><p>Tap your situation. The structure should follow the portfolio—not the other way around.</p></div>
+      <div class="strategy-layout">
+        <div class="strategy-picks" role="tablist" aria-label="Premium strategies">
+          <button class="strategy-btn active" role="tab" aria-selected="true" data-strategy="put"><strong>Want to own shares</strong><span>Cash-secured put</span></button>
+          <button class="strategy-btn" role="tab" aria-selected="false" data-strategy="call"><strong>Already own 100</strong><span>Covered call</span></button>
+          <button class="strategy-btn" role="tab" aria-selected="false" data-strategy="spread"><strong>Want a hard loss cap</strong><span>Credit spread</span></button>
+        </div>
+        <div class="strategy-stage" aria-live="polite">
+          <div class="stage-top"><div><div class="eyebrow" id="stage-kicker">BULLISH TO NEUTRAL</div><h3 class="stage-title" id="stage-title">Cash-secured put</h3></div><div class="risk-tag" id="stage-tag">FULL CASH RESERVED</div></div>
+          <div class="contract-line" id="contract-line"></div>
+          <div class="outcome-grid" id="outcomes"></div>
+          <div class="stage-foot" id="stage-foot"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="desks">
+      <div class="section-head"><h2>Six desks, one decision</h2><p>Each desk answers a different question. A candidate advances only when the evidence lines up.</p></div>
+      <div class="desk-grid">
+        <article class="desk"><span class="desk-no">D1</span><h3>Value</h3><p>What is the business worth, and where is the margin of safety?</p><div class="gate">GATE: acceptable entry/exit</div></article>
+        <article class="desk"><span class="desk-no">D2</span><h3>Earnings</h3><p>Is a report or binary catalyst inside the contract window?</p><div class="gate">GATE: event understood</div></article>
+        <article class="desk"><span class="desk-no">D3</span><h3>Premium / IV</h3><p>Does credit justify the breakeven, collateral and volatility?</p><div class="gate">GATE: price compensates</div></article>
+        <article class="desk"><span class="desk-no">D4</span><h3>Rates & futures</h3><p>Are yields, oil or index futures changing the macro setup?</p><div class="gate">GATE: regime aligned</div></article>
+        <article class="desk"><span class="desk-no">D5</span><h3>Dividend</h3><p>Does ex-dividend timing alter assignment or holding economics?</p><div class="gate">GATE: dates checked</div></article>
+        <article class="desk"><span class="desk-no">D6</span><h3>Parity & evidence</h3><p>Do quotes, spreads and outside research agree with the thesis?</p><div class="gate">GATE: data passes</div></article>
+      </div>
+    </section>
+
+    <section class="section" id="underlyings">
+      <div class="section-head"><h2>What makes a strong underlying?</h2><p>“Best” is not the highest premium. It is the cleanest combination of ownership quality, liquidity and a manageable obligation.</p></div>
+      <div class="selector">
+        <div class="quality">
+          <h3 class="panel-title">Five-point quality gate</h3><p class="panel-sub">Score the underlying before looking at the tempting credit.</p>
+          <div class="score-list">
+            <div class="score-row"><div class="score-icon">1</div><div class="score-text"><b>Ownership test</b><span>You can explain why you would own it through a decline.</span></div><div class="score-tag">MUST PASS</div></div>
+            <div class="score-row"><div class="score-icon">2</div><div class="score-text"><b>Chain quality</b><span>Live bid/ask, quote size, volume and open interest support execution.</span></div><div class="score-tag">MUST PASS</div></div>
+            <div class="score-row"><div class="score-icon">3</div><div class="score-text"><b>Price clarity</b><span>Put strike is a buy price; call strike is an acceptable sale price.</span></div><div class="score-tag">MUST PASS</div></div>
+            <div class="score-row"><div class="score-icon">4</div><div class="score-text"><b>Event awareness</b><span>Earnings, dividends and macro dates are marked before entry.</span></div><div class="score-tag">CHECK</div></div>
+            <div class="score-row"><div class="score-icon">5</div><div class="score-text"><b>Funding</b><span>Cash or shares cover assignment; defined-risk legs cap exposure.</span></div><div class="score-tag">MUST PASS</div></div>
+          </div>
+        </div>
+        <div class="universe">
+          <h3 class="panel-title">A practical starting universe</h3><p class="panel-sub">Examples to research, never an automatic buy list.</p>
+          <div class="universe-bands">
+            <div class="band core"><div class="band-top"><strong>Start here: broad ETFs</strong><span class="tickers">SPY · QQQ · IWM</span></div><p>Diversified exposure and commonly active option chains. Still verify the exact strike and expiry.</p></div>
+            <div class="band selective"><div class="band-top"><strong>Selective: mega-cap shares</strong><span class="tickers">AAPL · MSFT · AMZN</span></div><p>Useful only when valuation supports ownership and earnings risk is deliberately handled.</p></div>
+            <div class="band avoid"><div class="band-top"><strong>Avoid by default</strong><span class="tickers">THIN · BINARY · HYPE</span></div><p>Wide spreads, weak open interest, leveraged products, event-driven names, or anything you would not hold.</p></div>
+          </div>
+          <p class="universe-note">Underlying liquidity does not guarantee that a specific far-out strike is liquid. Inspect the contract itself.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="lab">
+      <div class="section-head"><h2>Real-data contract dash</h2><p>Start from the desk’s actual SPY cash-secured-put candidate, then move the sliders to stress the economics and model decay.</p></div>
+
+      <p class="snapshot-headline"><strong>Thin premium regime:</strong> at VIX 14.87, the 9.9%-OTM, 35-DTE SPY put offers a maximum gross return on collateral of 0.176% if it expires worthless. This snapshot alone does not establish an edge.</p>
+      <div class="market-strip" aria-label="Market backdrop as of September 25, 2026 close">
+        <div class="market-stat"><span>SPY close</span><b>$771.35</b><small>Desk sweep · Yahoo Finance</small></div>
+        <div class="market-stat"><span>VIX</span><b>14.87</b><small>Near 52-week lows · thin absolute premium</small></div>
+        <div class="market-stat"><span>10-year yield</span><b>5.184%</b><small>Desk sweep · Yahoo Finance</small></div>
+      </div>
+
+      <div class="contract-snapshot">
+        <div class="contract-identity">
+          <div class="eyebrow">REAL CONTRACT · CBOE DELAYED</div>
+          <h3>SPY 695 Put</h3>
+          <p>October 30, 2026 · 35 DTE · 9.9% OTM</p>
+          <div class="quote">1.21 × 1.23</div>
+          <div class="quote-label">bid × ask · $1.22 midpoint</div>
+        </div>
+        <div class="real-data-grid" aria-label="Seed contract data">
+          <div class="datum"><span>Implied vol</span><b>22.1%</b></div>
+          <div class="datum"><span>Delta</span><b>−0.0545</b></div>
+          <div class="datum"><span>Gamma</span><b>0.0021</b></div>
+          <div class="datum"><span>Vega</span><b>0.2757</b></div>
+          <div class="datum"><span>Theta / day</span><b>−0.0816</b></div>
+          <div class="datum"><span>Open interest</span><b>3,044</b></div>
+          <div class="datum"><span>Volume</span><b>124</b></div>
+          <div class="datum"><span>Theoretical</span><b>1.2165</b></div>
+          <div class="datum"><span>Premium / contract</span><b>$122</b></div>
+          <div class="datum"><span>Collateral</span><b>$69,500</b></div>
+          <div class="datum"><span>Breakeven</span><b>$693.78</b></div>
+          <div class="datum"><span>Max return</span><b>0.176%</b></div>
+          <div class="snapshot-source"><a href="https://cdn.cboe.com/api/global/delayed_quotes/options/SPY.json" target="_blank" rel="noreferrer">CBOE delayed SPY option chain</a><span>Friday, September 25 close; feed is approximately 15 minutes delayed. Verify the live contract at your broker.</span></div>
+        </div>
+      </div>
+      <div class="neighbor"><b>Neighbor check:</b> SPY 690 Put (10.5% OTM) — bid 1.10 / ask 1.11, IV 22.83%, delta −0.0488, open interest 5,526.</div>
+
+      <div class="dash">
+        <aside class="controls" aria-label="Interactive contract controls">
+          <div class="control-state"><div><div class="eyebrow">MOVE THE ASSUMPTIONS</div><h3 class="panel-title">Contract controls</h3></div><div class="state-chip" id="state-chip">REAL SEED CONTRACT</div></div>
+          <div class="field"><label for="strike">Strike <output id="strike-value">$695</output></label><input id="strike" aria-label="Strike price" type="range" min="650" max="750" step="1" value="695" /><div class="range-limits"><span>$650</span><span>$750</span></div></div>
+          <div class="field"><label for="premium">Premium / share <output id="premium-value">$1.22</output></label><input id="premium" aria-label="Premium per share" type="range" min="0.50" max="3.00" step="0.01" value="1.22" /><div class="range-limits"><span>$0.50</span><span>$3.00</span></div></div>
+          <div class="field"><label for="days">Days to expiration <output id="days-value">35 days</output></label><input id="days" aria-label="Days to expiration" type="range" min="7" max="60" step="1" value="35" /><div class="range-limits"><span>7</span><span>60</span></div></div>
+          <div class="field"><label for="iv">Implied volatility <output id="iv-value">22.1%</output></label><input id="iv" aria-label="Implied volatility" type="range" min="10" max="40" step="0.1" value="22.1" /><div class="range-limits"><span>10%</span><span>40%</span></div></div>
+          <button class="reset-btn" id="reset-seed" type="button">Reset to real contract</button>
+          <div class="results">
+            <div class="result-main"><div><span>Breakeven at expiry</span><strong id="breakeven">$693.78</strong></div><div><span>Max profit</span><strong id="credit">$122</strong></div></div>
+            <div class="result-list">
+              <div class="result-row"><span>Cash reserved</span><b id="cash">$69,500</b></div>
+              <div class="result-row"><span>Simple return on cash</span><b id="roc">0.176%</b></div>
+              <div class="result-row"><span>Annualized simple rate</span><b id="annualized">1.83%</b></div>
+              <div class="result-row"><span>Maximum loss if SPY goes to $0</span><b id="maxloss">$69,378</b></div>
+            </div>
+          </div>
+        </aside>
+        <div class="charts">
+          <div class="chart-card">
+            <div class="chart-head"><div><h3>P&amp;L at expiration</h3><p>Per contract, including premium received.</p></div><div class="chart-value" id="pnl-caption">Max +$122</div></div>
+            <div id="pnl-chart" class="plot" role="img" aria-label="Interactive profit and loss chart for the selected short put"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head"><div><h3>Modeled value decay</h3><p id="decay-assumption">Assumes IV stays at 22.1%.</p></div><div class="chart-value" id="model-caption">35 DTE</div></div>
+            <div id="decay-chart" class="plot" role="img" aria-label="Interactive Black-Scholes put value chart over days remaining"></div>
+            <div class="model-note">Black-Scholes illustration: SPY fixed at $771.35, 10-year yield of 5.184% used as the rate proxy, no dividend yield. Model output is not a quote or forecast.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="ticket">
+      <div class="section-head"><h2>Read the contract ticket</h2><p>A fast decoder for what you are actually promising.</p></div>
+      <div class="ticket">
+        <div class="ticket-code"><div class="eyebrow">EXAMPLE ONLY</div><div class="ticket-string">SELL 1 <span>XYZ</span> 35-DAY <span>95 PUT</span> @ <span>2.40</span></div><p>“Pay me $240 now. Until expiration, I may have to buy 100 XYZ shares for $95 each.”</p></div>
+        <div class="ticket-parts">
+          <div class="part"><div class="part-no">1</div><div><b>SELL 1</b><span>Open one short option contract; standard equity multiplier is generally 100.</span></div></div>
+          <div class="part"><div class="part-no">2</div><div><b>35-DAY</b><span>Time remaining until the contract expires.</span></div></div>
+          <div class="part"><div class="part-no">3</div><div><b>95 PUT</b><span>The seller may be obligated to buy shares at $95.</span></div></div>
+          <div class="part"><div class="part-no">4</div><div><b>@ 2.40</b><span>$2.40 per share × 100 = $240 gross premium, before fees and taxes.</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="risk">
+      <div class="section-head"><h2>Stop signs</h2><p>The fastest way to protect a premium strategy is to know when not to open it.</p></div>
+      <div class="guardrails">
+        <div class="guard"><strong>No naked calls</strong><span>Loss can be theoretically unlimited as the underlying rises.</span></div>
+        <div class="guard"><strong>No unfunded puts</strong><span>A $50 strike can create a $5,000 stock purchase per standard contract.</span></div>
+        <div class="guard"><strong>No event blindness</strong><span>Earnings and dividends can change price and early-assignment risk.</span></div>
+        <div class="guard"><strong>No market orders in thin chains</strong><span>A wide bid/ask can consume the premium edge before the trade begins.</span></div>
+      </div>
+    </section>
+
+    <footer class="closing">
+      <div>Educational operating guide—not individualized investment advice. Options involve risk and are not suitable for every investor.</div>
+      <div class="sources"><a href="https://www.sec.gov/resources-for-investors/investor-alerts-bulletins/ib_introductionoptions" target="_blank" rel="noreferrer">SEC: Options introduction</a><a href="https://www.theocc.com/getcontentasset/a151a9ae-d784-4a15-bdeb-23a029f50b70/dfc3d011-8f63-43f6-9ed8-4b444333a1d0/riskstoc.pdf" target="_blank" rel="noreferrer">OCC risk disclosure</a><a href="https://www.optionseducation.org/strategies/all-strategies/bull-put-spread-credit-put-spread" target="_blank" rel="noreferrer">OIC: Bull put spread</a></div>
+    </footer>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Guide sections">
+    <a href="#workflow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Workflow</a>
+    <a href="#strategies"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12 4 4L19 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Strategies</a>
+    <a href="#underlyings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19V9m6 10V5m6 14v-7m4 7H2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Underlyings</a>
+    <a href="#lab"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 3h8M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Lab</a>
+  </nav>
+
+  <script src="data:application/javascript;base64,KGZ1bmN0aW9uICgpIHsKICAndXNlIHN0cmljdCc7CiAgdmFyIE5TID0gJ2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJzsKCiAgZnVuY3Rpb24gc3ZnRWwobmFtZSwgYXR0cnMsIHRleHQpIHsKICAgIHZhciBlbCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnROUyhOUywgbmFtZSk7CiAgICBPYmplY3Qua2V5cyhhdHRycyB8fCB7fSkuZm9yRWFjaChmdW5jdGlvbiAoa2V5KSB7IGVsLnNldEF0dHJpYnV0ZShrZXksIGF0dHJzW2tleV0pOyB9KTsKICAgIGlmICh0ZXh0ICE9PSB1bmRlZmluZWQpIGVsLnRleHRDb250ZW50ID0gdGV4dDsKICAgIHJldHVybiBlbDsKICB9CgogIGZ1bmN0aW9uIGV4dGVudCh2YWx1ZXMpIHsKICAgIHZhciBtaW4gPSBJbmZpbml0eSwgbWF4ID0gLUluZmluaXR5OwogICAgdmFsdWVzLmZvckVhY2goZnVuY3Rpb24gKHYpIHsgaWYgKGlzRmluaXRlKHYpKSB7IG1pbiA9IE1hdGgubWluKG1pbiwgdik7IG1heCA9IE1hdGgubWF4KG1heCwgdik7IH0gfSk7CiAgICByZXR1cm4gW21pbiwgbWF4XTsKICB9CgogIGZ1bmN0aW9uIGZvcm1hdFRpY2sodmFsdWUsIGF4aXMpIHsKICAgIHZhciBwcmVmaXggPSBheGlzICYmIGF4aXMudGlja3ByZWZpeCA/IGF4aXMudGlja3ByZWZpeCA6ICcnOwogICAgdmFyIGRpZ2l0cyA9IGF4aXMgJiYgYXhpcy50aWNrZm9ybWF0ID09PSAnLjJmJyA/IDIgOiAoTWF0aC5hYnModmFsdWUpIDwgMTAgPyAxIDogMCk7CiAgICByZXR1cm4gcHJlZml4ICsgTnVtYmVyKHZhbHVlKS50b0xvY2FsZVN0cmluZygnZW4tVVMnLCB7bWF4aW11bUZyYWN0aW9uRGlnaXRzOmRpZ2l0cywgbWluaW11bUZyYWN0aW9uRGlnaXRzOmRpZ2l0c30pOwogIH0KCiAgZnVuY3Rpb24gbmljZVRpY2tzKG1pbiwgbWF4LCBjb3VudCkgewogICAgaWYgKG1pbiA9PT0gbWF4KSByZXR1cm4gW21pbl07CiAgICB2YXIgcm91Z2ggPSAobWF4IC0gbWluKSAvIGNvdW50OwogICAgdmFyIHBvd2VyID0gTWF0aC5wb3coMTAsIE1hdGguZmxvb3IoTWF0aC5sb2cxMChyb3VnaCkpKTsKICAgIHZhciBmcmFjdGlvbiA9IHJvdWdoIC8gcG93ZXI7CiAgICB2YXIgc3RlcCA9IChmcmFjdGlvbiA8PSAxID8gMSA6IGZyYWN0aW9uIDw9IDIgPyAyIDogZnJhY3Rpb24gPD0gNSA/IDUgOiAxMCkgKiBwb3dlcjsKICAgIHZhciBmaXJzdCA9IE1hdGguY2VpbChtaW4gLyBzdGVwKSAqIHN0ZXA7CiAgICB2YXIgb3V0ID0gW107CiAgICBmb3IgKHZhciB2ID0gZmlyc3Q7IHYgPD0gbWF4ICsgc3RlcCAqIC4wMDE7IHYgKz0gc3RlcCkgb3V0LnB1c2godik7CiAgICByZXR1cm4gb3V0OwogIH0KCiAgZnVuY3Rpb24gbGluZVBhdGgoeHMsIHlzLCB4U2NhbGUsIHlTY2FsZSkgewogICAgcmV0dXJuIHhzLm1hcChmdW5jdGlvbiAoeCwgaSkgeyByZXR1cm4gKGkgPyAnTCcgOiAnTScpICsgeFNjYWxlKHgpLnRvRml4ZWQoMikgKyAnLCcgKyB5U2NhbGUoeXNbaV0pLnRvRml4ZWQoMik7IH0pLmpvaW4oJyAnKTsKICB9CgogIGZ1bmN0aW9uIHJlYWN0KHRhcmdldCwgdHJhY2VzLCBsYXlvdXQpIHsKICAgIHZhciBjb250YWluZXIgPSB0eXBlb2YgdGFyZ2V0ID09PSAnc3RyaW5nJyA/IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKHRhcmdldCkgOiB0YXJnZXQ7CiAgICBpZiAoIWNvbnRhaW5lciB8fCAhdHJhY2VzIHx8ICF0cmFjZXMubGVuZ3RoKSByZXR1cm47CiAgICB2YXIgdHJhY2UgPSB0cmFjZXNbMF0sIHhzID0gdHJhY2UueC5zbGljZSgpLCB5cyA9IHRyYWNlLnkuc2xpY2UoKTsKICAgIHZhciBjb2xvcnMgPSB7CiAgICAgIHBhcGVyOiBsYXlvdXQucGFwZXJfYmdjb2xvciB8fCAndHJhbnNwYXJlbnQnLAogICAgICB0ZXh0OiAobGF5b3V0LmZvbnQgJiYgbGF5b3V0LmZvbnQuY29sb3IpIHx8ICcjNTM2NDViJywKICAgICAgZ3JpZDogKGxheW91dC54YXhpcyAmJiBsYXlvdXQueGF4aXMuZ3JpZGNvbG9yKSB8fCAnI2NkZDVjZScsCiAgICAgIGxpbmU6ICh0cmFjZS5saW5lICYmIHRyYWNlLmxpbmUuY29sb3IpIHx8ICcjMGI3MTUwJywKICAgICAgZmlsbDogdHJhY2UuZmlsbGNvbG9yIHx8ICdyZ2JhKDExLDExMyw4MCwuMTApJwogICAgfTsKICAgIHZhciB3aWR0aCA9IE1hdGgubWF4KDI4MCwgY29udGFpbmVyLmNsaWVudFdpZHRoIHx8IDY0MCk7CiAgICB2YXIgaGVpZ2h0ID0gTWF0aC5tYXgoMjYwLCBjb250YWluZXIuY2xpZW50SGVpZ2h0IHx8IDMzMCk7CiAgICB2YXIgbWFyZ2luID0gbGF5b3V0Lm1hcmdpbiB8fCB7bDo1OCxyOjE4LHQ6MjAsYjo1Mn07CiAgICB2YXIgbGVmdCA9IG1hcmdpbi5sLCByaWdodCA9IHdpZHRoIC0gbWFyZ2luLnIsIHRvcCA9IG1hcmdpbi50LCBib3R0b20gPSBoZWlnaHQgLSBtYXJnaW4uYjsKICAgIHZhciB4RXh0ID0gZXh0ZW50KHhzKSwgeUV4dCA9IGV4dGVudCh5cyk7CiAgICB5RXh0WzBdID0gTWF0aC5taW4oeUV4dFswXSwgMCk7IHlFeHRbMV0gPSBNYXRoLm1heCh5RXh0WzFdLCAwKTsKICAgIHZhciB5UGFkID0gTWF0aC5tYXgoKHlFeHRbMV0gLSB5RXh0WzBdKSAqIC4wOCwgLjA1KTsKICAgIHlFeHRbMF0gLT0geVBhZDsgeUV4dFsxXSArPSB5UGFkOwogICAgdmFyIHJldmVyc2VkID0gbGF5b3V0LnhheGlzICYmIGxheW91dC54YXhpcy5hdXRvcmFuZ2UgPT09ICdyZXZlcnNlZCc7CiAgICBmdW5jdGlvbiB4U2NhbGUodikgeyB2YXIgcmF0aW8gPSAodiAtIHhFeHRbMF0pIC8gKHhFeHRbMV0gLSB4RXh0WzBdIHx8IDEpOyByZXR1cm4gcmV2ZXJzZWQgPyByaWdodCAtIHJhdGlvICogKHJpZ2h0IC0gbGVmdCkgOiBsZWZ0ICsgcmF0aW8gKiAocmlnaHQgLSBsZWZ0KTsgfQogICAgZnVuY3Rpb24geVNjYWxlKHYpIHsgcmV0dXJuIGJvdHRvbSAtICh2IC0geUV4dFswXSkgLyAoeUV4dFsxXSAtIHlFeHRbMF0gfHwgMSkgKiAoYm90dG9tIC0gdG9wKTsgfQoKICAgIGNvbnRhaW5lci5yZXBsYWNlQ2hpbGRyZW4oKTsKICAgIHZhciBzdmcgPSBzdmdFbCgnc3ZnJywge3ZpZXdCb3g6JzAgMCAnICsgd2lkdGggKyAnICcgKyBoZWlnaHQsIHdpZHRoOicxMDAlJywgaGVpZ2h0OicxMDAlJywgcm9sZToncHJlc2VudGF0aW9uJ30pOwogICAgc3ZnLnN0eWxlLmRpc3BsYXkgPSAnYmxvY2snOwogICAgc3ZnLmFwcGVuZENoaWxkKHN2Z0VsKCdyZWN0Jywge3g6MCx5OjAsd2lkdGg6d2lkdGgsaGVpZ2h0OmhlaWdodCxmaWxsOmNvbG9ycy5wYXBlcn0pKTsKCiAgICB2YXIgeFRpY2tzID0gbmljZVRpY2tzKHhFeHRbMF0sIHhFeHRbMV0sIDUpOwogICAgdmFyIHlUaWNrcyA9IG5pY2VUaWNrcyh5RXh0WzBdLCB5RXh0WzFdLCA1KTsKICAgIHhUaWNrcy5mb3JFYWNoKGZ1bmN0aW9uICh2KSB7CiAgICAgIHZhciBweCA9IHhTY2FsZSh2KTsKICAgICAgc3ZnLmFwcGVuZENoaWxkKHN2Z0VsKCdsaW5lJywge3gxOnB4LHkxOnRvcCx4MjpweCx5Mjpib3R0b20sc3Ryb2tlOmNvbG9ycy5ncmlkLCdzdHJva2Utd2lkdGgnOjEsJ3N0cm9rZS1vcGFjaXR5JzouNjV9KSk7CiAgICAgIHN2Zy5hcHBlbmRDaGlsZChzdmdFbCgndGV4dCcsIHt4OnB4LHk6Ym90dG9tKzE4LGZpbGw6Y29sb3JzLnRleHQsJ2ZvbnQtc2l6ZSc6MTAsJ3RleHQtYW5jaG9yJzonbWlkZGxlJ30sIGZvcm1hdFRpY2sodiwgbGF5b3V0LnhheGlzKSkpOwogICAgfSk7CiAgICB5VGlja3MuZm9yRWFjaChmdW5jdGlvbiAodikgewogICAgICB2YXIgcHkgPSB5U2NhbGUodik7CiAgICAgIHN2Zy5hcHBlbmRDaGlsZChzdmdFbCgnbGluZScsIHt4MTpsZWZ0LHkxOnB5LHgyOnJpZ2h0LHkyOnB5LHN0cm9rZTpjb2xvcnMuZ3JpZCwnc3Ryb2tlLXdpZHRoJzoxLCdzdHJva2Utb3BhY2l0eSc6LjY1fSkpOwogICAgICBzdmcuYXBwZW5kQ2hpbGQoc3ZnRWwoJ3RleHQnLCB7eDpsZWZ0LTgseTpweSszLGZpbGw6Y29sb3JzLnRleHQsJ2ZvbnQtc2l6ZSc6MTAsJ3RleHQtYW5jaG9yJzonZW5kJ30sIGZvcm1hdFRpY2sodiwgbGF5b3V0LnlheGlzKSkpOwogICAgfSk7CiAgICBzdmcuYXBwZW5kQ2hpbGQoc3ZnRWwoJ2xpbmUnLCB7eDE6bGVmdCx5MTpib3R0b20seDI6cmlnaHQseTI6Ym90dG9tLHN0cm9rZTpjb2xvcnMudGV4dCwnc3Ryb2tlLXdpZHRoJzoxfSkpOwogICAgc3ZnLmFwcGVuZENoaWxkKHN2Z0VsKCdsaW5lJywge3gxOmxlZnQseTE6dG9wLHgyOmxlZnQseTI6Ym90dG9tLHN0cm9rZTpjb2xvcnMudGV4dCwnc3Ryb2tlLXdpZHRoJzoxfSkpOwogICAgaWYgKHlFeHRbMF0gPCAwICYmIHlFeHRbMV0gPiAwKSBzdmcuYXBwZW5kQ2hpbGQoc3ZnRWwoJ2xpbmUnLCB7eDE6bGVmdCx5MTp5U2NhbGUoMCkseDI6cmlnaHQseTI6eVNjYWxlKDApLHN0cm9rZTpjb2xvcnMudGV4dCwnc3Ryb2tlLXdpZHRoJzoxLjIsJ3N0cm9rZS1vcGFjaXR5JzouN30pKTsKCiAgICAobGF5b3V0LnNoYXBlcyB8fCBbXSkuZm9yRWFjaChmdW5jdGlvbiAoc2hhcGUpIHsKICAgICAgaWYgKHNoYXBlLnR5cGUgIT09ICdsaW5lJykgcmV0dXJuOwogICAgICB2YXIgcHggPSB4U2NhbGUoc2hhcGUueDApOwogICAgICBzdmcuYXBwZW5kQ2hpbGQoc3ZnRWwoJ2xpbmUnLCB7eDE6cHgseTE6dG9wLHgyOnB4LHkyOmJvdHRvbSxzdHJva2U6c2hhcGUubGluZS5jb2xvciwnc3Ryb2tlLXdpZHRoJzpzaGFwZS5saW5lLndpZHRoIHx8IDEsJ3N0cm9rZS1kYXNoYXJyYXknOnNoYXBlLmxpbmUuZGFzaCA9PT0gJ2RvdCcgPyAnMiA0JyA6IHNoYXBlLmxpbmUuZGFzaCA9PT0gJ2Rhc2hkb3QnID8gJzggNCAyIDQnIDogJzcgNSd9KSk7CiAgICB9KTsKCiAgICB2YXIgemVyb1kgPSB5U2NhbGUoMCk7CiAgICB2YXIgYXJlYSA9IGxpbmVQYXRoKHhzLCB5cywgeFNjYWxlLCB5U2NhbGUpICsgJyBMJyArIHhTY2FsZSh4c1t4cy5sZW5ndGgtMV0pLnRvRml4ZWQoMikgKyAnLCcgKyB6ZXJvWS50b0ZpeGVkKDIpICsgJyBMJyArIHhTY2FsZSh4c1swXSkudG9GaXhlZCgyKSArICcsJyArIHplcm9ZLnRvRml4ZWQoMikgKyAnIFonOwogICAgc3ZnLmFwcGVuZENoaWxkKHN2Z0VsKCdwYXRoJywge2Q6YXJlYSxmaWxsOmNvbG9ycy5maWxsLHN0cm9rZTonbm9uZSd9KSk7CiAgICBzdmcuYXBwZW5kQ2hpbGQoc3ZnRWwoJ3BhdGgnLCB7ZDpsaW5lUGF0aCh4cyx5cyx4U2NhbGUseVNjYWxlKSxmaWxsOidub25lJyxzdHJva2U6Y29sb3JzLmxpbmUsJ3N0cm9rZS13aWR0aCc6KHRyYWNlLmxpbmUgJiYgdHJhY2UubGluZS53aWR0aCkgfHwgMywnc3Ryb2tlLWxpbmVqb2luJzoncm91bmQnLCdzdHJva2UtbGluZWNhcCc6J3JvdW5kJ30pKTsKCiAgICAobGF5b3V0LmFubm90YXRpb25zIHx8IFtdKS5mb3JFYWNoKGZ1bmN0aW9uIChhKSB7CiAgICAgIHZhciBweCA9IHhTY2FsZShhLngpLCBweSA9IHRvcCArICgxIC0gKHR5cGVvZiBhLnkgPT09ICdudW1iZXInID8gYS55IDogMSkpICogKGJvdHRvbSAtIHRvcCk7CiAgICAgIHZhciB0ZXh0ID0gc3ZnRWwoJ3RleHQnLCB7eDpweCszLHk6cHksZmlsbDooYS5mb250ICYmIGEuZm9udC5jb2xvcikgfHwgY29sb3JzLnRleHQsJ2ZvbnQtc2l6ZSc6KGEuZm9udCAmJiBhLmZvbnQuc2l6ZSkgfHwgMTAsJ3RleHQtYW5jaG9yJzonc3RhcnQnfSwgYS50ZXh0KTsKICAgICAgaWYgKGEudGV4dGFuZ2xlKSB0ZXh0LnNldEF0dHJpYnV0ZSgndHJhbnNmb3JtJywncm90YXRlKCcgKyBhLnRleHRhbmdsZSArICcgJyArIChweCszKSArICcgJyArIHB5ICsgJyknKTsKICAgICAgc3ZnLmFwcGVuZENoaWxkKHRleHQpOwogICAgfSk7CgogICAgdmFyIHhUaXRsZSA9IGxheW91dC54YXhpcyAmJiBsYXlvdXQueGF4aXMudGl0bGUgJiYgbGF5b3V0LnhheGlzLnRpdGxlLnRleHQ7CiAgICB2YXIgeVRpdGxlID0gbGF5b3V0LnlheGlzICYmIGxheW91dC55YXhpcy50aXRsZSAmJiBsYXlvdXQueWF4aXMudGl0bGUudGV4dDsKICAgIGlmICh4VGl0bGUpIHN2Zy5hcHBlbmRDaGlsZChzdmdFbCgndGV4dCcsIHt4OihsZWZ0K3JpZ2h0KS8yLHk6aGVpZ2h0LTUsZmlsbDpjb2xvcnMudGV4dCwnZm9udC1zaXplJzoxMSwndGV4dC1hbmNob3InOidtaWRkbGUnfSwgeFRpdGxlKSk7CiAgICBpZiAoeVRpdGxlKSB7CiAgICAgIHZhciB5dCA9IHN2Z0VsKCd0ZXh0Jywge3g6MTMseToodG9wK2JvdHRvbSkvMixmaWxsOmNvbG9ycy50ZXh0LCdmb250LXNpemUnOjExLCd0ZXh0LWFuY2hvcic6J21pZGRsZSd9LCB5VGl0bGUpOwogICAgICB5dC5zZXRBdHRyaWJ1dGUoJ3RyYW5zZm9ybScsJ3JvdGF0ZSgtOTAgMTMgJyArICgodG9wK2JvdHRvbSkvMikgKyAnKScpOyBzdmcuYXBwZW5kQ2hpbGQoeXQpOwogICAgfQoKICAgIHZhciBob3ZlckxpbmUgPSBzdmdFbCgnbGluZScsIHt4MTpsZWZ0LHkxOnRvcCx4MjpsZWZ0LHkyOmJvdHRvbSxzdHJva2U6Y29sb3JzLnRleHQsJ3N0cm9rZS13aWR0aCc6MSwnc3Ryb2tlLWRhc2hhcnJheSc6JzMgMycsdmlzaWJpbGl0eTonaGlkZGVuJ30pOwogICAgdmFyIGhvdmVyRG90ID0gc3ZnRWwoJ2NpcmNsZScsIHtjeDpsZWZ0LGN5OnRvcCxyOjQsZmlsbDpjb2xvcnMubGluZSxzdHJva2U6Y29sb3JzLnBhcGVyLCdzdHJva2Utd2lkdGgnOjIsdmlzaWJpbGl0eTonaGlkZGVuJ30pOwogICAgc3ZnLmFwcGVuZENoaWxkKGhvdmVyTGluZSk7IHN2Zy5hcHBlbmRDaGlsZChob3ZlckRvdCk7CiAgICB2YXIgdG9vbHRpcCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ2RpdicpOwogICAgdG9vbHRpcC5zdHlsZS5jc3NUZXh0ID0gJ3Bvc2l0aW9uOmFic29sdXRlO3BvaW50ZXItZXZlbnRzOm5vbmU7ZGlzcGxheTpub25lO3BhZGRpbmc6NnB4IDhweDtib3JkZXItcmFkaXVzOjZweDtiYWNrZ3JvdW5kOicgKyBjb2xvcnMudGV4dCArICc7Y29sb3I6JyArIGNvbG9ycy5wYXBlciArICc7Zm9udDoxMXB4IHVpLW1vbm9zcGFjZSxtb25vc3BhY2U7d2hpdGUtc3BhY2U6bm93cmFwO3otaW5kZXg6Mztib3gtc2hhZG93OjAgNHB4IDEycHggcmdiYSgwLDAsMCwuMTgpJzsKICAgIGNvbnRhaW5lci5zdHlsZS5wb3NpdGlvbiA9ICdyZWxhdGl2ZSc7CiAgICBjb250YWluZXIuYXBwZW5kQ2hpbGQoc3ZnKTsgY29udGFpbmVyLmFwcGVuZENoaWxkKHRvb2x0aXApOwoKICAgIHZhciBoaXQgPSBzdmdFbCgncmVjdCcsIHt4OmxlZnQseTp0b3Asd2lkdGg6cmlnaHQtbGVmdCxoZWlnaHQ6Ym90dG9tLXRvcCxmaWxsOid0cmFuc3BhcmVudCd9KTsKICAgIHN2Zy5hcHBlbmRDaGlsZChoaXQpOwogICAgaGl0LmFkZEV2ZW50TGlzdGVuZXIoJ3BvaW50ZXJtb3ZlJywgZnVuY3Rpb24gKGV2ZW50KSB7CiAgICAgIHZhciByZWN0ID0gc3ZnLmdldEJvdW5kaW5nQ2xpZW50UmVjdCgpOwogICAgICB2YXIgcHggPSAoZXZlbnQuY2xpZW50WCAtIHJlY3QubGVmdCkgKiB3aWR0aCAvIHJlY3Qud2lkdGg7CiAgICAgIHZhciByYXRpbyA9IE1hdGgubWF4KDAsIE1hdGgubWluKDEsIChweC1sZWZ0KS8ocmlnaHQtbGVmdCkpKTsKICAgICAgaWYgKHJldmVyc2VkKSByYXRpbyA9IDEtcmF0aW87CiAgICAgIHZhciB4VmFsdWUgPSB4RXh0WzBdICsgcmF0aW8gKiAoeEV4dFsxXS14RXh0WzBdKTsKICAgICAgdmFyIGJlc3QgPSAwLCBkaXN0YW5jZSA9IEluZmluaXR5OwogICAgICB4cy5mb3JFYWNoKGZ1bmN0aW9uICh2LGkpIHsgdmFyIGRpc3Q9TWF0aC5hYnModi14VmFsdWUpOyBpZiAoZGlzdDxkaXN0YW5jZSkge2Rpc3RhbmNlPWRpc3Q7YmVzdD1pO30gfSk7CiAgICAgIHZhciBoeD14U2NhbGUoeHNbYmVzdF0pLCBoeT15U2NhbGUoeXNbYmVzdF0pOwogICAgICBob3ZlckxpbmUuc2V0QXR0cmlidXRlKCd4MScsaHgpOyBob3ZlckxpbmUuc2V0QXR0cmlidXRlKCd4MicsaHgpOyBob3ZlckxpbmUuc2V0QXR0cmlidXRlKCd2aXNpYmlsaXR5JywndmlzaWJsZScpOwogICAgICBob3ZlckRvdC5zZXRBdHRyaWJ1dGUoJ2N4JyxoeCk7IGhvdmVyRG90LnNldEF0dHJpYnV0ZSgnY3knLGh5KTsgaG92ZXJEb3Quc2V0QXR0cmlidXRlKCd2aXNpYmlsaXR5JywndmlzaWJsZScpOwogICAgICB2YXIgeExhYmVsID0gZm9ybWF0VGljayh4c1tiZXN0XSwgbGF5b3V0LnhheGlzKSwgeUxhYmVsID0gZm9ybWF0VGljayh5c1tiZXN0XSwgbGF5b3V0LnlheGlzKTsKICAgICAgdG9vbHRpcC50ZXh0Q29udGVudCA9IHhMYWJlbCArICcgwrcgJyArIHlMYWJlbDsKICAgICAgdG9vbHRpcC5zdHlsZS5kaXNwbGF5PSdibG9jayc7CiAgICAgIHRvb2x0aXAuc3R5bGUubGVmdD1NYXRoLm1heCg0LE1hdGgubWluKHdpZHRoLTEyMCxoeCs4KSkrJ3B4JzsKICAgICAgdG9vbHRpcC5zdHlsZS50b3A9TWF0aC5tYXgoNCxoeS0zMCkrJ3B4JzsKICAgIH0pOwogICAgaGl0LmFkZEV2ZW50TGlzdGVuZXIoJ3BvaW50ZXJsZWF2ZScsIGZ1bmN0aW9uICgpIHsgaG92ZXJMaW5lLnNldEF0dHJpYnV0ZSgndmlzaWJpbGl0eScsJ2hpZGRlbicpOyBob3ZlckRvdC5zZXRBdHRyaWJ1dGUoJ3Zpc2liaWxpdHknLCdoaWRkZW4nKTsgdG9vbHRpcC5zdHlsZS5kaXNwbGF5PSdub25lJzsgfSk7CiAgfQoKICB3aW5kb3cuUGxvdGx5ID0geyByZWFjdDogcmVhY3QgfTsKfSkoKTsK"></script>
+  <script>
+    (function () {
+      var strategies = {
+        put: {
+          kicker: 'BULLISH TO NEUTRAL', title: 'Cash-secured put', tag: 'FULL CASH RESERVED',
+          nodes: [['SELL PUT','collect premium'],['WAIT','time + price move'],['BUY SHARES','if assigned']],
+          outcomes: [
+            ['good','Above strike','Put can expire; premium is kept.'],
+            ['warn','Below strike','Likely buy 100 shares at strike.'],
+            ['bad','Sharp drop','Stock loss can dwarf premium.']
+          ],
+          foot: 'Use when the strike is a price you would genuinely pay for the shares. Breakeven at expiration = strike − premium.'
+        },
+        call: {
+          kicker: 'NEUTRAL TO MODERATELY BULLISH', title: 'Covered call', tag: '100 SHARES HELD',
+          nodes: [['OWN SHARES','100 per contract'],['SELL CALL','collect premium'],['SELL SHARES','if assigned']],
+          outcomes: [
+            ['good','Below strike','Keep shares and premium.'],
+            ['warn','Above strike','Shares may be called away at strike.'],
+            ['bad','Sharp drop','Premium only partly cushions stock loss.']
+          ],
+          foot: 'Use when the strike is an acceptable sale price. The call caps upside; it does not protect most of the stock downside.'
+        },
+        spread: {
+          kicker: 'DIRECTIONAL, DEFINED RISK', title: 'Credit spread', tag: 'LONG LEG CAPS LOSS',
+          nodes: [['SELL OPTION','collect premium'],['BUY OPTION','pay for protection'],['NET CREDIT','smaller, bounded']],
+          outcomes: [
+            ['good','Both expire OTM','Keep the net credit.'],
+            ['warn','Between strikes','Partial gain or loss.'],
+            ['bad','Past long strike','Loss reaches the defined cap.']
+          ],
+          foot: 'Use when you want a known maximum loss. Max loss is generally spread width × 100 minus net credit, before fees.'
+        }
+      };
+
+      function renderStrategy(key) {
+        var s = strategies[key];
+        document.getElementById('stage-kicker').textContent = s.kicker;
+        document.getElementById('stage-title').textContent = s.title;
+        document.getElementById('stage-tag').textContent = s.tag;
+        document.getElementById('contract-line').innerHTML = s.nodes.map(function(n, i) {
+          return '<div class="contract-node"><b>' + n[0] + '</b><small>' + n[1] + '</small></div>' + (i < s.nodes.length - 1 ? '<div class="contract-arrow">→</div>' : '');
+        }).join('');
+        document.getElementById('outcomes').innerHTML = s.outcomes.map(function(o) {
+          return '<div class="outcome ' + o[0] + '"><b>' + o[1] + '</b><span>' + o[2] + '</span></div>';
+        }).join('');
+        document.getElementById('stage-foot').textContent = s.foot;
+      }
+
+      document.querySelectorAll('.strategy-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.strategy-btn').forEach(function(b) {
+            b.classList.remove('active'); b.setAttribute('aria-selected', 'false');
+          });
+          btn.classList.add('active'); btn.setAttribute('aria-selected', 'true');
+          renderStrategy(btn.getAttribute('data-strategy'));
+        });
+      });
+
+      var SPOT = 771.35;
+      var RATE = 0.05184;
+      var SEED = { strike: 695, premium: 1.22, days: 35, iv: 22.1 };
+
+      function money(n, decimals) {
+        return new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', maximumFractionDigits: decimals, minimumFractionDigits: decimals}).format(n);
+      }
+
+      function normCdf(x) {
+        var t = 1 / (1 + 0.2316419 * Math.abs(x));
+        var d = 0.3989422804014327 * Math.exp(-x * x / 2);
+        var p = 1 - d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+        return x >= 0 ? p : 1 - p;
+      }
+
+      function blackScholesPut(spot, strike, days, rate, volatility) {
+        if (days <= 0) return Math.max(strike - spot, 0);
+        var t = days / 365;
+        var rootT = Math.sqrt(t);
+        var d1 = (Math.log(spot / strike) + (rate + volatility * volatility / 2) * t) / (volatility * rootT);
+        var d2 = d1 - volatility * rootT;
+        return strike * Math.exp(-rate * t) * normCdf(-d2) - spot * normCdf(-d1);
+      }
+
+      function palette() {
+        var styles = getComputedStyle(document.documentElement);
+        return {
+          ink: styles.getPropertyValue('--ink').trim(),
+          muted: styles.getPropertyValue('--muted').trim(),
+          line: styles.getPropertyValue('--line').trim(),
+          surface: styles.getPropertyValue('--surface').trim(),
+          green: styles.getPropertyValue('--green').trim(),
+          red: styles.getPropertyValue('--red').trim(),
+          yellow: styles.getPropertyValue('--yellow').trim()
+        };
+      }
+
+      function baseLayout(colors) {
+        return {
+          autosize:true,
+          margin:{l:58,r:18,t:20,b:52},
+          paper_bgcolor:colors.surface,
+          plot_bgcolor:colors.surface,
+          font:{family:'Avenir Next, Segoe UI, sans-serif',color:colors.muted,size:11},
+          hoverlabel:{bgcolor:colors.ink,bordercolor:colors.ink,font:{color:colors.surface}},
+          showlegend:false
+        };
+      }
+
+      function drawCharts(strike, premium, days, iv) {
+        if (!window.Plotly) return;
+        var colors = palette();
+        var xMin = Math.floor(Math.min(strike - 140, SPOT - 180));
+        var xMax = Math.ceil(Math.max(strike + 90, SPOT + 40));
+        var x = [], pnl = [];
+        for (var price = xMin; price <= xMax; price += 2) {
+          x.push(price);
+          pnl.push((premium - Math.max(strike - price, 0)) * 100);
+        }
+        var breakeven = strike - premium;
+        var pnlLayout = baseLayout(colors);
+        pnlLayout.xaxis = {title:{text:'SPY price at expiration'},gridcolor:colors.line,zeroline:false,tickprefix:'$',fixedrange:true};
+        pnlLayout.yaxis = {title:{text:'P&L'},gridcolor:colors.line,zerolinecolor:colors.muted,tickprefix:'$',fixedrange:true};
+        pnlLayout.shapes = [
+          {type:'line',x0:breakeven,x1:breakeven,y0:0,y1:1,yref:'paper',line:{color:colors.yellow,width:1.5,dash:'dot'}},
+          {type:'line',x0:strike,x1:strike,y0:0,y1:1,yref:'paper',line:{color:colors.red,width:1.5,dash:'dash'}},
+          {type:'line',x0:SPOT,x1:SPOT,y0:0,y1:1,yref:'paper',line:{color:colors.green,width:1.5,dash:'dashdot'}}
+        ];
+        pnlLayout.annotations = [
+          {x:breakeven,y:.82,yref:'paper',text:'BE ' + money(breakeven,2),showarrow:false,textangle:-90,font:{color:colors.yellow,size:10}},
+          {x:strike,y:.98,yref:'paper',text:'Strike ' + money(strike,0),showarrow:false,textangle:-90,font:{color:colors.red,size:10}},
+          {x:SPOT,y:.98,yref:'paper',text:'Spot $771.35',showarrow:false,textangle:-90,font:{color:colors.green,size:10}}
+        ];
+        Plotly.react('pnl-chart', [{
+          x:x,y:pnl,type:'scatter',mode:'lines',
+          line:{color:colors.green,width:3},
+          fill:'tozeroy',fillcolor:'rgba(11,113,80,.10)',
+          hovertemplate:'SPY %{x:$,.2f}<br>P&L %{y:$,.0f}<extra></extra>'
+        }], pnlLayout, {responsive:true,displayModeBar:false,scrollZoom:false});
+
+        var decayDays = [], values = [];
+        for (var d = 0; d <= days; d += 1) {
+          decayDays.push(d);
+          values.push(blackScholesPut(SPOT, strike, d, RATE, iv / 100));
+        }
+        var decayLayout = baseLayout(colors);
+        decayLayout.xaxis = {title:{text:'Days remaining'},gridcolor:colors.line,zeroline:false,autorange:'reversed',dtick:Math.max(5,Math.round(days/5)),fixedrange:true};
+        decayLayout.yaxis = {title:{text:'Put value'},gridcolor:colors.line,zeroline:false,tickprefix:'$',tickformat:'.2f',rangemode:'tozero',fixedrange:true};
+        Plotly.react('decay-chart', [{
+          x:decayDays,y:values,type:'scatter',mode:'lines',
+          line:{color:colors.green,width:3,shape:'spline'},
+          fill:'tozeroy',fillcolor:'rgba(11,113,80,.10)',
+          hovertemplate:'%{x} DTE<br>Modeled value %{y:$,.2f}<extra></extra>'
+        }], decayLayout, {responsive:true,displayModeBar:false,scrollZoom:false});
+      }
+
+      function calculate() {
+        var strike = Number(document.getElementById('strike').value);
+        var premium = Number(document.getElementById('premium').value);
+        var days = Number(document.getElementById('days').value);
+        var iv = Number(document.getElementById('iv').value);
+        var cash = strike * 100;
+        var credit = premium * 100;
+        var breakeven = strike - premium;
+        var roc = credit / cash * 100;
+        var annualized = roc * 365 / days;
+        var maxloss = cash - credit;
+        var isSeed = strike === SEED.strike && Math.abs(premium - SEED.premium) < .001 && days === SEED.days && Math.abs(iv - SEED.iv) < .001;
+        var chip = document.getElementById('state-chip');
+
+        document.getElementById('strike-value').textContent = money(strike, 0);
+        document.getElementById('premium-value').textContent = money(premium, 2);
+        document.getElementById('days-value').textContent = days + ' days';
+        document.getElementById('iv-value').textContent = iv.toFixed(1) + '%';
+        document.getElementById('breakeven').textContent = money(breakeven, 2);
+        document.getElementById('cash').textContent = money(cash, 0);
+        document.getElementById('credit').textContent = money(credit, 0);
+        document.getElementById('roc').textContent = roc.toFixed(3) + '%';
+        document.getElementById('annualized').textContent = annualized.toFixed(2) + '%';
+        document.getElementById('maxloss').textContent = money(maxloss, 0);
+        document.getElementById('pnl-caption').textContent = 'Max +' + money(credit, 0);
+        document.getElementById('model-caption').textContent = days + ' DTE';
+        document.getElementById('decay-assumption').textContent = 'Assumes IV stays at ' + iv.toFixed(1) + '%.';
+        chip.textContent = isSeed ? 'REAL SEED CONTRACT' : 'HYPOTHETICAL EXPLORATION — REAL: 695 PUT @ 1.21×1.23';
+        chip.classList.toggle('hypothetical', !isSeed);
+        drawCharts(strike, premium, days, iv);
+      }
+
+      ['strike','premium','days','iv'].forEach(function(id) { document.getElementById(id).addEventListener('input', calculate); });
+      document.getElementById('reset-seed').addEventListener('click', function() {
+        Object.keys(SEED).forEach(function(key) { document.getElementById(key).value = SEED[key]; });
+        calculate();
+      });
+      var themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      if (themeQuery.addEventListener) themeQuery.addEventListener('change', calculate);
+      renderStrategy('put'); calculate();
+    })();
+  </script>
+</body>
+</html>
