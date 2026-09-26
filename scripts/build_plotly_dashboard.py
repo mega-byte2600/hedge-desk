@@ -129,6 +129,50 @@ def source_health(r: dict) -> str:
 
 # ---------------------------------------------------------------- macro
 
+def history_trend_chart() -> str:
+    """Real multi-day trend from the dated nightly reports (am-report-*.json).
+
+    Shows how candidates, the wheel's average return-on-collateral, and VIX
+    moved across the last N closes — real history, not a single snapshot.
+    """
+    import glob
+    dates, cands, roc, vix = [], [], [], []
+    for f in sorted(glob.glob(str(ROOT / "artifacts" / "am-report-*.json"))):
+        if "latest" in f:
+            continue
+        try:
+            r = json.loads(Path(f).read_text())
+        except (OSError, ValueError):
+            continue
+        d = Path(f).name.replace("am-report-", "").replace(".json", "")
+        csp = r.get("cash_secured_put_scan", {})
+        rocs = [float(v["candidate"]["return_on_capital"])
+                for v in csp.values() if v.get("mode") == "CASH_SECURED_PUT"]
+        dates.append(d)
+        cands.append(len(r.get("candidates", [])))
+        roc.append(round(sum(rocs) / len(rocs), 4) if rocs else None)
+        vix.append(r.get("vix_regime", {}).get("last_close"))
+    if len(dates) < 2:
+        return "<p class='muted'>need 2+ dated reports for a trend</p>"
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=dates, y=cands, name="candidates", mode="lines+markers",
+                             line=dict(color="#3498db"), hovertemplate="%{x}<br>%{y} candidates<extra></extra>"))
+    fig.add_trace(go.Scatter(x=dates, y=roc, name="avg return on collateral", mode="lines+markers",
+                             line=dict(color="#e67e22"), yaxis="y2",
+                             hovertemplate="%{x}<br>avg RoC %{y:.2%}<extra></extra>"))
+    fig.add_trace(go.Scatter(x=dates, y=vix, name="VIX", mode="lines+markers",
+                             line=dict(color="#9b59b6"), yaxis="y3",
+                             hovertemplate="%{x}<br>VIX %{y:.1f}<extra></extra>"))
+    fig.update_layout(margin=dict(l=10, r=10, t=40, b=10), height=340,
+                      title="Multi-Day Trend — real nightly history",
+                      xaxis_title="date", legend=dict(orientation="h", y=1.12),
+                      yaxis=dict(title="candidates", gridcolor="#1e2b47"),
+                      yaxis2=dict(title="avg RoC", overlaying="y", side="right", tickformat=".1%", showgrid=False),
+                      yaxis3=dict(title="VIX", overlaying="y", side="right", position=1.0, showgrid=False),
+                      font=dict(color="#e8eef7"), paper_bgcolor="#0f1828", plot_bgcolor="#0f1828")
+    return fig.to_html(full_html=False, include_plotlyjs=False, div_id="ch_trend")
+
+
 def macro_panel(vix: dict, rates: dict, oil: dict, macro: dict) -> str:
     cells = []  # (label, value, source)
     vix = vix or {}
@@ -516,6 +560,7 @@ def build() -> None:
                                            r.get("oil_market", {}), r.get("macro_environment", {}))),
         card("Paper trail", paper_panels(r.get("paper_outcome_summary", {}), r.get("yellow_sheets", {}))),
         card("Equity performance", price_chart(series), wide=True),
+        card("Multi-day trend", history_trend_chart(), wide=True),
         card("Feature heatmap", feature_heatmap(r.get("features", {})), wide=True),
         card("Cash-secured puts", csp_scan_chart(r.get("cash_secured_put_scan")), wide=True),
         card("Options premium", premium_yield_chart(r.get("cash_secured_put_scan")), wide=True),
