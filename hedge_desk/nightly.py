@@ -39,6 +39,7 @@ from hedge_desk.macro_desk import macro_environment
 from hedge_desk.freshness import freshness_summary
 from hedge_desk.account import read_account_equity
 from hedge_desk.position_sizing import wheel_fit_for_equity, scale_position_to_equity
+from hedge_desk.oil_desk import oil_market
 from hedge_desk.earnings_desk import earnings_desk
 from hedge_desk.execution_gate import (
     KillSwitch,
@@ -127,6 +128,7 @@ def run_nightly(
     rates_transport=None,
     vix_transport=None,
     macro_transport=None,
+    oil_transport=None,
     earnings_ciks: Sequence[str] = (),
     earnings_transport=None,
     paper_log_path: Path | str = "artifacts/paper-outcomes.jsonl",
@@ -191,6 +193,7 @@ def run_nightly(
     rates: dict = {}
     vix: dict = {}
     macro: dict = {}
+    oil: dict = {}
     earnings_results: dict = {}
 
     with ThreadPoolExecutor(max_workers=8) as ex:
@@ -221,6 +224,10 @@ def run_nightly(
             futures[ex.submit(_safe, macro_environment, macro_transport)] = ("macro", None)
         else:
             futures[ex.submit(_safe, macro_environment)] = ("macro", None)
+        if oil_transport:
+            futures[ex.submit(_safe, oil_market, transport=oil_transport)] = ("oil", None)
+        else:
+            futures[ex.submit(_safe, oil_market)] = ("oil", None)
         for cik in earnings_ciks:
             if earnings_transport:
                 futures[ex.submit(_safe, earnings_desk, cik, earnings_transport)] = ("earnings", cik)
@@ -240,6 +247,8 @@ def run_nightly(
                 vix = res
             elif kind == "macro":
                 macro = res
+            elif kind == "oil":
+                oil = res
             elif kind == "earnings":
                 earnings_results[key] = res
 
@@ -307,6 +316,7 @@ def run_nightly(
         "rates_environment": rates,
         "vix_regime": vix,
         "macro_environment": macro,
+        "oil_market": oil,
         "earnings_actuals": earnings_results,
         "note": (
             "Equity candidates: collateral/margin from real EOD closes. Premium "

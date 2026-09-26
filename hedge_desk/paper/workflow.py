@@ -39,6 +39,7 @@ class HumanAuthorization:
     human_id: Optional[str] = None
     decided_at: Optional[datetime] = None
     plan_hash: Optional[str] = None
+    reason_codes: Tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -148,6 +149,7 @@ def _calculate_plan_hash(
     execution_quote_max_age_seconds: int,
     control_artifact_max_age_seconds: int,
     event_calendar_gate: EventCalendarGate,
+    machine_risk_status: MachineRiskStatus,
 ) -> str:
     payload = "|".join(
         (
@@ -217,6 +219,7 @@ def _calculate_plan_hash(
             ",".join(event_calendar_gate.reason_codes),
             event_calendar_gate.calendar_sha256,
             event_calendar_gate.complete_through.isoformat(),
+            machine_risk_status.value,
             created_at.isoformat(),
             approval_expires_at.isoformat(),
             str(execution_quote_max_age_seconds),
@@ -237,6 +240,7 @@ def _assert_plan_integrity(plan: PaperTradePlan) -> None:
         plan.execution_quote_max_age_seconds,
         plan.control_artifact_max_age_seconds,
         plan.event_calendar_gate,
+        plan.machine_risk_status,
     )
     if expected != plan.plan_hash:
         raise PermissionError("paper-trade plan integrity check failed")
@@ -327,6 +331,7 @@ def create_paper_trade_plan(
         execution_quote_max_age_seconds,
         control_artifact_max_age_seconds,
         event_calendar_gate,
+        machine_status,
     )
     return PaperTradePlan(
         plan_id=plan_id,
@@ -373,6 +378,42 @@ def approve_paper_trade(
             human_id=human_id,
             decided_at=decided_at,
             plan_hash=plan.plan_hash,
+        ),
+    )
+
+
+def reject_paper_trade(
+    plan: PaperTradePlan,
+    human_id: str,
+    decided_at: datetime,
+    reason_codes: Tuple[str, ...],
+) -> PaperTradePlan:
+    """Record a human rejection. Rejection only says no, so it can never
+    override a machine risk rejection or a Back Office compliance block —
+    those gates are approval-side only. The audit trail still requires plan
+    integrity, a named human, a timezone-aware timestamp inside the approval
+    window, a PENDING-only plan, and at least one reason code."""
+    _assert_plan_integrity(plan)
+    if not human_id.strip():
+        raise ValueError("human identity is required")
+    if decided_at.tzinfo is None:
+        raise ValueError("authorization timestamp must be timezone-aware")
+    if decided_at > plan.approval_expires_at:
+        raise PermissionError("paper-trade rejection window has expired")
+    if plan.authorization.status is not HumanAuthorizationStatus.PENDING:
+        raise PermissionError("plan has already received a human decision")
+    codes = tuple(reason_codes)
+    if not codes or any(not code.strip() for code in codes):
+        raise ValueError("rejection requires at least one reason code")
+
+    return replace(
+        plan,
+        authorization=HumanAuthorization(
+            status=HumanAuthorizationStatus.REJECTED,
+            human_id=human_id,
+            decided_at=decided_at,
+            plan_hash=plan.plan_hash,
+            reason_codes=codes,
         ),
     )
 
