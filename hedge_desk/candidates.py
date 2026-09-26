@@ -194,6 +194,14 @@ def build_earnings_candidate_feed(
                 "instrument_type": "EQUITY",
                 "stage": "REAL_EDGAR_EARNINGS",
                 "method": method,
+                "observation": {
+                    "latest_quarterly_eps": q_eps,
+                    "latest_quarterly_period": q_period,
+                    "prior_quarterly_eps": pq_eps,
+                    "prior_quarterly_period": pq_period,
+                    "latest_fy_eps": fy_eps,
+                    "latest_fy_period": fy_period,
+                },
                 "evidence_needed": (
                     "Confirmed event, frozen consensus, release, and post-release "
                     "reaction. Surprise is computed only when a real analyst "
