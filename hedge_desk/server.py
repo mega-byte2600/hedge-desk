@@ -10,7 +10,14 @@ from time import monotonic, perf_counter
 from urllib.request import Request, urlopen
 from wsgiref.simple_server import WSGIServer, make_server
 
-from hedge_desk.candidates import build_candidate_feed, build_real_eod_candidate_feed
+from typing import Dict
+
+from hedge_desk.candidates import (
+    build_candidate_feed,
+    build_earnings_candidate_feed,
+    build_macro_candidate_feed,
+    build_real_eod_candidate_feed,
+)
 from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
 from hedge_desk.console_report import build_console_payload
 from hedge_desk.overnight import current_morning_report
@@ -212,6 +219,73 @@ def build_live_console_payload():
     return build_console_payload(report)
 
 
+NIGHTLY_OUTCOMES_SCHEMA = "hedge-desk-nightly-outcomes-1.0.0"
+
+
+def build_nightly_outcomes_payload(
+    report_path: str = "artifacts/am-report-latest.json",
+) -> Dict[str, object]:
+    """Serve the real nightly paper outcomes + yellow sheets for the Scenario Lab.
+
+    Reads the committed AM report (the same artifact the dashboard renders) and
+    exposes its ``paper_outcome_summary`` and ``yellow_sheets`` sections verbatim,
+    so the Scenario Lab can show observed outcomes instead of the frozen
+    synthetic war-games. Empty is honest: when no paper outcomes have been
+    recorded yet the payload says so explicitly instead of inventing scenarios.
+    Raises FileNotFoundError / ValueError when the report is missing or
+    unreadable (the route maps these to a 503 with an explicit reason).
+    """
+    from pathlib import Path as _Path
+
+    path = _Path(report_path)
+    if not path.is_file():
+        raise FileNotFoundError(f"nightly report not found: {report_path}")
+    try:
+        report = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"nightly report unreadable: {exc}") from exc
+    if not isinstance(report, dict):
+        raise ValueError("nightly report is not a JSON object")
+    outcomes = report.get("paper_outcome_summary")
+    sheets = report.get("yellow_sheets")
+    return {
+        "schema_version": NIGHTLY_OUTCOMES_SCHEMA,
+        "mode": "REAL_NIGHTLY_OUTCOMES",
+        "report_sha256": report.get("report_sha256", ""),
+        "paper_outcome_summary": outcomes
+        if isinstance(outcomes, dict)
+        else {"status": "NO_OUTCOMES_RECORDED"},
+        "yellow_sheets": sheets
+        if isinstance(sheets, dict)
+        else {"status": "NO_SHEETS_RECORDED"},
+        # Research input only. The Scenario Lab never authorizes a trade.
+        "trade_authorized": False,
+        "note": (
+            "Observed paper outcomes from the nightly batch, not a forecast. "
+            "An empty outcome set is reported as empty — never synthesized."
+        ),
+    }
+
+
+def _nightly_outcomes_or_503(start_response):
+    try:
+        return _json(
+            start_response, _cached("nightly-outcomes", build_nightly_outcomes_payload)
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        return _json(
+            start_response,
+            {
+                "schema_version": NIGHTLY_OUTCOMES_SCHEMA,
+                "mode": "REAL_NIGHTLY_OUTCOMES",
+                "status": "NIGHTLY_REPORT_UNAVAILABLE",
+                "reason": str(exc),
+                "trade_authorized": False,
+            },
+            "503 Service Unavailable",
+        )
+
+
 def _supabase_status():
     url = os.getenv("SUPABASE_URL", "").rstrip("/")
     key = os.getenv("SUPABASE_PUBLISHABLE_KEY", "") or os.getenv("SUPABASE_ANON_KEY", "")
@@ -243,6 +317,12 @@ def _dispatch(environ, start_response):
         return _json(start_response, _cached("candidates", build_candidate_feed))
     if path == "/api/eod-candidates":
         return _json(start_response, _cached("eod-candidates", build_real_eod_candidate_feed))
+    if path == "/api/earnings-candidates":
+        return _json(start_response, _cached("earnings-candidates", build_earnings_candidate_feed))
+    if path == "/api/macro-candidates":
+        return _json(start_response, _cached("macro-candidates", build_macro_candidate_feed))
+    if path == "/api/nightly-outcomes":
+        return _nightly_outcomes_or_503(start_response)
     if path == "/api/risk-dashboard":
         return _json(start_response, _cached("risk-dashboard", build_candidate_risk_dashboard))
     if path == "/api/about":

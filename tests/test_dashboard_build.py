@@ -74,6 +74,39 @@ class DashboardBuildTests(unittest.TestCase):
         html = self._build()
         self.assertIn("rebuild the overnight report", html)
 
+    def test_macro_panel_renders_cells_not_none(self):
+        # Regression: a truncated macro_panel once rendered the literal
+        # string "None" in the Macro backdrop card.
+        html = self._build(
+            vix_regime={"mode": "REAL_VIX", "last_close": "14.9", "regime": "LOW"},
+            oil_market={"mode": "REAL_YAHOO_WTI", "last_close": "64.5"},
+            macro_environment={"mode": "BLOCKED", "reason": "withheld"},
+        )
+        self.assertNotIn("Macro backdrop</h3>None", html)
+        self.assertIn("VIX (LOW)", html)
+        self.assertIn("withheld — refetch pending", html)
+
+    def test_earnings_eps_chart_draws_real_quarters(self):
+        html = self._build(
+            earnings_actuals={
+                "0000320193": {
+                    "mode": "REAL_EDGAR_EARNINGS",
+                    "observation": {
+                        "latest_quarterly_eps": 2.03,
+                        "latest_quarterly_period": "2026-06-27",
+                        "prior_quarterly_eps": 2.02,
+                        "prior_quarterly_period": "2026-03-28",
+                    },
+                }
+            }
+        )
+        self.assertIn("ch_earnings_eps", html)
+        self.assertIn("AAPL", html)
+
+    def test_earnings_eps_chart_empty_state_is_honest(self):
+        html = self._build(earnings_actuals={})
+        self.assertIn("no real quarterly EPS observations", html)
+
     def test_html_escapes_untrusted_text(self):
         html = self._build(chain_income={
             "SPY": {"mode": "BLOCKED", "reason": "<script>alert(1)</script>",

@@ -1,6 +1,7 @@
 """Deterministic tests for the WTI front-month oil desk (no network)."""
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -186,6 +187,18 @@ def _failing_oil_transport(url):
 
 
 class NightlyOilTests(unittest.TestCase):
+    def setUp(self):
+        # Fake rates transport must never write stub rows into the production
+        # FRED cache (see tests/test_nightly.py NightlyTests.setUp).
+        self._old_cache = os.environ.get("HEDGE_DESK_CACHE_DIR")
+        os.environ["HEDGE_DESK_CACHE_DIR"] = "off"
+
+    def tearDown(self):
+        if self._old_cache is None:
+            os.environ.pop("HEDGE_DESK_CACHE_DIR", None)
+        else:
+            os.environ["HEDGE_DESK_CACHE_DIR"] = self._old_cache
+
     def _run(self, oil_transport, tmp):
         return run_nightly(
             ["AAPL"],
@@ -193,6 +206,7 @@ class NightlyOilTests(unittest.TestCase):
             transport=_fake_eod_transport,
             chain_transport=_fake_chain_transport,
             rates_transport=_FakeRatesTransport(),
+            macro_transport=_FakeRatesTransport(),
             oil_transport=oil_transport,
         )
 

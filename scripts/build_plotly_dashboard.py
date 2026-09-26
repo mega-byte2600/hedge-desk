@@ -7,9 +7,16 @@ missing sections render as honest state panels, never as invented values.
 """
 import html
 import json
+import sys
 from pathlib import Path
 
+# Allow `python3 scripts/build_plotly_dashboard.py` from the repo root: the
+# script directory (not the root) lands on sys.path in that mode.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import plotly.graph_objects as go
+
+from hedge_desk.candidates import CIK_TO_SYMBOL
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "artifacts" / "am-report-latest.json"
@@ -121,6 +128,37 @@ def macro_panel(vix: dict, rates: dict, oil: dict, macro: dict) -> str:
             cells.append((f"VIX ({vix.get('regime', '?')})", f"{float(vix['last_close']):.1f}", "Yahoo"))
         except (TypeError, ValueError):
             pass
+    if rates.get("mode") == "REAL_FRED_RATES":
+        cells.append(("Fed funds %", str(rates.get("fed_funds_effective_rate", "-")), "FRED"))
+        if rates.get("treasury_10y_yield"):
+            cells.append(("10Y Treasury %", str(rates["treasury_10y_yield"]), "FRED"))
+        if rates.get("spread_10y_2y_points"):
+            cells.append(("10Y-2Y bp", str(rates["spread_10y_2y_points"]), "FRED"))
+    if oil.get("mode") == "REAL_YAHOO_WTI" and oil.get("last_close") is not None:
+        try:
+            cells.append(("WTI oil $", f"{float(oil['last_close']):.1f}", "Yahoo"))
+        except (TypeError, ValueError):
+            pass
+    if macro.get("mode") == "REAL_FRED_MACRO":
+        if macro.get("cpi_yoy_pct"):
+            cells.append(("CPI YoY %", str(macro["cpi_yoy_pct"]), "FRED"))
+        # Report key is unemployment_rate_pct (not the older unemployment_rate).
+        if macro.get("unemployment_rate_pct"):
+            cells.append(("Unemployment %", str(macro["unemployment_rate_pct"]), "FRED"))
+        if macro.get("treasury_5y"):
+            cells.append(("5Y Treasury %", str(macro["treasury_5y"]), "FRED"))
+        if macro.get("treasury_30y"):
+            cells.append(("30Y Treasury %", str(macro["treasury_30y"]), "FRED"))
+    elif macro.get("mode") == "BLOCKED":
+        # Withheld rather than fabricated: show a short marker, not the full
+        # reason string (which lives in the report JSON for audit).
+        cells.append(("Macro (FRED)", "withheld — refetch pending", "FRED"))
+    blocks = "".join(
+        f'<div class="metric"><div class="ml">{esc(l)} <span class="src">{esc(s)}</span></div>'
+        f'<div class="mv">{esc(v)}</div></div>'
+        for l, v, s in cells
+    )
+    return f'<div class="macropanel">{blocks or "<p class=muted>no real macro</p>"}</div>'
 
 
 def premium_yield_chart(csp: dict) -> str:
@@ -389,6 +427,48 @@ def earnings_table(earnings_actuals: dict) -> str:
             f"<p class='muted'>source: SEC EDGAR companyfacts</p>")
 
 
+def earnings_eps_chart(earnings_actuals: dict) -> str:
+    """Quarterly EPS: latest vs prior quarter per CIK (real SEC EDGAR actuals).
+
+    Grouped bars, one group per filer. Only entries with mode
+    REAL_EDGAR_EARNINGS and parseable quarterly EPS are drawn; anything else
+    yields the honest empty state, never an invented bar.
+    """
+    ea = earnings_actuals or {}
+    rows = []  # (label, latest_eps, latest_period, prior_eps, prior_period)
+    for cik, v in ea.items():
+        if not isinstance(v, dict) or v.get("mode") != "REAL_EDGAR_EARNINGS":
+            continue
+        obs = v.get("observation") or {}
+        try:
+            latest = float(obs["latest_quarterly_eps"])
+            prior = float(obs["prior_quarterly_eps"])
+        except (TypeError, ValueError, KeyError):
+            continue
+        label = CIK_TO_SYMBOL.get(str(cik), str(cik))
+        rows.append((label,
+                     latest, str(obs.get("latest_quarterly_period", "")),
+                     prior, str(obs.get("prior_quarterly_period", ""))))
+    if not rows:
+        return muted("no real quarterly EPS observations in this report")
+    labels = [r[0] for r in rows]
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=labels, y=[r[1] for r in rows], name="latest quarter",
+        marker_color="#6ea8ff",
+        customdata=[r[2] for r in rows],
+        hovertemplate="%{x} %{customdata}<br>EPS $%{y:.2f}<extra></extra>"))
+    fig.add_trace(go.Bar(
+        x=labels, y=[r[3] for r in rows], name="prior quarter",
+        marker_color="#5a6b8c",
+        customdata=[r[4] for r in rows],
+        hovertemplate="%{x} %{customdata}<br>EPS $%{y:.2f}<extra></extra>"))
+    fig.update_layout(**base_layout("Quarterly EPS — latest vs prior (SEC EDGAR actuals)", 340))
+    fig.update_layout(barmode="group", yaxis_title="EPS $", xaxis_title="filer",
+                      legend=dict(orientation="h", y=1.12))
+    return chart(fig, "ch_earnings_eps")
+
+
 def paper_panels(paper: dict, yellow: dict) -> str:
     paper = paper or {}
     yellow = yellow or {}
@@ -431,6 +511,7 @@ def build() -> None:
         card("Volatility", vix_chart(series, r.get("vix_regime", {}))),
         card("WTI oil", wti_chart(series, r.get("oil_market", {}))),
         card("Earnings actuals", earnings_table(r.get("earnings_actuals", {})), wide=True),
+        card("Earnings — quarterly EPS", earnings_eps_chart(r.get("earnings_actuals", {})), wide=True),
     ])
     html_doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">

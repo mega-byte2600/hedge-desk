@@ -7981,20 +7981,18 @@
   },
   "macro_environment": {
     "schema_version": "hedge-desk-macro-desk-1.0.0",
-    "mode": "REAL_FRED_MACRO",
+    "mode": "BLOCKED",
     "as_of": "2026-09-26",
     "data_source": "fred-public-csv-http-200",
     "trade_authorized": false,
     "blocked": [
-      "CPIAUCSL_YOY"
+      "CPIAUCSL",
+      "UNRATE",
+      "DGS5",
+      "DGS30"
     ],
-    "unemployment_rate_pct": "1.0",
-    "unemployment_date": "2026-09-17",
-    "treasury_5y": "1.0",
-    "treasury_5y_date": "2026-09-17",
-    "treasury_30y": "1.0",
-    "treasury_30y_date": "2026-09-17",
-    "note": "Official FRED observations (CPI YoY, unemployment, 5y/30y curve). Measured facts, not a forecast and not advice. No order placed."
+    "reason": "withheld_fabricated_cache_values: the 2026-09-26 batch served test-suite stub rows ('1.0') from a poisoned FRED disk cache as REAL_FRED_MACRO observations; cache purged and tests sandboxed, awaiting fresh nightly fetch",
+    "note": "No macro values are shown rather than showing fabricated ones. The next nightly batch refetches CPI, unemployment, and Treasury yields from FRED. No forecast, no order. trade_authorized=False."
   },
   "oil_market": {
     "schema_version": "hedge-desk-oil-desk-1.0.0",
@@ -8055,5 +8053,5 @@
     }
   },
   "note": "Equity candidates: collateral/margin from real EOD closes. Premium desk: executable net credit from REAL Cboe delayed option chains. Rates: real FRED observations. Oil: front-month WTI (CL=F) observations from public Yahoo chart data. Earnings: real SEC EDGAR actuals. No probability or Risk of Ruin. No order placed; no trade authorized (every candidate trade_authorized=False).",
-  "report_sha256": "deefdd697d685292af68888f1456ac52f450b9b92cc3acfba31c8a53de0aef06"
+  "report_sha256": "1b88c82a2ff5b24322c2e8f4a9ae1bab29e43e2dbf1592e91528ec5fbe2cab5b"
 }

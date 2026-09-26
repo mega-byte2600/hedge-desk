@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -121,6 +122,19 @@ def _fake_csp_transport(url):
 
 
 class NightlyTests(unittest.TestCase):
+    def setUp(self):
+        # Fake transports must never write stub rows into the production FRED
+        # cache (artifacts/.cache/fred): on 2026-09-26 this poisoned the real
+        # cache and the committed AM report shipped fabricated macro values.
+        self._old_cache = os.environ.get("HEDGE_DESK_CACHE_DIR")
+        os.environ["HEDGE_DESK_CACHE_DIR"] = "off"
+
+    def tearDown(self):
+        if self._old_cache is None:
+            os.environ.pop("HEDGE_DESK_CACHE_DIR", None)
+        else:
+            os.environ["HEDGE_DESK_CACHE_DIR"] = self._old_cache
+
     def test_run_nightly_writes_content_addressed_report(self):
         with tempfile.TemporaryDirectory() as tmp:
             report = run_nightly(["AAPL"], artifacts_dir=tmp, transport=_fake_transport,
