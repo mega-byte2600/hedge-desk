@@ -81,9 +81,22 @@ def _parse_symbol(symbol: str) -> Tuple[str, date, OptionType, Decimal] | None:
 
 
 def build_snapshot_from_cboe(
-    raw: bytes, symbol: str, quoted_at: datetime
+    raw: bytes, symbol: str, quoted_at: datetime,
+    min_open_interest: int = 0, min_volume: int = 0,
 ) -> OptionSnapshot:
-    """Parse a Cboe delayed-quotes payload into a canonical OptionSnapshot."""
+    """Parse a Cboe delayed-quotes payload into a canonical OptionSnapshot.
+
+    The snapshot is pre-filtered to quotes that can actually feed the desk:
+    one expiration in the 27-45 DTE premium window, strikes within +-12% of the
+    underlying, executable bid/ask, out-of-the-money (ATM kept), and at or
+    above ``min_open_interest`` / ``min_volume``. The moneyness and liquidity
+    pre-filters are superset-safe: every admissible vertical's legs are OTM
+    (``real_chain_income`` drops any structure whose short leg is ITM) and the
+    spread pricer rejects any pair whose weakest leg is below the liquidity
+    minimums — so dropped quotes could never form an admissible structure.
+    They only fed the O(n^2) pair explosion that tripped the scanner's
+    pair-count safety limit and BLOCKED the whole chain.
+    """
     try:
         data = json.loads(raw.decode("utf-8"))["data"]
     except (KeyError, IndexError, TypeError, ValueError, UnicodeDecodeError) as exc:
@@ -101,6 +114,7 @@ def build_snapshot_from_cboe(
         quoted_at,
         f"cboe-delayed-{symbol.upper()}",
     )
+    underlying_mid = (underlying_quote.bid + underlying_quote.ask) / Decimal(2)
     quotes = []
     seen = set()
     # Keep the scan bounded and on the ~30-day premium cycle the desk targets.
@@ -154,6 +168,20 @@ def build_snapshot_from_cboe(
         ask_size = int(float(item.get("ask_size") or 0))
         if bid <= 0 or ask <= 0 or bid_size <= 0 or ask_size <= 0 or ask < bid:
             continue  # unexecutable quote
+        oi = int(float(item.get("open_interest") or 0))
+        vol = int(float(item.get("volume") or 0))
+        # Liquidity pre-filter: a quote below the minimums can never appear in
+        # an admissible spread (the pricer rejects any pair whose weakest leg
+        # is below minimums), so drop it before pair enumeration.
+        if oi < min_open_interest or vol < min_volume:
+            continue
+        # Moneyness pre-filter: every admissible vertical's legs are OTM (the
+        # post-scan filter drops any structure whose short leg is ITM), so ITM
+        # quotes only feed the O(n^2) pair explosion. ATM is kept.
+        if ot is OptionType.PUT and strike_dec > underlying_mid:
+            continue
+        if ot is OptionType.CALL and strike_dec < underlying_mid:
+            continue
         if contract in seen:
             continue
         seen.add(contract)
@@ -170,8 +198,8 @@ def build_snapshot_from_cboe(
                 ask_size,
                 quoted_at,
                 f"cboe-delayed-{symbol.upper()}",
-                int(float(item.get("open_interest") or 0)),
-                int(float(item.get("volume") or 0)),
+                oi,
+                vol,
             )
         )
     if not quotes:
@@ -202,10 +230,16 @@ def real_chain_income(
     status, raw = transport(CBOE_URL.format(symbol=symbol))
     if status != 200 or not raw:
         raise ValueError(f"cboe fetch failed (status {status})")
-    snapshot = build_snapshot_from_cboe(raw, symbol, cutoff)
     policy = SpreadScanPolicy(
         quantity=quantity,
         commission_per_contract=_d(commission_per_contract),
+    )
+    snapshot = build_snapshot_from_cboe(
+        raw,
+        symbol,
+        cutoff,
+        min_open_interest=policy.minimum_open_interest,
+        min_volume=policy.minimum_volume,
     )
     scan = scan_vertical_credit_spreads(snapshot, cutoff, policy)
     underlying_mid = (

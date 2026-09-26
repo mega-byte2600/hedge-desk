@@ -140,6 +140,8 @@ def oil_market(
         "window_first_close": str(first_close),
         "net_change_over_window": str(last_close - first_close),
         "observation_count": len(window),
+        # Full window closes for the dashboard's trend chart.
+        "window_closes": [[d, str(c)] for d, c in window],
         "lookback_days": lookback_days,
         "data_source": EOD_SOURCE_ID,
         "trade_authorized": False,

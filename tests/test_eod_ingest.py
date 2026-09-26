@@ -85,6 +85,13 @@ class EodIngestTests(unittest.TestCase):
         self.assertFalse(artifact["redistribution_allowed"])
         self.assertEqual(artifact["source_id"], EOD_SOURCE_ID)
 
+    def test_empty_watchlist_rejected_loudly(self):
+        # An empty watchlist is a configuration error: fail fast with a clear
+        # message rather than silently batching zero symbols (and never reach
+        # ThreadPoolExecutor with max_workers=0).
+        with self.assertRaisesRegex(ValueError, "watchlist cannot be empty"):
+            ingest_eod([], self.cutoff, transport=_ok_transport("AAPL"))
+
     def test_transport_failure_quarantines(self):
         result = ingest_eod(["AAPL"], self.cutoff, transport=lambda url: (0, b""))
         src = result["source_results"][0]
@@ -144,6 +151,54 @@ def _ok_transport_future(future_ts):
         }
     }
     return lambda url: (200, json.dumps(payload).encode("utf-8"))
+
+
+class EodParallelTests(unittest.TestCase):
+    """The per-symbol Yahoo fetches run concurrently; results must stay
+    deterministic (sorted by symbol) regardless of completion order."""
+
+    def setUp(self):
+        self.cutoff = datetime(2026, 9, 19, 15, 0, tzinfo=timezone.utc)
+
+    def test_parallel_fetch_keeps_symbol_order_deterministic(self):
+        import re
+        import time
+
+        def transport(url):
+            m = re.search(r"/chart/([^?]+)", url)
+            symbol = m.group(1) if m else "UNK"
+            # Finish in reverse-alphabetical order: completion order must not
+            # leak into the batch results.
+            time.sleep(0.05 * (ord("Z") - ord(symbol[0])))
+            payload = {
+                "chart": {
+                    "result": [
+                        {
+                            "meta": {"symbol": symbol},
+                            "timestamp": [TS - 86400, TS],
+                            "indicators": {
+                                "quote": [
+                                    {
+                                        "open": [100.0, 101.5],
+                                        "high": [102.0, 103.0],
+                                        "low": [99.0, 100.5],
+                                        "close": [101.0, 102.25],
+                                        "volume": [1000, 1200],
+                                    }
+                                ]
+                            },
+                        }
+                    ]
+                }
+            }
+            return 200, json.dumps(payload).encode("utf-8")
+
+        symbols = ["MSFT", "AAPL", "ZZZ", "F"]
+        result = ingest_eod(symbols, self.cutoff, transport=transport)
+        got = [r["symbol"] for r in result["source_results"]]
+        self.assertEqual(got, sorted(symbols))
+        self.assertTrue(all(r["status"] == "PASS" for r in result["source_results"]))
+        self.assertEqual(result["batch_status"], "READY_FOR_RESEARCH")
 
 
 if __name__ == "__main__":
