@@ -31,8 +31,7 @@ def csp_scan_chart(csp: dict) -> str:
     fig.update_layout(margin=dict(l=10, r=10, t=40, b=10), height=340,
                       title="Cash-Secured Put Wheel — return on collateral (real Cboe)",
                       yaxis_tickformat=".1%", yaxis_title="return on collateral",
-                      xaxis_title="symbol",
-                      xaxis_tickangle=-30,
+                      xaxis_title="symbol", xaxis_tickangle=-30,
                       font=dict(color="#e8eef7"), paper_bgcolor="#0f1828", plot_bgcolor="#0f1828")
     return fig.to_html(full_html=False, include_plotlyjs=False, div_id="ch_csp")
 
@@ -51,10 +50,41 @@ def candidates_chart(cands: list) -> str:
     return fig.to_html(full_html=False, include_plotlyjs=False, div_id="ch_cands")
 
 
+def premium_yield_chart(csp: dict) -> str:
+    """Options premium economics: return-on-capital vs premium-yield (net_credit/strike).
+
+    Real Cboe data from the CSP scan. Two metrics per PREMIUM_WHEEL_ECONOMICS.md:
+    return_on_capital = net_credit/collateral (small, on full capital deployed);
+    premium_yield = net_credit/strike (what 'sell premium' intuitively means).
+    """
+    rows = [(s, v) for s, v in (csp or {}).items() if v.get("mode") == "CASH_SECURED_PUT"]
+    if not rows:
+        return "<p class='muted'>no cash-secured-put candidates</p>"
+    symbols = [s for s, _ in rows]
+    roc = [float(v["candidate"]["return_on_capital"]) for _, v in rows]
+    py = []
+    for _, v in rows:
+        c = v["candidate"]
+        credit = float(c["net_credit_per_share"])
+        strike = float(c["strike"])
+        py.append(credit / strike if strike else 0.0)
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=symbols, y=roc, name="return on capital", marker_color="#3498db",
+                         hovertemplate="%{x}<br>RoC %{y:.2%}<extra></extra>"))
+    fig.add_trace(go.Bar(x=symbols, y=py, name="premium yield (credit/strike)", marker_color="#e67e22",
+                         hovertemplate="%{x}<br>premium yield %{y:.2%}<extra></extra>"))
+    fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=40, b=10), height=340,
+                      title="Options Premium — return on capital vs premium yield (real Cboe)",
+                      yaxis_tickformat=".1%", yaxis_title="per 30-45d", xaxis_title="symbol",
+                      xaxis_tickangle=-30, legend=dict(orientation="h", y=1.12),
+                      font=dict(color="#e8eef7"), paper_bgcolor="#0f1828", plot_bgcolor="#0f1828")
+    return fig.to_html(full_html=False, include_plotlyjs=False, div_id="ch_premium")
+
+
 def macro_panel(vix: dict, rates: dict, oil: dict, macro: dict) -> str:
     cells = []  # (label, value, source)
     if vix.get("mode") == "REAL_VIX":
-        cells.append((f"VIX ({vix.get('regime','?')})", f"{float(vix['last_close']):.1f}", "Yahoo"))
+        cells.append((f"VIX ({vix.get('regime', '?')})", f"{float(vix['last_close']):.1f}", "Yahoo"))
     if rates.get("mode") == "REAL_FRED_RATES":
         cells.append(("Fed funds %", str(rates.get("fed_funds_effective_rate", "-")), "FRED"))
         if rates.get("treasury_10y_yield"):
@@ -80,6 +110,7 @@ def build() -> None:
     r = json.loads(REPORT.read_text())
     csp = csp_scan_chart(r.get("cash_secured_put_scan"))
     cands = candidates_chart(r["candidates"])
+    premium = premium_yield_chart(r.get("cash_secured_put_scan"))
     macro = macro_panel(r.get("vix_regime", {}), r.get("rates_environment", {}),
                         r.get("oil_market", {}), r.get("macro_environment", {}))
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -108,6 +139,7 @@ header h1{{margin:0;font-size:20px}} header .tag{{color:#6ea8ff;font-size:12px}}
 <div class="grid">
 <div class="card">{macro}</div>
 <div class="card wide">{cands}</div>
+<div class="card wide">{premium}</div>
 <div class="card wide">{csp}</div>
 </div>
 </body></html>"""
