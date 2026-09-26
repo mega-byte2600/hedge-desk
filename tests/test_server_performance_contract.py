@@ -106,7 +106,7 @@ class ServerPerformanceContractTests(unittest.TestCase):
 
     def test_cold_start_shows_a_waking_message_instead_of_stalling(self):
         app_js = (server.PACKAGE_ROOT / "web" / "app.js").read_text(encoding="utf-8")
-        self.assertIn("Waking the research desk", app_js)
+        self.assertIn("Loading the overnight report…", app_js)
 
 
 if __name__ == "__main__":

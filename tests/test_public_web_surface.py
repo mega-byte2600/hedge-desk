@@ -246,7 +246,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("candidate.report?.environment!=='paper'", app)
         self.assertIn("candidate.report.live_orders_enabled!==false", app)
         self.assertIn("candidate.report.projects.length!==6", app)
-        self.assertIn("Exact engine record. Synthetic fixture only.", app)
+        self.assertIn("Exact engine record from the overnight report.", app)
         self.assertNotIn("runScenario", app)
         self.assertNotIn("executeScenario", app)
 
