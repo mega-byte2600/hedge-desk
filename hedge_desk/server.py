@@ -83,6 +83,12 @@ _request_metrics = {
 }
 
 
+def _redirect(start_response, location: str):
+    """Issue a 302 redirect to ``location``."""
+    start_response("302 Found", [("Location", location), ("Content-Length", "0")])
+    return [b""]
+
+
 def _json(start_response, payload, status="200 OK"):
     body = json.dumps(payload).encode("utf-8")
     start_response(
@@ -114,12 +120,13 @@ def _serve_artifact(start_response, path: Path, as_json: bool = False):
         "application/json" if as_json
         else mimetypes.guess_type(str(path))[0] or "text/html; charset=utf-8"
     )
+    cache = "no-store" if as_json else "no-cache"  # HTML revalidates (regens nightly); JSON never cached client-side
     start_response(
         "200 OK",
         [
             ("Content-Type", content_type),
             ("Content-Length", str(len(body))),
-            ("Cache-Control", "no-store"),
+            ("Cache-Control", cache),
             ("ETag", _etag_for(path)),
         ],
     )
@@ -244,8 +251,12 @@ def _dispatch(environ, start_response):
         return _json(start_response, _cached("console-report", build_live_console_payload))
     # True-MVP demo: serve the regenerated AM report page / live report JSON
     # straight from artifacts/ (the real EOD -> overnight -> AM candidate output).
-    if path in ("/am-demo.html", "/am-demo"):
+    # Live overview dashboard (was /am-demo); old path redirects. Root serves
+    # the dashboard directly so the bare prod URL shows the real report.
+    if (ARTIFACTS / "am-demo.html").is_file() and (path in ("/", "", "/dashboard", "/dashboard.html")):
         return _serve_artifact(start_response, ARTIFACTS / "am-demo.html")
+    if path in ("/am-demo", "/am-demo.html"):
+        return _redirect(start_response, "/dashboard")
     if path == "/api/am-report":
         return _serve_artifact(start_response, ARTIFACTS / "am-report-latest.json", as_json=True)
     relative = "index.html" if path in ("/", "") else path.lstrip("/")

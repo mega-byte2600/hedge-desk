@@ -172,9 +172,13 @@ class ServerTests(unittest.TestCase):
             open(os.path.join(td, "am-report-latest.json"), "w").write(
                 __import__("json").dumps(report))
             with patch.object(srv, "ARTIFACTS", __import__("pathlib").Path(td)):
-                st_html, body = self.raw("/am-demo.html")
+                st_html, body = self.raw("/dashboard")
                 self.assertEqual(st_html, "200 OK")
                 self.assertEqual(body.decode(), demo_marker)
+
+                # the old /am-demo path redirects to /dashboard (302)
+                st_redir, redir_headers = self.raw("/am-demo")
+                self.assertIn("302", st_redir)
 
                 st_rep, payload = self.request("/api/am-report")
                 self.assertEqual(st_rep, "200 OK")
