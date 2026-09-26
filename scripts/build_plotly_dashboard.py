@@ -121,6 +121,8 @@ def build() -> None:
 body{{margin:0;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#0b1220;color:#e8eef7}}
 header{{padding:18px 28px;background:#111a2c;border-bottom:1px solid #1e2b47;display:flex;align-items:center;gap:12px}}
 header h1{{margin:0;font-size:20px}} header .tag{{color:#6ea8ff;font-size:12px}}
+.gbtn{{margin-left:auto;color:#e8eef7;text-decoration:none;background:#1a2a4a;border:1px solid #2a3f6a;padding:8px 14px;border-radius:8px;font-size:13px;white-space:nowrap}}
+.gbtn:hover{{background:#24406e}}
 .ts{{padding:10px 28px;color:#93a5c4;font-size:12px}}
 .grid{{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 28px 28px}}
 .card{{background:#0f1828;border:1px solid #1e2b47;border-radius:10px;padding:10px;overflow:hidden}}
@@ -133,7 +135,8 @@ header h1{{margin:0;font-size:20px}} header .tag{{color:#6ea8ff;font-size:12px}}
 @media(max-width:900px){{.grid{{grid-template-columns:1fr}}}}
 </style></head><body>
 <header><span style="font-size:26px">⚓</span><div><h1>Emporion Overnight Desk</h1>
-<div class="tag">compass · real data · paper-only · what the batch actually closed on</div></div></header>
+<div class="tag">compass · real data · paper-only · what the batch actually closed on</div></div>
+<a class="gbtn" href="/guide/selling-options-premium">📘 Selling Options Premium — visual guide</a></header>
 <p class="ts">REAL overnight report · generated {r['generated_at']} ·
 {len(r['candidates'])} candidates · {r['mode']} · live_orders {str(r.get('live_orders_enabled', False))}</p>
 <div class="grid">

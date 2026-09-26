@@ -259,6 +259,12 @@ def _dispatch(environ, start_response):
         return _redirect(start_response, "/dashboard")
     if path == "/api/am-report":
         return _serve_artifact(start_response, ARTIFACTS / "am-report-latest.json", as_json=True)
+    # Muse/Toby's Selling Options Premium visual guide (static, self-contained).
+    if path in ("/guide/selling-options-premium", "/guide/selling-options-premium.html"):
+        guide = PACKAGE_ROOT / "docs" / "guides" / "selling-options-premium-visual-guide.html"
+        if guide.is_file():
+            return _serve_artifact(start_response, guide)
+        return _json(start_response, {"error": "artifact_missing", "path": "guide"}, "404 Not Found")
     relative = "index.html" if path in ("/", "") else path.lstrip("/")
     target = (WEB / relative).resolve()
     if WEB.resolve() not in target.parents and target != WEB.resolve():
