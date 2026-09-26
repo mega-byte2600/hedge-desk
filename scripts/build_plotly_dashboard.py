@@ -135,7 +135,7 @@ header h1{{margin:0;font-size:20px}} header .tag{{color:#6ea8ff;font-size:12px}}
 @media(max-width:900px){{.grid{{grid-template-columns:1fr}}}}
 </style></head><body>
 <header><span style="font-size:26px">⚓</span><div><h1>Emporion Overnight Desk</h1>
-<div class="tag">compass · real data · paper-only · what the batch actually closed on</div></div>
+<div class="tag">compass · real data · paper-only</div></div></header>
 <a class="gbtn" href="/guide/selling-options-premium">📘 Selling Options Premium — visual guide</a></header>
 <p class="ts">REAL overnight report · generated {r['generated_at']} ·
 {len(r['candidates'])} candidates · {r['mode']} · live_orders {str(r.get('live_orders_enabled', False))}</p>
