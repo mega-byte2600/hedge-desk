@@ -74,6 +74,75 @@ class DashboardBuildTests(unittest.TestCase):
         html = self._build()
         self.assertIn("rebuild the overnight report", html)
 
+    def test_macro_panel_renders_cells_not_none(self):
+        # Regression: a truncated macro_panel once rendered the literal
+        # string "None" in the Macro backdrop card.
+        html = self._build(
+            vix_regime={"mode": "REAL_VIX", "last_close": "14.9", "regime": "LOW"},
+            oil_market={"mode": "REAL_YAHOO_WTI", "last_close": "64.5"},
+            macro_environment={"mode": "BLOCKED", "reason": "withheld"},
+        )
+        self.assertNotIn("Macro backdrop</h3>None", html)
+        self.assertIn("VIX (LOW)", html)
+        self.assertIn("withheld — refetch pending", html)
+
+    def test_earnings_eps_chart_draws_real_quarters(self):
+        html = self._build(
+            earnings_actuals={
+                "0000320193": {
+                    "mode": "REAL_EDGAR_EARNINGS",
+                    "observation": {
+                        "latest_quarterly_eps": 2.03,
+                        "latest_quarterly_period": "2026-06-27",
+                        "prior_quarterly_eps": 2.02,
+                        "prior_quarterly_period": "2026-03-28",
+                    },
+                }
+            }
+        )
+        self.assertIn("ch_earnings_eps", html)
+        self.assertIn("AAPL", html)
+
+    def test_earnings_eps_chart_empty_state_is_honest(self):
+        html = self._build(earnings_actuals={})
+        self.assertIn("no real quarterly EPS observations", html)
+
+    def test_every_rendered_visual_states_its_source(self):
+        # The user requires every dashboard visual to be annotated with its
+        # data source so any number can be traced back to its origin.
+        html = self._build(
+            earnings_actuals={
+                "0000320193": {
+                    "mode": "REAL_EDGAR_EARNINGS",
+                    "observation": {
+                        "latest_quarterly_eps": 2.03,
+                        "latest_quarterly_period": "2026-06-27",
+                        "prior_quarterly_eps": 2.02,
+                        "prior_quarterly_period": "2026-03-28",
+                    },
+                }
+            },
+            series={
+                "symbols": {"AAL": [["2026-09-01", 10.0], ["2026-09-02", 11.0]]},
+                "vix": [["2026-09-01", 14.0], ["2026-09-02", 15.0]],
+                "wti": [["2026-09-01", 64.0], ["2026-09-02", 65.0]],
+                "treasury_10y": [["2026-09-01", 4.5], ["2026-09-02", 4.6]],
+            },
+        )
+        import re
+
+        # Every Plotly div id that rendered must be followed by a source note.
+        for div_id in set(re.findall(r'id="(ch_[a-z_]+)"', html)):
+            i = html.find(f'id="{div_id}"')
+            following = html[i:i + 200000]
+            j = following.find("class='src-note'")
+            self.assertGreater(
+                j, 0, f"chart {div_id} renders without a source annotation")
+        self.assertGreaterEqual(html.count("class='src-note'"), 8)
+        for src in ("Yahoo Finance", "Cboe", "SEC EDGAR",
+                    "FRED", "paper-outcomes.jsonl"):
+            self.assertIn(src, html)
+
     def test_html_escapes_untrusted_text(self):
         html = self._build(chain_income={
             "SPY": {"mode": "BLOCKED", "reason": "<script>alert(1)</script>",

@@ -7,9 +7,16 @@ missing sections render as honest state panels, never as invented values.
 """
 import html
 import json
+import sys
 from pathlib import Path
 
+# Allow `python3 scripts/build_plotly_dashboard.py` from the repo root: the
+# script directory (not the root) lands on sys.path in that mode.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import plotly.graph_objects as go
+
+from hedge_desk.candidates import CIK_TO_SYMBOL
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "artifacts" / "am-report-latest.json"
@@ -37,12 +44,25 @@ def base_layout(title: str, height: int = 340) -> dict:
     )
 
 
-def chart(fig: go.Figure, div_id: str) -> str:
-    return fig.to_html(full_html=False, include_plotlyjs=False, div_id=div_id)
+def chart(fig: go.Figure, div_id: str, source: str = "") -> str:
+    html = fig.to_html(full_html=False, include_plotlyjs=False, div_id=div_id)
+    return html + src_note(source) if source else html
 
 
 def muted(msg: str) -> str:
     return f"<p class='muted'>{esc(msg)}</p>"
+
+
+def src_note(source: str) -> str:
+    """One-line provenance caption every dashboard visual must carry.
+
+    The user requires every chart/table to state where its data came from,
+    so a reader can trace any number back to its origin. Empty source
+    renders nothing (the caller, not this helper, decides what is sourced).
+    """
+    if not source:
+        return ""
+    return f"<p class='src-note'>source: {esc(source)}</p>"
 
 
 def _fnum(value, default=0.0) -> float:
@@ -121,6 +141,37 @@ def macro_panel(vix: dict, rates: dict, oil: dict, macro: dict) -> str:
             cells.append((f"VIX ({vix.get('regime', '?')})", f"{float(vix['last_close']):.1f}", "Yahoo"))
         except (TypeError, ValueError):
             pass
+    if rates.get("mode") == "REAL_FRED_RATES":
+        cells.append(("Fed funds %", str(rates.get("fed_funds_effective_rate", "-")), "FRED"))
+        if rates.get("treasury_10y_yield"):
+            cells.append(("10Y Treasury %", str(rates["treasury_10y_yield"]), "FRED"))
+        if rates.get("spread_10y_2y_points"):
+            cells.append(("10Y-2Y bp", str(rates["spread_10y_2y_points"]), "FRED"))
+    if oil.get("mode") == "REAL_YAHOO_WTI" and oil.get("last_close") is not None:
+        try:
+            cells.append(("WTI oil $", f"{float(oil['last_close']):.1f}", "Yahoo"))
+        except (TypeError, ValueError):
+            pass
+    if macro.get("mode") == "REAL_FRED_MACRO":
+        if macro.get("cpi_yoy_pct"):
+            cells.append(("CPI YoY %", str(macro["cpi_yoy_pct"]), "FRED"))
+        # Report key is unemployment_rate_pct (not the older unemployment_rate).
+        if macro.get("unemployment_rate_pct"):
+            cells.append(("Unemployment %", str(macro["unemployment_rate_pct"]), "FRED"))
+        if macro.get("treasury_5y"):
+            cells.append(("5Y Treasury %", str(macro["treasury_5y"]), "FRED"))
+        if macro.get("treasury_30y"):
+            cells.append(("30Y Treasury %", str(macro["treasury_30y"]), "FRED"))
+    elif macro.get("mode") == "BLOCKED":
+        # Withheld rather than fabricated: show a short marker, not the full
+        # reason string (which lives in the report JSON for audit).
+        cells.append(("Macro (FRED)", "withheld — refetch pending", "FRED"))
+    blocks = "".join(
+        f'<div class="metric"><div class="ml">{esc(l)} <span class="src">{esc(s)}</span></div>'
+        f'<div class="mv">{esc(v)}</div></div>'
+        for l, v, s in cells
+    )
+    return f'<div class="macropanel">{blocks or "<p class=muted>no real macro</p>"}</div>'
 
 
 def premium_yield_chart(csp: dict) -> str:
@@ -159,7 +210,8 @@ def premium_yield_chart(csp: dict) -> str:
                       yaxis_tickformat=".1%", yaxis_title="per 30-45d", xaxis_title="symbol",
                       xaxis_tickangle=-30, legend=dict(orientation="h", y=1.12),
                       font=dict(color="#e8eef7"), paper_bgcolor="#0f1828", plot_bgcolor="#0f1828")
-    return fig.to_html(full_html=False, include_plotlyjs=False, div_id="ch_premium")
+    return (fig.to_html(full_html=False, include_plotlyjs=False, div_id="ch_premium")
+            + src_note("Cboe delayed option chains, nightly premium scan"))
 
 
 # ---------------------------------------------------------------- price trends
@@ -190,7 +242,7 @@ def price_chart(series: dict) -> str:
     fig.update_layout(**base_layout("Equity performance — rebased to 100 (real Yahoo EOD)", 360))
     fig.update_layout(yaxis_title="index (start = 100)", xaxis_title="date",
                       legend=dict(orientation="h", y=-0.25))
-    return chart(fig, "ch_prices")
+    return chart(fig, "ch_prices", source="Yahoo Finance EOD closes, nightly batch")
 
 
 def feature_heatmap(features: dict) -> str:
@@ -221,7 +273,7 @@ def feature_heatmap(features: dict) -> str:
         hovertemplate="%{y} · %{x}<br>value %{text}<extra></extra>",
     ))
     fig.update_layout(**base_layout("Feature bundle — per-symbol z-scored heatmap (raw values annotated)", 360))
-    return chart(fig, "ch_heatmap")
+    return chart(fig, "ch_heatmap", source="computed from Yahoo Finance EOD closes, nightly batch")
 
 
 # ---------------------------------------------------------------- premium desks
@@ -258,7 +310,7 @@ def csp_scan_chart(csp: dict) -> str:
     )
     table = (f"<table class='health'><thead><tr><th>symbol</th><th>fit</th><th>reasons</th></tr></thead>"
              f"<tbody>{tbl}</tbody></table>")
-    return chart(fig, "ch_csp") + table
+    return chart(fig, "ch_csp", source="nightly cash-secured-put scan (Yahoo EOD + Cboe delayed chains)") + table
 
 
 def chain_panel(chain_income: dict) -> str:
@@ -291,7 +343,7 @@ def chain_panel(chain_income: dict) -> str:
             f"<th>credit</th><th>max loss</th><th>RoR</th><th>gate</th></tr></thead>"
             f"<tbody>{trs or '<tr><td colspan=7 class=muted>no admissible structures</td></tr>'}</tbody></table>"
             f"<p class='muted'>{esc(ch.get('gate_note', ''))}</p>")
-    return "".join(parts)
+    return "".join(parts) + src_note("Cboe delayed option chains, nightly batch")
 
 
 def candidates_chart(cands: list) -> str:
@@ -318,7 +370,7 @@ def candidates_chart(cands: list) -> str:
                            hovertemplate="%{x}<br>%{customdata}<br>collateral %{y:$,.0f}<extra></extra>"))
     fig.update_layout(**base_layout(f"Equity Candidates — collateral by symbol ({len(cands)})", 340))
     fig.update_layout(yaxis_title="collateral ($)", xaxis_title="symbol", xaxis_tickangle=-30)
-    return chart(fig, "ch_cands")
+    return chart(fig, "ch_cands", source="nightly EOD candidate batch (Yahoo Finance)")
 
 
 # ---------------------------------------------------------------- rates / vix / oil
@@ -342,7 +394,7 @@ def rates_chart(rates: dict, series: dict) -> str:
     shape = rates.get("curve_shape", "?") if rates.get("mode") == "REAL_FRED_RATES" else "?"
     fig.update_layout(**base_layout(f"Treasury yields — 10Y vs 2Y (FRED, curve {shape})", 340))
     fig.update_layout(yaxis_title="yield %", xaxis_title="date")
-    return chart(fig, "ch_rates")
+    return chart(fig, "ch_rates", source="FRED public series, nightly batch")
 
 
 def vix_chart(series: dict, vix: dict) -> str:
@@ -355,7 +407,7 @@ def vix_chart(series: dict, vix: dict) -> str:
                                hovertemplate="VIX %{x}<br>%{y:.2f}<extra></extra>"))
     fig.update_layout(**base_layout(f"VIX 3-month trend (Yahoo, regime {regime})", 320))
     fig.update_layout(yaxis_title="VIX", xaxis_title="date")
-    return chart(fig, "ch_vix")
+    return chart(fig, "ch_vix", source="Yahoo Finance (^VIX), nightly batch")
 
 
 def wti_chart(series: dict, oil: dict) -> str:
@@ -367,7 +419,7 @@ def wti_chart(series: dict, oil: dict) -> str:
                                hovertemplate="WTI %{x}<br>$%{y:.2f}<extra></extra>"))
     fig.update_layout(**base_layout("WTI front-month trend (Yahoo CL=F)", 320))
     fig.update_layout(yaxis_title="$", xaxis_title="date")
-    return chart(fig, "ch_wti")
+    return chart(fig, "ch_wti", source="Yahoo Finance WTI (CL=F), nightly batch")
 
 
 # ---------------------------------------------------------------- earnings / paper
@@ -389,6 +441,48 @@ def earnings_table(earnings_actuals: dict) -> str:
             f"<p class='muted'>source: SEC EDGAR companyfacts</p>")
 
 
+def earnings_eps_chart(earnings_actuals: dict) -> str:
+    """Quarterly EPS: latest vs prior quarter per CIK (real SEC EDGAR actuals).
+
+    Grouped bars, one group per filer. Only entries with mode
+    REAL_EDGAR_EARNINGS and parseable quarterly EPS are drawn; anything else
+    yields the honest empty state, never an invented bar.
+    """
+    ea = earnings_actuals or {}
+    rows = []  # (label, latest_eps, latest_period, prior_eps, prior_period)
+    for cik, v in ea.items():
+        if not isinstance(v, dict) or v.get("mode") != "REAL_EDGAR_EARNINGS":
+            continue
+        obs = v.get("observation") or {}
+        try:
+            latest = float(obs["latest_quarterly_eps"])
+            prior = float(obs["prior_quarterly_eps"])
+        except (TypeError, ValueError, KeyError):
+            continue
+        label = CIK_TO_SYMBOL.get(str(cik), str(cik))
+        rows.append((label,
+                     latest, str(obs.get("latest_quarterly_period", "")),
+                     prior, str(obs.get("prior_quarterly_period", ""))))
+    if not rows:
+        return muted("no real quarterly EPS observations in this report")
+    labels = [r[0] for r in rows]
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=labels, y=[r[1] for r in rows], name="latest quarter",
+        marker_color="#6ea8ff",
+        customdata=[r[2] for r in rows],
+        hovertemplate="%{x} %{customdata}<br>EPS $%{y:.2f}<extra></extra>"))
+    fig.add_trace(go.Bar(
+        x=labels, y=[r[3] for r in rows], name="prior quarter",
+        marker_color="#5a6b8c",
+        customdata=[r[4] for r in rows],
+        hovertemplate="%{x} %{customdata}<br>EPS $%{y:.2f}<extra></extra>"))
+    fig.update_layout(**base_layout("Quarterly EPS — latest vs prior (SEC EDGAR actuals)", 340))
+    fig.update_layout(barmode="group", yaxis_title="EPS $", xaxis_title="filer",
+                      legend=dict(orientation="h", y=1.12))
+    return chart(fig, "ch_earnings_eps", source="SEC EDGAR companyfacts, nightly batch")
+
+
 def paper_panels(paper: dict, yellow: dict) -> str:
     paper = paper or {}
     yellow = yellow or {}
@@ -401,6 +495,7 @@ def paper_panels(paper: dict, yellow: dict) -> str:
         f"</div>"
         f"<p class='muted'>paper outcomes: {esc(json.dumps(oc))}<br>"
         f"yellow-sheet decisions: {esc(json.dumps(bd))}<br>{esc(paper.get('note', ''))}</p>"
+        + src_note("paper-outcomes.jsonl + yellow-sheets.jsonl, nightly batch")
     )
 
 
@@ -431,6 +526,7 @@ def build() -> None:
         card("Volatility", vix_chart(series, r.get("vix_regime", {}))),
         card("WTI oil", wti_chart(series, r.get("oil_market", {}))),
         card("Earnings actuals", earnings_table(r.get("earnings_actuals", {})), wide=True),
+        card("Earnings — quarterly EPS", earnings_eps_chart(r.get("earnings_actuals", {})), wide=True),
     ])
     html_doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -454,6 +550,7 @@ header h1{{margin:0;font-size:20px}} header .tag{{color:#6ea8ff;font-size:12px}}
 .ml{{color:{MUTED};font-size:12px}} .ml .src{{color:#6ea8ff;font-size:10px}}
 .mv{{font-size:26px;font-weight:600;margin-top:4px}}
 .muted{{color:{MUTED};font-size:12px}}
+.src-note{{color:{MUTED};font-size:11px;margin:6px 2px 0;font-style:italic}}
 table.health{{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0}}
 table.health th,table.health td{{text-align:left;padding:6px 8px;border-bottom:1px solid #1e2b47}}
 table.health th{{color:{MUTED};font-weight:600}}
