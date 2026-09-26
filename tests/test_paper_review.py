@@ -304,6 +304,23 @@ class PlanFileTests(unittest.TestCase):
             with self.assertRaisesRegex(PermissionError, "integrity check failed"):
                 queue.decide(plan.plan_id, "captain", DECIDED_AT, approve=True)
 
+    def test_machine_risk_status_tamper_fails_integrity_on_decide(self) -> None:
+        # Guard-bypass regression test: flipping machine_risk_status
+        # FAIL->PASS in the plan file must break the plan hash. Otherwise a
+        # hand-edited file would let a human approve a machine-rejected plan.
+        plan = _machine_reject_plan()
+        self.assertEqual(plan.machine_risk_status, MachineRiskStatus.REJECT)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "plan.json"
+            write_plan_file(plan, path)
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            raw["plan"]["machine_risk_status"] = "pass"
+            path.write_text(json.dumps(raw), encoding="utf-8")
+            loaded = load_plan_file(path)
+            queue = submit_plan_for_review(loaded)
+            with self.assertRaisesRegex(PermissionError, "integrity check failed"):
+                queue.decide(plan.plan_id, "captain", DECIDED_AT, approve=True)
+
 
 class PaperReviewCliTests(unittest.TestCase):
     def _run_cli(self, *argv):
@@ -354,6 +371,39 @@ class PaperReviewCliTests(unittest.TestCase):
         self.assertEqual(decision["status"], "rejected")
         self.assertEqual(
             decision["reason_codes"], ["THESIS_INVALIDATED", "VOL_TOO_RICH"]
+        )
+
+    def test_cli_paper_decide_persists_approval_to_plan_file(self) -> None:
+        # The runner only opens plans whose FILE says APPROVED, so the CLI
+        # must write the decision back — otherwise review dead-ends.
+        with tempfile.TemporaryDirectory() as directory:
+            plan, path = _plan_file(directory)
+            result = self._run_cli(
+                "--paper-decide", str(path),
+                "--human-id", "captain",
+                "--decided-at", DECIDED_AT.isoformat(),
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            reloaded = load_plan_file(path)
+        self.assertEqual(
+            reloaded.authorization.status, HumanAuthorizationStatus.APPROVED
+        )
+        self.assertEqual(reloaded.authorization.human_id, "captain")
+
+    def test_cli_paper_decide_persists_rejection_to_plan_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            plan, path = _plan_file(directory)
+            result = self._run_cli(
+                "--paper-decide", str(path),
+                "--human-id", "captain",
+                "--decided-at", DECIDED_AT.isoformat(),
+                "--reject",
+                "--reason-codes", "THESIS_INVALIDATED",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            reloaded = load_plan_file(path)
+        self.assertEqual(
+            reloaded.authorization.status, HumanAuthorizationStatus.REJECTED
         )
 
     def test_cli_paper_decide_requires_human_id(self) -> None:

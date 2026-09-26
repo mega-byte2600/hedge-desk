@@ -41,6 +41,8 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import os
+import tempfile
 import typing
 from dataclasses import is_dataclass
 from datetime import date, datetime
@@ -208,14 +210,31 @@ def _record_from_dict(cls: Any, data: Dict[str, Any], path: str) -> Any:
 
 
 def write_plan_file(plan: PaperTradePlan, path: Any) -> Path:
-    """Write a paper plan file that the review queue and CLI can load."""
+    """Write a paper plan file that the review queue and CLI can load.
+
+    The write is atomic (temp file + os.replace) so a crashed decide can
+    never leave a half-written plan file behind.
+    """
     target = Path(path)
     envelope = {
         "schema_version": PLAN_FILE_SCHEMA_VERSION,
         "environment": PLAN_FILE_ENVIRONMENT,
         "plan": _json_value(plan),
     }
-    target.write_text(json.dumps(envelope, indent=2, sort_keys=True), encoding="utf-8")
+    payload = json.dumps(envelope, indent=2, sort_keys=True).encode("utf-8")
+    fd, tmp_name = tempfile.mkstemp(
+        dir=str(target.parent), prefix=target.name + ".", suffix=".tmp"
+    )
+    try:
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(payload)
+        os.replace(tmp_name, target)
+    except BaseException:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
     return target
 
 

@@ -149,6 +149,7 @@ def _calculate_plan_hash(
     execution_quote_max_age_seconds: int,
     control_artifact_max_age_seconds: int,
     event_calendar_gate: EventCalendarGate,
+    machine_risk_status: MachineRiskStatus,
 ) -> str:
     payload = "|".join(
         (
@@ -218,6 +219,7 @@ def _calculate_plan_hash(
             ",".join(event_calendar_gate.reason_codes),
             event_calendar_gate.calendar_sha256,
             event_calendar_gate.complete_through.isoformat(),
+            machine_risk_status.value,
             created_at.isoformat(),
             approval_expires_at.isoformat(),
             str(execution_quote_max_age_seconds),
@@ -238,6 +240,7 @@ def _assert_plan_integrity(plan: PaperTradePlan) -> None:
         plan.execution_quote_max_age_seconds,
         plan.control_artifact_max_age_seconds,
         plan.event_calendar_gate,
+        plan.machine_risk_status,
     )
     if expected != plan.plan_hash:
         raise PermissionError("paper-trade plan integrity check failed")
@@ -328,6 +331,7 @@ def create_paper_trade_plan(
         execution_quote_max_age_seconds,
         control_artifact_max_age_seconds,
         event_calendar_gate,
+        machine_status,
     )
     return PaperTradePlan(
         plan_id=plan_id,

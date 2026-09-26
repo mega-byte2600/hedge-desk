@@ -45,6 +45,7 @@ from hedge_desk.paper import (
     load_plan_file,
     parse_option_quote,
     settle_paper_outcomes,
+    write_plan_file,
 )
 from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.options import (
@@ -732,6 +733,10 @@ def main() -> None:
                 approve=not args.reject,
                 reason_codes=reason_codes,
             )
+            # Persist the decision: the runner only opens plans whose FILE
+            # says APPROVED, so without this write-back the review loop
+            # would dead-end at the CLI.
+            write_plan_file(decided, plan_file)
             authorization = decided.authorization
             print(json.dumps({
                 "plan_id": decided.plan_id,
