@@ -21,6 +21,7 @@ CONSOLE_ASSETS = (
     "app.js",
     "candidate-context.js",
     "scenario-lab.js",
+    "desk-outcomes.js",
     "core.mjs",
     "professional.js",
     "ror-positioning.js",
