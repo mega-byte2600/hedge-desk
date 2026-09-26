@@ -28,9 +28,11 @@ class WebExportTests(unittest.TestCase):
             self.assertEqual(result['candidate_feed']['schema_version'], 'hedge-desk-candidates-1.0.0')
             evaluated_ids = {project['project_id'] for project in result['report']['projects']}
             candidate_ids = {row['desk_id'] for row in result['candidate_feed']['candidates']}
-            self.assertEqual(candidate_ids, evaluated_ids)
-            self.assertNotIn('bonds-rates-desk', candidate_ids)
-            self.assertTrue({'SPY', 'AAPL', 'SPX', 'KO', 'CL'}.issubset(
+            # Real-EOD contract: the candidate feed is the overnight wheel universe
+            # (matches the dashboard), not the 6-desk static seed.
+            self.assertEqual(result['candidate_feed']['mode'], 'REAL_EOD')
+            self.assertEqual(candidate_ids, {'overnight-premium-desk'})
+            self.assertTrue({'AAL', 'CCL', 'DVN', 'F', 'LYFT', 'NCLH', 'NKE'}.issubset(
                 {row['symbol'] for row in result['candidate_feed']['candidates']}
             ))
             self.assertTrue(all(not row['trade_authorized'] for row in result['candidate_feed']['candidates']))

@@ -10,7 +10,7 @@ same packaging, schema, and registry as the checked-in deploy snapshot.
 
 from dataclasses import asdict
 
-from hedge_desk.candidates import build_candidate_feed
+from hedge_desk.candidates import build_real_eod_candidate_feed
 from hedge_desk.data import PWB_DAILY_NEWS_DATASET
 from hedge_desk.projects import DESK_ARCHITECTURE
 from hedge_desk.reporting import (
@@ -34,7 +34,7 @@ def build_console_payload(report):
         raise ValueError(
             "Report rejected: " + ", ".join(decision.reason_codes)
         )
-    candidate_feed = build_candidate_feed()
+    candidate_feed = build_real_eod_candidate_feed()
     payload = {
         "schema_version": CONSOLE_SCHEMA,
         "report": report,
