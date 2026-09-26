@@ -37,6 +37,7 @@ from hedge_desk.rates_desk import rates_environment
 from hedge_desk.vix_regime import vix_regime, apply_vix_regime_filter
 from hedge_desk.macro_desk import macro_environment
 from hedge_desk.freshness import freshness_summary
+from hedge_desk.data_quality import quality_report
 from hedge_desk.account import read_account_equity
 from hedge_desk.position_sizing import wheel_fit_for_equity, scale_position_to_equity
 from hedge_desk.oil_desk import oil_market
@@ -353,6 +354,10 @@ def run_nightly(
     "authorized (every candidate trade_authorized=False)."
         ),
     }
+    # Data-quality monitor (handoff 2026-09-26 gap #3): scan the finished
+    # report and flag DOWN/STALE/MISSING sources loudly. Added after the
+    # report body is complete but before hashing, so it's content-addressed.
+    report["data_quality"] = quality_report(report)
     # Content-address the stable report body (exclude the hash and the
     # runtime path fields so the hash is reproducible across runs).
     body = {
