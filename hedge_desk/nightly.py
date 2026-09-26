@@ -49,7 +49,7 @@ from hedge_desk.execution_gate import (
 from hedge_desk.domain import Account, AccountType
 from decimal import Decimal
 
-NIGHTLY_VERSION = "hedge-desk-nightly-2.0.0"
+NIGHTLY_VERSION = "hedge-desk-nightly-2.1.0"
 DEFAULT_WATCHLIST = ("NKE", "CCL", "AAL", "LYFT", "NCLH", "F", "DVN")  # sub-$55 GP-fit universe (see docs/MVP_RESCOPE)
 
 
@@ -288,6 +288,30 @@ def run_nightly(
                      "max-loss rule. Sizing design, not a performance projection."),
         }
 
+    def _downsample(points, limit=63):
+        """Evenly thin a point list for charting; keeps endpoints, stays small."""
+        if len(points) <= limit:
+            return list(points)
+        step = len(points) / limit
+        idxs = sorted({min(int(i * step), len(points) - 1) for i in range(limit)})
+        return [points[i] for i in idxs]
+
+    # Compact trend series for the dashboard: symbol prices from the EOD
+    # batch (no extra fetches), plus the desk windows the batch already
+    # pulled. None when the owning desk was BLOCKED.
+    series = {
+        "as_of": cutoff.date().isoformat(),
+        "symbols": {
+            sym: _downsample([[d.date, str(d.close)] for d in days])
+            for sym, days in sorted(days_by_symbol.items())
+            if days
+        },
+        "vix": (vix.get("history") if isinstance(vix, dict) else None),
+        "treasury_10y": (rates.get("treasury_10y_history") if isinstance(rates, dict) else None),
+        "treasury_2y": (rates.get("treasury_2y_history") if isinstance(rates, dict) else None),
+        "wti": (oil.get("window_closes") if isinstance(oil, dict) else None),
+    }
+
     report = {
         "schema_version": NIGHTLY_VERSION,
         "mode": "REAL_EOD_NIGHTLY",
@@ -299,6 +323,7 @@ def run_nightly(
         "candidate_count": candidates["candidate_count"],
         "symbol_count": candidates["symbol_count"],
         "candidates": candidates["candidates"],
+        "series": series,
         "eod_source_results": eod["source_results"],
         "chain_income": chain_results,
         "features": features,

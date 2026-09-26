@@ -1,5 +1,6 @@
 """Deterministic tests for the real FRED rates desk (no network)."""
 
+import os
 import unittest
 from datetime import date
 from decimal import Decimal
@@ -21,6 +22,17 @@ class _FakeTransport:
 
 
 class RatesDeskTests(unittest.TestCase):
+    def setUp(self):
+        # The FRED disk cache would leak fixtures between tests sharing a
+        # window; disable it so each test exercises the fetch path.
+        self._old_cache = os.environ.get("HEDGE_DESK_CACHE_DIR")
+        os.environ["HEDGE_DESK_CACHE_DIR"] = "off"
+
+    def tearDown(self):
+        if self._old_cache is None:
+            os.environ.pop("HEDGE_DESK_CACHE_DIR", None)
+        else:
+            os.environ["HEDGE_DESK_CACHE_DIR"] = self._old_cache
     def test_parse_fred_csv(self):
         raw = "observation_date,DFF\n2026-09-16,3.63\n2026-09-17,3.88\n".encode()
         rows = _parse_fred_csv(raw)

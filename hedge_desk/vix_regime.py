@@ -15,10 +15,12 @@ Honesty and safety:
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
-from typing import Callable, Dict
+from decimal import Decimal, InvalidOperation
+from typing import Callable, Dict, List, Tuple
 
-from hedge_desk.data.eod_ingest import ingest_eod
+from hedge_desk.data.eod_ingest import YAHOO_CHART_URL, _default_transport
 
 VIX_VERSION = "hedge-desk-vix-regime-1.0.0"
 VIX_SYMBOL = "^VIX"
@@ -34,43 +36,87 @@ def _regime(close: float) -> str:
     return "HIGH"             # fear; premium expensive but risky
 
 
+def _parse_vix_chart(raw: bytes) -> Tuple[List[Tuple[str, Decimal]], int]:
+    """Parse a Yahoo chart payload into (date, close) points.
+
+    Days with null/non-numeric/non-positive closes are DROPPED and counted,
+    not fatal: a single bad print (e.g. a holiday-shortened session months
+    ago) must not block today's regime read. A malformed payload or zero
+    valid closes raises ValueError (fail closed).
+    """
+    try:
+        payload = json.loads(raw.decode("utf-8"))
+        result = payload["chart"]["result"][0]
+        timestamps = result["timestamp"]
+        closes = (result["indicators"]["quote"][0].get("close") or [])
+    except (KeyError, IndexError, TypeError, ValueError, UnicodeDecodeError) as exc:
+        raise ValueError(f"vix chart payload malformed: {exc}")
+    try:
+        n_ts, n_cl = len(timestamps), len(closes)
+    except TypeError as exc:
+        raise ValueError(f"vix chart series not sequences: {exc}")
+    if n_ts != n_cl:
+        raise ValueError(
+            f"vix chart series length mismatch: {n_ts} timestamps vs {n_cl} closes"
+        )
+    points: List[Tuple[str, Decimal]] = []
+    dropped = 0
+    for ts, close in zip(timestamps, closes):
+        try:
+            dec = Decimal(str(close))
+        except (InvalidOperation, ValueError, TypeError):
+            dropped += 1
+            continue
+        if not dec.is_finite() or dec <= 0:
+            dropped += 1
+            continue
+        try:
+            day = datetime.fromtimestamp(int(ts), tz=timezone.utc).date().isoformat()
+        except (OverflowError, OSError, ValueError, TypeError):
+            raise ValueError(f"vix chart has corrupt timestamp: {ts!r}")
+        points.append((day, dec))
+    if not points:
+        raise ValueError("vix chart has no valid closes")
+    return points, dropped
+
+
 def vix_regime(
     now: datetime | None = None,
     transport: Callable | None = None,
 ) -> Dict[str, object]:
     """Read the real ^VIX close and label the regime.
 
-    Reuses the validated EOD chart parser (ingest_eod) so the transport, point-in-time
-    and parse gates are the same ones the daily batch trusts. ``transport`` is
-    injectable for deterministic offline tests.
+    Fetches the 3mo Yahoo chart directly and parses it null-tolerantly (see
+    _parse_vix_chart): the EOD batch's strict parser would reject the whole
+    series over one stale null print. ``transport`` is injectable for
+    deterministic offline tests.
     """
     now = now or datetime.now(timezone.utc)
     if now.tzinfo is None:
         raise ValueError("vix cutoff must be timezone-aware")
+    t = transport or _default_transport
     try:
-        if transport is not None:
-            batch = ingest_eod((VIX_SYMBOL,), now, transport=transport, range_param="5d")
-        else:
-            batch = ingest_eod((VIX_SYMBOL,), now, range_param="5d")
+        status, raw = t(YAHOO_CHART_URL.format(symbol=VIX_SYMBOL, range_param="3mo"))
+    except Exception as exc:
+        return {"mode": "BLOCKED", "reason": f"vix transport failed: {exc}"}
+    if status != 200 or not raw:
+        return {"mode": "BLOCKED", "reason": f"yahoo vix fetch failed (status {status})"}
+    try:
+        points, dropped = _parse_vix_chart(raw)
     except ValueError as exc:
         return {"mode": "BLOCKED", "reason": str(exc)}
-    row = batch["source_results"][0]
-    if row["status"] != "PASS" or row.get("last_day_close") is None:
-        return {
-            "mode": "BLOCKED",
-            "reason": ",".join(row.get("reason_codes", [])) or row["status"],
-        }
-    try:
-        close = float(row["last_day_close"])
-    except (TypeError, ValueError):
-        return {"mode": "BLOCKED", "reason": "NON_NUMERIC_VIX"}
-    return {
+    last_day, close = points[-1]
+    if last_day > now.date().isoformat():
+        return {"mode": "BLOCKED", "reason": f"vix chart last day {last_day} is in the future"}
+    out: Dict[str, object] = {
         "schema_version": VIX_VERSION,
         "mode": "REAL_VIX",
         "symbol": VIX_SYMBOL,
+        # Full 3mo close history for the dashboard's trend chart (small).
+        "history": [[d, str(c)] for d, c in points],
         "last_close": str(close),
-        "last_day": row.get("last_day"),
-        "regime": _regime(close),
+        "last_day": last_day,
+        "regime": _regime(float(close)),
         "data_source": "yahoo-public-chart-http-200",
         "note": (
             "Real delayed VIX close. Regime is a descriptive band (LOW/NORMAL/"
@@ -78,6 +124,9 @@ def vix_regime(
             "not advice. No order placed."
         ),
     }
+    if dropped:
+        out["dropped_null_days"] = dropped
+    return out
 
 
 def apply_vix_regime_filter(vix: Dict[str, object], csp_results: Dict[str, object]) -> Dict[str, object]:
