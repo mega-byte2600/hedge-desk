@@ -32,6 +32,10 @@ from .runner import (
     list_pending_escalations,
     parse_option_quote,
 )
+from .settler import (
+    SETTLER_SCHEMA_VERSION,
+    settle_paper_outcomes,
+)
 
 __all__ = [
     "HumanAuthorization",
@@ -58,6 +62,8 @@ __all__ = [
     "load_plan_file",
     "parse_option_quote",
     "reject_paper_trade",
+    "SETTLER_SCHEMA_VERSION",
+    "settle_paper_outcomes",
     "submit_plan_for_review",
     "write_plan_file",
 ]

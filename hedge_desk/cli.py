@@ -44,6 +44,7 @@ from hedge_desk.paper import (
     list_pending_escalations,
     load_plan_file,
     parse_option_quote,
+    settle_paper_outcomes,
 )
 from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.options import (
@@ -75,7 +76,7 @@ def main() -> None:
     parser.add_argument(
         "--evaluate-directional-outcomes",
         metavar="FILE",
-        help="evaluate strict local boolean outcomes at alpha .005 and 95% CI",
+        help="evaluate strict local boolean outcomes at alpha .005 and 95%% CI",
     )
     parser.add_argument(
         "--validate-option-universe-manifest",
@@ -235,12 +236,12 @@ def main() -> None:
     parser.add_argument(
         "--state",
         metavar="FILE",
-        help="paper runner state file for --paper-tick/--paper-close/--paper-escalations",
+        help="paper runner state file for --paper-tick/--paper-close/--paper-escalations/--paper-settle",
     )
     parser.add_argument(
         "--now",
         metavar="ISO",
-        help="timezone-aware ISO-8601 tick timestamp for --paper-tick (default: current UTC time)",
+        help="timezone-aware ISO-8601 tick timestamp for --paper-tick/--paper-settle (default: current UTC time)",
     )
     parser.add_argument(
         "--paper-close",
@@ -261,6 +262,16 @@ def main() -> None:
         "--paper-escalations",
         action="store_true",
         help="list paper escalations awaiting a human from --state",
+    )
+    parser.add_argument(
+        "--paper-settle",
+        action="store_true",
+        help="settle paper outcomes from --state into --paper-log (read-only market data)",
+    )
+    parser.add_argument(
+        "--paper-log",
+        metavar="FILE",
+        help="paper outcome log file for --paper-settle",
     )
     parser.add_argument(
         "--report-input",
@@ -668,6 +679,28 @@ def main() -> None:
             if not args.state:
                 raise ValueError("--state is required with --paper-escalations")
             print(json.dumps(list_pending_escalations(args.state), indent=2))
+        except (ValueError, PermissionError, KeyError) as exc:
+            parser.error(str(exc))
+        return
+    if args.paper_settle:
+        try:
+            if not args.state:
+                raise ValueError("--state is required with --paper-settle")
+            if not args.paper_log:
+                raise ValueError("--paper-log is required with --paper-settle")
+            settle_now = datetime.now(timezone.utc)
+            if args.now:
+                settle_now = datetime.fromisoformat(args.now)
+                if settle_now.tzinfo is None:
+                    raise ValueError("--now must be timezone-aware")
+            # No market-data provider is wired on the CLI, so the default
+            # provider returns all-None: OPEN plans past expiration settle to
+            # UNKNOWN (never guessed). CLOSED plans settle from the recorded
+            # human close artifact alone.
+            report = settle_paper_outcomes(
+                Path(args.state).parent, args.paper_log, None, settle_now
+            )
+            print(json.dumps(report, indent=2))
         except (ValueError, PermissionError, KeyError) as exc:
             parser.error(str(exc))
         return
