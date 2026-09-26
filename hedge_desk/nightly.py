@@ -33,6 +33,7 @@ from hedge_desk.paper_log import summarize as summarize_paper_log
 from hedge_desk.premium_candidates import build_premium_candidates
 from hedge_desk.cboe_chain import real_chain_income
 from hedge_desk.rates_desk import rates_environment
+from hedge_desk.oil_desk import oil_market
 from hedge_desk.earnings_desk import earnings_desk
 from hedge_desk.execution_gate import (
     KillSwitch,
@@ -115,6 +116,7 @@ def run_nightly(
     chain_symbols: Sequence[str] = ("SPY",),
     chain_transport=None,
     rates_transport=None,
+    oil_transport=None,
     earnings_ciks: Sequence[str] = (),
     earnings_transport=None,
     paper_log_path: Path | str = "artifacts/paper-outcomes.jsonl",
@@ -122,9 +124,9 @@ def run_nightly(
     """Run the EOD batch + premium candidates + real chain income + macro desks.
 
     Real chain income (Cboe) for ``chain_symbols``; a real rates environment
-    (FRED); and real earnings actuals (SEC EDGAR, by 10-digit CIK in
-    ``earnings_ciks``). Anything that fails is reported blocked — never
-    fabricated.
+    (FRED); front-month WTI oil observations (Yahoo); and real earnings
+    actuals (SEC EDGAR, by 10-digit CIK in ``earnings_ciks``). Anything that
+    fails is reported blocked — never fabricated.
     """
     symbols = tuple(watchlist) if watchlist else _watchlist()
     if not symbols:
@@ -176,6 +178,16 @@ def run_nightly(
     except ValueError as exc:
         rates = {"mode": "BLOCKED", "reason": str(exc)}
 
+    # Real macro: front-month WTI oil (Yahoo).
+    try:
+        oil = (
+            oil_market(transport=oil_transport)
+            if oil_transport
+            else oil_market()
+        )
+    except ValueError as exc:
+        oil = {"mode": "BLOCKED", "reason": str(exc)}
+
     # Real earnings actuals (SEC EDGAR) per supplied CIK.
     earnings_results = {}
     for cik in earnings_ciks:
@@ -204,11 +216,14 @@ def run_nightly(
         "cash_secured_put_scan": csp_results,
         "paper_outcome_summary": summarize_paper_log(paper_log_path),
         "rates_environment": rates,
+        "oil_market": oil,
         "earnings_actuals": earnings_results,
         "note": (
             "Equity candidates: collateral/margin from real EOD closes. Premium "
             "desk: executable net credit from REAL Cboe delayed option chains. "
-            "Rates: real FRED observations. Earnings: real SEC EDGAR actuals. "
+            "Rates: real FRED observations. Oil: front-month WTI (CL=F) "
+            "observations from public Yahoo chart data. Earnings: real SEC "
+            "EDGAR actuals. "
             "No probability or Risk of Ruin. No order placed; no trade "
             "authorized (every candidate trade_authorized=False)."
         ),
