@@ -62,11 +62,17 @@ fully usable on delayed data.
 
 ## Ground rules (unchanged)
 
+- **SOUL.md is the governing charter — it outranks everything.** Read it first. The desk is a
+  compass, not a hand on the wheel: real data only, no fabricated numbers, no probability/RoR
+  claims, no trade authorization, no secrets/PHI/PII, research ≠ income ≠ order, paper-only,
+  `trade_authorized=False`. Every change must serve the GP's standing orders.
+- **Build value, not output.** The measure of this work is whether the GP can act on it — a
+  usable desk that turns real data into a decision-ready briefing. Don't add breadth for its
+  own sake; each increment must make the desk more usable, more honest, or more reliable.
+  Kill waste. Prefer the smallest useful vertical slice that the GP can actually use.
 - Real data only. No fabricated numbers, no probability/RoR claims, no trade authorization.
 - No secrets, PHI, or PII in commits, PRs, logs, or replies.
-- Research ≠ income ≠ order. Paper-only, `trade_authorized=False`.
-- Follow AGENTS.md: claim the issue, branch, PR, no critical-path collision. SOUL.md is the
-  governing charter.
+- Follow AGENTS.md: claim the issue, branch, PR, no critical-path collision.
 - Tests must be deterministic and never write to the production cache.
 
 ## Coordination
