@@ -96,7 +96,7 @@ struct LearnCard<Content: View>: View {
 struct LearnStep: View {
     let number: Int
     let title: String
-    let body: String
+    let text: String
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Text("\(number)")
@@ -106,7 +106,7 @@ struct LearnStep: View {
                 .background(Color.accentColor, in: Circle())
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.subheadline.weight(.semibold))
-                Text(body).font(.subheadline).foregroundColor(.secondary)
+                Text(text).font(.subheadline).foregroundColor(.secondary)
             }
         }
     }
@@ -182,13 +182,13 @@ struct LearnChapter2: View {
         ChapterShell(kicker: "Chapter 2", title: "Anatomy of one trade") {
             VStack(alignment: .leading, spacing: 14) {
                 LearnStep(number: 1, title: "Pick the underlying and strike",
-                          body: "A stock you'd be happy to own, strike about 10% below today's price, roughly 30–45 days out.")
+                          text: "A stock you'd be happy to own, strike about 10% below today's price, roughly 30–45 days out.")
                 LearnStep(number: 2, title: "Sell the put, collect cash",
-                          body: "The premium lands in the account on day one. Set aside the collateral to buy the shares if needed.")
+                          text: "The premium lands in the account on day one. Set aside the collateral to buy the shares if needed.")
                 LearnStep(number: 3, title: "Let time decay work",
-                          body: "Every day, time decay (theta) melts the option's value. That melt is your profit accruing.")
+                          text: "Every day, time decay (theta) melts the option's value. That melt is your profit accruing.")
                 LearnStep(number: 4, title: "Expiry arrives",
-                          body: "Stock above the strike: keep it all. Below: you buy the shares at the strike — the price you already agreed was fine.")
+                          text: "Stock above the strike: keep it all. Below: you buy the shares at the strike — the price you already agreed was fine.")
             }
             LearnCard(title: "Worked example", systemImage: "calculator", accent: .green) {
                 VStack(alignment: .leading, spacing: 8) {
@@ -432,17 +432,17 @@ struct LearnChapter6: View {
                 .foregroundColor(.secondary)
             VStack(alignment: .leading, spacing: 14) {
                 LearnStep(number: 1, title: "Nightly research",
-                          body: "The research desk scans all six desks — premium, earnings, dividends, parity, quant, futures — and publishes findings.")
+                          text: "The research desk scans all six desks — premium, earnings, dividends, parity, quant, futures — and publishes findings.")
                 LearnStep(number: 2, title: "Screen candidates",
-                          body: "Liquidity, volatility rank, and the event calendar filter the list. Most ideas die here.")
+                          text: "Liquidity, volatility rank, and the event calendar filter the list. Most ideas die here.")
                 LearnStep(number: 3, title: "Risk gates",
-                          body: "The 2% max-loss rule and deterministic checks run. No gate passed, no trade — no exceptions.")
+                          text: "The 2% max-loss rule and deterministic checks run. No gate passed, no trade — no exceptions.")
                 LearnStep(number: 4, title: "You decide",
-                          body: "The GP steers. Nothing becomes a position without a human decision. This is the step you're standing in.")
+                          text: "The GP steers. Nothing becomes a position without a human decision. This is the step you're standing in.")
                 LearnStep(number: 5, title: "Paper tracked",
-                          body: "Every approved plan is tracked on paper — entries, exits, and outcomes recorded either way.")
+                          text: "Every approved plan is tracked on paper — entries, exits, and outcomes recorded either way.")
                 LearnStep(number: 6, title: "Settler scores it",
-                          body: "A read-only settler marks each plan against its own terms. Wins and losses both feed the next night's research.")
+                          text: "A read-only settler marks each plan against its own terms. Wins and losses both feed the next night's research.")
             }
             LearnCard(title: "Research, not orders", systemImage: "doc.badge.clock", accent: .blue) {
                 Text("This desk is research-only by design. The app shows research and tracks simulated plans — it places no orders, holds no money, and never overrides a risk control.")
