@@ -1,7 +1,7 @@
 {
   "schema_version": "hedge-desk-nightly-2.0.0",
   "mode": "REAL_EOD_NIGHTLY",
-  "generated_at": "2026-09-26T14:35:09.121602+00:00",
+  "generated_at": "2026-09-26T20:30:04.987955+00:00",
   "watchlist": [
     "NKE",
     "CCL",
@@ -12,7 +12,7 @@
     "DVN"
   ],
   "eod_batch_status": "READY_FOR_RESEARCH",
-  "eod_manifest_sha256": "30901836e2db9e7841e2996c54ad3489fffc64b2942359b0401d703abb675a72",
+  "eod_manifest_sha256": "acb3d9857ecdc75540580011ee60c7904dda4ff6dbc2a5d4988f2e726dc991bb",
   "data_freshness": {
     "schema_version": "hedge-desk-data-freshness-1.0.0",
     "expected_trading_day": "2026-09-25",
@@ -4110,7 +4110,7 @@
       },
       "data_source": "cboe-delayed-public-http-200",
       "trade_authorized": false,
-      "survivability": "PASS",
+      "survivability": "INDETERMINATE",
       "fits_gp_rules": true,
       "eval_reasons": []
     },
@@ -4131,30 +4131,7 @@
       },
       "data_source": "cboe-delayed-public-http-200",
       "trade_authorized": false,
-      "survivability": "FAIL",
-      "fits_gp_rules": false,
-      "eval_reasons": [
-        "RETURN_NOT_IN_GP_BAND"
-      ]
-    },
-    "AAL": {
-      "mode": "CASH_SECURED_PUT",
-      "symbol": "AAL",
-      "candidate": {
-        "found": true,
-        "contract_id": "AAL261030P00012500",
-        "strike": "12.5",
-        "expiration": "2026-10-30",
-        "dte": 34,
-        "underlying_mid": "13.865",
-        "net_credit_per_share": "0.28",
-        "collateral_required": "1222.00",
-        "return_on_capital": "0.0229",
-        "max_loss": "1222.00"
-      },
-      "data_source": "cboe-delayed-public-http-200",
-      "trade_authorized": false,
-      "survivability": "FAIL",
+      "survivability": "INDETERMINATE",
       "fits_gp_rules": false,
       "eval_reasons": [
         "RETURN_NOT_IN_GP_BAND"
@@ -4177,32 +4154,11 @@
       },
       "data_source": "cboe-delayed-public-http-200",
       "trade_authorized": false,
-      "survivability": "FAIL",
+      "survivability": "INDETERMINATE",
       "fits_gp_rules": false,
       "eval_reasons": [
         "RETURN_NOT_IN_GP_BAND"
       ]
-    },
-    "CCL": {
-      "mode": "CASH_SECURED_PUT",
-      "symbol": "CCL",
-      "candidate": {
-        "found": true,
-        "contract_id": "CCL261030P00020000",
-        "strike": "20",
-        "expiration": "2026-10-30",
-        "dte": 34,
-        "underlying_mid": "22.29",
-        "net_credit_per_share": "0.3",
-        "collateral_required": "1970.00",
-        "return_on_capital": "0.0152",
-        "max_loss": "1970.00"
-      },
-      "data_source": "cboe-delayed-public-http-200",
-      "trade_authorized": false,
-      "survivability": "PASS",
-      "fits_gp_rules": true,
-      "eval_reasons": []
     },
     "NKE": {
       "mode": "CASH_SECURED_PUT",
@@ -4221,10 +4177,31 @@
       },
       "data_source": "cboe-delayed-public-http-200",
       "trade_authorized": false,
-      "survivability": "FAIL",
+      "survivability": "INDETERMINATE",
+      "fits_gp_rules": true,
+      "eval_reasons": []
+    },
+    "AAL": {
+      "mode": "CASH_SECURED_PUT",
+      "symbol": "AAL",
+      "candidate": {
+        "found": true,
+        "contract_id": "AAL261030P00012500",
+        "strike": "12.5",
+        "expiration": "2026-10-30",
+        "dte": 34,
+        "underlying_mid": "13.865",
+        "net_credit_per_share": "0.28",
+        "collateral_required": "1222.00",
+        "return_on_capital": "0.0229",
+        "max_loss": "1222.00"
+      },
+      "data_source": "cboe-delayed-public-http-200",
+      "trade_authorized": false,
+      "survivability": "INDETERMINATE",
       "fits_gp_rules": false,
       "eval_reasons": [
-        "MAX_LOSS_TOO_LARGE_FOR_ACCOUNT"
+        "RETURN_NOT_IN_GP_BAND"
       ]
     },
     "DVN": {
@@ -4244,41 +4221,60 @@
       },
       "data_source": "cboe-delayed-public-http-200",
       "trade_authorized": false,
-      "survivability": "FAIL",
-      "fits_gp_rules": false,
-      "eval_reasons": [
-        "MAX_LOSS_TOO_LARGE_FOR_ACCOUNT"
-      ]
+      "survivability": "INDETERMINATE",
+      "fits_gp_rules": true,
+      "eval_reasons": []
+    },
+    "CCL": {
+      "mode": "CASH_SECURED_PUT",
+      "symbol": "CCL",
+      "candidate": {
+        "found": true,
+        "contract_id": "CCL261030P00020000",
+        "strike": "20",
+        "expiration": "2026-10-30",
+        "dte": 34,
+        "underlying_mid": "22.29",
+        "net_credit_per_share": "0.3",
+        "collateral_required": "1970.00",
+        "return_on_capital": "0.0152",
+        "max_loss": "1970.00"
+      },
+      "data_source": "cboe-delayed-public-http-200",
+      "trade_authorized": false,
+      "survivability": "INDETERMINATE",
+      "fits_gp_rules": true,
+      "eval_reasons": []
     }
   },
-  "account_equity_configured": true,
+  "account_equity_configured": false,
   "scale_path": {
-    "symbol": "CCL",
-    "strike": "20",
-    "capital_per_contract": "1970.00",
+    "symbol": "NKE",
+    "strike": "32",
+    "capital_per_contract": "3145.00",
     "path": [
       {
         "equity": "100000",
-        "contracts": 1
+        "contracts": 0
       },
       {
         "equity": "250000",
-        "contracts": 2
+        "contracts": 1
       },
       {
         "equity": "500000",
-        "contracts": 5
+        "contracts": 3
       },
       {
         "equity": "1000000",
-        "contracts": 10
+        "contracts": 6
       }
     ],
     "note": "Conditional on real account equity; holds the 2%-of-equity max-loss rule. Sizing design, not a performance projection."
   },
   "wheel_fit": {
-    "max_position_collateral": "2000.00",
-    "explanation": "2% of equity = $2000.00 worst-case position loss allowed. Any candidate whose worst-case loss exceeds this fails survivability - the wheel needs an account roughly 50x the position size."
+    "max_position_collateral": null,
+    "explanation": "Account equity not configured; survivability is INDETERMINATE."
   },
   "paper_outcome_summary": {
     "schema_version": "hedge-desk-paper-outcome-log-1.0.0",
@@ -4297,23 +4293,8 @@
     "note": "Decision ledger; not performance. No P&L claimed."
   },
   "rates_environment": {
-    "schema_version": "hedge-desk-rates-desk-1.0.0",
-    "mode": "REAL_FRED_RATES",
-    "as_of": "2026-09-26",
-    "fed_funds_effective_rate": "3.88",
-    "fed_funds_latest_date": "2026-09-24",
-    "fed_funds_change_over_window": "0.25",
-    "treasury_2y": "4.87",
-    "treasury_2y_date": "2026-09-24",
-    "treasury_10y": "5.18",
-    "treasury_10y_date": "2026-09-24",
-    "spread_10y_2y_points": "31.00",
-    "curve_slope": "0.038750",
-    "curve_shape": "UPWARD_SLOPING",
-    "lookback_days": 60,
-    "data_source": "fred-public-csv-http-200",
-    "trade_authorized": false,
-    "note": "Observations of official FRED daily series. Fed funds/src curve change is a measured fact, not a forecast and not advice. No order placed."
+    "mode": "BLOCKED",
+    "reason": "fred fetch failed for DFF (status 0)"
   },
   "vix_regime": {
     "schema_version": "hedge-desk-vix-regime-1.0.0",
@@ -4327,20 +4308,17 @@
   },
   "macro_environment": {
     "schema_version": "hedge-desk-macro-desk-1.0.0",
-    "mode": "REAL_FRED_MACRO",
+    "mode": "BLOCKED",
     "as_of": "2026-09-26",
     "data_source": "fred-public-csv-http-200",
     "trade_authorized": false,
-    "blocked": [],
-    "cpi_yoy_pct": "3.353016322755659761638894989",
-    "cpi_latest_date": "2026-08-01",
-    "cpi_index": "334.131",
-    "unemployment_rate_pct": "4.1",
-    "unemployment_date": "2026-08-01",
-    "treasury_5y": "5.03",
-    "treasury_5y_date": "2026-09-24",
-    "treasury_30y": "5.47",
-    "treasury_30y_date": "2026-09-24",
+    "blocked": [
+      "CPIAUCSL",
+      "UNRATE",
+      "DGS5",
+      "DGS30"
+    ],
+    "reason": "all_fred_series_blocked",
     "note": "Official FRED observations (CPI YoY, unemployment, 5y/30y curve). Measured facts, not a forecast and not advice. No order placed."
   },
   "oil_market": {
@@ -4380,5 +4358,5 @@
     }
   },
   "note": "Equity candidates: collateral/margin from real EOD closes. Premium desk: executable net credit from REAL Cboe delayed option chains. Rates: real FRED observations. Oil: front-month WTI (CL=F) observations from public Yahoo chart data. Earnings: real SEC EDGAR actuals. No probability or Risk of Ruin. No order placed; no trade authorized (every candidate trade_authorized=False).",
-  "report_sha256": "b6c75703828e809aa0f90f833b321124cbef63f60426d09d9e0facbf0839b77d"
+  "report_sha256": "616075f0006159c8cf976e42cdb8fb0d5985910d826d54b91f951f21e0ef1358"
 }

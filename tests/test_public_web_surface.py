@@ -225,7 +225,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
 
         self.assertIn("resources:'Research resources'", app)
         self.assertIn("function resources()", app)
-        self.assertIn("journal,resources,about", app)
+        self.assertIn("journal,resources,guide,about", app)
         self.assertIn("function setText(node, value)", polish)
         self.assertIn("node.textContent !== value", polish)
         self.assertIn("function setText(node, value)", yellow)

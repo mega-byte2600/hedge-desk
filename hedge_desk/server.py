@@ -254,10 +254,6 @@ def _dispatch(environ, start_response):
     # Live overview dashboard (was /am-demo); old path redirects. Root serves
     # the dashboard directly so the bare prod URL shows the real report.
     # Landing page at root; dashboard at /dashboard; guide at /guide.
-    if path in ("/", ""):
-        landing = ARTIFACTS / "landing.html"
-        if landing.is_file():
-            return _serve_artifact(start_response, landing)
     if (ARTIFACTS / "am-demo.html").is_file() and (path in ("/dashboard", "/dashboard.html")):
         return _serve_artifact(start_response, ARTIFACTS / "am-demo.html")
     if path in ("/am-demo", "/am-demo.html"):

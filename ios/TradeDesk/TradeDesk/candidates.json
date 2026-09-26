@@ -1,0 +1,199 @@
+{
+  "schema_version": "hedge-desk-candidates-1.0.0",
+  "generated_at": "2026-09-26T20:30:04.987955+00:00",
+  "mode": "REAL_EOD_NIGHTLY",
+  "candidate_count": 28,
+  "candidates": [
+    {
+      "symbol": "AAL",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "1248.00",
+      "close": "13.869999885559082"
+    },
+    {
+      "symbol": "AAL",
+      "strategy": "COVERED_CALL",
+      "requirement": "1387.00",
+      "close": "13.869999885559082"
+    },
+    {
+      "symbol": "AAL",
+      "strategy": "CREDIT_SPREAD",
+      "requirement": "500.00",
+      "close": "13.869999885559082"
+    },
+    {
+      "symbol": "CCL",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "2002.00",
+      "close": "22.25"
+    },
+    {
+      "symbol": "CCL",
+      "strategy": "COVERED_CALL",
+      "requirement": "2225.00",
+      "close": "22.25"
+    },
+    {
+      "symbol": "CCL",
+      "strategy": "CREDIT_SPREAD",
+      "requirement": "500.00",
+      "close": "22.25"
+    },
+    {
+      "symbol": "DVN",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "4234.00",
+      "close": "47.04999923706055"
+    },
+    {
+      "symbol": "DVN",
+      "strategy": "COVERED_CALL",
+      "requirement": "4705.00",
+      "close": "47.04999923706055"
+    },
+    {
+      "symbol": "DVN",
+      "strategy": "CREDIT_SPREAD",
+      "requirement": "500.00",
+      "close": "47.04999923706055"
+    },
+    {
+      "symbol": "F",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "1144.00",
+      "close": "12.710000038146973"
+    },
+    {
+      "symbol": "F",
+      "strategy": "COVERED_CALL",
+      "requirement": "1271.00",
+      "close": "12.710000038146973"
+    },
+    {
+      "symbol": "F",
+      "strategy": "CREDIT_SPREAD",
+      "requirement": "500.00",
+      "close": "12.710000038146973"
+    },
+    {
+      "symbol": "LYFT",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "1338.00",
+      "close": "14.864999771118164"
+    },
+    {
+      "symbol": "LYFT",
+      "strategy": "COVERED_CALL",
+      "requirement": "1486.50",
+      "close": "14.864999771118164"
+    },
+    {
+      "symbol": "LYFT",
+      "strategy": "CREDIT_SPREAD",
+      "requirement": "500.00",
+      "close": "14.864999771118164"
+    },
+    {
+      "symbol": "NCLH",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "1315.00",
+      "close": "14.609999656677246"
+    },
+    {
+      "symbol": "NCLH",
+      "strategy": "COVERED_CALL",
+      "requirement": "1461.00",
+      "close": "14.609999656677246"
+    },
+    {
+      "symbol": "NCLH",
+      "strategy": "CREDIT_SPREAD",
+      "requirement": "500.00",
+      "close": "14.609999656677246"
+    },
+    {
+      "symbol": "NKE",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "3218.00",
+      "close": "35.75"
+    },
+    {
+      "symbol": "NKE",
+      "strategy": "COVERED_CALL",
+      "requirement": "3575.00",
+      "close": "35.75"
+    },
+    {
+      "symbol": "NKE",
+      "strategy": "CREDIT_SPREAD",
+      "requirement": "500.00",
+      "close": "35.75"
+    },
+    {
+      "symbol": "F",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "1136.00",
+      "close": "12.71",
+      "return_on_capital": "0.0123",
+      "dte": 34,
+      "strike": "11.5"
+    },
+    {
+      "symbol": "NCLH",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "1271.00",
+      "close": "14.625",
+      "return_on_capital": "0.0228",
+      "dte": 34,
+      "strike": "13"
+    },
+    {
+      "symbol": "LYFT",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "1349.00",
+      "close": "14.89",
+      "return_on_capital": "0.0007",
+      "dte": 34,
+      "strike": "13.5"
+    },
+    {
+      "symbol": "NKE",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "3145.00",
+      "close": "35.78",
+      "return_on_capital": "0.0175",
+      "dte": 34,
+      "strike": "32"
+    },
+    {
+      "symbol": "AAL",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "1222.00",
+      "close": "13.865",
+      "return_on_capital": "0.0229",
+      "dte": 34,
+      "strike": "12.5"
+    },
+    {
+      "symbol": "DVN",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "4175.00",
+      "close": "47.08",
+      "return_on_capital": "0.0060",
+      "dte": 34,
+      "strike": "42"
+    },
+    {
+      "symbol": "CCL",
+      "strategy": "CASH_SECURED_PUT",
+      "requirement": "1970.00",
+      "close": "22.29",
+      "return_on_capital": "0.0152",
+      "dte": 34,
+      "strike": "20"
+    }
+  ],
+  "vix": "14.869999885559082",
+  "vix_regime": "LOW"
+}
