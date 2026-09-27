@@ -74,6 +74,13 @@ LEAKS = [
     # Incident 2026-09-26: engineering jargon in user-facing summaries.
     (r"production probes", "engineering jargon in user copy (incident 2026-09-26)"),
     (r"strategy-input", "engineering jargon in user copy (incident 2026-09-26)"),
+    # Incident 2026-09-26: finance/trader jargon in user-facing labels.
+    (r"\bEOD batch\b", "trader jargon in user copy, use 'Daily prices' (incident 2026-09-26)"),
+    (r"\([\"']CSP scan", "acronym jargon in user label, spell out (incident 2026-09-26)"),
+    (r"VIX regime", "jargon in user copy, use 'Market volatility' (incident 2026-09-26)"),
+    (r"positioning rows", "jargon in user copy (incident 2026-09-26)"),
+    (r"adv\s+\$\{", "trader abbreviation in user copy, spell out 'up/down' (incident 2026-09-26)"),
+    (r"observations['\"`]\s*;", "stats jargon in user copy, use 'data points' (incident 2026-09-26)"),
 ]
 
 

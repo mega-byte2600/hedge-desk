@@ -136,7 +136,7 @@ def _human_detail(detail: str) -> str:
 def source_health(r: dict) -> str:
     """Per-source status table: what the batch actually closed on."""
     rows = []
-    rows.append(("EOD batch (Yahoo)", _human_status(r.get("eod_batch_status", "?")),
+    rows.append(("Daily prices (Yahoo)", _human_status(r.get("eod_batch_status", "?")),
                  _human_detail(str((r.get("data_freshness", {}) or {}).get("note", "")))))
     for sym, ch in (r.get("chain_income", {}) or {}).items():
         mode = ch.get("mode", "?")
@@ -145,18 +145,18 @@ def source_health(r: dict) -> str:
         else:
             n = len(ch.get('gated_income_structures', []) or [])
             detail = f"{n} structures" if n else ""
-        rows.append((f"Premium chain (Cboe {sym})", _human_status(mode), detail))
-    for label, key in (("Rates (FRED)", "rates_environment"), ("VIX regime (Yahoo)", "vix_regime"),
-                       ("Macro (FRED)", "macro_environment"), ("Oil WTI (Yahoo)", "oil_market")):
+        rows.append((f"Options data (Cboe {sym})", _human_status(mode), detail))
+    for label, key in (("Rates (FRED)", "rates_environment"), ("Market volatility (VIX)", "vix_regime"),
+                       ("Economy (FRED)", "macro_environment"), ("Oil WTI (Yahoo)", "oil_market")):
         d = r.get(key, {}) or {}
         rows.append((label, _human_status(d.get("mode", "?")),
                      _human_detail(str(d.get("reason", d.get("note", ""))))))
     csp = r.get("cash_secured_put_scan", {}) or {}
     real_csp = sum(1 for v in csp.values() if isinstance(v, dict) and v.get("mode") == "CASH_SECURED_PUT")
-    rows.append(("CSP scan (Cboe)", f"{real_csp}/{len(csp)} live" if real_csp else "Unavailable", ""))
+    rows.append(("Cash-secured puts (Cboe)", f"{real_csp}/{len(csp)} live" if real_csp else "Unavailable", ""))
     ea = r.get("earnings_actuals", {}) or {}
     real_ea = sum(1 for v in ea.values() if isinstance(v, dict) and v.get("mode") == "REAL_EDGAR_EARNINGS")
-    rows.append(("Earnings (SEC EDGAR)", f"{real_ea}/{len(ea)} live" if real_ea else "Unavailable", ""))
+    rows.append(("Earnings (SEC)", f"{real_ea}/{len(ea)} live" if real_ea else "Unavailable", ""))
     trs = "".join(
         f"<tr><td>{esc(a)}</td><td class='{'ok' if b == 'Live' or b == 'Ready' else 'warn'}'>{esc(b)}</td>"
         f"<td class='muted'>{esc(c)}</td></tr>"

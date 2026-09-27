@@ -38,10 +38,10 @@ _DASHBOARD_API_LAYER = r"""
     'nyfed-markets': 'Money markets (NY Fed)',
     'treasury-fiscaldata': 'Treasury auctions (U.S. Treasury)',
     'cftc-cot': 'Futures positioning (CFTC)',
-    'sec-edgar': 'Filings / fundamentals (SEC EDGAR)',
-    'eia-open-data': 'Energy fundamentals (EIA)',
-    'finra': 'Fixed income breadth (FINRA)',
-    'fred': 'Macro / rates (FRED)'
+    'sec-edgar': 'Company filings (SEC)',
+    'eia-open-data': 'Energy data (EIA)',
+    'finra': 'Bond market data (FINRA)',
+    'fred': 'Economic data (FRED)'
   };
 
   function detail(provider, contextSource, probe) {
@@ -60,7 +60,7 @@ _DASHBOARD_API_LAYER = r"""
       return ['SOFR','EFFR','OBFR','TGCR','BGCR']
         .filter(k => obs[k] && obs[k].percentRate != null)
         .map(k => `${k} ${obs[k].percentRate}%`)
-        .join(' · ') || `${probe.observation_count} observations`;
+        .join(' · ') || `${probe.observation_count} data points`;
     }
     if (provider === 'treasury-fiscaldata' && Array.isArray(obs) && obs[0]) {
       const x = obs[0];
@@ -73,15 +73,15 @@ _DASHBOARD_API_LAYER = r"""
         .filter(Boolean).join(' · ');
     }
     if (provider === 'cftc-cot' && Array.isArray(obs) && obs[0]) {
-      return `${obs.length} positioning rows · latest ${obs[0].report_date_as_yyyy_mm_dd || 'report'}`;
+      return `${obs.length} markets tracked · latest ${obs[0].report_date_as_yyyy_mm_dd || 'report'}`;
     }
     if (provider === 'finra' && Array.isArray(obs) && obs[0]) {
       const x = obs[0];
-      const breadth = x.advances != null && x.declines != null ? `adv ${x.advances} / dec ${x.declines}` : null;
+      const breadth = x.advances != null && x.declines != null ? `${x.advances} up / ${x.declines} down` : null;
       return [x.date || x.weekStartDate, x.productCategory || x.marketSegment, breadth]
-        .filter(Boolean).join(' · ') || `${probe.observation_count} observations`;
+        .filter(Boolean).join(' · ') || `${probe.observation_count} data points`;
     }
-    return `${probe.observation_count} observations`;
+    return `${probe.observation_count} data points`;
   }
 
   function mount(status, context) {
@@ -99,9 +99,9 @@ _DASHBOARD_API_LAYER = r"""
         if (!tr.textContent.includes('Rates (FRED)')) return;
         const cells = tr.querySelectorAll('td');
         if (cells.length >= 3) {
-          cells[1].textContent = 'LIVE';
+          cells[1].textContent = 'Live';
           cells[1].className = 'ok';
-          cells[2].textContent = 'Live FRED API verified; the nightly snapshot predates recovery.';
+          cells[2].textContent = 'Working now; last night\u2019s report was made before the fix.';
         }
       });
     }
@@ -119,14 +119,14 @@ _DASHBOARD_API_LAYER = r"""
     const live = status.live_count || 0;
     const total = status.source_count || 0;
     const blocked = status.blocked_count || 0;
-    summary.textContent = `${live} of ${total} sources live now` +
-      (blocked ? ` · ${blocked} temporarily unavailable` : '') +
-      '. Checked just now; nightly numbers are listed separately below.';
+    summary.textContent = `${live} of ${total} sources connected` +
+      (blocked ? ` · ${blocked} unavailable` : '') +
+      '. Checked just now.';
     card.appendChild(summary);
 
     const table = document.createElement('table');
     table.className = 'health';
-    table.innerHTML = '<thead><tr><th>source</th><th>status</th><th>detail</th></tr></thead>';
+    table.innerHTML = '<thead><tr><th>Source</th><th>Status</th><th>Details</th></tr></thead>';
     const tbody = document.createElement('tbody');
     Object.entries(status.sources || {}).forEach(([provider, probe]) => {
       const tr = document.createElement('tr');
@@ -164,10 +164,10 @@ _DASHBOARD_API_LAYER = r"""
     card.className = 'card wide';
     card.id = 'authoritative-api-card';
     const h = document.createElement('h3');
-    h.textContent = 'Authoritative API layer';
+    h.textContent = 'Data sources — live connections';
     const p = document.createElement('p');
     p.className = 'muted';
-    p.textContent = 'Live production probe unavailable. No provider status inferred.';
+    p.textContent = 'Could not check sources just now. Try refreshing the page.';
     card.append(h, p);
     grid.insertBefore(card, grid.firstChild);
   });
