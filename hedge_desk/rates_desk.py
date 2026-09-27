@@ -270,11 +270,13 @@ def fred_series_rows(
         except ValueError:
             rows = ()
     if not rows:
+        last_exc: str | None = None
         for attempt in range(retries + 1):
             try:
                 status, raw = transport(url)
-            except Exception:
+            except Exception as exc:
                 status, raw = 0, b""
+                last_exc = f"{type(exc).__name__}: {str(exc)[:150]}"
             last_status = status
             if status == 200 and raw:
                 rows = parse(raw)
@@ -285,7 +287,10 @@ def fred_series_rows(
                 import time as _time
                 _time.sleep(0.5 * (attempt + 1))
     if not rows:
-        raise ValueError(f"fred fetch failed for {series} (status {last_status})")
+        detail = f" (status {last_status})"
+        if last_exc:
+            detail += f" {last_exc}"
+        raise ValueError(f"fred fetch failed for {series}{detail}")
     if cache_file is not None:
         try:
             cache_file.parent.mkdir(parents=True, exist_ok=True)
