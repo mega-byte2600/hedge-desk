@@ -22,6 +22,7 @@ from __future__ import annotations
 import datetime as _dt
 import json
 import os
+import subprocess
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -50,6 +51,9 @@ Transport = Callable[[str], Tuple[int, bytes]]
 FED_FUNDS = "DFF"          # effective federal funds rate, %
 TEN_YEAR = "DGS10"         # 10-year treasury constant maturity, %
 TWO_YEAR = "DGS2"          # 2-year treasury constant maturity, %
+SOFR = "SOFR"              # secured overnight financing rate (NY Fed via FRED), %
+EFFR = "EFFR"              # effective federal funds rate (NY Fed via FRED), %
+OBFR = "OBFR"              # overnight bank funding rate (NY Fed via FRED), %
 
 
 def _default_transport(url: str) -> Tuple[int, bytes]:
@@ -133,6 +137,73 @@ def _fred_url(series: str, start: _dt.date, end: _dt.date) -> Tuple[str, bool]:
     )
 
 
+def _skill_cli_path() -> Path | None:
+    """Path to the FRED skill CLI, if installed on this machine.
+
+    The CLI calls the official FRED JSON API using the securely-stored
+    ``custom.fred`` credential (surrogate exchange — the raw key never touches
+    this process). This is a machine-local route: it only exists where the
+    skill is installed. Returns None elsewhere so the repo stays portable.
+    """
+    candidates = (
+        Path.home() / "workspace" / "skills" / "fred" / "bin"
+        / "fred_observations.py",
+    )
+    for p in candidates:
+        if p.is_file():
+            return p
+    return None
+
+
+def _fred_via_skill_cli(
+    series: str, start: _dt.date, end: _dt.date
+) -> Tuple[Tuple[str, Decimal], ...]:
+    """Fetch FRED observations through the skill CLI (stored credential).
+
+    Raises ValueError when the CLI is missing or returns no usable rows, so
+    the caller can fall through to the next route.
+    """
+    cli = _skill_cli_path()
+    if cli is None:
+        raise ValueError("fred skill CLI not installed")
+    # Ask for enough observations to cover the window; FRED returns latest
+    # first, so over-fetch then filter to [start, end].
+    span_days = max((end - start).days, 1)
+    limit = str(min(max(span_days * 2, 120), 2000))
+    try:
+        proc = subprocess.run(
+            ["python3", str(cli), series, f"--limit={limit}"],
+            capture_output=True,
+            text=True,
+            timeout=90,
+        )
+    except (OSError, subprocess.SubprocessError) as e:
+        raise ValueError(f"fred skill CLI failed: {e}") from e
+    if proc.returncode != 0:
+        raise ValueError(f"fred skill CLI exit {proc.returncode}")
+    try:
+        payload = json.loads(proc.stdout or "{}")
+    except ValueError as e:
+        raise ValueError(f"fred skill CLI bad JSON: {e}") from e
+    obs = payload.get(series)
+    if isinstance(obs, dict) and "error" in obs:
+        raise ValueError(f"fred skill CLI: {obs['error']}")
+    if not isinstance(obs, list):
+        raise ValueError("fred skill CLI returned no observations")
+    rows: list[Tuple[str, Decimal]] = []
+    for o in obs:
+        d = str(o.get("date", ""))
+        if not (start.isoformat() <= d <= end.isoformat()):
+            continue
+        v = _num(str(o.get("value", "")))
+        if v is None:
+            continue
+        rows.append((d, v))
+    if not rows:
+        raise ValueError(f"fred skill CLI: no rows for {series} in window")
+    return tuple(sorted(rows))
+
+
 def _cache_dir() -> Path | None:
     """Root dir for the FRED observation cache. None disables caching."""
     raw = os.environ.get("HEDGE_DESK_CACHE_DIR", "").strip()
@@ -183,20 +254,35 @@ def fred_series_rows(
     parse = _parse_fred_json if is_keyed else _parse_fred_csv
     last_status: int | None = None
     rows: Tuple[Tuple[str, Decimal], ...] = ()
-    for attempt in range(retries + 1):
+    # Route 2: no env key but the skill CLI is installed -> same official JSON
+    # API via the securely-stored credential. Only when the caller is using the
+    # default transport: an explicit transport (e.g. a test fake) is respected
+    # as-is and never bypassed. Tried before the CSV because the CSV endpoint
+    # stalls on networks where the API works.
+    if (
+        not is_keyed
+        and transport is _default_transport
+        and _skill_cli_path() is not None
+    ):
         try:
-            status, raw = transport(url)
-        except Exception:
-            status, raw = 0, b""
-        last_status = status
-        if status == 200 and raw:
-            rows = parse(raw)
-            if rows:
-                break
-            raise ValueError(f"fred series {series} has no observations")
-        if attempt < retries:
-            import time as _time
-            _time.sleep(0.5 * (attempt + 1))
+            rows = _fred_via_skill_cli(series, start, end)
+        except ValueError:
+            rows = ()
+    if not rows:
+        for attempt in range(retries + 1):
+            try:
+                status, raw = transport(url)
+            except Exception:
+                status, raw = 0, b""
+            last_status = status
+            if status == 200 and raw:
+                rows = parse(raw)
+                if rows:
+                    break
+                raise ValueError(f"fred series {series} has no observations")
+            if attempt < retries:
+                import time as _time
+                _time.sleep(0.5 * (attempt + 1))
     if not rows:
         raise ValueError(f"fred fetch failed for {series} (status {last_status})")
     if cache_file is not None:
@@ -237,17 +323,12 @@ def rates_environment(
     end = as_of or _dt.date.today()
     start = end - _dt.timedelta(days=lookback_days)
 
-    # Fetch the fed funds series ONCE for the whole window; the earliest
+    # Fetch the fed funds series ONCE for the whole window via the shared
+    # fred_series_rows path (CSV / keyed API / skill CLI). The earliest
     # observation is the prior-period baseline for the change, and the latest is
-    # the current effective rate. Single fetch, fail closed on non-200 so a
-    # transport error can never fabricate a "0.00 change" in a published report.
-    ff_url = FRED_CSV_URL.format(
-        series=FED_FUNDS, start=start.isoformat(), end=end.isoformat()
-    )
-    ff_status, ff_raw = transport(ff_url)
-    if ff_status != 200 or not ff_raw:
-        raise ValueError(f"fred fetch failed for {FED_FUNDS} (status {ff_status})")
-    ff_series = _parse_fred_csv(ff_raw)
+    # the current effective rate. Fail closed: a fetch failure raises instead
+    # of fabricating a "0.00 change" in a published report.
+    ff_series = fred_series_rows(FED_FUNDS, start, end, transport)
     if not ff_series:
         raise ValueError(f"fred series {FED_FUNDS} has no observations")
     ff_date, ff = ff_series[-1]
@@ -257,6 +338,20 @@ def rates_environment(
     y10_rows = fred_series_rows(TEN_YEAR, start, end, transport)
     y2_date, y2 = y2_rows[-1]
     y10_date, y10 = y10_rows[-1]
+
+    # Overnight reference rates (NY Fed via FRED). Best-effort: if any series
+    # fails, the money-market section reports BLOCKED for that rate rather
+    # than failing the whole rates environment.
+    def _latest_or_none(series_id: str):
+        try:
+            rows = fred_series_rows(series_id, start, end, transport)
+            return rows[-1] if rows else (None, None)
+        except ValueError:
+            return (None, None)
+
+    sofr_date, sofr = _latest_or_none(SOFR)
+    effr_date, effr = _latest_or_none(EFFR)
+    obfr_date, obfr = _latest_or_none(OBFR)
 
     # 2y vs 10y slope (tenors in years) -> curve shape.
     slope = curve_slope(((2, y2), (10, y10)))
@@ -280,6 +375,13 @@ def rates_environment(
         # Full observation windows for the dashboard's trend charts.
         "treasury_2y_history": [[d, str(v)] for d, v in y2_rows],
         "treasury_10y_history": [[d, str(v)] for d, v in y10_rows],
+        # Overnight reference rates (NY Fed via FRED). None when BLOCKED.
+        "sofr": str(sofr) if sofr is not None else None,
+        "sofr_date": sofr_date,
+        "effr": str(effr) if effr is not None else None,
+        "effr_date": effr_date,
+        "obfr": str(obfr) if obfr is not None else None,
+        "obfr_date": obfr_date,
         "data_source": "fred-public-csv-http-200",
         "trade_authorized": False,
         "note": (
@@ -290,4 +392,12 @@ def rates_environment(
     }
 
 
-__all__ = ["rates_environment", "FED_FUNDS", "TEN_YEAR", "TWO_YEAR"]
+__all__ = [
+    "rates_environment",
+    "FED_FUNDS",
+    "TEN_YEAR",
+    "TWO_YEAR",
+    "SOFR",
+    "EFFR",
+    "OBFR",
+]
