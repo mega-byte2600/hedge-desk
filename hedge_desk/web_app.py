@@ -24,6 +24,8 @@ from hedge_desk.data.open_market_feeds import (
     treasury_latest_auctions,
 )
 from hedge_desk.market_context import build_market_context
+from hedge_desk.rates_desk import fred_series_rows
+from datetime import date, timedelta
 
 
 DATA_SOURCE_STATUS_SCHEMA = "hedge-desk-data-source-status-1.1.0"
@@ -37,7 +39,8 @@ _DASHBOARD_API_LAYER = r"""
     'cftc-cot': 'Futures positioning (CFTC)',
     'sec-edgar': 'Filings / fundamentals (SEC EDGAR)',
     'eia-open-data': 'Energy fundamentals (EIA)',
-    'finra': 'Fixed income breadth (FINRA)'
+    'finra': 'Fixed income breadth (FINRA)',
+    'fred': 'Macro / rates (FRED)'
   };
 
   function detail(provider, contextSource, probe) {
@@ -224,6 +227,15 @@ def build_data_source_status() -> Dict[str, object]:
     )
 
     definitions = {
+        "fred": (
+            True,
+            False,
+            lambda: {
+                "latest": fred_series_rows(
+                    "DFF", date.today() - timedelta(days=14), date.today()
+                )[-1]
+            },
+        ),
         "nyfed-markets": (True, False, lambda: nyfed_reference_rates()),
         "treasury-fiscaldata": (True, False, lambda: treasury_latest_auctions(limit=1)),
         "cftc-cot": (True, False, lambda: cftc_cot(limit=1)),
