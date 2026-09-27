@@ -64,6 +64,14 @@ class MarketContextTests(unittest.TestCase):
         ):
             context = build_market_context(
                 fred_fetch=lambda series, start, end: (("2026-09-25", "3.88"),),
+                bls_fetch=lambda series: _result("bls", series, [{}]),
+                ecb_fetch=lambda currencies: _result("ecb-fx", "EXR", [{}]),
+                bls_fetch=lambda series: _result(
+                    "bls", series, [{"seriesID": series, "year": "2026", "period": "M08", "value": "325.0"}]
+                ),
+                ecb_fetch=lambda currencies: _result(
+                    "ecb-fx", "EXR", [{"CURRENCY": "USD", "CURRENCY_DENOM": "EUR", "TIME_PERIOD": "2026-09-25", "OBS_VALUE": "1.17"}]
+                ),
                 nyfed_fetch=nyfed_fetch,
                 treasury_fetch=treasury_fetch,
                 cftc_fetch=cftc_fetch,
@@ -73,7 +81,7 @@ class MarketContextTests(unittest.TestCase):
 
         self.assertEqual(context["schema_version"], MARKET_CONTEXT_SCHEMA)
         self.assertEqual(context["status"], "LIVE")
-        self.assertEqual(context["live_sources"], 6)
+        self.assertEqual(context["live_sources"], 8)
         self.assertEqual(context["blocked_sources"], 0)
         self.assertEqual(context["unconfigured_sources"], 0)
         self.assertFalse(context["trade_authorized"])
@@ -104,6 +112,8 @@ class MarketContextTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             context = build_market_context(
                 fred_fetch=broken,
+                bls_fetch=lambda series: _result("bls", series, [{}]),
+                ecb_fetch=lambda currencies: _result("ecb-fx", "EXR", [{}]),
                 nyfed_fetch=broken,
                 treasury_fetch=lambda limit: _result("treasury-fiscaldata", "x", [{}]),
                 cftc_fetch=lambda report, limit: _result("cftc-cot", report, [{}]),
