@@ -64,6 +64,9 @@ class MarketContextTests(unittest.TestCase):
         ):
             context = build_market_context(
                 fred_fetch=lambda series, start, end: (("2026-09-25", "3.88"),),
+                treasury_curve_fetch=lambda: _result("treasury-rates", "daily_treasury_yield_curve", [{"NEW_DATE": "2026-09-25", "BC_2YEAR": "3.70", "BC_10YEAR": "4.10"}]),
+                fdic_fetch=lambda limit: _result("fdic", "bank-failures", [{"NAME": "Example Bank", "FAILDATE": "01/01/2026"}]),
+                world_bank_fetch=lambda indicator, country, per_page: _result("world-bank", indicator, [{"countryiso3code": "USA", "date": "2025", "value": 100.0}]),
                 bls_fetch=lambda series: _result(
                     "bls", series, [{"seriesID": series, "year": "2026", "period": "M08", "value": "325.0"}]
                 ),
@@ -79,7 +82,7 @@ class MarketContextTests(unittest.TestCase):
 
         self.assertEqual(context["schema_version"], MARKET_CONTEXT_SCHEMA)
         self.assertEqual(context["status"], "LIVE")
-        self.assertEqual(context["live_sources"], 8)
+        self.assertEqual(context["live_sources"], 11)
         self.assertEqual(context["blocked_sources"], 0)
         self.assertEqual(context["unconfigured_sources"], 0)
         self.assertFalse(context["trade_authorized"])
