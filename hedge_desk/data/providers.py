@@ -97,6 +97,18 @@ _PROVIDERS: Tuple[ProviderSpec, ...] = (
         "Official CFTC positioning data for futures markets; useful for crowding and regime context.",
     ),
     ProviderSpec(
+        "finra",
+        "FINRA Public Data",
+        frozenset({"credit", "rates", "fixed_income"}),
+        frozenset({"corporate_bond_breadth", "treasury_aggregates", "market_sentiment", "agency_tba"}),
+        "official",
+        "FINRA_CLIENT_ID",
+        False,
+        False,
+        True,
+        "Free FINRA Public Credential OAuth; FINRA_CLIENT_SECRET is also required server-side.",
+    ),
+    ProviderSpec(
         "cboe",
         "Cboe",
         frozenset({"equities", "options", "volatility"}),
