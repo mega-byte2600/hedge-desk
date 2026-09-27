@@ -17,6 +17,9 @@ from hedge_desk.data.open_market_feeds import (
     bls_latest_series,
     cftc_cot,
     ecb_exchange_rates,
+    fdic_failures,
+    treasury_yield_curve,
+    world_bank_indicator,
     eia_v2,
     finra_fixed_income,
     nyfed_reference_rates,
@@ -88,6 +91,24 @@ def _nyfed_summary(result: OpenFeedResult) -> Dict[str, object]:
         if item:
             rates[name] = item
     return rates
+
+
+def _treasury_curve_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = (
+        "NEW_DATE", "BC_1MONTH", "BC_3MONTH", "BC_6MONTH",
+        "BC_1YEAR", "BC_2YEAR", "BC_5YEAR", "BC_10YEAR", "BC_20YEAR", "BC_30YEAR",
+    )
+    return [_pick(row, keys) for row in result.rows[-5:]]
+
+
+def _fdic_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = ("NAME", "CERT", "FIN", "CITYST", "FAILDATE", "SAVR", "RESTYPE1")
+    return [_pick(row, keys) for row in result.rows[:10]]
+
+
+def _world_bank_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = ("indicator", "country", "countryiso3code", "date", "value", "unit")
+    return [_pick(row, keys) for row in result.rows[:10]]
 
 
 def _treasury_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
@@ -166,6 +187,9 @@ def build_market_context(
     treasury_fetch: Callable[..., OpenFeedResult] = treasury_latest_auctions,
     cftc_fetch: Callable[..., OpenFeedResult] = cftc_cot,
     bls_fetch: Callable[..., OpenFeedResult] = bls_latest_series,
+    treasury_curve_fetch: Callable[..., OpenFeedResult] = treasury_yield_curve,
+    fdic_fetch: Callable[..., OpenFeedResult] = fdic_failures,
+    world_bank_fetch: Callable[..., OpenFeedResult] = world_bank_indicator,
     ecb_fetch: Callable[..., OpenFeedResult] = ecb_exchange_rates,
     eia_fetch: Callable[..., OpenFeedResult] = eia_v2,
     finra_fetch: Callable[..., OpenFeedResult] = finra_fixed_income,
@@ -205,6 +229,24 @@ def build_market_context(
         sources["treasury-fiscaldata"] = _blocked(
             "treasury-fiscaldata", "UPSTREAM_OR_PARSE_FAILURE", str(exc)
         )
+
+    try:
+        result = treasury_curve_fetch()
+        sources["treasury-rates"] = _live(result, _treasury_curve_summary(result))
+    except Exception as exc:
+        sources["treasury-rates"] = _blocked("treasury-rates", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+
+    try:
+        result = fdic_fetch(limit=10)
+        sources["fdic"] = _live(result, _fdic_summary(result))
+    except Exception as exc:
+        sources["fdic"] = _blocked("fdic", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+
+    try:
+        result = world_bank_fetch("NY.GDP.MKTP.CD", country="USA", per_page=5)
+        sources["world-bank"] = _live(result, _world_bank_summary(result))
+    except Exception as exc:
+        sources["world-bank"] = _blocked("world-bank", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
 
     try:
         result = bls_fetch("CUUR0000SA0")
