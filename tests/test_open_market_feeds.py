@@ -26,6 +26,20 @@ def _transport(payload, status=200, seen=None):
     return fetch
 
 
+def _request_transport(payloads, seen=None):
+    encoded = [json.dumps(payload).encode("utf-8") for payload in payloads]
+    index = {"value": 0}
+
+    def fetch(request):
+        if seen is not None:
+            seen.append(request)
+        i = index["value"]
+        index["value"] += 1
+        return 200, encoded[i]
+
+    return fetch
+
+
 class OpenMarketFeedTests(unittest.TestCase):
     def test_treasury_auctions_uses_official_endpoint_and_rows(self):
         seen = []
@@ -44,24 +58,63 @@ class OpenMarketFeedTests(unittest.TestCase):
         self.assertTrue(parsed.path.endswith("/auctions_query"))
         self.assertEqual(parse_qs(parsed.query).get("page[size]"), ["2"])
 
-    def test_finra_public_fixed_income_dataset_is_allowlisted(self):
+    def test_finra_public_fixed_income_dataset_is_allowlisted_and_bearer_authenticated(self):
         seen = []
         result = finra_fixed_income(
             "corporateMarketBreadth",
             limit=5,
-            transport=_transport([{"advances": 100, "declines": 80}], seen=seen),
+            access_token="test-access-token",
+            request_transport=_request_transport(
+                [[{"advances": 100, "declines": 80}]], seen=seen
+            ),
         )
         self.assertEqual(result.provider_id, "finra")
         self.assertEqual(result.dataset, "corporateMarketBreadth")
         self.assertEqual(result.row_count, 1)
-        parsed = urlparse(seen[0])
+        request = seen[0]
+        parsed = urlparse(request.full_url)
         self.assertEqual(parsed.hostname, "api.finra.org")
         self.assertEqual(
             parsed.path,
             "/data/group/fixedIncomeMarket/name/corporateMarketBreadth",
         )
+        self.assertEqual(request.get_header("Authorization"), "Bearer test-access-token")
         with self.assertRaisesRegex(ValueError, "unsupported FINRA"):
-            finra_fixed_income("arbitraryDataset", transport=_transport([]))
+            finra_fixed_income(
+                "arbitraryDataset",
+                access_token="x",
+                request_transport=_request_transport([[]]),
+            )
+
+    def test_finra_requires_server_side_credentials_when_no_token_is_injected(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesRegex(ValueError, "FINRA_CLIENT_ID"):
+                finra_fixed_income(
+                    "corporateMarketBreadth",
+                    request_transport=_request_transport([[]]),
+                )
+
+    def test_finra_oauth_flow_uses_basic_then_bearer_without_returning_secret(self):
+        seen = []
+        result = finra_fixed_income(
+            "corporateMarketBreadth",
+            client_id="public-client",
+            client_secret="test-client-secret",
+            request_transport=_request_transport(
+                [
+                    {"access_token": "short-lived-token", "token_type": "Bearer"},
+                    [{"advances": 101, "declines": 79}],
+                ],
+                seen=seen,
+            ),
+        )
+        self.assertEqual(len(seen), 2)
+        token_request, data_request = seen
+        self.assertEqual(token_request.get_method(), "POST")
+        self.assertEqual(urlparse(token_request.full_url).hostname, "ews.fip.finra.org")
+        self.assertTrue(token_request.get_header("Authorization").startswith("Basic "))
+        self.assertEqual(data_request.get_header("Authorization"), "Bearer short-lived-token")
+        self.assertNotIn("test-client-secret", repr(result))
 
     def test_cftc_tff_uses_official_public_reporting_api(self):
         seen = []
