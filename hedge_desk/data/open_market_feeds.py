@@ -11,6 +11,8 @@ No function in this module authorizes a trade or places an order.
 from __future__ import annotations
 
 import base64
+import csv
+import io
 import json
 import os
 import urllib.error
@@ -38,6 +40,8 @@ NYFED_LATEST_RATES_URL = "https://markets.newyorkfed.org/api/rates/all/latest.js
 NYFED_RATE_HISTORY_URL = "https://markets.newyorkfed.org/api/rates/{segment}/{rate}/last/{limit}.json"
 SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
+BLS_LATEST_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/{series}?latest=true"
+ECB_EXR_URL = "https://data-api.ecb.europa.eu/service/data/EXR/{key}"
 
 # Public FINRA fixed-income datasets that are directly useful to a rates/credit desk.
 # FINRA public data is free, but its Query API requires a Public Credential and
@@ -61,6 +65,9 @@ CFTC_COT_DATASETS: Mapping[str, str] = {
     "tff_futures_only": "gpe5-46if",
     "disaggregated_futures_only": "72hh-3qpy",
 }
+
+BLS_MACRO_SERIES = frozenset({"CUUR0000SA0", "CUSR0000SA0L1E", "CES0000000001", "LNS14000000"})
+ECB_FX_CURRENCIES = frozenset({"USD", "JPY", "GBP", "CHF", "CAD", "AUD", "CNY"})
 
 NYFED_REFERENCE_RATES: Mapping[str, Tuple[str, str]] = {
     "SOFR": ("secured", "sofr"),
@@ -266,6 +273,68 @@ def finra_fixed_income(
     )
 
 
+
+def bls_latest_series(
+    series: str,
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch the latest observation for a vetted BLS macro series (no key required)."""
+    normalized = series.strip().upper()
+    if normalized not in BLS_MACRO_SERIES:
+        raise ValueError(f"unsupported BLS macro series: {series}")
+    payload = _fetch_json(BLS_LATEST_URL.format(series=normalized), "bls", transport)
+    if not isinstance(payload, dict) or payload.get("status") != "REQUEST_SUCCEEDED":
+        raise ValueError("bls request did not succeed")
+    results = payload.get("Results")
+    series_rows = results.get("series") if isinstance(results, dict) else None
+    if not isinstance(series_rows, list) or not series_rows:
+        raise ValueError("bls payload has no series rows")
+    data = series_rows[0].get("data") if isinstance(series_rows[0], dict) else None
+    if not isinstance(data, list) or not data:
+        raise ValueError("bls payload has no observations")
+    rows = []
+    for row in data:
+        if isinstance(row, dict):
+            item = dict(row)
+            item["seriesID"] = normalized
+            rows.append(item)
+    return OpenFeedResult(provider_id="bls", dataset=normalized, rows=tuple(rows))
+
+
+def ecb_exchange_rates(
+    currencies: Sequence[str] = ("USD", "JPY", "GBP", "CHF"),
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch latest ECB euro reference FX rates (no key required)."""
+    normalized = []
+    for currency in currencies:
+        code = str(currency).strip().upper()
+        if code not in ECB_FX_CURRENCIES:
+            raise ValueError(f"unsupported ECB FX currency: {currency}")
+        if code not in normalized:
+            normalized.append(code)
+    if not normalized:
+        raise ValueError("at least one ECB FX currency is required")
+    key = f"D.{'+'.join(normalized)}.EUR.SP00.A"
+    query = urllib.parse.urlencode({"format": "csvdata", "lastNObservations": "1"})
+    url = f"{ECB_EXR_URL.format(key=key)}?{query}"
+    try:
+        status, raw = transport(url)
+    except Exception as exc:
+        raise ValueError("ecb-fx transport failed") from exc
+    if status != 200 or not raw:
+        body = raw[:200].decode("utf-8", errors="replace") if raw else ""
+        raise ValueError(f"ecb-fx fetch failed (status {status}) body={body}")
+    try:
+        text = raw.decode("utf-8-sig")
+        parsed = tuple(dict(row) for row in csv.DictReader(io.StringIO(text)))
+    except (UnicodeDecodeError, csv.Error) as exc:
+        raise ValueError("ecb-fx returned malformed CSV") from exc
+    if not parsed:
+        raise ValueError("ecb-fx payload has no observations")
+    return OpenFeedResult(provider_id="ecb-fx", dataset="EXR", rows=parsed)
+
+
 def cftc_cot(
     report: str = "tff_futures_only",
     limit: int = 100,
@@ -381,11 +450,15 @@ def sec_companyfacts(
 
 
 __all__ = [
+    "BLS_MACRO_SERIES",
     "CFTC_COT_DATASETS",
+    "ECB_FX_CURRENCIES",
     "FINRA_FIXED_INCOME_DATASETS",
     "NYFED_REFERENCE_RATES",
     "OpenFeedResult",
+    "bls_latest_series",
     "cftc_cot",
+    "ecb_exchange_rates",
     "eia_v2",
     "finra_fixed_income",
     "nyfed_reference_rates",
