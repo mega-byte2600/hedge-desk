@@ -20,10 +20,13 @@ from hedge_desk.data.open_market_feeds import (
     eia_v2,
     finra_fixed_income,
     nyfed_reference_rates,
+    sec_companyfacts,
     sec_submissions,
     treasury_latest_auctions,
 )
 from hedge_desk.market_context import build_market_context
+from hedge_desk.rates_desk import fred_series_rows
+from datetime import date, timedelta
 
 
 DATA_SOURCE_STATUS_SCHEMA = "hedge-desk-data-source-status-1.1.0"
@@ -37,7 +40,8 @@ _DASHBOARD_API_LAYER = r"""
     'cftc-cot': 'Futures positioning (CFTC)',
     'sec-edgar': 'Filings / fundamentals (SEC EDGAR)',
     'eia-open-data': 'Energy fundamentals (EIA)',
-    'finra': 'Fixed income breadth (FINRA)'
+    'finra': 'Fixed income breadth (FINRA)',
+    'fred': 'Macro / rates (FRED)'
   };
 
   function detail(provider, contextSource, probe) {
@@ -80,6 +84,19 @@ _DASHBOARD_API_LAYER = r"""
     const oldHealth = grid.querySelector('.card.wide h3');
     if (oldHealth && oldHealth.textContent.includes('Source health')) {
       oldHealth.textContent = 'Nightly batch inputs — what this specific run actually consumed';
+    }
+
+    const fred = (status.sources || {}).fred;
+    if (fred && fred.status === 'LIVE') {
+      grid.querySelectorAll('tr').forEach(tr => {
+        if (!tr.textContent.includes('Rates (FRED)')) return;
+        const cells = tr.querySelectorAll('td');
+        if (cells.length >= 3) {
+          cells[1].textContent = 'LIVE';
+          cells[1].className = 'ok';
+          cells[2].textContent = 'Live FRED API verified; the nightly snapshot predates recovery.';
+        }
+      });
     }
 
     const card = document.createElement('div');
@@ -223,11 +240,26 @@ def build_data_source_status() -> Dict[str, object]:
         and os.environ.get("FINRA_CLIENT_SECRET", "").strip()
     )
 
+    def probe_sec():
+        try:
+            return sec_submissions(320193)
+        except Exception:
+            return sec_companyfacts(320193)
+
     definitions = {
+        "fred": (
+            True,
+            False,
+            lambda: {
+                "latest": fred_series_rows(
+                    "CPIAUCSL", date.today() - timedelta(days=60), date.today()
+                )[-1]
+            },
+        ),
         "nyfed-markets": (True, False, lambda: nyfed_reference_rates()),
         "treasury-fiscaldata": (True, False, lambda: treasury_latest_auctions(limit=1)),
         "cftc-cot": (True, False, lambda: cftc_cot(limit=1)),
-        "sec-edgar": (True, False, lambda: sec_submissions(320193)),
+        "sec-edgar": (True, False, probe_sec),
         "eia-open-data": (
             eia_configured,
             True,

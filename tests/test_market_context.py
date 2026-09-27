@@ -63,6 +63,7 @@ class MarketContextTests(unittest.TestCase):
             clear=False,
         ):
             context = build_market_context(
+                fred_fetch=lambda series, start, end: (("2026-09-25", "3.88"),),
                 nyfed_fetch=nyfed_fetch,
                 treasury_fetch=treasury_fetch,
                 cftc_fetch=cftc_fetch,
@@ -72,7 +73,7 @@ class MarketContextTests(unittest.TestCase):
 
         self.assertEqual(context["schema_version"], MARKET_CONTEXT_SCHEMA)
         self.assertEqual(context["status"], "LIVE")
-        self.assertEqual(context["live_sources"], 5)
+        self.assertEqual(context["live_sources"], 6)
         self.assertEqual(context["blocked_sources"], 0)
         self.assertEqual(context["unconfigured_sources"], 0)
         self.assertFalse(context["trade_authorized"])
@@ -87,6 +88,7 @@ class MarketContextTests(unittest.TestCase):
     def test_keyed_sources_are_explicitly_unconfigured(self):
         with patch.dict(os.environ, {}, clear=True):
             context = build_market_context(
+                fred_fetch=lambda series, start, end: (("2026-09-25", "3.88"),),
                 nyfed_fetch=lambda: _result("nyfed-markets", "all-latest", [{"type": "SOFR"}]),
                 treasury_fetch=lambda limit: _result("treasury-fiscaldata", "x", [{}]),
                 cftc_fetch=lambda report, limit: _result("cftc-cot", report, [{}]),
@@ -101,6 +103,7 @@ class MarketContextTests(unittest.TestCase):
 
         with patch.dict(os.environ, {}, clear=True):
             context = build_market_context(
+                fred_fetch=broken,
                 nyfed_fetch=broken,
                 treasury_fetch=lambda limit: _result("treasury-fiscaldata", "x", [{}]),
                 cftc_fetch=lambda report, limit: _result("cftc-cot", report, [{}]),
