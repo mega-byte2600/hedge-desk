@@ -59,9 +59,10 @@ OBFR = "OBFR"              # overnight bank funding rate (NY Fed via FRED), %
 def _default_transport(url: str) -> Tuple[int, bytes]:
     req = urllib.request.Request(url, headers={"User-Agent": "hedge-desk/1.0"})
     try:
-        # FRED normally answers in <2s; a short timeout makes a down/slow FRED
-        # fail fast so the after-close batch is bounded, not stalled for minutes.
-        with urllib.request.urlopen(req, timeout=8) as resp:
+        # FRED normally answers in <2s; the timeout is generous for cloud
+        # networks where the first connection can be slow, and retries handle
+        # transient stalls so the after-close batch stays bounded.
+        with urllib.request.urlopen(req, timeout=15) as resp:
             return resp.status, resp.read()
     except urllib.error.HTTPError as exc:
         return exc.code, exc.read()
@@ -218,7 +219,7 @@ def fred_series_rows(
     end: _dt.date,
     transport: Transport = _default_transport,
     cache_dir: Path | None = None,
-    retries: int = 1,
+    retries: int = 3,
 ) -> Tuple[Tuple[str, Decimal], ...]:
     """Fetch one FRED daily series, caching the observation window on disk.
 
