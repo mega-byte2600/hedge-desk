@@ -53,6 +53,17 @@ from .providers import (
     providers_for_asset_class,
     providers_for_capability,
 )
+from .open_market_feeds import (
+    CFTC_COT_DATASETS,
+    FINRA_FIXED_INCOME_DATASETS,
+    OpenFeedResult,
+    cftc_cot,
+    eia_v2,
+    finra_fixed_income,
+    sec_companyfacts,
+    sec_submissions,
+    treasury_latest_auctions,
+)
 
 __all__ = [
     "DataArtifact", "DataGateResult", "validate_data_artifact",
@@ -73,4 +84,7 @@ __all__ = [
     "ingest_eod",
     "ProviderSpec", "all_providers", "missing_auth_env", "provider",
     "providers_for_asset_class", "providers_for_capability",
+    "CFTC_COT_DATASETS", "FINRA_FIXED_INCOME_DATASETS", "OpenFeedResult",
+    "cftc_cot", "eia_v2", "finra_fixed_income", "sec_companyfacts",
+    "sec_submissions", "treasury_latest_auctions",
 ]
