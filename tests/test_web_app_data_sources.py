@@ -84,9 +84,9 @@ class DataSourceStatusTests(unittest.TestCase):
     def test_upstream_exception_text_is_suppressed(self):
         patches = self._patch_public_sources()
         leaking_error = "upstream failed api_key=must-never-escape"
-        with patch.dict("os.environ", {"EIA_API_KEY": "configured"}, clear=True), patches[0], patches[1], patch.object(
+        with patch.dict("os.environ", {"EIA_API_KEY": "configured"}, clear=True), patches[0], patches[1], patches[2], patches[3], patches[4], patch.object(
             web_app, "nyfed_reference_rates", side_effect=ValueError(leaking_error)
-        ), patches[3], patches[4], patches[5], patches[6], patches[7]:
+        ), patches[6], patches[7], patches[8], patches[9], patches[10]:
             payload = web_app.build_data_source_status()
 
         nyfed = payload["sources"]["nyfed-markets"]
