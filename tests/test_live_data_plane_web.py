@@ -67,9 +67,20 @@ class LiveDataPlaneWebTests(unittest.TestCase):
         self.assertIn("/api/data-sources", text)
         self.assertIn("/api/market-context", text)
         self.assertIn("Source health — what the batch actually closed on", text)
-        self.assertIn("Nightly batch inputs", text)
-        self.assertIn("Authoritative API layer", text)
+        # New copy is set via JS at runtime; assert the JS contains it.
+        self.assertIn("Last night", text)
+        self.assertIn("what went into this report", text)
+        self.assertIn("Data sources — live connections", text)
         self.assertNotIn("FINRA_CLIENT_SECRET", text)
+        # No internal jargon in user-facing strings. The reason_code values
+        # appear in JS as comparison targets (not displayed); assert the
+        # display mapping uses plain language instead.
+        self.assertIn("Couldn't reach the source just now", text)
+        self.assertIn("Not connected yet", text)
+        self.assertNotIn("production probes", text)
+        self.assertNotIn("strategy-input", text)
+        # The raw code must not be used as display text via replaceAll.
+        self.assertNotIn("replaceAll('_', ' ')", text)
 
     def test_dashboard_etag_works_with_enhancement_version(self):
         html = "<html><body><div class='grid'></div></body></html>"

@@ -46,7 +46,14 @@ _DASHBOARD_API_LAYER = r"""
 
   function detail(provider, contextSource, probe) {
     if (!probe || probe.status !== 'LIVE') {
-      return probe && probe.reason_code ? probe.reason_code.replaceAll('_', ' ') : 'not live';
+      // Never show internal reason codes (UPSTREAM_OR_AUTH_FAILURE, etc.) to readers.
+      // Map to plain-language explanations.
+      const code = probe && probe.reason_code;
+      if (code === 'CREDENTIALS_NOT_CONFIGURED') return 'Not connected yet';
+      if (code === 'EMPTY_OR_INVALID_RESPONSE') return "Source didn't return usable data";
+      if (code === 'UPSTREAM_OR_AUTH_FAILURE') return "Couldn't reach the source just now";
+      if (code === 'PROBE_FAILURE') return "Couldn't reach the source just now";
+      return 'Not available right now';
     }
     const obs = contextSource && contextSource.observations;
     if (provider === 'nyfed-markets' && obs) {
@@ -83,7 +90,7 @@ _DASHBOARD_API_LAYER = r"""
 
     const oldHealth = grid.querySelector('.card.wide h3');
     if (oldHealth && oldHealth.textContent.includes('Source health')) {
-      oldHealth.textContent = 'Nightly batch inputs — what this specific run actually consumed';
+      oldHealth.textContent = 'Last night\u2019s data — what went into this report';
     }
 
     const fred = (status.sources || {}).fred;
@@ -104,27 +111,32 @@ _DASHBOARD_API_LAYER = r"""
     card.id = 'authoritative-api-card';
 
     const heading = document.createElement('h3');
-    heading.textContent = 'Authoritative API layer — live production connections';
+    heading.textContent = 'Data sources — live connections';
     card.appendChild(heading);
 
     const summary = document.createElement('p');
     summary.className = 'muted';
-    summary.textContent = `${status.live_count || 0}/${status.source_count || 0} live now · ` +
-      `${status.blocked_count || 0} blocked · ${status.unconfigured_count || 0} unconfigured. ` +
-      'These are production probes; nightly strategy-input status remains separately visible below.';
+    const live = status.live_count || 0;
+    const total = status.source_count || 0;
+    const blocked = status.blocked_count || 0;
+    summary.textContent = `${live} of ${total} sources live now` +
+      (blocked ? ` · ${blocked} temporarily unavailable` : '') +
+      '. Checked just now; nightly numbers are listed separately below.';
     card.appendChild(summary);
 
     const table = document.createElement('table');
     table.className = 'health';
-    table.innerHTML = '<thead><tr><th>source</th><th>status</th><th>live detail</th></tr></thead>';
+    table.innerHTML = '<thead><tr><th>source</th><th>status</th><th>detail</th></tr></thead>';
     const tbody = document.createElement('tbody');
     Object.entries(status.sources || {}).forEach(([provider, probe]) => {
       const tr = document.createElement('tr');
       const name = document.createElement('td');
       name.textContent = LABELS[provider] || provider;
       const state = document.createElement('td');
-      state.textContent = probe.status || 'UNKNOWN';
-      state.className = probe.status === 'LIVE' ? 'ok' : 'warn';
+      const isLive = probe.status === 'LIVE';
+      const isUnconfigured = probe.reason_code === 'CREDENTIALS_NOT_CONFIGURED';
+      state.textContent = isLive ? 'Live' : (isUnconfigured ? 'Not connected' : 'Unavailable');
+      state.className = isLive ? 'ok' : 'warn';
       const info = document.createElement('td');
       info.className = 'muted';
       info.textContent = detail(provider, (context.sources || {})[provider], probe);

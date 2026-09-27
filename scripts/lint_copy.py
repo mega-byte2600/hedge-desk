@@ -33,7 +33,10 @@ WEB = ROOT / "web"
 
 # User-facing copy sources. report.json/timeline.json are data/history, not copy.
 COPY_GLOBS = ("*.js", "*.mjs", "*.html", "*.css")
-COPY_EXTRA = (ROOT / "scripts" / "build_plotly_dashboard.py",)
+COPY_EXTRA = (
+    ROOT / "scripts" / "build_plotly_dashboard.py",
+    ROOT / "hedge_desk" / "web_app.py",  # contains dashboard JS template
+)
 SKIP_FILES = {p.name for p in WEB.glob("*.test.*")}
 
 # (pattern, reason) — add only with a real incident behind the entry.
@@ -58,6 +61,19 @@ LEAKS = [
     (r"tag\(\s*['\"]PAPER_ONLY['\"]\s*\)", "paper-only tag chant (incident 2026-09-26)"),
     (r"Effective\s+(\$\{|20\d\d-)", "effective-date in rendered copy (incident 2026-09-26)"),
     (r"trade_authorized\s*\?\s*['\"]AUTHORIZED['\"]", "auth ternary rendered as UI copy"),
+    # Incident 2026-09-26: internal reason_codes displayed raw via replaceAll.
+    # Reason codes (UPSTREAM_OR_AUTH_FAILURE, etc.) must be mapped to plain
+    # language, never string-munged into display text.
+    (r"reason_code\?\s*\.\s*replaceAll\(\s*['\"]_['\"]", "raw reason_code displayed via replaceAll (incident 2026-09-26: UPSTREAM OR AUTH FAILURE)"),
+    # Incident 2026-09-26: internal mode enums rendered directly in tables.
+    # Only match display contexts (esc(), f-string interpolation, textContent).
+    # Logic comparisons (if mode == "...") are fine.
+    (r"esc\([^)]*REAL_CBOE_CHAIN_INCOME", "internal mode code in display path (use _human_status)"),
+    (r"esc\([^)]*READY_FOR_RESEARCH", "internal mode code in display path (use _human_status)"),
+    (r"textContent\s*=\s*['\"]REAL_", "internal mode code assigned to UI text"),
+    # Incident 2026-09-26: engineering jargon in user-facing summaries.
+    (r"production probes", "engineering jargon in user copy (incident 2026-09-26)"),
+    (r"strategy-input", "engineering jargon in user copy (incident 2026-09-26)"),
 ]
 
 

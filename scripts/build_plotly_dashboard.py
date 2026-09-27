@@ -99,27 +99,66 @@ def freshness_strip(r: dict) -> str:
     )
 
 
+def _human_status(mode: str) -> str:
+    """Map internal mode codes to user-facing status labels.
+
+    Never leak internal enum names (REAL_*, BLOCKED, READY_*) to readers.
+    """
+    mode = str(mode or "?").upper()
+    if mode.startswith("REAL_") or mode in ("CASH_SECURED_PUT", "PASS"):
+        return "Live"
+    if mode == "BLOCKED":
+        return "Unavailable"
+    if mode == "READY_FOR_RESEARCH":
+        return "Ready"
+    if mode in ("?", "UNKNOWN"):
+        return "Unknown"
+    # Fallback: title-case the code without underscores, never raw.
+    return mode.replace("_", " ").title()
+
+
+def _human_detail(detail: str) -> str:
+    """Map internal reason/note strings to user-facing explanations."""
+    detail = str(detail or "").strip()
+    if not detail:
+        return ""
+    low = detail.lower()
+    # Never show raw fetch errors or status codes to readers.
+    if "fetch failed" in low or "status 0" in low or "status 403" in low:
+        return "Couldn't reach the source just now."
+    if "upstream" in low or "auth failure" in low:
+        return "Couldn't reach the source just now."
+    if low.startswith("fred"):
+        return "Couldn't reach the source just now."
+    return detail
+
+
 def source_health(r: dict) -> str:
     """Per-source status table: what the batch actually closed on."""
     rows = []
-    rows.append(("EOD batch (Yahoo)", str(r.get("eod_batch_status", "?")),
-                 str((r.get("data_freshness", {}) or {}).get("note", ""))))
+    rows.append(("EOD batch (Yahoo)", _human_status(r.get("eod_batch_status", "?")),
+                 _human_detail(str((r.get("data_freshness", {}) or {}).get("note", "")))))
     for sym, ch in (r.get("chain_income", {}) or {}).items():
         mode = ch.get("mode", "?")
-        detail = ch.get("reason", "") if mode == "BLOCKED" else f"{len(ch.get('gated_income_structures', []) or [])} gated structures"
-        rows.append((f"Premium chain (Cboe {sym})", mode, detail))
+        if mode == "BLOCKED":
+            detail = _human_detail(ch.get("reason", ""))
+        else:
+            n = len(ch.get('gated_income_structures', []) or [])
+            detail = f"{n} structures" if n else ""
+        rows.append((f"Premium chain (Cboe {sym})", _human_status(mode), detail))
     for label, key in (("Rates (FRED)", "rates_environment"), ("VIX regime (Yahoo)", "vix_regime"),
                        ("Macro (FRED)", "macro_environment"), ("Oil WTI (Yahoo)", "oil_market")):
         d = r.get(key, {}) or {}
-        rows.append((label, str(d.get("mode", "?")), str(d.get("reason", d.get("note", "")))))
+        rows.append((label, _human_status(d.get("mode", "?")),
+                     _human_detail(str(d.get("reason", d.get("note", ""))))))
     csp = r.get("cash_secured_put_scan", {}) or {}
     real_csp = sum(1 for v in csp.values() if isinstance(v, dict) and v.get("mode") == "CASH_SECURED_PUT")
-    rows.append(("CSP scan (Cboe)", f"{real_csp}/{len(csp)} real", ""))
+    rows.append(("CSP scan (Cboe)", f"{real_csp}/{len(csp)} live" if real_csp else "Unavailable", ""))
     ea = r.get("earnings_actuals", {}) or {}
     real_ea = sum(1 for v in ea.values() if isinstance(v, dict) and v.get("mode") == "REAL_EDGAR_EARNINGS")
-    rows.append(("Earnings (SEC EDGAR)", f"{real_ea}/{len(ea)} real", ""))
+    rows.append(("Earnings (SEC EDGAR)", f"{real_ea}/{len(ea)} live" if real_ea else "Unavailable", ""))
     trs = "".join(
-        f"<tr><td>{esc(a)}</td><td class='{'ok' if 'REAL' in b or 'PASS' in b else 'warn'}'>{esc(b)}</td>"
+        f"<tr><td>{esc(a)}</td><td class='{'ok' if b == 'Live' or b == 'Ready' else 'warn'}'>{esc(b)}</td>"
         f"<td class='muted'>{esc(c)}</td></tr>"
         for a, b, c in rows
     )
