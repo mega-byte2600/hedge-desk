@@ -233,7 +233,11 @@ def _probe_source(
             "observation_count": count,
             "reason_code": None,
         }
-    except Exception:
+    except Exception as exc:
+        detail = str(exc)[:200]
+        # Redact credentials from error messages
+        import re
+        detail = re.sub(r"(api_key|apikey|token)=[^&\s]+", r"\1=[REDACTED]", detail, flags=re.IGNORECASE)
         return {
             "provider_id": provider_id,
             "status": "BLOCKED",
@@ -241,6 +245,7 @@ def _probe_source(
             "credential_required": credential_required,
             "observation_count": 0,
             "reason_code": "UPSTREAM_OR_AUTH_FAILURE",
+            "detail": detail,
         }
 
 
