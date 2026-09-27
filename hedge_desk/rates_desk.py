@@ -216,7 +216,7 @@ def fred_series_rows(
     series: str,
     start: _dt.date,
     end: _dt.date,
-    transport: Transport,
+    transport: Transport = _default_transport,
     cache_dir: Path | None = None,
     retries: int = 1,
 ) -> Tuple[Tuple[str, Decimal], ...]:
