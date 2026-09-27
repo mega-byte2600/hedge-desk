@@ -38,18 +38,28 @@ jobs:
                       time.sleep(min(5 + attempt * 2, 15))
               raise RuntimeError(f"production endpoint unavailable: {last}")
 
+          failures = []
           for base in bases:
-              status = get_json(base + "/api/data-sources")
-              eia = status["sources"]["eia-open-data"]
-              assert eia["status"] == "LIVE", (base, eia)
-              assert int(eia["observation_count"]) >= 1, (base, eia)
-
               context = get_json(base + "/api/market-context")
               eia_context = context["sources"]["eia-open-data"]
-              assert eia_context["status"] == "LIVE", (base, eia_context)
-              assert int(eia_context["observation_count"]) >= 1, (base, eia_context)
-              observations = eia_context.get("observations") or []
-              assert observations, (base, eia_context)
+              if eia_context["status"] != "LIVE" or int(eia_context["observation_count"]) < 1:
+                  failures.append((base, "market-context", eia_context))
+                  print(f"FAIL {base} /api/market-context: {json.dumps(eia_context, sort_keys=True)}")
+                  continue
 
+              status = get_json(base + "/api/data-sources")
+              eia = status["sources"]["eia-open-data"]
+              if eia["status"] != "LIVE" or int(eia["observation_count"]) < 1:
+                  failures.append((base, "data-sources", eia))
+                  print(f"FAIL {base} /api/data-sources: {json.dumps(eia, sort_keys=True)}")
+                  continue
+
+              observations = eia_context.get("observations") or []
+              if not observations:
+                  failures.append((base, "market-context-empty", eia_context))
+                  continue
               print(f"PASS {base}: EIA LIVE, {eia_context['observation_count']} context rows")
+
+          if failures:
+              raise SystemExit(1)
           PY
