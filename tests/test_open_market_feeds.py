@@ -113,6 +113,10 @@ class OpenMarketFeedTests(unittest.TestCase):
         self.assertEqual(token_request.get_method(), "POST")
         self.assertEqual(urlparse(token_request.full_url).hostname, "ews.fip.finra.org")
         self.assertTrue(token_request.get_header("Authorization").startswith("Basic "))
+        self.assertEqual(
+            token_request.get_header("Content-type"),
+            "application/x-www-form-urlencoded",
+        )
         self.assertEqual(data_request.get_header("Authorization"), "Bearer short-lived-token")
         self.assertNotIn("test-client-secret", repr(result))
 
