@@ -269,7 +269,10 @@ def build_data_source_status() -> Dict[str, object]:
             False,
             lambda: {
                 "latest": fred_series_rows(
-                    "CPIAUCSL", date.today() - timedelta(days=60), date.today()
+                    "CPIAUCSL",
+                    date.today() - timedelta(days=60),
+                    date.today(),
+                    retries=0,
                 )[-1]
             },
         ),

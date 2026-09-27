@@ -104,6 +104,23 @@ def _default_transport(url: str) -> Tuple[int, bytes]:
     return _default_request_transport(req)
 
 
+def _sec_transport(url: str) -> Tuple[int, bytes]:
+    """SEC transport with a declared bot identity per EDGAR fair-access guidance."""
+    contact = os.environ.get("SEC_CONTACT_EMAIL", "").strip()
+    user_agent = os.environ.get("SEC_USER_AGENT", "").strip()
+    if not user_agent:
+        user_agent = (
+            f"hedge-desk/1.0 {contact}"
+            if contact
+            else "hedge-desk/1.0 research https://github.com/mega-byte2600/hedge-desk"
+        )
+    req = urllib.request.Request(
+        url,
+        headers={"Accept": "application/json", "User-Agent": user_agent},
+    )
+    return _default_request_transport(req)
+
+
 def _decode_json(raw: bytes, provider: str) -> object:
     try:
         return json.loads(raw.decode("utf-8"))
@@ -132,7 +149,8 @@ def _fetch_request_json(
     except Exception as exc:
         raise ValueError(f"{provider} transport failed") from exc
     if status != 200 or not raw:
-        raise ValueError(f"{provider} fetch failed (status {status})")
+        body = raw[:200].decode("utf-8", errors="replace") if raw else ""
+        raise ValueError(f"{provider} fetch failed (status {status}) body={body}")
     return _decode_json(raw, provider)
 
 
@@ -198,7 +216,6 @@ def _finra_oauth_token(
         headers={
             "Accept": "application/json",
             "Authorization": f"Basic {basic}",
-            "Content-Type": "application/x-www-form-urlencoded",
             "User-Agent": "hedge-desk/1.0 research",
         },
     )
@@ -341,7 +358,7 @@ def _normalize_cik(cik: str | int) -> str:
 
 def sec_submissions(
     cik: str | int,
-    transport: Transport = _default_transport,
+    transport: Transport = _sec_transport,
 ) -> Mapping[str, object]:
     """Fetch SEC EDGAR company submission history (no API key)."""
     normalized = _normalize_cik(cik)
@@ -353,7 +370,7 @@ def sec_submissions(
 
 def sec_companyfacts(
     cik: str | int,
-    transport: Transport = _default_transport,
+    transport: Transport = _sec_transport,
 ) -> Mapping[str, object]:
     """Fetch SEC XBRL company facts for one issuer (no API key)."""
     normalized = _normalize_cik(cik)
