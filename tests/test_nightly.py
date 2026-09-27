@@ -6,13 +6,30 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from hedge_desk.nightly import NIGHTLY_VERSION, run_nightly
 
 
+def _fake_market_context():
+    return {
+        "schema_version": "hedge-desk-market-context-1.0.0",
+        "status": "LIVE",
+        "live_sources": 5,
+        "blocked_sources": 0,
+        "unconfigured_sources": 0,
+        "sources": {
+            "nyfed-markets": {"status": "LIVE", "observation_count": 5},
+            "treasury-fiscaldata": {"status": "LIVE", "observation_count": 1},
+            "cftc-cot": {"status": "LIVE", "observation_count": 1},
+            "eia-open-data": {"status": "LIVE", "observation_count": 1},
+            "finra": {"status": "LIVE", "observation_count": 1},
+        },
+        "trade_authorized": False,
+    }
+
+
 def _fake_chain_transport(url):
-    # A minimal Cboe-chain-shaped payload with a valid OTM call, so the nightly
-    # chain step produces one real-structure income row in offline tests.
     import json
 
     payload = {
@@ -73,7 +90,6 @@ def _fake_transport(url):
 
 
 def _fake_rates_transport(url):
-    # FRED CSV for the series id in the URL (DFF/DGS2/DGS10).
     series = url.split("id=")[1].split("&")[0]
     values = {"DFF": "3.88", "DGS2": "4.67", "DGS10": "4.94"}
     v = values.get(series, "1.0")
@@ -81,8 +97,6 @@ def _fake_rates_transport(url):
 
 
 def _fake_vix_transport(url):
-    # A low VIX (14.81 -> LOW regime) so the regime risk filter does not block
-    # the CSP candidates in the offline nightly test.
     import json
     ts = 1789761600
     payload = {
@@ -99,13 +113,6 @@ def _fake_vix_transport(url):
 
 
 def _fake_csp_transport(url):
-    # A Cboe-chain-shaped payload with a ~10% OTM put that FITS the GP wheel
-    # (sub-$5k collateral, return-on-capital in band) so the CSP scan finds a
-    # fits_gp_rules candidate offline. current_price 36 -> target strike ~32.4,
-    # nearest 32; bid 0.41 -> collateral $3,200, RoC 1.28% (in 0.5-2% band).
-    # Expiration is computed RELATIVE to today (38 DTE) so the fixture stays in
-    # the 30-45 DTE window no matter when the test runs — a hardcoded date drifts
-    # out of band as real time advances (was 2026-10-23, broke after 2026-09-25).
     import json
     from datetime import datetime, timedelta, timezone
     exp = (datetime.now(timezone.utc) + timedelta(days=38)).strftime("%y%m%d")
@@ -123,9 +130,6 @@ def _fake_csp_transport(url):
 
 class NightlyTests(unittest.TestCase):
     def setUp(self):
-        # Fake transports must never write stub rows into the production FRED
-        # cache (artifacts/.cache/fred): on 2026-09-26 this poisoned the real
-        # cache and the committed AM report shipped fabricated macro values.
         self._old_cache = os.environ.get("HEDGE_DESK_CACHE_DIR")
         os.environ["HEDGE_DESK_CACHE_DIR"] = "off"
 
@@ -135,48 +139,47 @@ class NightlyTests(unittest.TestCase):
         else:
             os.environ["HEDGE_DESK_CACHE_DIR"] = self._old_cache
 
+    def _run(self, tmp):
+        with patch("hedge_desk.nightly.build_market_context", side_effect=_fake_market_context):
+            return run_nightly(
+                ["AAPL"], artifacts_dir=tmp, transport=_fake_transport,
+                chain_transport=_fake_chain_transport, csp_transport=_fake_csp_transport,
+                rates_transport=_fake_rates_transport,
+                vix_transport=_fake_vix_transport, macro_transport=_fake_rates_transport,
+            )
+
     def test_run_nightly_writes_content_addressed_report(self):
         with tempfile.TemporaryDirectory() as tmp:
-            report = run_nightly(["AAPL"], artifacts_dir=tmp, transport=_fake_transport,
-                       chain_transport=_fake_chain_transport, csp_transport=_fake_csp_transport,
-                       rates_transport=_fake_rates_transport,
-                       vix_transport=_fake_vix_transport, macro_transport=_fake_rates_transport)
+            report = self._run(tmp)
             self.assertEqual(report["schema_version"], NIGHTLY_VERSION)
             self.assertEqual(report["mode"], "REAL_EOD_NIGHTLY")
             self.assertEqual(len(report["report_sha256"]), 64)
             self.assertIn("report_path", report)
             path = Path(report["report_path"])
             self.assertTrue(path.exists())
-            # No secrets/PII fields anywhere.
             blob = json.dumps(report).lower()
             for banned in ("token", "password", "secret", "oauth", "apikey"):
                 self.assertNotIn(banned, blob)
-            # No trade authorized.
             self.assertTrue(
                 all(not c["trade_authorized"] for c in report["candidates"])
             )
-            # ENGINEER peer-review: green must mean the desk WORKED, not just that
-            # a report-shaped object was produced. Assert real content.
             self.assertGreaterEqual(len(report["candidates"]), 1,
                                     "nightly produced no equity candidates")
             self.assertTrue(report["candidates"][0]["symbol"],
                             "candidate missing symbol")
-            # the fake csp transport returns a ~10% OTM put -> must fit the wheel
             csp = report["cash_secured_put_scan"]
             self.assertTrue(any(v.get("fits_gp_rules") for v in csp.values()),
                             "no cash-secured-put candidate fits the GP wheel")
-            # real-data desks present and honest
             self.assertEqual(report["vix_regime"]["mode"], "REAL_VIX")
             self.assertIn("macro_environment", report)
             self.assertIn("data_freshness", report)
             self.assertIsInstance(report["data_freshness"]["is_current"], bool)
+            self.assertEqual(report["market_context"]["status"], "LIVE")
+            self.assertEqual(report["market_context"]["live_sources"], 5)
 
     def test_report_is_verifiable(self):
         with tempfile.TemporaryDirectory() as tmp:
-            report = run_nightly(["AAPL"], artifacts_dir=tmp, transport=_fake_transport,
-                       chain_transport=_fake_chain_transport, csp_transport=_fake_csp_transport,
-                       rates_transport=_fake_rates_transport,
-                       vix_transport=_fake_vix_transport, macro_transport=_fake_rates_transport)
+            report = self._run(tmp)
             body = {
                 k: v
                 for k, v in report.items()
