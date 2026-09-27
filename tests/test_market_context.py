@@ -64,8 +64,6 @@ class MarketContextTests(unittest.TestCase):
         ):
             context = build_market_context(
                 fred_fetch=lambda series, start, end: (("2026-09-25", "3.88"),),
-                bls_fetch=lambda series: _result("bls", series, [{}]),
-                ecb_fetch=lambda currencies: _result("ecb-fx", "EXR", [{}]),
                 bls_fetch=lambda series: _result(
                     "bls", series, [{"seriesID": series, "year": "2026", "period": "M08", "value": "325.0"}]
                 ),
@@ -97,6 +95,8 @@ class MarketContextTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             context = build_market_context(
                 fred_fetch=lambda series, start, end: (("2026-09-25", "3.88"),),
+                bls_fetch=lambda series: _result("bls", series, [{}]),
+                ecb_fetch=lambda currencies: _result("ecb-fx", "EXR", [{}]),
                 nyfed_fetch=lambda: _result("nyfed-markets", "all-latest", [{"type": "SOFR"}]),
                 treasury_fetch=lambda limit: _result("treasury-fiscaldata", "x", [{}]),
                 cftc_fetch=lambda report, limit: _result("cftc-cot", report, [{}]),
