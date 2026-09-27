@@ -39,13 +39,23 @@ def _live(result: OpenFeedResult, observations: object) -> Dict[str, object]:
     }
 
 
-def _blocked(provider_id: str, reason_code: str) -> Dict[str, object]:
-    return {
+def _blocked(provider_id: str, reason_code: str, detail: str | None = None) -> Dict[str, object]:
+    result = {
         "provider_id": provider_id,
         "status": "BLOCKED",
         "observation_count": 0,
         "reason_code": reason_code,
     }
+    if detail:
+        # Sanitize: never leak API keys or credentials in diagnostics
+        clean = detail
+        for secret in ("api_key=", "apiKey=", "token="):
+            if secret in clean.lower():
+                # Redact query param values that look like credentials
+                import re
+                clean = re.sub(r"(api_key|apikey|token)=[^&\s]+", r"\1=[REDACTED]", clean, flags=re.IGNORECASE)
+        result["detail"] = clean[:200]
+    return result
 
 
 def _unconfigured(provider_id: str) -> Dict[str, object]:
@@ -167,36 +177,36 @@ def build_market_context(
                 {"date": str(day), "value": str(value)} for day, value in rows[-5:]
             ],
         }
-    except Exception:
-        sources["fred"] = _blocked("fred", "UPSTREAM_OR_AUTH_FAILURE")
+    except Exception as exc:
+        sources["fred"] = _blocked("fred", "UPSTREAM_OR_AUTH_FAILURE", str(exc))
 
     try:
         result = nyfed_fetch()
         sources["nyfed-markets"] = _live(result, _nyfed_summary(result))
-    except Exception:
-        sources["nyfed-markets"] = _blocked("nyfed-markets", "UPSTREAM_OR_PARSE_FAILURE")
+    except Exception as exc:
+        sources["nyfed-markets"] = _blocked("nyfed-markets", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
 
     try:
         result = treasury_fetch(limit=5)
         sources["treasury-fiscaldata"] = _live(result, _treasury_summary(result))
-    except Exception:
+    except Exception as exc:
         sources["treasury-fiscaldata"] = _blocked(
-            "treasury-fiscaldata", "UPSTREAM_OR_PARSE_FAILURE"
+            "treasury-fiscaldata", "UPSTREAM_OR_PARSE_FAILURE", str(exc)
         )
 
     try:
         result = cftc_fetch(report="tff_futures_only", limit=25)
         sources["cftc-cot"] = _live(result, _cftc_summary(result))
-    except Exception:
-        sources["cftc-cot"] = _blocked("cftc-cot", "UPSTREAM_OR_PARSE_FAILURE")
+    except Exception as exc:
+        sources["cftc-cot"] = _blocked("cftc-cot", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
 
     if os.environ.get("EIA_API_KEY", "").strip():
         try:
             result = eia_fetch("petroleum/stoc/wstk", data=("value",), limit=5)
             sources["eia-open-data"] = _live(result, _eia_summary(result))
-        except Exception:
+        except Exception as exc:
             sources["eia-open-data"] = _blocked(
-                "eia-open-data", "UPSTREAM_OR_AUTH_FAILURE"
+                "eia-open-data", "UPSTREAM_OR_AUTH_FAILURE", str(exc)
             )
     else:
         sources["eia-open-data"] = _unconfigured("eia-open-data")
@@ -209,8 +219,8 @@ def build_market_context(
         try:
             result = finra_fetch("corporateMarketBreadth", limit=10)
             sources["finra"] = _live(result, _finra_summary(result))
-        except Exception:
-            sources["finra"] = _blocked("finra", "UPSTREAM_OR_AUTH_FAILURE")
+        except Exception as exc:
+            sources["finra"] = _blocked("finra", "UPSTREAM_OR_AUTH_FAILURE", str(exc))
     else:
         sources["finra"] = _unconfigured("finra")
 
