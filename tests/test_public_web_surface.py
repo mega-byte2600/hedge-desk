@@ -192,8 +192,8 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn('./candidate-context.js', index)
         self.assertIn('"candidate-context.js"', build)
         self.assertLess(index.index('./app.js'), index.index('./candidate-context.js'))
-        self.assertIn("REAL EOD CANDIDATES", app)
-        self.assertIn("Real overnight wheel candidates from the nightly batch", app)
+        self.assertIn("REAL CANDIDATES", app)
+        self.assertIn("Overnight wheel candidates from the nightly batch", app)
         self.assertIn("Method-qualified picks',rows.filter", app)
         # The internal "Trade authorization 0" stat was UI slop (user-directed
         # removal 2026-09-26); the no-orders boundary is stated once in
