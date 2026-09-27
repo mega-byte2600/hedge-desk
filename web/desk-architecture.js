@@ -9,14 +9,14 @@ function installDeskArchitecture() {
   panel.dataset.deskArchitecture = 'bonds-rates-desk';
   panel.innerHTML = `
     <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
-      <span class="eyebrow">DESK 07 · MACRO ANCHOR</span>
-      <span class="tag">Framework</span>
+      <span class="eyebrow">DESK 07</span>
+      <span class="tag">Coming soon</span>
     </div>
     <h2>Bonds &amp; Rates</h2>
     <p>Anchor cross-asset research in Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress.</p>
-    <div class="gate-bars" aria-label="Architecture defined; evaluated research not yet connected"><span class="gray"></span><span class="gray"></span><span class="gray"></span><span class="gray"></span><span class="gray"></span><span class="gray"></span></div>
+    <div class="gate-bars" aria-label="Research for this desk is still in progress"><span class="gray"></span><span class="gray"></span><span class="gray"></span><span class="gray"></span><span class="gray"></span><span class="gray"></span></div>
     <a class="btn" href="#resources">View institutional rates sources ↗</a>
-    <p class="small-note">No evaluated signal is published for this desk yet.</p>`;
+    <p class="small-note">Research for this desk is still in progress.</p>`;
   cards.prepend(panel);
 
   const head = main.querySelector('.page-head .subtitle');

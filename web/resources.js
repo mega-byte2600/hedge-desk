@@ -34,10 +34,9 @@ const RESOURCE_GROUPS = [
 function resourceCards(group) {
   return group.links.map(([name, url, description]) => `
     <a class="resource-card" href="${url}" target="_blank" rel="noopener noreferrer">
-      <span class="eyebrow">EXTERNAL RESEARCH SOURCE</span>
       <h2>${name}</h2>
       <p>${description}</p>
-      <span class="resource-open">Open source ↗</span>
+      <span class="resource-open">Open ↗</span>
     </a>`).join('');
 }
 
