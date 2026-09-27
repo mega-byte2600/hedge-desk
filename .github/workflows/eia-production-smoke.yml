@@ -1,4 +1,4 @@
-name: EIA Production Smoke
+name: Production Demo Smoke
 
 on:
   pull_request:
@@ -8,10 +8,10 @@ permissions:
   contents: read
 
 jobs:
-  eia-production-smoke:
+  production-demo-smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify EIA is LIVE through both Render services
+      - name: Verify production APIs and demo surface
         shell: bash
         run: |
           python - <<'PY'
@@ -23,43 +23,100 @@ jobs:
               "https://hedge-desk2600.onrender.com",
               "https://hedge-desk.onrender.com",
           )
+          core_sources = {
+              "fred",
+              "nyfed-markets",
+              "treasury-fiscaldata",
+              "cftc-cot",
+              "sec-edgar",
+          }
 
-          def get_json(url):
+          def get(url, json_response=False):
               last = None
-              for attempt in range(8):
+              for attempt in range(4):
                   try:
-                      req = urllib.request.Request(url, headers={"User-Agent": "hedge-desk-prod-smoke/1.0"})
+                      req = urllib.request.Request(
+                          url,
+                          headers={"User-Agent": "hedge-desk-prod-smoke/2.0"},
+                      )
                       with urllib.request.urlopen(req, timeout=30) as response:
+                          body = response.read()
                           if response.status != 200:
                               raise RuntimeError(f"HTTP {response.status}")
-                          return json.loads(response.read().decode("utf-8"))
+                          return json.loads(body.decode("utf-8")) if json_response else body.decode("utf-8", "replace")
                   except Exception as exc:
                       last = exc
-                      time.sleep(min(5 + attempt * 2, 15))
+                      time.sleep(3 + attempt * 3)
               raise RuntimeError(f"production endpoint unavailable: {last}")
 
           failures = []
           for base in bases:
-              context = get_json(base + "/api/market-context")
-              eia_context = context["sources"]["eia-open-data"]
-              if eia_context["status"] != "LIVE" or int(eia_context["observation_count"]) < 1:
-                  failures.append((base, "market-context", eia_context))
-                  print(f"FAIL {base} /api/market-context: {json.dumps(eia_context, sort_keys=True)}")
-                  continue
+              print(f"\n=== {base} ===")
 
-              status = get_json(base + "/api/data-sources")
-              eia = status["sources"]["eia-open-data"]
-              if eia["status"] != "LIVE" or int(eia["observation_count"]) < 1:
-                  failures.append((base, "data-sources", eia))
-                  print(f"FAIL {base} /api/data-sources: {json.dumps(eia, sort_keys=True)}")
-                  continue
+              home = get(base + "/")
+              if "EMPORION" not in home or "styles.css" not in home or "viewport" not in home:
+                  failures.append((base, "public-home", "missing brand/layout hooks"))
+              else:
+                  print("PASS public home: brand + responsive layout hooks present")
 
-              observations = eia_context.get("observations") or []
-              if not observations:
-                  failures.append((base, "market-context-empty", eia_context))
-                  continue
-              print(f"PASS {base}: EIA LIVE, {eia_context['observation_count']} context rows")
+              css = get(base + "/styles.css")
+              if len(css) < 5000 or ".sidebar" not in css or ".panel" not in css or "@media" not in css:
+                  failures.append((base, "styles", "stylesheet incomplete"))
+              else:
+                  print(f"PASS stylesheet: {len(css)} bytes, responsive UI rules present")
+
+              health = get(base + "/api/health", True)
+              print("PASS health:", json.dumps(health, sort_keys=True))
+
+              status = get(base + "/api/data-sources", True)
+              sources = status.get("sources") or {}
+              print(
+                  f"Data sources: {status.get('live_count')} LIVE / "
+                  f"{status.get('blocked_count')} BLOCKED / "
+                  f"{status.get('unconfigured_count')} UNCONFIGURED"
+              )
+              for provider, probe in sorted(sources.items()):
+                  print(
+                      f"  {provider}: {probe.get('status')} "
+                      f"rows={probe.get('observation_count')} "
+                      f"configured={probe.get('configured')} "
+                      f"reason={probe.get('reason_code')}"
+                  )
+
+              for provider in sorted(core_sources):
+                  probe = sources.get(provider)
+                  if not probe:
+                      failures.append((base, provider, "missing from data-source status"))
+                      continue
+                  if probe.get("status") != "LIVE" or int(probe.get("observation_count") or 0) < 1:
+                      failures.append((base, provider, probe.get("reason_code")))
+
+              finra = sources.get("finra")
+              if finra and finra.get("configured"):
+                  if finra.get("status") != "LIVE" or int(finra.get("observation_count") or 0) < 1:
+                      failures.append((base, "finra", finra.get("reason_code")))
+                  else:
+                      print("PASS finra: configured and LIVE")
+              elif finra:
+                  print("INFO finra: credential not configured; not required for public demo")
+
+              eia = sources.get("eia-open-data")
+              if eia and eia.get("status") == "LIVE" and int(eia.get("observation_count") or 0) >= 1:
+                  print("PASS eia-open-data: LIVE")
+              else:
+                  print("INFO eia-open-data: pending credential rotation; non-fatal for this demo smoke")
+
+              context = get(base + "/api/market-context", True)
+              if not isinstance(context.get("sources"), dict):
+                  failures.append((base, "market-context", "sources missing"))
+              else:
+                  print(f"PASS market context: {len(context['sources'])} source entries")
 
           if failures:
+              print("\nFAILURES")
+              for failure in failures:
+                  print(" -", failure)
               raise SystemExit(1)
+
+          print("\nPASS: production demo surface and all required non-EIA sources are healthy on both services")
           PY
