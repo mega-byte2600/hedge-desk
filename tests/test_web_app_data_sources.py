@@ -54,7 +54,7 @@ class DataSourceStatusTests(unittest.TestCase):
         self.assertEqual(payload["mode"], "PAPER_RESEARCH_ONLY")
         self.assertFalse(payload["trade_authorized"])
         self.assertFalse(payload["live_orders_enabled"])
-        self.assertEqual(payload["source_count"], 6)
+        self.assertEqual(payload["source_count"], 7)
         self.assertEqual(payload["sources"]["eia-open-data"]["status"], "LIVE")
         self.assertEqual(payload["sources"]["finra"]["status"], "UNCONFIGURED")
         serialized = json.dumps(payload)
