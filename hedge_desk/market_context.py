@@ -14,7 +14,9 @@ from typing import Callable, Dict, Mapping, Sequence
 
 from hedge_desk.data.open_market_feeds import (
     OpenFeedResult,
+    bls_latest_series,
     cftc_cot,
+    ecb_exchange_rates,
     eia_v2,
     finra_fixed_income,
     nyfed_reference_rates,
@@ -131,6 +133,14 @@ def _cftc_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     return [_pick(row, keys) for row in result.rows[:10]]
 
 
+def _bls_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [_pick(row, ("seriesID", "year", "period", "periodName", "value", "latest")) for row in result.rows[:5]]
+
+
+def _ecb_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [_pick(row, ("CURRENCY", "CURRENCY_DENOM", "TIME_PERIOD", "OBS_VALUE", "OBS_STATUS")) for row in result.rows[:10]]
+
+
 def _finra_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     # FINRA dataset field names evolve. Preserve only common breadth/date fields
     # when present instead of coupling the report to a provider-specific schema.
@@ -155,6 +165,8 @@ def build_market_context(
     nyfed_fetch: Callable[..., OpenFeedResult] = nyfed_reference_rates,
     treasury_fetch: Callable[..., OpenFeedResult] = treasury_latest_auctions,
     cftc_fetch: Callable[..., OpenFeedResult] = cftc_cot,
+    bls_fetch: Callable[..., OpenFeedResult] = bls_latest_series,
+    ecb_fetch: Callable[..., OpenFeedResult] = ecb_exchange_rates,
     eia_fetch: Callable[..., OpenFeedResult] = eia_v2,
     finra_fetch: Callable[..., OpenFeedResult] = finra_fixed_income,
     fred_fetch: Callable[..., object] = fred_series_rows,
@@ -193,6 +205,18 @@ def build_market_context(
         sources["treasury-fiscaldata"] = _blocked(
             "treasury-fiscaldata", "UPSTREAM_OR_PARSE_FAILURE", str(exc)
         )
+
+    try:
+        result = bls_fetch("CUUR0000SA0")
+        sources["bls"] = _live(result, _bls_summary(result))
+    except Exception as exc:
+        sources["bls"] = _blocked("bls", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+
+    try:
+        result = ecb_fetch(("USD", "JPY", "GBP", "CHF"))
+        sources["ecb-fx"] = _live(result, _ecb_summary(result))
+    except Exception as exc:
+        sources["ecb-fx"] = _blocked("ecb-fx", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
 
     try:
         result = cftc_fetch(report="tff_futures_only", limit=25)
