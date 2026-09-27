@@ -197,6 +197,7 @@ def _finra_oauth_token(
         headers={
             "Accept": "application/json",
             "Authorization": f"Basic {basic}",
+            "Content-Type": "application/x-www-form-urlencoded",
             "User-Agent": "hedge-desk/1.0 research",
         },
     )
