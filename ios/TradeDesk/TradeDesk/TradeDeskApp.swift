@@ -354,7 +354,16 @@ struct ReportInfo: View {
                     Text("Refresh downloads the published snapshot; it does not run the Python engine. Bundled data is available offline. This app performs no trading or financial calculations.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
-            }.navigationTitle("Emporion Report")
+            }
+            .navigationTitle("Emporion Report")
+            .refreshable { await store.refresh() }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { Task { await store.refresh() } } label: {
+                        if store.loading { ProgressView() } else { Image(systemName: "arrow.clockwise") }
+                    }.disabled(store.loading).accessibilityLabel("Reload published snapshot")
+                }
+            }
         }
     }
 }

@@ -398,6 +398,9 @@ struct LearnChapter5: View {
                 }
                 .foregroundColor(.secondary)
             }
+            Text("Sample scorecard, reviewed Sep 26, 2026. Grades expire — events pass and calendars move. Treat this as the method, not today's answer.")
+                .font(.caption)
+                .foregroundColor(.secondary)
             ForEach(scores) { s in
                 HStack(alignment: .top, spacing: 12) {
                     GradeBadge(grade: s.grade)
@@ -414,9 +417,14 @@ struct LearnChapter5: View {
                 .cornerRadius(14)
             }
             LearnCard(title: "Today's weather", systemImage: "cloud.sun", accent: .blue) {
-                Text("VIX sits near 52-week lows (~15 at last close) — absolute premiums are thin right now. The edge persists, but the paychecks are smaller. As of Fri Sep 25 close; the desk re-scores this daily.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("VIX sits near 52-week lows (~15 at last close) — absolute premiums are thin right now. The edge persists, but the paychecks are smaller.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Text("Reviewed Sep 26, 2026, from the Friday close. The desk re-scores this daily — check the Today tab for the current read.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
         }
     }
