@@ -8,6 +8,9 @@ from hedge_desk.data.open_market_feeds import (
     bls_latest_series,
     cftc_cot,
     ecb_exchange_rates,
+    fdic_failures,
+    treasury_yield_curve,
+    world_bank_indicator,
     eia_v2,
     finra_fixed_income,
     nyfed_reference_rates,
@@ -175,6 +178,50 @@ class OpenMarketFeedTests(unittest.TestCase):
         self.assertEqual(result.rows[0]["CURRENCY"], "USD")
         with self.assertRaisesRegex(ValueError, "unsupported ECB"):
             ecb_exchange_rates(("BTC",), transport=transport)
+
+
+    def test_treasury_yield_curve_uses_official_feed(self):
+        seen = []
+        xml = b'''<?xml version="1.0" encoding="utf-8"?>
+        <feed xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+              xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices">
+          <entry><content><m:properties>
+            <d:NEW_DATE>2026-09-25</d:NEW_DATE>
+            <d:BC_2YEAR>3.70</d:BC_2YEAR>
+            <d:BC_10YEAR>4.10</d:BC_10YEAR>
+          </m:properties></content></entry>
+        </feed>'''
+        def transport(url):
+            seen.append(url)
+            return 200, xml
+        result = treasury_yield_curve(2026, transport=transport)
+        self.assertEqual(result.provider_id, "treasury-rates")
+        self.assertEqual(result.row_count, 1)
+        self.assertEqual(urlparse(seen[0]).hostname, "home.treasury.gov")
+
+    def test_fdic_failures_uses_official_api(self):
+        seen = []
+        payload = {"data": [{"data": {"NAME": "Example Bank", "FAILDATE": "01/01/2026"}}]}
+        result = fdic_failures(limit=1, transport=_transport(payload, seen=seen))
+        self.assertEqual(result.provider_id, "fdic")
+        self.assertEqual(result.row_count, 1)
+        self.assertEqual(urlparse(seen[0]).hostname, "api.fdic.gov")
+
+    def test_world_bank_indicator_uses_official_api(self):
+        seen = []
+        payload = [
+            {"page": 1},
+            [{"countryiso3code": "USA", "date": "2025", "value": 100.0}],
+        ]
+        result = world_bank_indicator(
+            "NY.GDP.MKTP.CD", country="USA", per_page=1,
+            transport=_transport(payload, seen=seen)
+        )
+        self.assertEqual(result.provider_id, "world-bank")
+        self.assertEqual(result.row_count, 1)
+        self.assertEqual(urlparse(seen[0]).hostname, "api.worldbank.org")
+        with self.assertRaisesRegex(ValueError, "unsupported World Bank"):
+            world_bank_indicator("BAD.SERIES", transport=_transport(payload))
 
     def test_cftc_tff_uses_official_public_reporting_api(self):
         seen = []
