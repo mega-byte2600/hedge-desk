@@ -117,7 +117,8 @@ def _fetch_json(url: str, provider: str, transport: Transport) -> object:
     except Exception as exc:
         raise ValueError(f"{provider} transport failed") from exc
     if status != 200 or not raw:
-        raise ValueError(f"{provider} fetch failed (status {status})")
+        body = raw[:200].decode("utf-8", errors="replace") if raw else ""
+        raise ValueError(f"{provider} fetch failed (status {status}) body={body}")
     return _decode_json(raw, provider)
 
 
