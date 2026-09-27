@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import time
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
@@ -73,22 +74,38 @@ def fetch_cot(
     commodity: Optional[str] = None,
     limit: int = 10,
     transport: Transport = _default_transport,
+    retries: int = 2,
 ) -> List[CotReport]:
     """Fetch recent COT reports. Optionally filter by commodity name.
 
-    Returns newest first. Raises ValueError on transport failure (fail closed).
+    Returns newest first. Retries transient failures with backoff.
+    Raises ValueError on persistent failure (fail closed).
     """
     params = {
         "$limit": str(limit),
         "$order": "report_date_as_yyyy_mm_dd DESC",
     }
     if commodity:
-        # Socrata SoQL: case-insensitive commodity filter
-        params["$where"] = (
-            f"upper(commodity_name) like '%{commodity.upper()}%'"
-        )
+        # Socrata SoQL: match on the CFTC commodity code when the input
+        # looks like one (e.g. '088651'), otherwise exact commodity name.
+        # Substring matching caused false hits (e.g. 'CRUDE OIL' matching
+        # 'FUEL OIL/CRUDE OIL'), so prefer exact matches.
+        code = commodity.strip().upper()
+        if code.isdigit():
+            params["$where"] = f"cftc_commodity_code = '{code}'"
+        else:
+            params["$where"] = f"upper(commodity_name) = '{code}'"
     url = f"{COT_API_URL}?{urllib.parse.urlencode(params)}"
-    status, raw = transport(url)
+    last_status: int | None = None
+    for attempt in range(retries + 1):
+        status, raw = transport(url)
+        last_status = status
+        if status == 200 and raw:
+            break
+        if attempt < retries:
+            time.sleep(2 ** attempt)
+    else:
+        raise ValueError(f"cftc COT fetch failed (status {last_status})")
     if status != 200 or not raw:
         raise ValueError(f"cftc COT fetch failed (status {status})")
     try:

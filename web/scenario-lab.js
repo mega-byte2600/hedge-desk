@@ -132,7 +132,7 @@ function scenarioDetail(scenario) {
     ? reasons.map(reason => `<div class="reason">${e(reason)}</div>`).join('')
     : '<p class="small">No reason code was recorded; inspect the exact engine record below.</p>';
 
-  return `<div class="dialog-head"><div><div class="eyebrow">REFERENCE SCENARIO / SYNTHETIC FIXTURE</div><h2 style="margin-top:9px">${e(human(scenario.scenario_id))}</h2></div><button class="close" data-action="close" aria-label="Close scenario">×</button></div>` +
+  return `<div class="dialog-head"><div><div class="eyebrow">REFERENCE SCENARIO</div><h2 style="margin-top:9px">${e(human(scenario.scenario_id))}</h2></div><button class="close" data-action="close" aria-label="Close scenario">×</button></div>` +
     `<div class="dialog-body"><div class="notice">${tag(outcome)}<span>${e(human(scenario.group))}. Recorded engine output; no scenario is executed from this screen.</span></div>` +
     `<div class="detail-grid"><section class="gate-card"><h3>What happened</h3>${metricRows}</section><section class="gate-card"><h3>Why the engine responded this way</h3>${reasonRows}</section></div>` +
     `<details class="evidence section-gap"><summary>Exact recorded inputs and outputs</summary><pre>${e(JSON.stringify(scenario, null, 2))}</pre></details>` +

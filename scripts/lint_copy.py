@@ -81,6 +81,10 @@ LEAKS = [
     (r"positioning rows", "jargon in user copy (incident 2026-09-26)"),
     (r"adv\s+\$\{", "trader abbreviation in user copy, spell out 'up/down' (incident 2026-09-26)"),
     (r"observations['\"`]\s*;", "stats jargon in user copy, use 'data points' (incident 2026-09-26)"),
+    # Incident 2026-09-26: meaningless internal status labels on the desk list.
+    (r"DATA INTEGRATION", "internal status jargon in user copy, use 'Active' (incident 2026-09-26)"),
+    (r"ARCHITECTURE ONLY", "internal status jargon in user copy, use 'Framework' (incident 2026-09-26)"),
+    (r"Operating state", "jargon header in user copy, use 'Status' (incident 2026-09-26)"),
 ]
 
 

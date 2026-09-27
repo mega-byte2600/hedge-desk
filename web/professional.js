@@ -2,13 +2,13 @@
 import { currentRoute } from './core.mjs';
 
 const deskMethods = [
-  ['Overnight Premium', 'Sells defined risk premium, and only after liquidity, volatility, event, and spread checks pass.', 'DATA INTEGRATION'],
-  ['Earnings Event', 'Compares what was expected against what the company confirmed, and how the stock reacted.', 'DATA INTEGRATION'],
-  ['Box / Parity Observer', 'Checks parity and box relationships after spreads, fees, settlement, and financing.', 'DATA INTEGRATION'],
-  ['Dividend Opportunity', 'Asks whether the payout can survive: cash generation, shareholder yield, and valuation.', 'DATA INTEGRATION'],
-  ['Global Quant & AI Research Lab', 'Covers quantitative and machine learning research, datasets, benchmarks, and reproducible model checks.', 'DATA INTEGRATION'],
-  ['Futures Event', 'Reads physical events against futures curves, liquidity, and contract specifications.', 'DATA INTEGRATION'],
-  ['Bonds & Rates', 'Uses Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress as the backdrop for other research.', 'ARCHITECTURE ONLY']
+  ['Overnight Premium', 'Sells defined risk premium, and only after liquidity, volatility, event, and spread checks pass.', 'Active'],
+  ['Earnings Event', 'Compares what was expected against what the company confirmed, and how the stock reacted.', 'Active'],
+  ['Box / Parity Observer', 'Checks parity and box relationships after spreads, fees, settlement, and financing.', 'Active'],
+  ['Dividend Opportunity', 'Asks whether the payout can survive: cash generation, shareholder yield, and valuation.', 'Active'],
+  ['Global Quant & AI Research Lab', 'Covers quantitative and machine learning research, datasets, benchmarks, and reproducible model checks.', 'Active'],
+  ['Futures Event', 'Reads physical events against futures curves, liquidity, and contract specifications.', 'Active'],
+  ['Bonds & Rates', 'Uses Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress as the backdrop for other research.', 'Framework']
 ];
 
 function applyBrand() {
@@ -89,7 +89,7 @@ function overviewBlock() {
         <article><strong>User-controlled extension</strong><span>Open-source users may connect their own data and implementation layers outside the default site.</span></article>
       </div>
       <div class="ws-desk-list">
-        <div class="ws-list-head"><span>Research desk</span><span>Operating state</span></div>
+        <div class="ws-list-head"><span>Research desk</span><span>Status</span></div>
         ${deskMethods.map(([name,,state]) => `<div class="ws-list-row"><strong>${name}</strong><span class="ws-state">${state}</span></div>`).join('')}
       </div>
     </section>`;

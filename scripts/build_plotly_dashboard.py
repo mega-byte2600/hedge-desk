@@ -321,10 +321,10 @@ def price_chart(series: dict) -> str:
         ))
     if not fig.data:
         return muted("symbol price series not parseable in this report")
-    fig.update_layout(**base_layout("Equity performance — rebased to 100 (real Yahoo EOD)", 360))
+    fig.update_layout(**base_layout("Equity performance — rebased to 100 (Yahoo daily closes)", 360))
     fig.update_layout(yaxis_title="index (start = 100)", xaxis_title="date",
                       legend=dict(orientation="h", y=-0.25))
-    return chart(fig, "ch_prices", source="Yahoo Finance EOD closes, nightly batch")
+    return chart(fig, "ch_prices", source="Yahoo Finance daily closes, nightly batch")
 
 
 def feature_heatmap(features: dict) -> str:
@@ -355,7 +355,7 @@ def feature_heatmap(features: dict) -> str:
         hovertemplate="%{y} · %{x}<br>value %{text}<extra></extra>",
     ))
     fig.update_layout(**base_layout("Feature bundle — per-symbol z-scored heatmap (raw values annotated)", 360))
-    return chart(fig, "ch_heatmap", source="computed from Yahoo Finance EOD closes, nightly batch")
+    return chart(fig, "ch_heatmap", source="computed from Yahoo Finance daily closes, nightly batch")
 
 
 # ---------------------------------------------------------------- premium desks
@@ -392,7 +392,7 @@ def csp_scan_chart(csp: dict) -> str:
     )
     table = (f"<table class='health'><thead><tr><th>symbol</th><th>fit</th><th>reasons</th></tr></thead>"
              f"<tbody>{tbl}</tbody></table>")
-    return chart(fig, "ch_csp", source="nightly cash-secured-put scan (Yahoo EOD + Cboe delayed chains)") + table
+    return chart(fig, "ch_csp", source="nightly cash-secured-put scan (Yahoo daily + Cboe delayed chains)") + table
 
 
 def chain_panel(chain_income: dict) -> str:
@@ -452,7 +452,7 @@ def candidates_chart(cands: list) -> str:
                            hovertemplate="%{x}<br>%{customdata}<br>collateral %{y:$,.0f}<extra></extra>"))
     fig.update_layout(**base_layout(f"Equity Candidates — collateral by symbol ({len(cands)})", 340))
     fig.update_layout(yaxis_title="collateral ($)", xaxis_title="symbol", xaxis_tickangle=-30)
-    return chart(fig, "ch_cands", source="nightly EOD candidate batch (Yahoo Finance)")
+    return chart(fig, "ch_cands", source="nightly candidate batch (Yahoo Finance)")
 
 
 # ---------------------------------------------------------------- rates / vix / oil
@@ -487,7 +487,7 @@ def vix_chart(series: dict, vix: dict) -> str:
     fig = go.Figure(go.Scatter(x=xs, y=ys,
                                mode="lines", name="VIX", line=dict(color="#e74c3c"),
                                hovertemplate="VIX %{x}<br>%{y:.2f}<extra></extra>"))
-    fig.update_layout(**base_layout(f"VIX 3-month trend (Yahoo, regime {regime})", 320))
+    fig.update_layout(**base_layout(f"VIX 3-month trend (Yahoo, {regime.lower()})", 320))
     fig.update_layout(yaxis_title="VIX", xaxis_title="date")
     return chart(fig, "ch_vix", source="Yahoo Finance (^VIX), nightly batch")
 
@@ -510,17 +510,21 @@ def earnings_table(earnings_actuals: dict) -> str:
     ea = earnings_actuals or {}
     real = [(k, v) for k, v in ea.items() if isinstance(v, dict) and v.get("mode") == "REAL_EDGAR_EARNINGS"]
     if not real:
-        return muted("no real EDGAR earnings actuals in this report")
+        return muted("no reported earnings in this report")
     trs = ""
     for cik, v in real:
         obs = v.get("observation", {}) or {}
-        trs += (f"<tr><td>{esc(cik)}</td><td>{esc(obs.get('form', ''))}</td>"
-                f"<td>{esc(obs.get('filed', obs.get('period', '')))}</td>"
-                f"<td>{esc(v.get('quarterly_eps_change'))}</td>"
-                f"<td>{esc(v.get('surprise_computed'))}</td></tr>")
-    return (f"<table class='health'><thead><tr><th>CIK</th><th>form</th><th>filed</th>"
-            f"<th>quarterly EPS Δ</th><th>surprise</th></tr></thead><tbody>{trs}</tbody></table>"
-            f"<p class='muted'>source: SEC EDGAR companyfacts</p>")
+        latest = obs.get('latest_quarterly_eps', '')
+        period = obs.get('latest_quarterly_period', '')
+        prior = obs.get('prior_quarterly_eps', '')
+        change = v.get('quarterly_eps_change', '')
+        trs += (f"<tr><td>{esc(cik)}</td><td>{esc(latest)}</td>"
+                f"<td>{esc(period)}</td>"
+                f"<td>{esc(prior)}</td>"
+                f"<td>{esc(change)}</td></tr>")
+    return (f"<table class='health'><thead><tr><th>CIK</th><th>Latest EPS</th><th>Period</th>"
+            f"<th>Prior EPS</th><th>Change</th></tr></thead><tbody>{trs}</tbody></table>"
+            f"<p class='muted'>source: SEC filings</p>")
 
 
 def earnings_eps_chart(earnings_actuals: dict) -> str:

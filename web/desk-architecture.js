@@ -10,7 +10,7 @@ function installDeskArchitecture() {
   panel.innerHTML = `
     <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
       <span class="eyebrow">DESK 07 · MACRO ANCHOR</span>
-      <span class="tag">Architecture only</span>
+      <span class="tag">Framework</span>
     </div>
     <h2>Bonds &amp; Rates</h2>
     <p>Anchor cross-asset research in Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress.</p>
