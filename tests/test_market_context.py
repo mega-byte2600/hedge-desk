@@ -98,6 +98,9 @@ class MarketContextTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             context = build_market_context(
                 fred_fetch=lambda series, start, end: (("2026-09-25", "3.88"),),
+                treasury_curve_fetch=lambda: _result("treasury-rates", "daily_treasury_yield_curve", [{}]),
+                fdic_fetch=lambda limit: _result("fdic", "bank-failures", [{}]),
+                world_bank_fetch=lambda indicator, country, per_page: _result("world-bank", indicator, [{}]),
                 bls_fetch=lambda series: _result("bls", series, [{}]),
                 ecb_fetch=lambda currencies: _result("ecb-fx", "EXR", [{}]),
                 nyfed_fetch=lambda: _result("nyfed-markets", "all-latest", [{"type": "SOFR"}]),
@@ -115,6 +118,9 @@ class MarketContextTests(unittest.TestCase):
         with patch.dict(os.environ, {}, clear=True):
             context = build_market_context(
                 fred_fetch=broken,
+                treasury_curve_fetch=lambda: _result("treasury-rates", "daily_treasury_yield_curve", [{}]),
+                fdic_fetch=lambda limit: _result("fdic", "bank-failures", [{}]),
+                world_bank_fetch=lambda indicator, country, per_page: _result("world-bank", indicator, [{}]),
                 bls_fetch=lambda series: _result("bls", series, [{}]),
                 ecb_fetch=lambda currencies: _result("ecb-fx", "EXR", [{}]),
                 nyfed_fetch=broken,
