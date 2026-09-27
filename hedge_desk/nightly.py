@@ -52,7 +52,7 @@ from hedge_desk.domain import Account, AccountType
 from decimal import Decimal
 
 NIGHTLY_VERSION = "hedge-desk-nightly-2.2.0"
-DEFAULT_WATCHLIST = ("NKE", "CCL", "AAL", "LYFT", "NCLH", "F", "DVN")  # sub-$55 GP-fit universe (see docs/MVP_RESCOPE)
+DEFAULT_WATCHLIST = ("NKE", "CCL", "AAL", "LYFT", "NCLH", "F", "DVN")
 
 
 def _watchlist() -> Sequence[str]:
@@ -322,9 +322,10 @@ def run_nightly(
         "note": (
             "Equity candidates use real EOD closes with Yahoo->Stooq redundancy; "
             "options use real delayed Cboe chains; SEC EDGAR supplies issuer facts. "
-            "Rates/macro retain FRED while authoritative cross-checks come from the "
-            "New York Fed and U.S. Treasury. EIA supplies energy fundamentals, CFTC "
-            "supplies futures positioning, and FINRA supplies public fixed-income "
+            "WTI market price context remains sourced from the existing oil desk, "
+            "while EIA supplies official energy fundamentals. Rates/macro retain FRED "
+            "with authoritative cross-checks from the New York Fed and U.S. Treasury. "
+            "CFTC supplies futures positioning and FINRA supplies public fixed-income "
             "breadth when credentials are configured. No provider failure is replaced "
             "with fabricated data. No order placed; trade_authorized=False."
         ),
@@ -344,9 +345,7 @@ def run_nightly(
     date_stamp = cutoff.date().isoformat()
     final_path = root / f"am-report-{date_stamp}.json"
     tmp_path = root / f".am-report-{date_stamp}.tmp"
-    tmp_path.write_text(
-        json.dumps(report, indent=2) + "\n", encoding="utf-8"
-    )
+    tmp_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     os.replace(tmp_path, final_path)
     latest_path = root / "am-report-latest.json"
     latest_tmp = root / ".am-report-latest.tmp"
