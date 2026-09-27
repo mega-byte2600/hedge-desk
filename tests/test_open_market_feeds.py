@@ -6,6 +6,7 @@ from hedge_desk.data.open_market_feeds import (
     cftc_cot,
     eia_v2,
     finra_fixed_income,
+    nyfed_reference_rates,
     sec_companyfacts,
     sec_submissions,
     treasury_latest_auctions,
@@ -65,6 +66,34 @@ def test_cftc_tff_uses_official_public_reporting_api():
     assert result.row_count == 1
     assert "publicreporting.cftc.gov/resource/gpe5-46if.json" in seen[0]
     assert "%24limit=3" in seen[0]
+
+
+def test_nyfed_latest_and_history_use_official_no_key_api():
+    seen = []
+    latest = nyfed_reference_rates(
+        transport=_transport(
+            {"refRates": [{"type": "SOFR", "percentRate": 3.88}]},
+            seen=seen,
+        )
+    )
+    assert latest.provider_id == "nyfed-markets"
+    assert latest.dataset == "all-latest"
+    assert latest.row_count == 1
+    assert seen[0] == "https://markets.newyorkfed.org/api/rates/all/latest.json"
+
+    seen.clear()
+    history = nyfed_reference_rates(
+        "SOFR",
+        limit=5,
+        transport=_transport(
+            {"refRates": [{"type": "SOFR", "percentRate": 3.88}]},
+            seen=seen,
+        ),
+    )
+    assert history.dataset == "sofr"
+    assert seen[0].endswith("/api/rates/secured/sofr/last/5.json")
+    with pytest.raises(ValueError, match="unsupported NY Fed"):
+        nyfed_reference_rates("LIBOR", transport=_transport({"refRates": []}))
 
 
 def test_eia_requires_key_and_does_not_return_it_in_result(monkeypatch):
