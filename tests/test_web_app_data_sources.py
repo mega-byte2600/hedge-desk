@@ -31,6 +31,8 @@ class DataSourceStatusTests(unittest.TestCase):
 
     def _patch_public_sources(self):
         return (
+            patch.object(web_app, "bls_latest_series", return_value=_Rows()),
+            patch.object(web_app, "ecb_exchange_rates", return_value=_Rows()),
             patch.object(web_app, "nyfed_reference_rates", return_value=_Rows()),
             patch.object(web_app, "treasury_latest_auctions", return_value=_Rows()),
             patch.object(web_app, "cftc_cot", return_value=_Rows()),
@@ -46,7 +48,7 @@ class DataSourceStatusTests(unittest.TestCase):
             # FINRA intentionally absent: its free Public Credential still
             # requires user-provisioned OAuth client credentials.
         }
-        with patch.dict("os.environ", env, clear=True), patches[0], patches[1], patches[2], patches[3], patches[4], patches[5]:
+        with patch.dict("os.environ", env, clear=True), patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6], patches[7]:
             status, headers, payload = self._request("/api/data-sources")
 
         self.assertEqual(status, "200 OK")
@@ -54,7 +56,7 @@ class DataSourceStatusTests(unittest.TestCase):
         self.assertEqual(payload["mode"], "PAPER_RESEARCH_ONLY")
         self.assertFalse(payload["trade_authorized"])
         self.assertFalse(payload["live_orders_enabled"])
-        self.assertEqual(payload["source_count"], 7)
+        self.assertEqual(payload["source_count"], 9)
         self.assertEqual(payload["sources"]["eia-open-data"]["status"], "LIVE")
         self.assertEqual(payload["sources"]["finra"]["status"], "UNCONFIGURED")
         serialized = json.dumps(payload)
@@ -68,7 +70,7 @@ class DataSourceStatusTests(unittest.TestCase):
             "FINRA_CLIENT_ID": "finra-client",
             "FINRA_CLIENT_SECRET": "finra-test-secret",
         }
-        with patch.dict("os.environ", env, clear=True), patches[0], patches[1], patches[2], patches[3], patches[4], patches[5]:
+        with patch.dict("os.environ", env, clear=True), patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6], patches[7]:
             payload = web_app.build_data_source_status()
 
         self.assertEqual(payload["sources"]["finra"]["status"], "LIVE")
@@ -81,7 +83,7 @@ class DataSourceStatusTests(unittest.TestCase):
         leaking_error = "upstream failed api_key=must-never-escape"
         with patch.dict("os.environ", {"EIA_API_KEY": "configured"}, clear=True), patch.object(
             web_app, "nyfed_reference_rates", side_effect=ValueError(leaking_error)
-        ), patches[1], patches[2], patches[3], patches[4], patches[5]:
+        ), patches[1], patches[2], patches[3], patches[4], patches[5], patches[6], patches[7]:
             payload = web_app.build_data_source_status()
 
         nyfed = payload["sources"]["nyfed-markets"]
