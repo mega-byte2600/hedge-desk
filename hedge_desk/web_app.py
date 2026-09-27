@@ -1,9 +1,9 @@
-"""Production WSGI entry point with safe market-data connection status.
+"""Production WSGI entry point for market-data health and normalized context.
 
-All existing web behavior delegates to :mod:`hedge_desk.server`.  This module
-adds one operational endpoint, ``/api/data-sources``, that verifies bounded
-server-side connectivity to authoritative research feeds without returning raw
-market payloads, credentials, account data, PII, or PHI.
+All existing web behavior delegates to :mod:`hedge_desk.server`. This module
+adds bounded operational/research endpoints and a live enhancement to the
+nightly dashboard. Credentials remain server-side. No secret, account data,
+PII, PHI, or trading authorization is returned.
 """
 
 from __future__ import annotations
@@ -23,9 +23,128 @@ from hedge_desk.data.open_market_feeds import (
     sec_submissions,
     treasury_latest_auctions,
 )
+from hedge_desk.market_context import build_market_context
 
 
-DATA_SOURCE_STATUS_SCHEMA = "hedge-desk-data-source-status-1.0.0"
+DATA_SOURCE_STATUS_SCHEMA = "hedge-desk-data-source-status-1.1.0"
+
+_DASHBOARD_API_LAYER = r"""
+<script id="authoritative-api-layer-v1">
+(() => {
+  const LABELS = {
+    'nyfed-markets': 'Money markets (NY Fed)',
+    'treasury-fiscaldata': 'Treasury auctions (U.S. Treasury)',
+    'cftc-cot': 'Futures positioning (CFTC)',
+    'sec-edgar': 'Filings / fundamentals (SEC EDGAR)',
+    'eia-open-data': 'Energy fundamentals (EIA)',
+    'finra': 'Fixed income breadth (FINRA)'
+  };
+
+  function detail(provider, contextSource, probe) {
+    if (!probe || probe.status !== 'LIVE') {
+      return probe && probe.reason_code ? probe.reason_code.replaceAll('_', ' ') : 'not live';
+    }
+    const obs = contextSource && contextSource.observations;
+    if (provider === 'nyfed-markets' && obs) {
+      return ['SOFR','EFFR','OBFR','TGCR','BGCR']
+        .filter(k => obs[k] && obs[k].percentRate != null)
+        .map(k => `${k} ${obs[k].percentRate}%`)
+        .join(' · ') || `${probe.observation_count} observations`;
+    }
+    if (provider === 'treasury-fiscaldata' && Array.isArray(obs) && obs[0]) {
+      const x = obs[0];
+      return [x.security_type, x.security_term, x.auction_date && `auction ${x.auction_date}`]
+        .filter(Boolean).join(' · ');
+    }
+    if (provider === 'eia-open-data' && Array.isArray(obs) && obs[0]) {
+      const x = obs[0];
+      return [x.period, x.value != null && `${x.value} ${x.units || ''}`.trim(), x['series-description']]
+        .filter(Boolean).join(' · ');
+    }
+    if (provider === 'cftc-cot' && Array.isArray(obs) && obs[0]) {
+      return `${obs.length} positioning rows · latest ${obs[0].report_date_as_yyyy_mm_dd || 'report'}`;
+    }
+    if (provider === 'finra' && Array.isArray(obs) && obs[0]) {
+      const x = obs[0];
+      const breadth = x.advances != null && x.declines != null ? `adv ${x.advances} / dec ${x.declines}` : null;
+      return [x.date || x.weekStartDate, x.productCategory || x.marketSegment, breadth]
+        .filter(Boolean).join(' · ') || `${probe.observation_count} observations`;
+    }
+    return `${probe.observation_count} observations`;
+  }
+
+  function mount(status, context) {
+    const grid = document.querySelector('.grid');
+    if (!grid || document.getElementById('authoritative-api-card')) return;
+
+    const oldHealth = grid.querySelector('.card.wide h3');
+    if (oldHealth && oldHealth.textContent.includes('Source health')) {
+      oldHealth.textContent = 'Nightly batch inputs — what this specific run actually consumed';
+    }
+
+    const card = document.createElement('div');
+    card.className = 'card wide';
+    card.id = 'authoritative-api-card';
+
+    const heading = document.createElement('h3');
+    heading.textContent = 'Authoritative API layer — live production connections';
+    card.appendChild(heading);
+
+    const summary = document.createElement('p');
+    summary.className = 'muted';
+    summary.textContent = `${status.live_count || 0}/${status.source_count || 0} live now · ` +
+      `${status.blocked_count || 0} blocked · ${status.unconfigured_count || 0} unconfigured. ` +
+      'These are production probes; nightly strategy-input status remains separately visible below.';
+    card.appendChild(summary);
+
+    const table = document.createElement('table');
+    table.className = 'health';
+    table.innerHTML = '<thead><tr><th>source</th><th>status</th><th>live detail</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+    Object.entries(status.sources || {}).forEach(([provider, probe]) => {
+      const tr = document.createElement('tr');
+      const name = document.createElement('td');
+      name.textContent = LABELS[provider] || provider;
+      const state = document.createElement('td');
+      state.textContent = probe.status || 'UNKNOWN';
+      state.className = probe.status === 'LIVE' ? 'ok' : 'warn';
+      const info = document.createElement('td');
+      info.className = 'muted';
+      info.textContent = detail(provider, (context.sources || {})[provider], probe);
+      tr.append(name, state, info);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    card.appendChild(table);
+    grid.insertBefore(card, grid.firstChild);
+  }
+
+  Promise.all([
+    fetch('/api/data-sources', {cache: 'no-store'}).then(r => {
+      if (!r.ok) throw new Error('source status unavailable');
+      return r.json();
+    }),
+    fetch('/api/market-context', {cache: 'no-store'}).then(r => {
+      if (!r.ok) throw new Error('market context unavailable');
+      return r.json();
+    })
+  ]).then(([status, context]) => mount(status, context)).catch(() => {
+    const grid = document.querySelector('.grid');
+    if (!grid || document.getElementById('authoritative-api-card')) return;
+    const card = document.createElement('div');
+    card.className = 'card wide';
+    card.id = 'authoritative-api-card';
+    const h = document.createElement('h3');
+    h.textContent = 'Authoritative API layer';
+    const p = document.createElement('p');
+    p.className = 'muted';
+    p.textContent = 'Live production probe unavailable. No provider status inferred.';
+    card.append(h, p);
+    grid.insertBefore(card, grid.firstChild);
+  });
+})();
+</script>
+"""
 
 
 def _json(start_response, payload, status="200 OK"):
@@ -86,8 +205,6 @@ def _probe_source(
             "reason_code": None,
         }
     except Exception:
-        # Deliberately suppress upstream exception text: URLs can contain API
-        # keys and authentication errors can contain provider-specific details.
         return {
             "provider_id": provider_id,
             "status": "BLOCKED",
@@ -107,28 +224,10 @@ def build_data_source_status() -> Dict[str, object]:
     )
 
     definitions = {
-        "nyfed-markets": (
-            True,
-            False,
-            lambda: nyfed_reference_rates(),
-        ),
-        "treasury-fiscaldata": (
-            True,
-            False,
-            lambda: treasury_latest_auctions(limit=1),
-        ),
-        "cftc-cot": (
-            True,
-            False,
-            lambda: cftc_cot(limit=1),
-        ),
-        "sec-edgar": (
-            True,
-            False,
-            # Stable public issuer used only to prove EDGAR connectivity.  No
-            # issuer payload is returned by this endpoint.
-            lambda: sec_submissions(320193),
-        ),
+        "nyfed-markets": (True, False, lambda: nyfed_reference_rates()),
+        "treasury-fiscaldata": (True, False, lambda: treasury_latest_auctions(limit=1)),
+        "cftc-cot": (True, False, lambda: cftc_cot(limit=1)),
+        "sec-edgar": (True, False, lambda: sec_submissions(320193)),
         "eia-open-data": (
             eia_configured,
             True,
@@ -151,9 +250,6 @@ def build_data_source_status() -> Dict[str, object]:
                 provider_id, False, credential_required, fetcher
             )
 
-    # Run independent upstreams concurrently so one slow agency endpoint does
-    # not serialize all connection checks. Each underlying adapter has its own
-    # bounded network timeout and fails closed.
     if runnable:
         with ThreadPoolExecutor(max_workers=len(runnable)) as pool:
             futures = {
@@ -199,10 +295,46 @@ def build_data_source_status() -> Dict[str, object]:
     }
 
 
+def _serve_enhanced_dashboard(environ, start_response):
+    path = base_server.ARTIFACTS / "am-demo.html"
+    try:
+        html = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return _json(
+            start_response,
+            {"error": "artifact_missing", "path": "am-demo.html"},
+            "404 Not Found",
+        )
+    if "authoritative-api-layer-v1" not in html:
+        marker = "</body>"
+        html = html.replace(marker, _DASHBOARD_API_LAYER + marker, 1)
+    body = html.encode("utf-8")
+    etag = base_server._etag_for(path)[:-1] + "-api-layer-v1\""
+    if environ.get("HTTP_IF_NONE_MATCH") == etag:
+        start_response("304 Not Modified", [("Cache-Control", "no-cache"), ("ETag", etag)])
+        return [b""]
+    start_response(
+        "200 OK",
+        [
+            ("Content-Type", "text/html; charset=utf-8"),
+            ("Content-Length", str(len(body))),
+            ("Cache-Control", "no-cache"),
+            ("ETag", etag),
+        ],
+    )
+    return [body]
+
+
 def application(environ, start_response):
-    if environ.get("PATH_INFO", "/") == "/api/data-sources":
+    path = environ.get("PATH_INFO", "/")
+    if path == "/api/data-sources":
         payload = base_server._cached("data-source-status", build_data_source_status)
         return _json(start_response, payload)
+    if path == "/api/market-context":
+        payload = base_server._cached("market-context", build_market_context)
+        return _json(start_response, payload)
+    if path in ("/dashboard", "/dashboard.html"):
+        return _serve_enhanced_dashboard(environ, start_response)
     return base_server.application(environ, start_response)
 
 

@@ -8,13 +8,13 @@ close; the GP opens the report before the open.
 
 Honesty and safety:
 - No secrets, tokens, or PII are read, written, or logged. The only inputs are
-  public symbols and the public Yahoo chart endpoint.
+  public symbols and configured server-side market-data credentials.
 - No order is placed and no trade is authorized (every candidate is
   trade_authorized=False).
 - The report is content-addressed (sha256) so a later reader can verify it was
   not tampered with, and it is written atomically (temp file + rename).
-- Fail closed: a transport or parse failure for a symbol quarantines/rejects that
-  symbol; the run still writes a report with the failures visible.
+- Fail closed: a transport or parse failure for a symbol/source is surfaced in
+  the report; the run never substitutes fabricated market data.
 """
 
 from __future__ import annotations
@@ -36,6 +36,7 @@ from hedge_desk.cboe_chain import real_chain_income
 from hedge_desk.rates_desk import rates_environment
 from hedge_desk.vix_regime import vix_regime, apply_vix_regime_filter
 from hedge_desk.macro_desk import macro_environment
+from hedge_desk.market_context import build_market_context
 from hedge_desk.freshness import freshness_summary
 from hedge_desk.data_quality import quality_report
 from hedge_desk.account import read_account_equity
@@ -50,8 +51,8 @@ from hedge_desk.execution_gate import (
 from hedge_desk.domain import Account, AccountType
 from decimal import Decimal
 
-NIGHTLY_VERSION = "hedge-desk-nightly-2.1.0"
-DEFAULT_WATCHLIST = ("NKE", "CCL", "AAL", "LYFT", "NCLH", "F", "DVN")  # sub-$55 GP-fit universe (see docs/MVP_RESCOPE)
+NIGHTLY_VERSION = "hedge-desk-nightly-2.2.0"
+DEFAULT_WATCHLIST = ("NKE", "CCL", "AAL", "LYFT", "NCLH", "F", "DVN")
 
 
 def _watchlist() -> Sequence[str]:
@@ -81,8 +82,7 @@ def _annotate_chain_with_gates(
         gate_reasons = []
         try:
             cand = build_candidate_from_structure(s, quote_timestamp=now)
-        except (ValueError, TypeError) as exc:
-            # Missing real inputs (e.g. real ADV) -> INDETERMINATE, never ERROR.
+        except (ValueError, TypeError):
             gate_reasons.append("MISSING_REAL_RISK_INPUT")
             gated.append(
                 {**s, "gate_decision": "INDETERMINATE",
@@ -90,9 +90,6 @@ def _annotate_chain_with_gates(
                  "kill_switch_armed": kill_switch_armed}
             )
             continue
-        # No validated RoR artifact exists yet, so pass None: the gate fails
-        # closed with RISK_INPUT_ABSENT instead of a fabricated 0.01. No agent
-        # may substitute an authoritative Risk-of-Ruin (AGENTS.md).
         decision = evaluate_execution(
             candidate=cand,
             account=acct,
@@ -105,8 +102,6 @@ def _annotate_chain_with_gates(
                       "kill_switch_armed": decision.kill_switch_armed})
     out = dict(chain)
     out["gated_income_structures"] = gated
-    # DATA peer-review: this is a DEMO default (drives the fail-closed gates to
-    # INDETERMINATE); never present it as the GP's validated account balance.
     out["gate_demo_account_equity"] = demo_account_equity
     out["gate_risk_input_advanced"] = False
     out["gate_note"] = (
@@ -135,35 +130,27 @@ def run_nightly(
     paper_log_path: Path | str = "artifacts/paper-outcomes.jsonl",
     yellow_sheet_path: Path | str = "artifacts/yellow-sheets.jsonl",
 ) -> Dict[str, object]:
-    """Run the EOD batch + premium candidates + real chain income + macro desks.
+    """Run EOD candidates plus real option, macro and authoritative API context.
 
-    Real chain income (Cboe) for ``chain_symbols``; a real rates environment
-    (FRED); and real earnings actuals (SEC EDGAR, by 10-digit CIK in
-    ``earnings_ciks``). Anything that fails is reported blocked — never
-    fabricated.
+    Independent providers fail closed. A failed provider is represented as
+    BLOCKED/UNCONFIGURED in the report and never replaced by invented values.
     """
     symbols = tuple(watchlist) if watchlist else _watchlist()
     if not symbols:
         raise ValueError("nightly watchlist cannot be empty")
     cutoff = datetime.now(timezone.utc)
-    # Real account equity (local, gitignored) so survivability can evaluate
-    # instead of INDETERMINATE. Raw value is never put in the report.
     account_equity = read_account_equity()
 
-    # Pull enough history for the feature plane (3mo), not just the 5d batch.
     eod = (ingest_eod(symbols, cutoff, transport=transport, range_param=FEATURE_YAHOO_RANGE)
     if transport else ingest_eod(symbols, cutoff, range_param=FEATURE_YAHOO_RANGE))
     candidates = build_premium_candidates(eod)
 
-    # Data-freshness gate: is the batch running on today's close or the prior
-    # trading day's? (At 4:30pm EST the source may not have published today yet.)
     last_bar_dates = [
         str(row["last_day"]) for row in eod.get("source_results", [])
         if isinstance(row, dict) and row.get("status") == "PASS" and row.get("last_day")
     ]
     freshness = freshness_summary(last_bar_dates, cutoff.date())
 
-    # Feature plane (Tier 1): deterministic per-symbol technical context.
     days_by_symbol = {}
     for row in eod.get("source_results", []):
         if isinstance(row, dict) and row.get("status") == "PASS" and row.get("days"):
@@ -173,17 +160,9 @@ def run_nightly(
             ]
     features = build_feature_bundle_from_days(days_by_symbol)
 
-    # Independent data fetches run CONCURRENTLY so one slow/flaky source (e.g.
-    # FRED) cannot stall the whole after-close batch. Each is fail-closed: a
-    # ValueError becomes a BLOCKED entry, never a fabricated number. The EOD
-    # ingest above stays sequential because candidates/features depend on it.
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     def _safe(fn, *args, **kwargs):
-        # DATA peer-review: catch any exception (not just ValueError) so a
-        # KeyError/TypeError from one desk cannot escape fut.result() and kill
-        # the whole batch before the report is written. Fail-stop is honest, but
-        # one flaky source should not cost the AM report.
         try:
             return fn(*args, **kwargs)
         except Exception as exc:
@@ -196,8 +175,9 @@ def run_nightly(
     macro: dict = {}
     oil: dict = {}
     earnings_results: dict = {}
+    market_context: dict = {}
 
-    with ThreadPoolExecutor(max_workers=8) as ex:
+    with ThreadPoolExecutor(max_workers=9) as ex:
         futures = {}
         for cs in symbols:
             if csp_transport:
@@ -229,6 +209,7 @@ def run_nightly(
             futures[ex.submit(_safe, oil_market, transport=oil_transport)] = ("oil", None)
         else:
             futures[ex.submit(_safe, oil_market)] = ("oil", None)
+        futures[ex.submit(_safe, build_market_context)] = ("market_context", None)
         for cik in earnings_ciks:
             if earnings_transport:
                 futures[ex.submit(_safe, earnings_desk, cik, earnings_transport)] = ("earnings", cik)
@@ -252,14 +233,11 @@ def run_nightly(
                 oil = res
             elif kind == "earnings":
                 earnings_results[key] = res
+            elif kind == "market_context":
+                market_context = res
 
-    # VIX regime as a risk filter on the CSP candidates (RISK peer-review):
-    # a HIGH regime flags/forces fits_gp_rules=False; ELEVATED warns.
     csp_results = apply_vix_regime_filter(vix, csp_results)
 
-    # Compounding scale path for the top GP-fit candidate: how contracts scale
-    # as the account grows, holding the 2%-of-equity rule. Purely conditional on
-    # equity milestones; no performance projected or claimed.
     scale_path = None
     top_fit = None
     best_roc = -1.0
@@ -290,16 +268,12 @@ def run_nightly(
         }
 
     def _downsample(points, limit=63):
-        """Evenly thin a point list for charting; keeps endpoints, stays small."""
         if len(points) <= limit:
             return list(points)
         step = len(points) / limit
         idxs = sorted({min(int(i * step), len(points) - 1) for i in range(limit)})
         return [points[i] for i in idxs]
 
-    # Compact trend series for the dashboard: symbol prices from the EOD
-    # batch (no extra fetches), plus the desk windows the batch already
-    # pulled. None when the owning desk was BLOCKED.
     series = {
         "as_of": cutoff.date().isoformat(),
         "symbols": {
@@ -344,29 +318,26 @@ def run_nightly(
         "macro_environment": macro,
         "oil_market": oil,
         "earnings_actuals": earnings_results,
+        "market_context": market_context,
         "note": (
-            "Equity candidates: collateral/margin from real EOD closes. Premium "
-            "desk: executable net credit from REAL Cboe delayed option chains. "
-    "Rates: real FRED observations. Oil: front-month WTI (CL=F) "
-            "observations from public Yahoo chart data. Earnings: real SEC "
-            "EDGAR actuals. "
-            "No probability or Risk of Ruin. No order placed; no trade "
-    "authorized (every candidate trade_authorized=False)."
+            "Equity candidates use real EOD closes with Yahoo->Stooq redundancy; "
+            "options use real delayed Cboe chains; SEC EDGAR supplies issuer facts. "
+            "WTI market price context remains sourced from the existing oil desk, "
+            "while EIA supplies official energy fundamentals. Rates/macro retain FRED "
+            "with authoritative cross-checks from the New York Fed and U.S. Treasury. "
+            "CFTC supplies futures positioning and FINRA supplies public fixed-income "
+            "breadth when credentials are configured. No provider failure is replaced "
+            "with fabricated data. No order placed; trade_authorized=False."
         ),
     }
-    # Data-quality monitor (handoff 2026-09-26 gap #3): scan the finished
-    # report and flag DOWN/STALE/MISSING sources loudly. Added after the
-    # report body is complete but before hashing, so it's content-addressed.
     report["data_quality"] = quality_report(report)
-    # Content-address the stable report body (exclude the hash and the
-    # runtime path fields so the hash is reproducible across runs).
     body = {
         k: v
         for k, v in report.items()
         if k not in ("report_sha256", "report_path", "latest_path")
     }
     report["report_sha256"] = hashlib.sha256(
-    json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
 
     root = Path(artifacts_dir)
@@ -374,11 +345,8 @@ def run_nightly(
     date_stamp = cutoff.date().isoformat()
     final_path = root / f"am-report-{date_stamp}.json"
     tmp_path = root / f".am-report-{date_stamp}.tmp"
-    tmp_path.write_text(
-    json.dumps(report, indent=2) + "\n", encoding="utf-8"
-    )
-    os.replace(tmp_path, final_path)  # atomic
-    # Stable "latest" pointer so the web/iOS feed can read today's report.
+    tmp_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    os.replace(tmp_path, final_path)
     latest_path = root / "am-report-latest.json"
     latest_tmp = root / ".am-report-latest.tmp"
     latest_tmp.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
