@@ -8,6 +8,7 @@ network, the real CLI, or the production cache.
 
 import datetime as _dt
 import json
+import os
 import unittest
 from decimal import Decimal
 from pathlib import Path
@@ -46,6 +47,19 @@ def _fake_run_ok(*args, **kwargs):
 
 
 class SkillCliRouteTest(unittest.TestCase):
+    def setUp(self):
+        # These tests exercise routing behavior, not the persistent cache.
+        # Disable the production cache so a prior CI run cannot short-circuit
+        # the fake CLI/CSV transports and make the suite order-dependent.
+        self._old_cache_dir = os.environ.get("HEDGE_DESK_CACHE_DIR")
+        os.environ["HEDGE_DESK_CACHE_DIR"] = "off"
+
+    def tearDown(self):
+        if self._old_cache_dir is None:
+            os.environ.pop("HEDGE_DESK_CACHE_DIR", None)
+        else:
+            os.environ["HEDGE_DESK_CACHE_DIR"] = self._old_cache_dir
+
     def test_cli_rows_filtered_to_window_and_sorted(self):
         with patch.object(
             rates_desk, "_skill_cli_path", return_value=Path("/fake/cli.py")
@@ -92,8 +106,6 @@ class SkillCliRouteTest(unittest.TestCase):
             rates_desk, "_default_transport", side_effect=boom
         ), patch.dict("os.environ", {}, clear=False):
             # Ensure no env key leaks in from the test environment.
-            import os
-
             os.environ.pop("FRED_API_KEY", None)
             rows = fred_series_rows(
                 "DGS5",
@@ -120,8 +132,6 @@ class SkillCliRouteTest(unittest.TestCase):
             "subprocess.run",
             side_effect=AssertionError("CLI must not run"),
         ), patch.dict("os.environ", {}, clear=False):
-            import os
-
             os.environ.pop("FRED_API_KEY", None)
             rows = fred_series_rows(
                 "DGS5", _START, _END, transport=fake_transport, cache_dir=None
@@ -146,8 +156,6 @@ class SkillCliRouteTest(unittest.TestCase):
         ), patch("subprocess.run", side_effect=fake_run), patch.dict(
             "os.environ", {}, clear=False
         ):
-            import os
-
             os.environ.pop("FRED_API_KEY", None)
             rows = fred_series_rows(
                 "DGS5", _START, _END, transport=csv_transport, cache_dir=None
