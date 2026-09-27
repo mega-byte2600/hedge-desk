@@ -2,14 +2,15 @@
 
 The adapters in this module deliberately prefer regulators, government agencies,
 and public market-structure datasets over scraped web pages or unlicensed feeds.
-They are read-only, use the Python standard library, and fail closed on transport
-or payload errors.
+They are read-only, use the Python standard library, and fail closed on transport,
+authentication, or payload errors.
 
 No function in this module authorizes a trade or places an order.
 """
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import urllib.error
@@ -20,12 +21,17 @@ from typing import Callable, Mapping, Sequence, Tuple
 
 
 Transport = Callable[[str], Tuple[int, bytes]]
+RequestTransport = Callable[[urllib.request.Request], Tuple[int, bytes]]
 
 TREASURY_AUCTIONS_URL = (
     "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/"
     "v1/accounting/od/auctions_query"
 )
 FINRA_DATA_URL = "https://api.finra.org/data/group/{group}/name/{dataset}"
+FINRA_TOKEN_URL = (
+    "https://ews.fip.finra.org/fip/rest/ews/oauth2/access_token"
+    "?grant_type=client_credentials"
+)
 CFTC_SODA_URL = "https://publicreporting.cftc.gov/resource/{dataset}.json"
 EIA_V2_URL = "https://api.eia.gov/v2/{route}/data/"
 NYFED_LATEST_RATES_URL = "https://markets.newyorkfed.org/api/rates/all/latest.json"
@@ -34,6 +40,8 @@ SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 
 # Public FINRA fixed-income datasets that are directly useful to a rates/credit desk.
+# FINRA public data is free, but its Query API requires a Public Credential and
+# OAuth 2.0 bearer token. Client credentials must remain server-side.
 FINRA_FIXED_INCOME_DATASETS = frozenset(
     {
         "treasuryDailyAggregates",
@@ -74,6 +82,16 @@ class OpenFeedResult:
         return len(self.rows)
 
 
+def _default_request_transport(request: urllib.request.Request) -> Tuple[int, bytes]:
+    try:
+        with urllib.request.urlopen(request, timeout=15) as resp:
+            return resp.status, resp.read()
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.read()
+    except Exception as exc:
+        return 0, str(exc).encode("utf-8")
+
+
 def _default_transport(url: str) -> Tuple[int, bytes]:
     user_agent = os.environ.get(
         "MARKET_DATA_USER_AGENT",
@@ -83,13 +101,14 @@ def _default_transport(url: str) -> Tuple[int, bytes]:
         url,
         headers={"Accept": "application/json", "User-Agent": user_agent},
     )
+    return _default_request_transport(req)
+
+
+def _decode_json(raw: bytes, provider: str) -> object:
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return resp.status, resp.read()
-    except urllib.error.HTTPError as exc:
-        return exc.code, exc.read()
-    except Exception as exc:
-        return 0, str(exc).encode("utf-8")
+        return json.loads(raw.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise ValueError(f"{provider} returned malformed JSON") from exc
 
 
 def _fetch_json(url: str, provider: str, transport: Transport) -> object:
@@ -99,10 +118,21 @@ def _fetch_json(url: str, provider: str, transport: Transport) -> object:
         raise ValueError(f"{provider} transport failed") from exc
     if status != 200 or not raw:
         raise ValueError(f"{provider} fetch failed (status {status})")
+    return _decode_json(raw, provider)
+
+
+def _fetch_request_json(
+    request: urllib.request.Request,
+    provider: str,
+    transport: RequestTransport,
+) -> object:
     try:
-        return json.loads(raw.decode("utf-8"))
-    except (ValueError, UnicodeDecodeError) as exc:
-        raise ValueError(f"{provider} returned malformed JSON") from exc
+        status, raw = transport(request)
+    except Exception as exc:
+        raise ValueError(f"{provider} transport failed") from exc
+    if status != 200 or not raw:
+        raise ValueError(f"{provider} fetch failed (status {status})")
+    return _decode_json(raw, provider)
 
 
 def _rows_from_list(payload: object, provider: str) -> Tuple[Mapping[str, object], ...]:
@@ -146,18 +176,70 @@ def treasury_latest_auctions(
     )
 
 
+def _finra_oauth_token(
+    transport: RequestTransport,
+    client_id: str | None = None,
+    client_secret: str | None = None,
+) -> str:
+    client = (client_id if client_id is not None else os.environ.get("FINRA_CLIENT_ID", "")).strip()
+    secret = (
+        client_secret
+        if client_secret is not None
+        else os.environ.get("FINRA_CLIENT_SECRET", "")
+    ).strip()
+    if not client or not secret:
+        raise ValueError("FINRA_CLIENT_ID and FINRA_CLIENT_SECRET are required")
+    basic = base64.b64encode(f"{client}:{secret}".encode("utf-8")).decode("ascii")
+    request = urllib.request.Request(
+        FINRA_TOKEN_URL,
+        data=b"",
+        method="POST",
+        headers={
+            "Accept": "application/json",
+            "Authorization": f"Basic {basic}",
+            "User-Agent": "hedge-desk/1.0 research",
+        },
+    )
+    payload = _fetch_request_json(request, "finra-auth", transport)
+    if not isinstance(payload, dict):
+        raise ValueError("finra-auth token payload is malformed")
+    token = str(payload.get("access_token", "")).strip()
+    if not token:
+        raise ValueError("finra-auth token payload has no access_token")
+    return token
+
+
 def finra_fixed_income(
     dataset: str,
     limit: int = 50,
-    transport: Transport = _default_transport,
+    request_transport: RequestTransport = _default_request_transport,
+    access_token: str | None = None,
+    client_id: str | None = None,
+    client_secret: str | None = None,
 ) -> OpenFeedResult:
-    """Fetch a vetted public FINRA fixed-income market dataset (no key)."""
+    """Fetch a vetted FINRA public fixed-income dataset via OAuth 2.0.
+
+    FINRA's Public Credential is free, but authentication is required. In
+    production, provide FINRA_CLIENT_ID and FINRA_CLIENT_SECRET as server-side
+    environment variables. Tests may inject a short-lived access_token.
+    """
     if dataset not in FINRA_FIXED_INCOME_DATASETS:
         raise ValueError(f"unsupported FINRA fixed-income dataset: {dataset}")
     limit = _positive_limit(limit, 5000)
+    token = (access_token or "").strip() or _finra_oauth_token(
+        request_transport, client_id=client_id, client_secret=client_secret
+    )
     base = FINRA_DATA_URL.format(group="fixedIncomeMarket", dataset=dataset)
     query = urllib.parse.urlencode({"limit": str(limit)})
-    payload = _fetch_json(f"{base}?{query}", "finra", transport)
+    request = urllib.request.Request(
+        f"{base}?{query}",
+        headers={
+            "Accept": "application/json",
+            "Authorization": f"Bearer {token}",
+            "User-Agent": "hedge-desk/1.0 research",
+        },
+    )
+    payload = _fetch_request_json(request, "finra", request_transport)
     return OpenFeedResult(
         provider_id="finra",
         dataset=dataset,
