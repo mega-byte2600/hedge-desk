@@ -274,6 +274,8 @@ def fred_series_rows(
         for attempt in range(retries + 1):
             try:
                 status, raw = transport(url)
+                if status == 0 and raw:
+                    last_exc = raw[:150].decode("utf-8", errors="replace")
             except Exception as exc:
                 status, raw = 0, b""
                 last_exc = f"{type(exc).__name__}: {str(exc)[:150]}"
