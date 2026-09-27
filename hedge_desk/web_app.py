@@ -1,9 +1,13 @@
-"""Production WSGI entry point with safe market-data connection status.
+"""Production WSGI entry point for market-data health and normalized context.
 
-All existing web behavior delegates to :mod:`hedge_desk.server`.  This module
-adds one operational endpoint, ``/api/data-sources``, that verifies bounded
-server-side connectivity to authoritative research feeds without returning raw
-market payloads, credentials, account data, PII, or PHI.
+All existing web behavior delegates to :mod:`hedge_desk.server`. This module
+adds two bounded operational/research endpoints:
+
+``/api/data-sources`` verifies connectivity without returning provider payloads.
+``/api/market-context`` returns a compact normalized cross-asset research view.
+
+Credentials remain server-side. Neither endpoint returns secrets, account data,
+PII, PHI, or trading authorization.
 """
 
 from __future__ import annotations
@@ -23,9 +27,10 @@ from hedge_desk.data.open_market_feeds import (
     sec_submissions,
     treasury_latest_auctions,
 )
+from hedge_desk.market_context import build_market_context
 
 
-DATA_SOURCE_STATUS_SCHEMA = "hedge-desk-data-source-status-1.0.0"
+DATA_SOURCE_STATUS_SCHEMA = "hedge-desk-data-source-status-1.1.0"
 
 
 def _json(start_response, payload, status="200 OK"):
@@ -86,8 +91,6 @@ def _probe_source(
             "reason_code": None,
         }
     except Exception:
-        # Deliberately suppress upstream exception text: URLs can contain API
-        # keys and authentication errors can contain provider-specific details.
         return {
             "provider_id": provider_id,
             "status": "BLOCKED",
@@ -125,8 +128,6 @@ def build_data_source_status() -> Dict[str, object]:
         "sec-edgar": (
             True,
             False,
-            # Stable public issuer used only to prove EDGAR connectivity.  No
-            # issuer payload is returned by this endpoint.
             lambda: sec_submissions(320193),
         ),
         "eia-open-data": (
@@ -151,9 +152,6 @@ def build_data_source_status() -> Dict[str, object]:
                 provider_id, False, credential_required, fetcher
             )
 
-    # Run independent upstreams concurrently so one slow agency endpoint does
-    # not serialize all connection checks. Each underlying adapter has its own
-    # bounded network timeout and fails closed.
     if runnable:
         with ThreadPoolExecutor(max_workers=len(runnable)) as pool:
             futures = {
@@ -200,8 +198,12 @@ def build_data_source_status() -> Dict[str, object]:
 
 
 def application(environ, start_response):
-    if environ.get("PATH_INFO", "/") == "/api/data-sources":
+    path = environ.get("PATH_INFO", "/")
+    if path == "/api/data-sources":
         payload = base_server._cached("data-source-status", build_data_source_status)
+        return _json(start_response, payload)
+    if path == "/api/market-context":
+        payload = base_server._cached("market-context", build_market_context)
         return _json(start_response, payload)
     return base_server.application(environ, start_response)
 
