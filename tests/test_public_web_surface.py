@@ -55,7 +55,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn('Independent research platform', combined)
         self.assertIn('RESEARCH PLATFORM', combined)
         self.assertIn('Seven research desks.<br>Six evaluated workflows.', combined)
-        self.assertIn('<b>7</b> desks', combined)
+        self.assertIn('<b>6</b> desks + 1 coming soon', combined)
         self.assertIn('No orders placed', combined)
         self.assertNotIn('AI-native', combined)
         self.assertNotIn('brandmark', combined)
@@ -112,7 +112,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         professional = (WEB / "professional.js").read_text(encoding="utf-8")
         build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
 
-        self.assertIn('Research desks <b>7</b>', index)
+        self.assertIn('Research desks <b>6+1</b>', index)
         self.assertIn('./desk-architecture.js', index)
         self.assertIn('"desk-architecture.js"', build)
         self.assertIn('Bonds &amp; Rates', architecture)
@@ -121,7 +121,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn('Research for this desk is still in progress.', architecture)
         self.assertIn("['Bonds & Rates'", professional)
         self.assertIn('Seven research desks.<br>Six evaluated workflows.', professional)
-        self.assertIn('<b>7</b> desks', professional)
+        self.assertIn('<b>6</b> desks + 1 coming soon', professional)
         self.assertNotIn('Six research workflows.<br>Structured decision support.', professional)
         self.assertNotIn('<b>WORKFLOWS</b> SIX DESKS', professional)
 

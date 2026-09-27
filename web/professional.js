@@ -45,7 +45,7 @@ function statusStrip() {
       <div class="ws-tape">
         <span><b>EMPORION</b></span>
         <span>Independent research</span>
-        <span><b>7</b> desks</span>
+        <span><b>6</b> desks + 1 coming soon</span>
         <span>Human review</span>
         <span>No orders placed</span>
         <a href="./README_PUBLIC.md" download>README ↓</a>
