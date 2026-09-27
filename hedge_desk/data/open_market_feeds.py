@@ -28,6 +28,8 @@ TREASURY_AUCTIONS_URL = (
 FINRA_DATA_URL = "https://api.finra.org/data/group/{group}/name/{dataset}"
 CFTC_SODA_URL = "https://publicreporting.cftc.gov/resource/{dataset}.json"
 EIA_V2_URL = "https://api.eia.gov/v2/{route}/data/"
+NYFED_LATEST_RATES_URL = "https://markets.newyorkfed.org/api/rates/all/latest.json"
+NYFED_RATE_HISTORY_URL = "https://markets.newyorkfed.org/api/rates/{segment}/{rate}/last/{limit}.json"
 SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 
@@ -50,6 +52,14 @@ FINRA_FIXED_INCOME_DATASETS = frozenset(
 CFTC_COT_DATASETS: Mapping[str, str] = {
     "tff_futures_only": "gpe5-46if",
     "disaggregated_futures_only": "72hh-3qpy",
+}
+
+NYFED_REFERENCE_RATES: Mapping[str, Tuple[str, str]] = {
+    "SOFR": ("secured", "sofr"),
+    "TGCR": ("secured", "tgcr"),
+    "BGCR": ("secured", "bgcr"),
+    "EFFR": ("unsecured", "effr"),
+    "OBFR": ("unsecured", "obfr"),
 }
 
 
@@ -176,6 +186,34 @@ def cftc_cot(
     )
 
 
+def nyfed_reference_rates(
+    rate: str | None = None,
+    limit: int = 5,
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch NY Fed administered reference rates (SOFR/EFFR/etc.; no key)."""
+    if rate is None:
+        payload = _fetch_json(NYFED_LATEST_RATES_URL, "nyfed-markets", transport)
+        dataset = "all-latest"
+    else:
+        normalized = rate.strip().upper()
+        try:
+            segment, slug = NYFED_REFERENCE_RATES[normalized]
+        except KeyError as exc:
+            raise ValueError(f"unsupported NY Fed reference rate: {rate}") from exc
+        limit = _positive_limit(limit, 1000)
+        url = NYFED_RATE_HISTORY_URL.format(segment=segment, rate=slug, limit=limit)
+        payload = _fetch_json(url, "nyfed-markets", transport)
+        dataset = normalized.lower()
+    if not isinstance(payload, dict) or not isinstance(payload.get("refRates"), list):
+        raise ValueError("nyfed-markets payload has no refRates rows")
+    return OpenFeedResult(
+        provider_id="nyfed-markets",
+        dataset=dataset,
+        rows=_rows_from_list(payload["refRates"], "nyfed-markets"),
+    )
+
+
 def eia_v2(
     route: str,
     data: Sequence[str] = ("value",),
@@ -244,10 +282,12 @@ def sec_companyfacts(
 __all__ = [
     "CFTC_COT_DATASETS",
     "FINRA_FIXED_INCOME_DATASETS",
+    "NYFED_REFERENCE_RATES",
     "OpenFeedResult",
     "cftc_cot",
     "eia_v2",
     "finra_fixed_income",
+    "nyfed_reference_rates",
     "sec_companyfacts",
     "sec_submissions",
     "treasury_latest_auctions",
