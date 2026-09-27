@@ -18,6 +18,7 @@ import os
 import urllib.error
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Callable, Mapping, Sequence, Tuple
 
@@ -42,6 +43,9 @@ SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 BLS_LATEST_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/{series}?latest=true"
 ECB_EXR_URL = "https://data-api.ecb.europa.eu/service/data/EXR/{key}"
+TREASURY_DAILY_RATES_URL = "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml"
+FDIC_FAILURES_URL = "https://api.fdic.gov/banks/failures"
+WORLD_BANK_INDICATOR_URL = "https://api.worldbank.org/v2/country/{country}/indicator/{indicator}"
 
 # Public FINRA fixed-income datasets that are directly useful to a rates/credit desk.
 # FINRA public data is free, but its Query API requires a Public Credential and
@@ -335,6 +339,108 @@ def ecb_exchange_rates(
     return OpenFeedResult(provider_id="ecb-fx", dataset="EXR", rows=parsed)
 
 
+
+def treasury_yield_curve(
+    year: int | None = None,
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch official U.S. Treasury daily par yield curve rates."""
+    import datetime as _dt
+    target_year = year if year is not None else _dt.date.today().year
+    if type(target_year) is not int or target_year < 1990 or target_year > 2100:
+        raise ValueError("invalid Treasury yield-curve year")
+    query = urllib.parse.urlencode({
+        "data": "daily_treasury_yield_curve",
+        "field_tdr_date_value": str(target_year),
+    })
+    url = f"{TREASURY_DAILY_RATES_URL}?{query}"
+    try:
+        status, raw = transport(url)
+    except Exception as exc:
+        raise ValueError("treasury-rates transport failed") from exc
+    if status != 200 or not raw:
+        body = raw[:200].decode("utf-8", errors="replace") if raw else ""
+        raise ValueError(f"treasury-rates fetch failed (status {status}) body={body}")
+    try:
+        root = ET.fromstring(raw)
+    except ET.ParseError as exc:
+        raise ValueError("treasury-rates returned malformed XML") from exc
+    rows = []
+    ns = "{http://schemas.microsoft.com/ado/2007/08/dataservices/metadata}properties"
+    for props in root.findall(f".//{ns}"):
+        row = {}
+        for child in list(props):
+            row[child.tag.split("}", 1)[-1]] = (child.text or "").strip()
+        if row:
+            rows.append(row)
+    if not rows:
+        raise ValueError("treasury-rates payload has no observations")
+    return OpenFeedResult("treasury-rates", "daily_treasury_yield_curve", tuple(rows))
+
+
+def fdic_failures(
+    limit: int = 10,
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch recent U.S. bank failures from FDIC BankFind."""
+    limit = _positive_limit(limit, 1000)
+    query = urllib.parse.urlencode({
+        "limit": str(limit),
+        "sort_by": "FAILDATE",
+        "sort_order": "DESC",
+    })
+    payload = _fetch_json(f"{FDIC_FAILURES_URL}?{query}", "fdic", transport)
+    if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
+        raise ValueError("fdic payload has no data rows")
+    rows = []
+    for item in payload["data"]:
+        if isinstance(item, dict):
+            row = item.get("data") if isinstance(item.get("data"), dict) else item
+            rows.append(row)
+    if not rows:
+        raise ValueError("fdic payload has no failure rows")
+    return OpenFeedResult("fdic", "bank-failures", tuple(rows))
+
+
+def world_bank_indicator(
+    indicator: str,
+    country: str = "USA",
+    per_page: int = 5,
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch recent World Bank indicator observations."""
+    allowed = {
+        "NY.GDP.MKTP.CD",
+        "FP.CPI.TOTL.ZG",
+        "SL.UEM.TOTL.ZS",
+        "NE.EXP.GNFS.ZS",
+        "GC.DOD.TOTL.GD.ZS",
+    }
+    normalized_indicator = indicator.strip().upper()
+    normalized_country = country.strip().upper()
+    if normalized_indicator not in allowed:
+        raise ValueError(f"unsupported World Bank indicator: {indicator}")
+    if not normalized_country.isalnum() or len(normalized_country) > 3:
+        raise ValueError("invalid World Bank country code")
+    per_page = _positive_limit(per_page, 1000)
+    query = urllib.parse.urlencode({
+        "format": "json",
+        "per_page": str(per_page),
+        "mrnev": str(per_page),
+    })
+    url = WORLD_BANK_INDICATOR_URL.format(
+        country=normalized_country,
+        indicator=normalized_indicator,
+    ) + "?" + query
+    payload = _fetch_json(url, "world-bank", transport)
+    if not isinstance(payload, list) or len(payload) < 2 or not isinstance(payload[1], list):
+        raise ValueError("world-bank payload has no data rows")
+    rows = tuple(row for row in payload[1] if isinstance(row, dict) and row.get("value") is not None)
+    if not rows:
+        raise ValueError("world-bank payload has no observations")
+    return OpenFeedResult("world-bank", normalized_indicator, rows)
+
+
 def cftc_cot(
     report: str = "tff_futures_only",
     limit: int = 100,
@@ -461,6 +567,9 @@ __all__ = [
     "ecb_exchange_rates",
     "eia_v2",
     "finra_fixed_income",
+    "world_bank_indicator",
+    "treasury_yield_curve",
+    "fdic_failures",
     "nyfed_reference_rates",
     "sec_companyfacts",
     "sec_submissions",
