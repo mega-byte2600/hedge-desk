@@ -16,7 +16,12 @@ from wsgiref.simple_server import make_server
 
 from hedge_desk import server as base_server
 from hedge_desk.data.open_market_feeds import (
+    bls_latest_series,
     cftc_cot,
+    ecb_exchange_rates,
+    fdic_failures,
+    treasury_yield_curve,
+    world_bank_indicator,
     eia_v2,
     finra_fixed_income,
     nyfed_reference_rates,
@@ -37,6 +42,11 @@ _DASHBOARD_API_LAYER = r"""
   const LABELS = {
     'nyfed-markets': 'Money markets (NY Fed)',
     'treasury-fiscaldata': 'Treasury auctions (U.S. Treasury)',
+    'treasury-rates': 'Treasury yield curve (U.S. Treasury)',
+    'fdic': 'Bank failures (FDIC)',
+    'world-bank': 'Global macro (World Bank)',
+    'bls': 'U.S. inflation & labor (BLS)',
+    'ecb-fx': 'Foreign exchange (ECB)',
     'cftc-cot': 'Futures positioning (CFTC)',
     'sec-edgar': 'Company filings (SEC)',
     'eia-open-data': 'Energy data (EIA)',
@@ -278,6 +288,11 @@ def build_data_source_status() -> Dict[str, object]:
         ),
         "nyfed-markets": (True, False, lambda: nyfed_reference_rates()),
         "treasury-fiscaldata": (True, False, lambda: treasury_latest_auctions(limit=1)),
+        "treasury-rates": (True, False, lambda: treasury_yield_curve()),
+        "fdic": (True, False, lambda: fdic_failures(limit=1)),
+        "world-bank": (True, False, lambda: world_bank_indicator("NY.GDP.MKTP.CD", country="USA", per_page=1)),
+        "bls": (True, False, lambda: bls_latest_series("CUUR0000SA0")),
+        "ecb-fx": (True, False, lambda: ecb_exchange_rates(("USD",))),
         "cftc-cot": (True, False, lambda: cftc_cot(limit=1)),
         "sec-edgar": (True, False, probe_sec),
         "eia-open-data": (

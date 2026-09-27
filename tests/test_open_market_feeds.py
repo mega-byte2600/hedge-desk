@@ -5,7 +5,12 @@ from urllib.parse import parse_qs, urlparse
 from unittest.mock import patch
 
 from hedge_desk.data.open_market_feeds import (
+    bls_latest_series,
     cftc_cot,
+    ecb_exchange_rates,
+    fdic_failures,
+    treasury_yield_curve,
+    world_bank_indicator,
     eia_v2,
     finra_fixed_income,
     nyfed_reference_rates,
@@ -115,6 +120,108 @@ class OpenMarketFeedTests(unittest.TestCase):
         self.assertTrue(token_request.get_header("Authorization").startswith("Basic "))
         self.assertEqual(data_request.get_header("Authorization"), "Bearer short-lived-token")
         self.assertNotIn("test-client-secret", repr(result))
+
+
+    def test_bls_latest_series_uses_official_public_api(self):
+        seen = []
+        payload = {
+            "status": "REQUEST_SUCCEEDED",
+            "Results": {
+                "series": [
+                    {
+                        "seriesID": "CUUR0000SA0",
+                        "data": [
+                            {
+                                "year": "2026",
+                                "period": "M08",
+                                "periodName": "August",
+                                "value": "325.0",
+                                "latest": "true",
+                            }
+                        ],
+                    }
+                ]
+            },
+        }
+        result = bls_latest_series(
+            "CUUR0000SA0", transport=_transport(payload, seen=seen)
+        )
+        self.assertEqual(result.provider_id, "bls")
+        self.assertEqual(result.dataset, "CUUR0000SA0")
+        self.assertEqual(result.row_count, 1)
+        parsed = urlparse(seen[0])
+        self.assertEqual(parsed.hostname, "api.bls.gov")
+        self.assertIn("/publicAPI/v2/timeseries/data/CUUR0000SA0", parsed.path)
+        self.assertEqual(parse_qs(parsed.query).get("latest"), ["true"])
+        with self.assertRaisesRegex(ValueError, "unsupported BLS"):
+            bls_latest_series("BAD", transport=_transport(payload))
+
+    def test_ecb_fx_uses_official_sdmx_api_and_parses_csv(self):
+        seen = []
+
+        def transport(url):
+            seen.append(url)
+            raw = (
+                "KEY,FREQ,CURRENCY,CURRENCY_DENOM,EXR_TYPE,EXR_SUFFIX,TIME_PERIOD,OBS_VALUE,OBS_STATUS\n"
+                "EXR.D.USD.EUR.SP00.A,D,USD,EUR,SP00,A,2026-09-25,1.1700,A\n"
+            ).encode("utf-8")
+            return 200, raw
+
+        result = ecb_exchange_rates(("USD",), transport=transport)
+        self.assertEqual(result.provider_id, "ecb-fx")
+        self.assertEqual(result.dataset, "EXR")
+        self.assertEqual(result.row_count, 1)
+        parsed = urlparse(seen[0])
+        self.assertEqual(parsed.hostname, "data-api.ecb.europa.eu")
+        self.assertIn("/service/data/EXR/D.USD.EUR.SP00.A", parsed.path)
+        self.assertEqual(parse_qs(parsed.query).get("lastNObservations"), ["1"])
+        self.assertEqual(result.rows[0]["CURRENCY"], "USD")
+        with self.assertRaisesRegex(ValueError, "unsupported ECB"):
+            ecb_exchange_rates(("BTC",), transport=transport)
+
+
+    def test_treasury_yield_curve_uses_official_feed(self):
+        seen = []
+        xml = b'''<?xml version="1.0" encoding="utf-8"?>
+        <feed xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
+              xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices">
+          <entry><content><m:properties>
+            <d:NEW_DATE>2026-09-25</d:NEW_DATE>
+            <d:BC_2YEAR>3.70</d:BC_2YEAR>
+            <d:BC_10YEAR>4.10</d:BC_10YEAR>
+          </m:properties></content></entry>
+        </feed>'''
+        def transport(url):
+            seen.append(url)
+            return 200, xml
+        result = treasury_yield_curve(2026, transport=transport)
+        self.assertEqual(result.provider_id, "treasury-rates")
+        self.assertEqual(result.row_count, 1)
+        self.assertEqual(urlparse(seen[0]).hostname, "home.treasury.gov")
+
+    def test_fdic_failures_uses_official_api(self):
+        seen = []
+        payload = {"data": [{"data": {"NAME": "Example Bank", "FAILDATE": "01/01/2026"}}]}
+        result = fdic_failures(limit=1, transport=_transport(payload, seen=seen))
+        self.assertEqual(result.provider_id, "fdic")
+        self.assertEqual(result.row_count, 1)
+        self.assertEqual(urlparse(seen[0]).hostname, "api.fdic.gov")
+
+    def test_world_bank_indicator_uses_official_api(self):
+        seen = []
+        payload = [
+            {"page": 1},
+            [{"countryiso3code": "USA", "date": "2025", "value": 100.0}],
+        ]
+        result = world_bank_indicator(
+            "NY.GDP.MKTP.CD", country="USA", per_page=1,
+            transport=_transport(payload, seen=seen)
+        )
+        self.assertEqual(result.provider_id, "world-bank")
+        self.assertEqual(result.row_count, 1)
+        self.assertEqual(urlparse(seen[0]).hostname, "api.worldbank.org")
+        with self.assertRaisesRegex(ValueError, "unsupported World Bank"):
+            world_bank_indicator("BAD.SERIES", transport=_transport(payload))
 
     def test_cftc_tff_uses_official_public_reporting_api(self):
         seen = []
