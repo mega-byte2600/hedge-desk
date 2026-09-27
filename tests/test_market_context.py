@@ -110,7 +110,14 @@ class MarketContextTests(unittest.TestCase):
             )
         self.assertEqual(context["status"], "DEGRADED")
         self.assertEqual(context["sources"]["nyfed-markets"]["status"], "BLOCKED")
-        self.assertNotIn("secret-bearing", repr(context))
+        # Error details are now surfaced for diagnostics (with credentials redacted),
+        # so the raw message appears — but actual secrets must never leak.
+        self.assertIn("detail", context["sources"]["nyfed-markets"])
+        # Credential patterns are redacted
+        from hedge_desk.market_context import _blocked
+        redacted = _blocked("test", "FAIL", "failed with api_key=supersecret123")
+        self.assertNotIn("supersecret123", repr(redacted))
+        self.assertIn("[REDACTED]", repr(redacted))
 
 
 if __name__ == "__main__":
