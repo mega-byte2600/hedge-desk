@@ -9,6 +9,7 @@ no secret, access token, account data, PII, or PHI is returned.
 from __future__ import annotations
 
 import os
+from datetime import date, timedelta
 from typing import Callable, Dict, Mapping, Sequence
 
 from hedge_desk.data.open_market_feeds import (
@@ -19,6 +20,7 @@ from hedge_desk.data.open_market_feeds import (
     nyfed_reference_rates,
     treasury_latest_auctions,
 )
+from hedge_desk.rates_desk import fred_series_rows
 
 MARKET_CONTEXT_SCHEMA = "hedge-desk-market-context-1.0.0"
 
@@ -145,10 +147,28 @@ def build_market_context(
     cftc_fetch: Callable[..., OpenFeedResult] = cftc_cot,
     eia_fetch: Callable[..., OpenFeedResult] = eia_v2,
     finra_fetch: Callable[..., OpenFeedResult] = finra_fixed_income,
+    fred_fetch: Callable[..., object] = fred_series_rows,
 ) -> Dict[str, object]:
     """Build fail-closed cross-asset context from authoritative provider APIs."""
 
     sources: Dict[str, Dict[str, object]] = {}
+
+    try:
+        end = date.today()
+        rows = fred_fetch("DFF", end - timedelta(days=14), end)
+        if not rows:
+            raise ValueError("empty FRED series")
+        sources["fred"] = {
+            "provider_id": "fred",
+            "dataset": "DFF",
+            "status": "LIVE",
+            "observation_count": len(rows),
+            "observations": [
+                {"date": str(day), "value": str(value)} for day, value in rows[-5:]
+            ],
+        }
+    except Exception:
+        sources["fred"] = _blocked("fred", "UPSTREAM_OR_AUTH_FAILURE")
 
     try:
         result = nyfed_fetch()
