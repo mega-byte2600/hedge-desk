@@ -42,7 +42,9 @@ NYFED_RATE_HISTORY_URL = "https://markets.newyorkfed.org/api/rates/{segment}/{ra
 SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 BLS_LATEST_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/{series}?latest=true"
-ECB_EXR_URL = "https://data-api.ecb.europa.eu/service/data/EXR/{key}"
+# ECB euro reference rates: the SDMX Data Portal endpoint intermittently closes
+# connections, so use the classic daily eurofxref feed (same official data).
+ECB_EUROFXREF_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
 TREASURY_DAILY_RATES_URL = "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml"
 FDIC_FAILURES_URL = "https://api.fdic.gov/banks/failures"
 WORLD_BANK_INDICATOR_URL = "https://api.worldbank.org/v2/country/{country}/indicator/{indicator}"
@@ -72,6 +74,27 @@ CFTC_COT_DATASETS: Mapping[str, str] = {
 
 BLS_MACRO_SERIES = frozenset({"CUUR0000SA0", "CUSR0000SA0L1E", "CES0000000001", "LNS14000000"})
 ECB_FX_CURRENCIES = frozenset({"USD", "JPY", "GBP", "CHF", "CAD", "AUD", "CNY"})
+
+# Official daily Treasury par yield curve tenors, sourced from FRED's DGS
+# constant-maturity series (the same official Treasury/Fed H.15 rates; the
+# home.treasury.gov XML route is unreliable). FRED DGS = "Market Yield on U.S.
+# Treasury Securities at X-Year Constant Maturity, Quoted on an Investment
+# Basis".
+TREASURY_DGS_TENORS: Tuple[str, ...] = (
+    "DGS1MO", "DGS3MO", "DGS6MO", "DGS1", "DGS2", "DGS3", "DGS5",
+    "DGS7", "DGS10", "DGS20", "DGS30",
+)
+
+# Nasdaq's public quote/calendar API needs a browser-style UA; it is
+# rate-sensitive, so batch callers must cache (see rates_desk FRED caching).
+NASDAQ_API_URL = "https://api.nasdaq.com/api/{path}"
+_NASDAQ_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+)
+NASDAQ_ETF_SYMBOLS = frozenset(
+    {"SPY", "QQQ", "IWM", "DIA", "TLT", "XLF", "XLE", "XLK", "EEM", "GLD"}
+)
 
 NYFED_REFERENCE_RATES: Mapping[str, Tuple[str, str]] = {
     "SOFR": ("secured", "sofr"),
@@ -139,30 +162,67 @@ def _decode_json(raw: bytes, provider: str) -> object:
         raise ValueError(f"{provider} returned malformed JSON") from exc
 
 
-def _fetch_json(url: str, provider: str, transport: Transport) -> object:
-    try:
-        status, raw = transport(url)
-    except Exception as exc:
-        raise ValueError(f"{provider} transport failed") from exc
-    if status != 200 or not raw:
-        body = raw[:200].decode("utf-8", errors="replace") if raw else ""
-        raise ValueError(f"{provider} fetch failed (status {status}) body={body}")
-    return _decode_json(raw, provider)
+def _is_transient_status(status: int) -> bool:
+    return status == 0 or status == 429 or 500 <= status < 600
+
+
+def _fetch_json(url: str, provider: str, transport: Transport, retries: int = 2) -> object:
+    last_status, last_raw = 0, b""
+    for attempt in range(retries + 1):
+        try:
+            status, raw = transport(url)
+        except Exception as exc:
+            status, raw = 0, str(exc).encode("utf-8")
+        if status == 200 and raw:
+            return _decode_json(raw, provider)
+        last_status, last_raw = status, raw
+        if not _is_transient_status(status) or attempt == retries:
+            break
+        import time as _time
+        _time.sleep(1.0 * (attempt + 1))
+    body = last_raw[:200].decode("utf-8", errors="replace") if last_raw else ""
+    raise ValueError(f"{provider} fetch failed (status {last_status}) body={body}")
+
+
+def _fetch_bytes(url: str, provider: str, transport: Transport, retries: int = 2) -> bytes:
+    last_status, last_raw = 0, b""
+    for attempt in range(retries + 1):
+        try:
+            status, raw = transport(url)
+        except Exception as exc:
+            status, raw = 0, str(exc).encode("utf-8")
+        if status == 200 and raw:
+            return raw
+        last_status, last_raw = status, raw
+        if not _is_transient_status(status) or attempt == retries:
+            break
+        import time as _time
+        _time.sleep(1.0 * (attempt + 1))
+    body = last_raw[:200].decode("utf-8", errors="replace") if last_raw else ""
+    raise ValueError(f"{provider} fetch failed (status {last_status}) body={body}")
 
 
 def _fetch_request_json(
     request: urllib.request.Request,
     provider: str,
     transport: RequestTransport,
+    retries: int = 2,
 ) -> object:
-    try:
-        status, raw = transport(request)
-    except Exception as exc:
-        raise ValueError(f"{provider} transport failed") from exc
-    if status != 200 or not raw:
-        body = raw[:200].decode("utf-8", errors="replace") if raw else ""
-        raise ValueError(f"{provider} fetch failed (status {status}) body={body}")
-    return _decode_json(raw, provider)
+    last_status, last_raw = 0, b""
+    for attempt in range(retries + 1):
+        try:
+            status, raw = transport(request)
+        except Exception as exc:
+            status, raw = 0, str(exc).encode("utf-8")
+        if status == 200 and raw:
+            return _decode_json(raw, provider)
+        last_status, last_raw = status, raw
+        if not _is_transient_status(status) or attempt == retries:
+            break
+        import time as _time
+        _time.sleep(1.0 * (attempt + 1))
+    body = last_raw[:200].decode("utf-8", errors="replace") if last_raw else ""
+    raise ValueError(f"{provider} fetch failed (status {last_status}) body={body}")
 
 
 def _rows_from_list(payload: object, provider: str) -> Tuple[Mapping[str, object], ...]:
@@ -309,7 +369,11 @@ def ecb_exchange_rates(
     currencies: Sequence[str] = ("USD", "JPY", "GBP", "CHF"),
     transport: Transport = _default_transport,
 ) -> OpenFeedResult:
-    """Fetch latest ECB euro reference FX rates (no key required)."""
+    """Fetch latest ECB euro reference FX rates (no key required).
+
+    Uses the official daily eurofxref feed (EUR base); the SDMX Data Portal
+    endpoint intermittently drops connections.
+    """
     normalized = []
     for currency in currencies:
         code = str(currency).strip().upper()
@@ -319,24 +383,29 @@ def ecb_exchange_rates(
             normalized.append(code)
     if not normalized:
         raise ValueError("at least one ECB FX currency is required")
-    key = f"D.{'+'.join(normalized)}.EUR.SP00.A"
-    query = urllib.parse.urlencode({"format": "csvdata", "lastNObservations": "1"})
-    url = f"{ECB_EXR_URL.format(key=key)}?{query}"
+    raw = _fetch_bytes(ECB_EUROFXREF_URL, "ecb-fx", transport)
     try:
-        status, raw = transport(url)
-    except Exception as exc:
-        raise ValueError("ecb-fx transport failed") from exc
-    if status != 200 or not raw:
-        body = raw[:200].decode("utf-8", errors="replace") if raw else ""
-        raise ValueError(f"ecb-fx fetch failed (status {status}) body={body}")
-    try:
-        text = raw.decode("utf-8-sig")
-        parsed = tuple(dict(row) for row in csv.DictReader(io.StringIO(text)))
-    except (UnicodeDecodeError, csv.Error) as exc:
-        raise ValueError("ecb-fx returned malformed CSV") from exc
-    if not parsed:
+        root = ET.fromstring(raw)
+    except ET.ParseError as exc:
+        raise ValueError("ecb-fx returned malformed XML") from exc
+    # eurofxref nests Cube elements: Envelope > Cube > Cube(time=...) > Cube(currency, rate)
+    wanted = set(normalized)
+    rows = []
+    ref_date = ""
+    for cube in root.iter():
+        tag = cube.tag.split("}", 1)[-1]
+        if tag != "Cube":
+            continue
+        if "time" in cube.attrib:
+            ref_date = str(cube.attrib["time"])
+            continue
+        code = str(cube.attrib.get("currency", "")).upper()
+        rate = str(cube.attrib.get("rate", ""))
+        if code in wanted and rate:
+            rows.append({"currency": code, "rate": rate, "date": ref_date, "base": "EUR"})
+    if not rows:
         raise ValueError("ecb-fx payload has no observations")
-    return OpenFeedResult(provider_id="ecb-fx", dataset="EXR", rows=parsed)
+    return OpenFeedResult(provider_id="ecb-fx", dataset="eurofxref-daily", rows=tuple(rows))
 
 
 
@@ -344,38 +413,31 @@ def treasury_yield_curve(
     year: int | None = None,
     transport: Transport = _default_transport,
 ) -> OpenFeedResult:
-    """Fetch official U.S. Treasury daily par yield curve rates."""
+    """Fetch official U.S. Treasury daily par yield curve rates.
+
+    Sources the constant-maturity par yields from FRED's DGS series (the same
+    official Treasury/Fed H.15 rates); the home.treasury.gov XML route is
+    unreliable. Attribution is honest: provider_id is "fred".
+    """
     import datetime as _dt
+    from hedge_desk.rates_desk import fred_series_rows  # lazy: avoid import cycle
+
     target_year = year if year is not None else _dt.date.today().year
     if type(target_year) is not int or target_year < 1990 or target_year > 2100:
         raise ValueError("invalid Treasury yield-curve year")
-    query = urllib.parse.urlencode({
-        "data": "daily_treasury_yield_curve",
-        "field_tdr_date_value": str(target_year),
-    })
-    url = f"{TREASURY_DAILY_RATES_URL}?{query}"
-    try:
-        status, raw = transport(url)
-    except Exception as exc:
-        raise ValueError("treasury-rates transport failed") from exc
-    if status != 200 or not raw:
-        body = raw[:200].decode("utf-8", errors="replace") if raw else ""
-        raise ValueError(f"treasury-rates fetch failed (status {status}) body={body}")
-    try:
-        root = ET.fromstring(raw)
-    except ET.ParseError as exc:
-        raise ValueError("treasury-rates returned malformed XML") from exc
+    end = _dt.date.today()
+    start = end - _dt.timedelta(days=14)
     rows = []
-    ns = "{http://schemas.microsoft.com/ado/2007/08/dataservices/metadata}properties"
-    for props in root.findall(f".//{ns}"):
-        row = {}
-        for child in list(props):
-            row[child.tag.split("}", 1)[-1]] = (child.text or "").strip()
-        if row:
-            rows.append(row)
+    for tenor in TREASURY_DGS_TENORS:
+        try:
+            obs = fred_series_rows(tenor, start, end, transport=transport)
+        except ValueError as exc:
+            raise ValueError(f"treasury-rates FRED fetch failed for {tenor}: {exc}") from exc
+        for day, value in obs[-5:]:
+            rows.append({"tenor": tenor, "date": str(day), "value": str(value)})
     if not rows:
         raise ValueError("treasury-rates payload has no observations")
-    return OpenFeedResult("treasury-rates", "daily_treasury_yield_curve", tuple(rows))
+    return OpenFeedResult("fred", "treasury_par_yield_curve_DGS", tuple(rows))
 
 
 def fdic_failures(
@@ -555,6 +617,142 @@ def sec_companyfacts(
     return payload
 
 
+def _nasdaq_transport(url: str) -> Tuple[int, bytes]:
+    """Nasdaq's public API requires a browser-style User-Agent."""
+    req = urllib.request.Request(
+        url,
+        headers={"Accept": "application/json", "User-Agent": _NASDAQ_UA},
+    )
+    return _default_request_transport(req)
+
+
+def _nasdaq_asset_class(symbol: str, override: str | None = None) -> str:
+    if override:
+        normalized = override.strip().lower()
+        if normalized in ("stocks", "etf"):
+            return normalized
+        raise ValueError(f"unsupported Nasdaq asset class: {override}")
+    return "etf" if symbol.strip().upper() in NASDAQ_ETF_SYMBOLS else "stocks"
+
+
+def nasdaq_quote(
+    symbols: Sequence[str],
+    asset_classes: Mapping[str, str] | None = None,
+    transport: Transport = _nasdaq_transport,
+) -> OpenFeedResult:
+    """Fetch Nasdaq quote snapshots for watchlist symbols (no key required).
+
+    Nasdaq rate-limits aggressively; batch callers should call this once per
+    run and cache. Fail-closed on 429/transport errors.
+    """
+    overrides = asset_classes or {}
+    rows = []
+    for symbol in symbols:
+        sym = str(symbol).strip().upper()
+        if not sym or not sym.replace(".", "").replace("-", "").isalnum():
+            raise ValueError(f"invalid Nasdaq symbol: {symbol}")
+        asset_class = _nasdaq_asset_class(sym, overrides.get(sym))
+        url = NASDAQ_API_URL.format(path=f"quote/{sym}/info") + "?" + urllib.parse.urlencode(
+            {"assetclass": asset_class}
+        )
+        payload = _fetch_json(url, "nasdaq", transport)
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, dict):
+            raise ValueError("nasdaq quote payload has no data object")
+        primary = data.get("primaryData") if isinstance(data.get("primaryData"), dict) else {}
+        rows.append({
+            "symbol": sym,
+            "assetClass": asset_class,
+            "lastSalePrice": primary.get("lastSalePrice"),
+            "netChange": primary.get("netChange"),
+            "percentageChange": primary.get("percentageChange"),
+            "lastTradeTimestamp": primary.get("lastTradeTimestamp"),
+            "isRealTime": primary.get("isRealTime"),
+            "bidPrice": primary.get("bidPrice"),
+            "askPrice": primary.get("askPrice"),
+        })
+    return OpenFeedResult(provider_id="nasdaq", dataset="quote-info", rows=tuple(rows))
+
+
+def nasdaq_option_chain(
+    symbol: str,
+    asset_class: str | None = None,
+    limit: int = 200,
+    transport: Transport = _nasdaq_transport,
+) -> OpenFeedResult:
+    """Fetch Nasdaq delayed option-chain rows for one symbol (no key required).
+
+    Group-header rows (no strike) are dropped; each row carries call/put
+    bid/ask/last/volume/open-interest per strike.
+    """
+    sym = str(symbol).strip().upper()
+    if not sym:
+        raise ValueError("Nasdaq option-chain symbol is required")
+    limit = _positive_limit(limit, 5000)
+    cls = _nasdaq_asset_class(sym, asset_class)
+    query = urllib.parse.urlencode({"assetclass": cls, "limit": str(limit)})
+    url = NASDAQ_API_URL.format(path=f"quote/{sym}/option-chain") + "?" + query
+    payload = _fetch_json(url, "nasdaq", transport)
+    data = payload.get("data") if isinstance(payload, dict) else None
+    table = data.get("table") if isinstance(data, dict) else None
+    raw_rows = table.get("rows") if isinstance(table, dict) else None
+    if not isinstance(raw_rows, list):
+        raise ValueError("nasdaq option-chain payload has no table rows")
+    rows = []
+    for row in raw_rows:
+        if not isinstance(row, dict) or row.get("strike") in (None, ""):
+            continue  # expiry group header, not a strike row
+        rows.append({
+            "symbol": sym,
+            "expiryGroup": row.get("expirygroup"),
+            "strike": row.get("strike"),
+            "callLast": row.get("c_Last"),
+            "callBid": row.get("c_Bid"),
+            "callAsk": row.get("c_Ask"),
+            "callVolume": row.get("c_Volume"),
+            "callOpenInterest": row.get("c_Openinterest"),
+            "putLast": row.get("p_Last"),
+            "putBid": row.get("p_Bid"),
+            "putAsk": row.get("p_Ask"),
+            "putVolume": row.get("p_Volume"),
+            "putOpenInterest": row.get("p_Openinterest"),
+        })
+    if not rows:
+        raise ValueError("nasdaq option-chain payload has no strike rows")
+    return OpenFeedResult(provider_id="nasdaq", dataset="option-chain", rows=tuple(rows))
+
+
+def nasdaq_earnings_calendar(
+    day,
+    transport: Transport = _nasdaq_transport,
+) -> OpenFeedResult:
+    """Fetch Nasdaq's earnings-calendar rows for one date (no key required)."""
+    import datetime as _dt
+    if isinstance(day, (_dt.date, _dt.datetime)):
+        day_str = day.strftime("%Y-%m-%d")
+    else:
+        day_str = str(day).strip()
+        try:
+            _dt.date.fromisoformat(day_str)
+        except ValueError as exc:
+            raise ValueError(f"invalid earnings-calendar date: {day}") from exc
+    query = urllib.parse.urlencode({"date": day_str})
+    url = NASDAQ_API_URL.format(path="calendar/earnings") + "?" + query
+    payload = _fetch_json(url, "nasdaq", transport)
+    data = payload.get("data") if isinstance(payload, dict) else None
+    raw_rows = data.get("rows") if isinstance(data, dict) else None
+    if not isinstance(raw_rows, list):
+        raise ValueError("nasdaq earnings-calendar payload has no rows")
+    rows = []
+    for row in raw_rows:
+        if isinstance(row, dict):
+            item = dict(row)
+            item["calendarDate"] = day_str
+            rows.append(item)
+    return OpenFeedResult(provider_id="nasdaq", dataset="earnings-calendar", rows=tuple(rows))
+
+
+
 __all__ = [
     "BLS_MACRO_SERIES",
     "CFTC_COT_DATASETS",
@@ -562,11 +760,16 @@ __all__ = [
     "FINRA_FIXED_INCOME_DATASETS",
     "NYFED_REFERENCE_RATES",
     "OpenFeedResult",
+    "NASDAQ_ETF_SYMBOLS",
+    "TREASURY_DGS_TENORS",
     "bls_latest_series",
     "cftc_cot",
     "ecb_exchange_rates",
     "eia_v2",
     "finra_fixed_income",
+    "nasdaq_earnings_calendar",
+    "nasdaq_option_chain",
+    "nasdaq_quote",
     "world_bank_indicator",
     "treasury_yield_curve",
     "fdic_failures",

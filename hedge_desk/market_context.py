@@ -18,6 +18,8 @@ from hedge_desk.data.open_market_feeds import (
     cftc_cot,
     ecb_exchange_rates,
     fdic_failures,
+    nasdaq_earnings_calendar,
+    nasdaq_quote,
     treasury_yield_curve,
     world_bank_indicator,
     eia_v2,
@@ -94,11 +96,13 @@ def _nyfed_summary(result: OpenFeedResult) -> Dict[str, object]:
 
 
 def _treasury_curve_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
-    keys = (
-        "NEW_DATE", "BC_1MONTH", "BC_3MONTH", "BC_6MONTH",
-        "BC_1YEAR", "BC_2YEAR", "BC_5YEAR", "BC_10YEAR", "BC_20YEAR", "BC_30YEAR",
-    )
-    return [_pick(row, keys) for row in result.rows[-5:]]
+    # FRED DGS tenors (official Treasury par yields via FRED).
+    latest: Dict[str, Dict[str, object]] = {}
+    for row in result.rows:
+        tenor = str(row.get("tenor", ""))
+        if tenor and (tenor not in latest or str(row.get("date", "")) > str(latest[tenor].get("date", ""))):
+            latest[tenor] = _pick(row, ("tenor", "date", "value"))
+    return [latest[tenor] for tenor in sorted(latest)]
 
 
 def _fdic_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
@@ -159,7 +163,26 @@ def _bls_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
 
 
 def _ecb_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
-    return [_pick(row, ("CURRENCY", "CURRENCY_DENOM", "TIME_PERIOD", "OBS_VALUE", "OBS_STATUS")) for row in result.rows[:10]]
+    return [_pick(row, ("currency", "rate", "date", "base")) for row in result.rows[:10]]
+
+
+def _nasdaq_quote_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [
+        _pick(
+            row,
+            (
+                "symbol", "assetClass", "lastSalePrice", "netChange",
+                "percentageChange", "lastTradeTimestamp", "isRealTime",
+                "bidPrice", "askPrice",
+            ),
+        )
+        for row in result.rows
+    ]
+
+
+def _nasdaq_earnings_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = ("symbol", "name", "marketCap", "time", "epsForecast", "noOfEsts", "calendarDate")
+    return [_pick(row, keys) for row in result.rows[:25]]
 
 
 def _finra_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
@@ -194,6 +217,9 @@ def build_market_context(
     eia_fetch: Callable[..., OpenFeedResult] = eia_v2,
     finra_fetch: Callable[..., OpenFeedResult] = finra_fixed_income,
     fred_fetch: Callable[..., object] = fred_series_rows,
+    nasdaq_quote_fetch: Callable[..., OpenFeedResult] = nasdaq_quote,
+    nasdaq_earn_fetch: Callable[..., OpenFeedResult] = nasdaq_earnings_calendar,
+    watchlist: Sequence[str] = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA"),
 ) -> Dict[str, object]:
     """Build fail-closed cross-asset context from authoritative provider APIs."""
 
@@ -289,6 +315,22 @@ def build_market_context(
             sources["finra"] = _blocked("finra", "UPSTREAM_OR_AUTH_FAILURE", str(exc))
     else:
         sources["finra"] = _unconfigured("finra")
+
+    try:
+        result = nasdaq_quote_fetch(tuple(watchlist))
+        sources["nasdaq-quotes"] = _live(result, _nasdaq_quote_summary(result))
+    except Exception as exc:
+        sources["nasdaq-quotes"] = _blocked(
+            "nasdaq-quotes", "UPSTREAM_OR_RATE_LIMIT", str(exc)
+        )
+
+    try:
+        result = nasdaq_earn_fetch(date.today() + timedelta(days=1))
+        sources["nasdaq-earnings"] = _live(result, _nasdaq_earnings_summary(result))
+    except Exception as exc:
+        sources["nasdaq-earnings"] = _blocked(
+            "nasdaq-earnings", "UPSTREAM_OR_RATE_LIMIT", str(exc)
+        )
 
     live = sum(1 for item in sources.values() if item.get("status") == "LIVE")
     blocked = sum(1 for item in sources.values() if item.get("status") == "BLOCKED")

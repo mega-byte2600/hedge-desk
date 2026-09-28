@@ -35,6 +35,35 @@ def _report(**overrides):
         "macro_environment": {"mode": "BLOCKED", "reason": "x"},
         "oil_market": {"mode": "REAL_YAHOO_WTI"},
         "earnings_actuals": {},
+        "market_context": {
+            "status": "LIVE",
+            "sources": {
+                "nasdaq-quotes": {
+                    "provider_id": "nasdaq", "status": "LIVE", "observation_count": 2,
+                    "observations": [
+                        {"symbol": "SPY", "lastSalePrice": "$765.05", "percentageChange": "-0.07%",
+                         "lastTradeTimestamp": "Sep 28, 2026 4:53 PM ET", "isRealTime": True},
+                        {"symbol": "AAPL", "lastSalePrice": "$338.36", "percentageChange": "+0.10%",
+                         "lastTradeTimestamp": "Sep 28, 2026 4:53 PM ET", "isRealTime": True},
+                    ],
+                },
+                "ecb-fx": {
+                    "provider_id": "ecb-fx", "status": "LIVE", "observation_count": 1,
+                    "observations": [{"currency": "USD", "rate": "1.1723", "date": "2026-09-28", "base": "EUR"}],
+                },
+                "treasury-rates": {
+                    "provider_id": "fred", "status": "LIVE", "observation_count": 3,
+                    "observations": [
+                        {"tenor": "DGS2", "date": "2026-09-25", "value": "4.10"},
+                        {"tenor": "DGS10", "date": "2026-09-25", "value": "5.17"},
+                        {"tenor": "DGS30", "date": "2026-09-25", "value": "5.52"},
+                    ],
+                },
+                "fred": {"provider_id": "fred", "status": "LIVE", "observation_count": 5},
+                "cftc-cot": {"provider_id": "cftc-cot", "status": "BLOCKED", "reason_code": "UPSTREAM_OR_PARSE_FAILURE",
+                             "detail": "cftc-cot fetch failed (status 0)"},
+            },
+        },
         "paper_outcome_summary": {"entry_count": 3, "outcome_counts": {"WIN": 2}},
         "yellow_sheets": {"sheet_count": 1, "by_decision": {"HOLD": 1}},
         "series": {},
@@ -106,6 +135,26 @@ class DashboardBuildTests(unittest.TestCase):
     def test_earnings_eps_chart_empty_state_is_honest(self):
         html = self._build(earnings_actuals={})
         self.assertIn("no real quarterly EPS observations", html)
+
+    def test_carpe_data_panels_render_live_feeds(self):
+        html = self._build()
+        # Nasdaq watchlist quotes
+        self.assertIn("$765.05", html)
+        self.assertIn("Nasdaq", html)
+        # Treasury curve chart (Plotly) with honest FRED attribution
+        self.assertIn("ch_treasury_curve", html)
+        self.assertIn("FRED DGS", html)
+        # ECB FX panel
+        self.assertIn("EUR/USD", html)
+        self.assertIn("1.1723", html)
+        # Public data plane health table shows live + blocked honestly
+        self.assertIn("Quotes (Nasdaq)", html)
+        self.assertIn("Blocked", html)
+
+    def test_carpe_data_panels_degrade_honestly_without_market_context(self):
+        html = self._build(market_context={})
+        self.assertIn("unavailable in this batch", html)
+        self.assertNotIn("$765.05", html)
 
     def test_every_rendered_visual_states_its_source(self):
         # The user requires every dashboard visual to be annotated with its

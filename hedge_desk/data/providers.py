@@ -214,7 +214,20 @@ _PROVIDERS: Tuple[ProviderSpec, ...] = (
         True,
         False,
         False,
-        "Existing no-key EOD fallback. Treat as secondary and preserve source attribution.",
+        "No-key EOD fallback. 2026-09-28: BLOCKED — /q/l/ 404s and /q/d/l/ serves a "
+        "JS bot challenge from this network. Treat as secondary when available.",
+    ),
+    ProviderSpec(
+        "nasdaq",
+        "Nasdaq public market-data API",
+        frozenset({"equities", "options"}),
+        frozenset({"quotes", "option_chains", "earnings_calendar"}),
+        "exchange",
+        None,
+        True,
+        False,
+        False,
+        "No-key public API (browser UA required). Rate-sensitive: batch callers must cache; fail closed on 429.",
     ),
 )
 

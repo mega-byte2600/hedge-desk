@@ -78,11 +78,22 @@ class MarketContextTests(unittest.TestCase):
                 cftc_fetch=cftc_fetch,
                 eia_fetch=eia_fetch,
                 finra_fetch=finra_fetch,
+                nasdaq_quote_fetch=lambda symbols: _result(
+                    "nasdaq", "quote-info", [{"symbol": "SPY", "lastSalePrice": "$765.05"}]
+                ),
+                nasdaq_earn_fetch=lambda day: _result(
+                    "nasdaq", "earnings-calendar", [{"symbol": "JEF", "calendarDate": "2026-09-29"}]
+                ),
             )
 
         self.assertEqual(context["schema_version"], MARKET_CONTEXT_SCHEMA)
         self.assertEqual(context["status"], "LIVE")
-        self.assertEqual(context["live_sources"], 11)
+        self.assertEqual(context["live_sources"], 13)
+        self.assertEqual(context["sources"]["nasdaq-quotes"]["status"], "LIVE")
+        self.assertEqual(context["sources"]["nasdaq-earnings"]["status"], "LIVE")
+        self.assertEqual(
+            context["sources"]["nasdaq-quotes"]["observations"][0]["lastSalePrice"], "$765.05"
+        )
         self.assertEqual(context["blocked_sources"], 0)
         self.assertEqual(context["unconfigured_sources"], 0)
         self.assertFalse(context["trade_authorized"])

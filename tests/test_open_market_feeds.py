@@ -4,11 +4,15 @@ import unittest
 from urllib.parse import parse_qs, urlparse
 from unittest.mock import patch
 
+from decimal import Decimal
 from hedge_desk.data.open_market_feeds import (
     bls_latest_series,
     cftc_cot,
     ecb_exchange_rates,
     fdic_failures,
+    nasdaq_earnings_calendar,
+    nasdaq_option_chain,
+    nasdaq_quote,
     treasury_yield_curve,
     world_bank_indicator,
     eia_v2,
@@ -156,48 +160,153 @@ class OpenMarketFeedTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsupported BLS"):
             bls_latest_series("BAD", transport=_transport(payload))
 
-    def test_ecb_fx_uses_official_sdmx_api_and_parses_csv(self):
+    def test_ecb_fx_uses_official_eurofxref_feed(self):
         seen = []
+        xml = (
+            b'<?xml version="1.0" encoding="UTF-8"?>'
+            b'<gesmes:Envelope xmlns:gesmes="http://www.gesmes.org/xml/2002-08-01"'
+            b' xmlns="http://www.ecb.int/vocabulary/2002-08-01/eurofxref">'
+            b"<Cube><Cube time='2026-09-28'>"
+            b"<Cube currency='USD' rate='1.1723'/>"
+            b"<Cube currency='JPY' rate='171.20'/>"
+            b"</Cube></Cube></gesmes:Envelope>"
+        )
 
-        def transport(url):
-            seen.append(url)
-            raw = (
-                "KEY,FREQ,CURRENCY,CURRENCY_DENOM,EXR_TYPE,EXR_SUFFIX,TIME_PERIOD,OBS_VALUE,OBS_STATUS\n"
-                "EXR.D.USD.EUR.SP00.A,D,USD,EUR,SP00,A,2026-09-25,1.1700,A\n"
-            ).encode("utf-8")
-            return 200, raw
-
-        result = ecb_exchange_rates(("USD",), transport=transport)
-        self.assertEqual(result.provider_id, "ecb-fx")
-        self.assertEqual(result.dataset, "EXR")
-        self.assertEqual(result.row_count, 1)
-        parsed = urlparse(seen[0])
-        self.assertEqual(parsed.hostname, "data-api.ecb.europa.eu")
-        self.assertIn("/service/data/EXR/D.USD.EUR.SP00.A", parsed.path)
-        self.assertEqual(parse_qs(parsed.query).get("lastNObservations"), ["1"])
-        self.assertEqual(result.rows[0]["CURRENCY"], "USD")
-        with self.assertRaisesRegex(ValueError, "unsupported ECB"):
-            ecb_exchange_rates(("BTC",), transport=transport)
-
-
-    def test_treasury_yield_curve_uses_official_feed(self):
-        seen = []
-        xml = b'''<?xml version="1.0" encoding="utf-8"?>
-        <feed xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"
-              xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices">
-          <entry><content><m:properties>
-            <d:NEW_DATE>2026-09-25</d:NEW_DATE>
-            <d:BC_2YEAR>3.70</d:BC_2YEAR>
-            <d:BC_10YEAR>4.10</d:BC_10YEAR>
-          </m:properties></content></entry>
-        </feed>'''
         def transport(url):
             seen.append(url)
             return 200, xml
-        result = treasury_yield_curve(2026, transport=transport)
-        self.assertEqual(result.provider_id, "treasury-rates")
+
+        result = ecb_exchange_rates(("USD", "JPY"), transport=transport)
+        self.assertEqual(result.provider_id, "ecb-fx")
+        self.assertEqual(result.dataset, "eurofxref-daily")
+        self.assertEqual(result.row_count, 2)
+        parsed = urlparse(seen[0])
+        self.assertEqual(parsed.hostname, "www.ecb.europa.eu")
+        self.assertIn("eurofxref-daily.xml", parsed.path)
+        by_ccy = {row["currency"]: row for row in result.rows}
+        self.assertEqual(by_ccy["USD"]["rate"], "1.1723")
+        self.assertEqual(by_ccy["USD"]["date"], "2026-09-28")
+        self.assertEqual(by_ccy["USD"]["base"], "EUR")
+        with self.assertRaisesRegex(ValueError, "unsupported ECB"):
+            ecb_exchange_rates(("BTC",), transport=transport)
+
+    def test_ecb_fx_fails_closed_on_bad_xml(self):
+        def transport(url):
+            return 200, b"not xml"
+        with self.assertRaisesRegex(ValueError, "malformed XML"):
+            ecb_exchange_rates(("USD",), transport=transport)
+
+
+    def test_treasury_yield_curve_uses_fred_dgs_tenors(self):
+        seen = []
+
+        def fake_fred(series, start, end, transport=None):
+            seen.append(series)
+            return (("2026-09-25", Decimal("4.10")), ("2026-09-24", Decimal("4.09")))
+
+        with patch("hedge_desk.rates_desk.fred_series_rows", side_effect=fake_fred):
+            result = treasury_yield_curve(2026)
+        self.assertEqual(result.provider_id, "fred")
+        self.assertEqual(result.dataset, "treasury_par_yield_curve_DGS")
+        tenors = {row["tenor"] for row in result.rows}
+        self.assertIn("DGS10", tenors)
+        self.assertIn("DGS2", tenors)
+        row = next(r for r in result.rows if r["tenor"] == "DGS10" and r["date"] == "2026-09-25")
+        self.assertEqual(row["value"], "4.10")
+        with self.assertRaisesRegex(ValueError, "invalid Treasury yield-curve year"):
+            treasury_yield_curve(1800)
+
+    def test_treasury_yield_curve_fails_closed_when_fred_fails(self):
+        def fake_fred(series, start, end, transport=None):
+            raise ValueError("fred down")
+        with patch("hedge_desk.rates_desk.fred_series_rows", side_effect=fake_fred):
+            with self.assertRaisesRegex(ValueError, "FRED fetch failed"):
+                treasury_yield_curve(2026)
+
+    def test_nasdaq_quote_parses_watchlist_snapshots(self):
+        seen = []
+        payload = {
+            "data": {
+                "symbol": "SPY",
+                "primaryData": {
+                    "lastSalePrice": "$765.05",
+                    "netChange": "-0.50",
+                    "percentageChange": "-0.07%",
+                    "lastTradeTimestamp": "Sep 28, 2026 4:53 PM ET",
+                    "isRealTime": True,
+                    "bidPrice": "$765.02",
+                    "askPrice": "$765.08",
+                },
+            }
+        }
+
+        def transport(url):
+            seen.append(url)
+            return 200, json.dumps(payload).encode("utf-8")
+
+        result = nasdaq_quote(("SPY", "AAPL"), transport=transport)
+        self.assertEqual(result.provider_id, "nasdaq")
+        self.assertEqual(result.row_count, 2)
+        self.assertEqual(urlparse(seen[0]).hostname, "api.nasdaq.com")
+        self.assertIn("assetclass=etf", seen[0])  # SPY auto-detected as ETF
+        self.assertIn("assetclass=stocks", seen[1])  # AAPL defaults to stocks
+        self.assertEqual(result.rows[0]["symbol"], "SPY")
+        self.assertEqual(result.rows[0]["lastSalePrice"], "$765.05")
+        self.assertTrue(result.rows[0]["isRealTime"])
+        with self.assertRaisesRegex(ValueError, "invalid Nasdaq symbol"):
+            nasdaq_quote(("BAD SYM!!",), transport=transport)
+
+    def test_nasdaq_quote_fails_closed_on_rate_limit(self):
+        def transport(url):
+            return 429, b"too many requests"
+        with self.assertRaisesRegex(ValueError, "status 429"):
+            nasdaq_quote(("SPY",), transport=transport)
+
+    def test_nasdaq_option_chain_drops_group_headers(self):
+        payload = {
+            "data": {
+                "table": {
+                    "rows": [
+                        {"expirygroup": "October 2026", "strike": None},
+                        {
+                            "expirygroup": "October 2026", "strike": "765.00",
+                            "c_Last": "5.20", "c_Bid": "5.10", "c_Ask": "5.30",
+                            "c_Volume": "1200", "c_Openinterest": "3400",
+                            "p_Last": "4.80", "p_Bid": "4.70", "p_Ask": "4.90",
+                            "p_Volume": "900", "p_Openinterest": "2100",
+                        },
+                    ]
+                }
+            }
+        }
+
+        def transport(url):
+            return 200, json.dumps(payload).encode("utf-8")
+
+        result = nasdaq_option_chain("SPY", limit=5, transport=transport)
+        self.assertEqual(result.provider_id, "nasdaq")
         self.assertEqual(result.row_count, 1)
-        self.assertEqual(urlparse(seen[0]).hostname, "home.treasury.gov")
+        row = result.rows[0]
+        self.assertEqual(row["strike"], "765.00")
+        self.assertEqual(row["callBid"], "5.10")
+        self.assertEqual(row["putAsk"], "4.90")
+        with self.assertRaisesRegex(ValueError, "no strike rows"):
+            nasdaq_option_chain("SPY", transport=lambda url: (200, json.dumps({"data": {"table": {"rows": []}}}).encode()))
+
+    def test_nasdaq_earnings_calendar_returns_rows(self):
+        payload = {"data": {"rows": [{"symbol": "JEF", "name": "Jefferies", "time": "beforeMarket"}]}}
+
+        def transport(url):
+            return 200, json.dumps(payload).encode("utf-8")
+
+        result = nasdaq_earnings_calendar("2026-09-29", transport=transport)
+        self.assertEqual(result.provider_id, "nasdaq")
+        self.assertEqual(result.dataset, "earnings-calendar")
+        self.assertEqual(result.row_count, 1)
+        self.assertEqual(result.rows[0]["symbol"], "JEF")
+        self.assertEqual(result.rows[0]["calendarDate"], "2026-09-29")
+        with self.assertRaisesRegex(ValueError, "invalid earnings-calendar date"):
+            nasdaq_earnings_calendar("not-a-date", transport=transport)
 
     def test_fdic_failures_uses_official_api(self):
         seen = []

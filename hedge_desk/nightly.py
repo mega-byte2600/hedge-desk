@@ -320,13 +320,17 @@ def run_nightly(
         "earnings_actuals": earnings_results,
         "market_context": market_context,
         "note": (
-            "Equity candidates use real EOD closes with Yahoo->Stooq redundancy; "
-            "options use real delayed Cboe chains; SEC EDGAR supplies issuer facts. "
-            "WTI market price context remains sourced from the existing oil desk, "
-            "while EIA supplies official energy fundamentals. Rates/macro retain FRED "
-            "with authoritative cross-checks from the New York Fed and U.S. Treasury. "
+            "Equity candidates use real EOD closes; options use real delayed Cboe "
+            "chains. Nasdaq's public API supplies real-time watchlist quotes and the "
+            "earnings calendar. WTI market price context remains sourced from the "
+            "existing oil desk, while EIA supplies official energy fundamentals "
+            "when its key is configured. Rates/macro retain FRED with "
+            "authoritative cross-checks from the New York Fed and the U.S. Treasury "
+            "par yield curve via FRED DGS. ECB supplies euro reference FX. "
             "CFTC supplies futures positioning and FINRA supplies public fixed-income "
-            "breadth when credentials are configured. No provider failure is replaced "
+            "breadth when credentials are configured. Yahoo Finance and SEC EDGAR "
+            "are currently unreachable from this network and are reported BLOCKED, "
+            "never backfilled. No provider failure is replaced "
             "with fabricated data. No order placed; trade_authorized=False."
         ),
     }

@@ -256,6 +256,113 @@ def macro_panel(vix: dict, rates: dict, oil: dict, macro: dict) -> str:
     return f'<div class="macropanel">{blocks or "<p class=muted>no real macro</p>"}</div>'
 
 
+# ------------------------------------------------------- live public data
+# Carpe-data panels: raw open-market feeds rendered directly from the batch's
+# market_context block. Every metric carries its source; nothing is invented.
+
+def _mc_sources(r: dict) -> dict:
+    return ((r.get("market_context", {}) or {}).get("sources", {}) or {})
+
+
+def nasdaq_quotes_panel(r: dict) -> str:
+    src = _mc_sources(r).get("nasdaq-quotes", {}) or {}
+    obs = src.get("observations") or []
+    if src.get("status") != "LIVE" or not obs:
+        return "<p class='muted'>Nasdaq quotes unavailable in this batch</p>" + src_note("Nasdaq public quote API")
+    cells = []
+    for o in obs:
+        sym = esc(o.get("symbol", "?"))
+        price = esc(o.get("lastSalePrice", "-"))
+        chg = esc(o.get("percentageChange", ""))
+        ts = esc(o.get("lastTradeTimestamp", ""))
+        rt = "live" if o.get("isRealTime") else "delayed"
+        cells.append(
+            f'<div class="metric"><div class="ml">{sym} <span class="src">Nasdaq · {rt}</span></div>'
+            f'<div class="mv">{price}</div><div class="muted">{chg} · {ts}</div></div>'
+        )
+    return f'<div class="macropanel">{"".join(cells)}</div>' + src_note("Nasdaq public quote API (no key)")
+
+
+def fx_panel(r: dict) -> str:
+    src = _mc_sources(r).get("ecb-fx", {}) or {}
+    obs = src.get("observations") or []
+    if src.get("status") != "LIVE" or not obs:
+        return "<p class='muted'>ECB reference rates unavailable in this batch</p>" + src_note("ECB euro reference rates")
+    cells = []
+    for o in obs:
+        cells.append(
+            f'<div class="metric"><div class="ml">EUR/{esc(o.get("currency", "?"))} '
+            f'<span class="src">ECB</span></div>'
+            f'<div class="mv">{esc(o.get("rate", "-"))}</div>'
+            f'<div class="muted">{esc(o.get("date", ""))}</div></div>'
+        )
+    return f'<div class="macropanel">{"".join(cells)}</div>' + src_note("ECB euro foreign exchange reference rates (daily)")
+
+
+def treasury_curve_chart(r: dict) -> str:
+    src = _mc_sources(r).get("treasury-rates", {}) or {}
+    obs = src.get("observations") or []
+    if src.get("status") != "LIVE" or not obs:
+        return "<p class='muted'>Treasury curve unavailable in this batch</p>"
+    latest_date = max(str(o.get("date", "")) for o in obs)
+    order = ["DGS1MO", "DGS3MO", "DGS6MO", "DGS1", "DGS2", "DGS3", "DGS5", "DGS7", "DGS10", "DGS20", "DGS30"]
+    labels = {"DGS1MO": "1M", "DGS3MO": "3M", "DGS6MO": "6M", "DGS1": "1Y", "DGS2": "2Y", "DGS3": "3Y",
+              "DGS5": "5Y", "DGS7": "7Y", "DGS10": "10Y", "DGS20": "20Y", "DGS30": "30Y"}
+    xs, ys = [], []
+    for tenor in order:
+        match = [o for o in obs if o.get("tenor") == tenor and str(o.get("date")) == latest_date]
+        if not match:
+            continue
+        try:
+            xs.append(labels.get(tenor, tenor))
+            ys.append(float(match[0]["value"]))
+        except (TypeError, ValueError):
+            continue
+    if len(xs) < 2:
+        return "<p class='muted'>Treasury curve unavailable in this batch</p>"
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=xs, y=ys, mode="lines+markers", line=dict(color="#6ea8ff"),
+                             hovertemplate="%{x}: %{y:.2f}%<extra></extra>"))
+    fig.update_layout(margin=dict(l=10, r=10, t=40, b=10), height=300,
+                      title=f"U.S. Treasury par yield curve — {latest_date}",
+                      yaxis=dict(title="yield %", gridcolor="#1e2b47"),
+                      xaxis=dict(title="tenor"),
+                      font=dict(color="#e8eef7"), paper_bgcolor="#0f1828", plot_bgcolor="#0f1828")
+    return chart(fig, "ch_treasury_curve",
+                 "FRED DGS constant-maturity series (official U.S. Treasury par yields)")
+
+
+def market_context_health(r: dict) -> str:
+    """Status table for the open public-data plane (market_context block)."""
+    sources = _mc_sources(r)
+    if not sources:
+        return "<p class='muted'>no market-context block in this report</p>"
+    pretty = {
+        "fred": "Macro/rates (FRED)", "nyfed-markets": "Reference rates (NY Fed)",
+        "treasury-fiscaldata": "Auctions (Treasury)", "treasury-rates": "Yield curve (Treasury via FRED)",
+        "fdic": "Bank failures (FDIC)", "world-bank": "Indicators (World Bank)",
+        "bls": "Labor/prices (BLS)", "ecb-fx": "FX reference (ECB)",
+        "cftc-cot": "Positioning (CFTC)", "eia-open-data": "Energy (EIA)",
+        "finra": "Fixed income (FINRA)", "nasdaq-quotes": "Quotes (Nasdaq)",
+        "nasdaq-earnings": "Earnings calendar (Nasdaq)",
+    }
+    trs = []
+    for key, label in pretty.items():
+        s = sources.get(key, {}) or {}
+        status = s.get("status", "?")
+        if status == "LIVE":
+            cell, detail = "ok", f'{s.get("observation_count", 0)} obs'
+        elif status == "UNCONFIGURED":
+            cell, detail = "warn", "needs API key"
+        else:
+            cell, detail = "warn", _human_detail(str(s.get("detail", s.get("reason_code", ""))))
+        trs.append(f"<tr><td>{esc(label)}</td><td class='{cell}'>{esc(status.title())}</td>"
+                   f"<td class='muted'>{esc(detail)}</td></tr>")
+    return (f"<table class='health'><thead><tr><th>source</th><th>status</th><th>detail</th></tr></thead>"
+            f"<tbody>{''.join(trs)}</tbody></table>"
+            + src_note("Batch market-context block: each source fetched live, fail-closed"))
+
+
 def premium_yield_chart(csp: dict) -> str:
     """Options premium economics: return-on-capital vs premium-yield (net_credit/strike).
 
@@ -599,6 +706,10 @@ def build() -> None:
     series = r.get("series", {}) or {}
     body = "\n".join([
         card("Source health — what the batch actually closed on", source_health(r), wide=True),
+        card("Live public data — watchlist quotes", nasdaq_quotes_panel(r), wide=True),
+        card("Live public data — Treasury curve", treasury_curve_chart(r), wide=True),
+        card("Live public data — FX reference", fx_panel(r)),
+        card("Public data plane — source status", market_context_health(r)),
         card("Macro backdrop", macro_panel(r.get("vix_regime", {}), r.get("rates_environment", {}),
                                            r.get("oil_market", {}), r.get("macro_environment", {}))),
         card("Paper trail", paper_panels(r.get("paper_outcome_summary", {}), r.get("yellow_sheets", {}))),
