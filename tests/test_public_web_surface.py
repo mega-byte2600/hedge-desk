@@ -192,7 +192,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn('./candidate-context.js', index)
         self.assertIn('"candidate-context.js"', build)
         self.assertLess(index.index('./app.js'), index.index('./candidate-context.js'))
-        self.assertIn("REAL CANDIDATES", app)
+        self.assertIn("Overnight candidates", app)
         self.assertIn("Overnight wheel candidates from the nightly batch", app)
         self.assertIn("Method-qualified picks',rows.filter", app)
         # The internal "Trade authorization 0" stat was UI slop (user-directed
