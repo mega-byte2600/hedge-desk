@@ -36,6 +36,8 @@ from hedge_desk.data import (
     evaluate_pwb_daily_news,
     load_pwb_daily_news,
     ingest_eod,
+    REGISTRY,
+    fetch_provider,
 )
 from hedge_desk.paper import (
     PaperReviewQueue,
@@ -174,6 +176,29 @@ def main() -> None:
         "--eod-batch",
         metavar="SYMBOLS",
         help="comma-separated watchlist; pull real EOD closes and emit the AM candidate batch",
+    )
+    parser.add_argument(
+        "--data-provider",
+        metavar="PROVIDER",
+        help="fetch a free/open series from a registered provider (see REGISTRY_BY_ID); series via --provider-series",
+    )
+    parser.add_argument(
+        "--provider-series",
+        metavar="SERIES",
+        default="",
+        help="series/tag for --data-provider (e.g. CIK for sec-edgar-companyfacts, rates_of_exchange for ust-treasury-fiscal)",
+    )
+    parser.add_argument(
+        "--provider-param",
+        action="append",
+        default=[],
+        metavar="KEY=VALUE",
+        help="extra adapter param for --data-provider (repeatable)",
+    )
+    parser.add_argument(
+        "--list-providers",
+        action="store_true",
+        help="print the registered data-provider registry (no network)",
     )
     parser.add_argument(
         "--eod-cutoff",
@@ -579,6 +604,50 @@ def main() -> None:
         return
     if args.projects:
         print(json.dumps([project.__dict__ for project in MVP_PROJECTS], indent=2))
+        return
+    if args.list_providers:
+        print(json.dumps([
+            {
+                "source_id": a.source_id,
+                "free_open": a.free_open,
+                "asset_classes": list(a.asset_classes),
+                "key_env": a.key_env,
+                "doc_url": a.doc_url,
+            }
+            for a in REGISTRY
+        ], indent=2))
+        return
+    if args.data_provider:
+        params: dict = {}
+        for pair in args.provider_param:
+            if "=" not in pair:
+                parser.error(f"--provider-param must be KEY=VALUE, got {pair!r}")
+            key, value = pair.split("=", 1)
+            params[key] = value
+        try:
+            result = fetch_provider(args.data_provider, args.provider_series, **params)
+        except ValueError as exc:
+            parser.error(str(exc))
+        print(json.dumps({
+            "provider": args.data_provider,
+            "status": result.status.value,
+            "reason_codes": list(result.reason_codes),
+            "config_needs": list(result.config_needs),
+            "source_as_of": result.source_as_of.isoformat() if result.observations else None,
+            "observations": [
+                {
+                    "source_id": obs.source_id,
+                    "series": obs.series,
+                    "date": obs.date,
+                    "value": obs.value,
+                    "unit": obs.unit,
+                    "extra": list(obs.extra),
+                }
+                for obs in result.observations
+            ],
+        }, indent=2))
+        if result.status.value != "PASS":
+            raise SystemExit(1)
         return
     if args.eod_batch:
         symbols = tuple(s.strip().upper() for s in args.eod_batch.split(",") if s.strip())
