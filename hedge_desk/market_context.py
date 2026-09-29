@@ -32,6 +32,13 @@ from hedge_desk.data.institutional_feeds import (
     coinbase_product_trades,
     finra_equity,
 )
+from hedge_desk.data.global_public_feeds import (
+    eurostat_hicp_inflation,
+    imf_datamapper,
+    nasa_eonet_events,
+    oecd_composite_leading_indicator,
+    usgs_material_earthquakes,
+)
 from hedge_desk.data.public_signal_feeds import (
     bea_nipa_table,
     nws_active_alerts,
@@ -139,6 +146,36 @@ def _bis_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
         "series_alias",
     )
     return [_pick(row, keys) for row in result.rows[:12]]
+
+
+def _imf_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [_pick(row, ("indicator", "entity", "period", "value")) for row in result.rows[:40]]
+
+
+def _oecd_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = ("reference_area", "time_period", "value", "unit_measure", "measure")
+    return [_pick(row, keys) for row in result.rows[:24]]
+
+
+def _eurostat_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = ("geo", "time_period", "value", "unit", "coicop")
+    return [_pick(row, keys) for row in result.rows[:24]]
+
+
+def _usgs_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = (
+        "event_id", "time", "updated", "magnitude", "place", "alert", "tsunami",
+        "significance", "status", "url", "longitude", "latitude", "depth_km",
+    )
+    return [_pick(row, keys) for row in result.rows[:50]]
+
+
+def _eonet_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = (
+        "event_id", "title", "closed", "categories", "sources", "event_date",
+        "geometry_type", "coordinates", "magnitude_value", "magnitude_unit",
+    )
+    return [_pick(row, keys) for row in result.rows[:50]]
 
 
 def _coinbase_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
@@ -315,6 +352,11 @@ def build_market_context(
     fdic_fetch: Callable[..., OpenFeedResult] = fdic_failures,
     world_bank_fetch: Callable[..., OpenFeedResult] = world_bank_indicator,
     bis_fetch: Callable[..., OpenFeedResult] = bis_global_liquidity,
+    imf_fetch: Callable[..., OpenFeedResult] = imf_datamapper,
+    oecd_fetch: Callable[..., OpenFeedResult] = oecd_composite_leading_indicator,
+    eurostat_fetch: Callable[..., OpenFeedResult] = eurostat_hicp_inflation,
+    usgs_fetch: Callable[..., OpenFeedResult] = usgs_material_earthquakes,
+    eonet_fetch: Callable[..., OpenFeedResult] = nasa_eonet_events,
     ecb_fetch: Callable[..., OpenFeedResult] = ecb_exchange_rates,
     nws_fetch: Callable[..., OpenFeedResult] = nws_active_alerts,
     bea_fetch: Callable[..., OpenFeedResult] = bea_nipa_table,
@@ -393,6 +435,31 @@ def build_market_context(
     except Exception as exc:
         sources["bis"] = _blocked("bis", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
 
+    current_year = date.today().year
+    try:
+        result = imf_fetch(
+            "NGDP_RPCH",
+            ("USA", "CHN", "DEU", "JPN", "GBR"),
+            periods=(current_year - 1, current_year, current_year + 1),
+        )
+        sources["imf-datamapper"] = _live(result, _imf_summary(result))
+    except Exception as exc:
+        sources["imf-datamapper"] = _blocked(
+            "imf-datamapper", "UPSTREAM_OR_PARSE_FAILURE", str(exc)
+        )
+
+    try:
+        result = oecd_fetch("USA", start_period=f"{current_year - 1}-01", limit=18)
+        sources["oecd-cli"] = _live(result, _oecd_summary(result))
+    except Exception as exc:
+        sources["oecd-cli"] = _blocked("oecd-cli", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+
+    try:
+        result = eurostat_fetch("EA20", periods=12)
+        sources["eurostat"] = _live(result, _eurostat_summary(result))
+    except Exception as exc:
+        sources["eurostat"] = _blocked("eurostat", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+
     try:
         result = bls_fetch("CUUR0000SA0")
         sources["bls"] = _live(result, _bls_summary(result))
@@ -410,6 +477,22 @@ def build_market_context(
         sources["nws"] = _live(result, _nws_summary(result))
     except Exception as exc:
         sources["nws"] = _blocked("nws", "UPSTREAM_OR_RATE_LIMIT", str(exc))
+
+    try:
+        result = usgs_fetch(days=7, min_magnitude=5.5, limit=50)
+        sources["usgs-earthquakes"] = _live(result, _usgs_summary(result))
+    except Exception as exc:
+        sources["usgs-earthquakes"] = _blocked(
+            "usgs-earthquakes", "UPSTREAM_OR_RATE_LIMIT", str(exc)
+        )
+
+    try:
+        result = eonet_fetch(days=30, limit=50, status="open")
+        sources["nasa-eonet"] = _live(result, _eonet_summary(result))
+    except Exception as exc:
+        sources["nasa-eonet"] = _blocked(
+            "nasa-eonet", "UPSTREAM_OR_RATE_LIMIT", str(exc)
+        )
 
     try:
         result = cftc_fetch(report="tff_futures_only", limit=25)
