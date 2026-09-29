@@ -2,7 +2,7 @@
 import { currentRoute } from './core.mjs';
 
 const subtitles = {
-  overview: 'Six research workflows, operating state, and decision controls.',
+  overview: 'Six research workflows, status, and decision controls.',
   candidates: 'Research universe by desk, method, and required evidence.',
   desks: 'Methods, evidence requirements, and control state for each research workflow.',
   scenarios: 'Deterministic scenario coverage and portfolio stress testing.',

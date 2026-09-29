@@ -3,8 +3,8 @@
   "report": {
     "report_type": "paper_hypothetical_morning_evaluation",
     "runner_version": "1.0.0",
-    "code_commit": "ff40bf21dc01f91a5b18419aa0b0c13c7bdb3a9e",
-    "generated_at": "2026-09-06T19:31:52.442631+00:00",
+    "code_commit": "LOCAL_UNSPECIFIED",
+    "generated_at": "2026-09-27T04:20:39.148771+00:00",
     "environment": "paper",
     "complete": true,
     "live_orders_enabled": false,
@@ -87,7 +87,7 @@
             "status": "PASS",
             "reason_codes": [],
             "metrics": {
-              "risk_artifact": "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+              "risk_artifact": "cfa414aca453ae16d7e8bd0ed204d5fdcf9107d7049f88b4052beebfeb8fca99",
               "risk_input_artifact": "d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0",
               "risk_source_artifact": "7cf81486003839df683af5285b181fbb8e3c3eccee154edb7e59fc4cf8a5f034",
               "risk_of_ruin": "0",
@@ -100,7 +100,7 @@
             },
             "artifact_refs": [
               "d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0",
-              "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+              "cfa414aca453ae16d7e8bd0ed204d5fdcf9107d7049f88b4052beebfeb8fca99",
               "8aaea2aac701e0b8d764d1c37b8280ff3356089d6143cee1cabbd1bbe86c80d7"
             ]
           },
@@ -112,14 +112,14 @@
               "policy_version": "paper-options-1.0.0",
               "regulatory_traceability_sha256": "59ce814853cb548f9bfd8b5133320ee1ca4e9c53d89d3506a86b11afbe0817e3",
               "paper_reconciliation_status": "pass",
-              "paper_reconciliation_artifact": "a5b8897448968eff387ffeac02b067dc533be792de8969e59b9eecd713c2f67e",
+              "paper_reconciliation_artifact": "d6cba9de81e2599981bb5d44728506bed075cbd369f6c40130b2e086dc9b46da",
               "paper_reconciliation_positions_artifact": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
               "paper_reconciliation_live_release_eligible": "false"
             },
             "artifact_refs": [
-              "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+              "cfa414aca453ae16d7e8bd0ed204d5fdcf9107d7049f88b4052beebfeb8fca99",
               "59ce814853cb548f9bfd8b5133320ee1ca4e9c53d89d3506a86b11afbe0817e3",
-              "a5b8897448968eff387ffeac02b067dc533be792de8969e59b9eecd713c2f67e"
+              "d6cba9de81e2599981bb5d44728506bed075cbd369f6c40130b2e086dc9b46da"
             ]
           },
           {
@@ -130,7 +130,7 @@
             ],
             "metrics": {},
             "artifact_refs": [
-              "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30"
+              "cfa414aca453ae16d7e8bd0ed204d5fdcf9107d7049f88b4052beebfeb8fca99"
             ]
           }
         ]
@@ -1632,7 +1632,7 @@
           "kind": "HUMAN_PENDING",
           "event_time": "2026-07-28T20:00:06+00:00",
           "received_time": "2026-07-28T20:00:06+00:00",
-          "artifact_id": "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30"
+          "artifact_id": "cfa414aca453ae16d7e8bd0ed204d5fdcf9107d7049f88b4052beebfeb8fca99"
         }
       ]
     },
@@ -1642,7 +1642,7 @@
       "reason_codes": [],
       "event_count": 7,
       "complete_lineage": true,
-      "head_hash": "f396be738966ee22dd01de20d783e65274d1907b77cfb7ccbcef210625ff92d9",
+      "head_hash": "0f9e057c6f7cf806a511b6baa0472136ed59ca07bd440bcc010590209c33268d",
       "events": [
         {
           "sequence": 1,
@@ -1739,21 +1739,21 @@
           "run_id": "reference-overnight-run",
           "stage": "HUMAN_PENDING",
           "occurred_at": "2026-07-28T20:00:06+00:00",
-          "artifact_id": "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+          "artifact_id": "cfa414aca453ae16d7e8bd0ed204d5fdcf9107d7049f88b4052beebfeb8fca99",
           "candidate_id": "TEST260821P00095000--TEST260821P00090000",
           "input_sha256": "c067b6af9ecee4d51c6970df41cda15df5e81a4cab04826e62a4405d732dbb6c",
-          "output_sha256": "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+          "output_sha256": "cfa414aca453ae16d7e8bd0ed204d5fdcf9107d7049f88b4052beebfeb8fca99",
           "component_version": "human-authorization-1.0.0",
           "policy_version": "paper-human-checkpoint-1.0.0",
           "reason_codes": [],
           "previous_hash": "e15e27682e5962aa92e0c1f33d8e838cc0392cefe672bd52a23ff8cd28d2cc4c",
-          "event_hash": "f396be738966ee22dd01de20d783e65274d1907b77cfb7ccbcef210625ff92d9"
+          "event_hash": "0f9e057c6f7cf806a511b6baa0472136ed59ca07bd440bcc010590209c33268d"
         }
       ]
     },
     "back_office_reconciliation": {
       "version": "paper-back-office-reconciliation-1.1.0",
-      "plan_sha256": "e385a3aebb3ac8705bf74ed8d94e91264df71dd4d531cef858371762419eed30",
+      "plan_sha256": "cfa414aca453ae16d7e8bd0ed204d5fdcf9107d7049f88b4052beebfeb8fca99",
       "internal_positions_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
       "broker_positions_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
       "internal_cash": "100000",
@@ -1766,7 +1766,7 @@
       "status": "pass",
       "reason_codes": [],
       "live_release_evidence_eligible": false,
-      "artifact_sha256": "a5b8897448968eff387ffeac02b067dc533be792de8969e59b9eecd713c2f67e"
+      "artifact_sha256": "d6cba9de81e2599981bb5d44728506bed075cbd369f6c40130b2e086dc9b46da"
     },
     "premium_cadence": {
       "version": "monthly-premium-cadence-1.0.0",
@@ -2009,12 +2009,12 @@
       "live_transition_authorized": false,
       "artifact_sha256": "9cc2c210afb346587dc3890a87ff3f7570f2ecdf9f1e547145948a0f2f63fa61"
     },
-    "report_sha256": "e8285f86aca2046e6228d15d4d3d53bec98521b2d13c6211161c4aea1b390546"
+    "report_sha256": "6c0abb3007f91ffdbf1b5a17c3065af8add7a445f7d439c258aa694c8f60d70a"
   },
   "summary": {
     "report_type": "paper_morning_control_summary",
-    "code_commit": "ff40bf21dc01f91a5b18419aa0b0c13c7bdb3a9e",
-    "report_sha256": "e8285f86aca2046e6228d15d4d3d53bec98521b2d13c6211161c4aea1b390546",
+    "code_commit": "LOCAL_UNSPECIFIED",
+    "report_sha256": "6c0abb3007f91ffdbf1b5a17c3065af8add7a445f7d439c258aa694c8f60d70a",
     "projects_evaluated": 6,
     "human_review": 1,
     "no_trade_projects": 5,
@@ -2077,7 +2077,259 @@
       "name": "Weather/War/Logistics Futures Event Desk",
       "status": "working_foundation",
       "objective": "Compare validated physical-event surprise with curve pricing, basis, roll, and costs."
+    },
+    {
+      "number": 7,
+      "project_id": "bonds-rates-desk",
+      "name": "Bonds and Rates Desk",
+      "status": "architecture_only",
+      "objective": "Anchor cross-asset research in Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress."
     }
   ],
-  "morning_markdown": "# Hedge Desk Morning Evaluation\n\nGenerated: 2026-09-06T19:31:52.442631+00:00\nCode commit: `ff40bf21dc01f91a5b18419aa0b0c13c7bdb3a9e`\n\n## Actual status\n\n- Real money P&L: $0\n- Real trades executed: 0\n- Environment: PAPER / HYPOTHETICAL\n- Live orders enabled: false\n\n## Project evaluation\n\n| Project | Disposition |\n|---|---|\n| overnight-premium-desk | HUMAN_REVIEW |\n| earnings-event-desk | NO_TRADE |\n| arbitrage-observer | NO_TRADE |\n| dividend-opportunity-desk | NO_TRADE |\n| open-quant-ai-model-lab | NO_TRADE |\n| event-futures-desk | NO_TRADE |\n\n## Synthetic war games\n\n- Total declared scenarios: 73\n- NO_TRADE controls: 46\n- Premium profitable stresses: 1\n- Premium losing stresses: 4\n- Premium synthetic total P&L: $-848.00\n- Premium synthetic maximum drawdown: $925.40\n- Premium synthetic expected shortfall: $-407.60\n- Earnings equity-arm synthetic total: $-22\n- Earnings option-arm synthetic total: $-312.00\n- Earnings hedged-arm synthetic total: $-5\n- Arbitrage gated-policy synthetic total: $45\n- Dividend shares-arm synthetic total: $-1083.00\n- Dividend call-arm synthetic total: $-310.00\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n- STAT Brier score: 0.23\n- STAT inference: INSUFFICIENT_SAMPLE\n- STAT p-value: None\n- STAT 95% CI: None\n- BIG proposal (agent research): defined-risk synthetic put credit spread\n- Deterministic risk model: finite-capital-ruin-approximation 0.1.0-unvalidated\n- Validated risk-input artifact: `d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0`\n\n## Combined-MVP capital stress\n\n- Synthetic scenarios: 5\n- Starting synthetic capital: $100000\n- Synthetic total P&L: $-9936.00\n- Synthetic maximum drawdown: $10034.40\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n\n## Control verification\n\n- Data batch: READY_FOR_RESEARCH\n- Chronological replay valid: true\n- Audit chain valid: true\n- Paper Back Office reconciliation: pass\n- Paper reconciliation live-release eligible: false\n- Premium new-entry evaluation allowed: true\n- Premium monitoring allowed: true\n- Premium exit-policy review scenarios: 3\n- Live release status: LIVE_RELEASE_BLOCKED\n- Live transition authorized: false\n- Unsatisfied live-release requirements: 9\n- Report SHA-256: `e8285f86aca2046e6228d15d4d3d53bec98521b2d13c6211161c4aea1b390546`\n\n## Limitations\n\n- Synthetic fixtures only; no current market opportunity is claimed.\n- Hypothetical paper output is not investment advice or a performance guarantee.\n- Research-only foundations correctly return NO_TRADE without validated risk inputs.\n"
+  "morning_markdown": "# Hedge Desk Morning Evaluation\n\nGenerated: 2026-09-27T04:20:39.148771+00:00\nCode commit: `LOCAL_UNSPECIFIED`\n\n## Actual status\n\n- Real money P&L: $0\n- Real trades executed: 0\n- Environment: PAPER / HYPOTHETICAL\n- Live orders enabled: false\n\n## Project evaluation\n\n| Project | Disposition |\n|---|---|\n| overnight-premium-desk | HUMAN_REVIEW |\n| earnings-event-desk | NO_TRADE |\n| arbitrage-observer | NO_TRADE |\n| dividend-opportunity-desk | NO_TRADE |\n| open-quant-ai-model-lab | NO_TRADE |\n| event-futures-desk | NO_TRADE |\n\n## Synthetic war games\n\n- Total declared scenarios: 73\n- NO_TRADE controls: 46\n- Premium profitable stresses: 1\n- Premium losing stresses: 4\n- Premium synthetic total P&L: $-848.00\n- Premium synthetic maximum drawdown: $925.40\n- Premium synthetic expected shortfall: $-407.60\n- Earnings equity-arm synthetic total: $-22\n- Earnings option-arm synthetic total: $-312.00\n- Earnings hedged-arm synthetic total: $-5\n- Arbitrage gated-policy synthetic total: $45\n- Dividend shares-arm synthetic total: $-1083.00\n- Dividend call-arm synthetic total: $-310.00\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n- STAT Brier score: 0.23\n- STAT inference: INSUFFICIENT_SAMPLE\n- STAT p-value: None\n- STAT 95% CI: None\n- BIG proposal (agent research): defined-risk synthetic put credit spread\n- Deterministic risk model: finite-capital-ruin-approximation 0.1.0-unvalidated\n- Validated risk-input artifact: `d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0`\n\n## Combined-MVP capital stress\n\n- Synthetic scenarios: 5\n- Starting synthetic capital: $100000\n- Synthetic total P&L: $-9936.00\n- Synthetic maximum drawdown: $10034.40\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n\n## Control verification\n\n- Data batch: READY_FOR_RESEARCH\n- Chronological replay valid: true\n- Audit chain valid: true\n- Paper Back Office reconciliation: pass\n- Paper reconciliation live-release eligible: false\n- Premium new-entry evaluation allowed: true\n- Premium monitoring allowed: true\n- Premium exit-policy review scenarios: 3\n- Live release status: LIVE_RELEASE_BLOCKED\n- Live transition authorized: false\n- Unsatisfied live-release requirements: 9\n- Report SHA-256: `6c0abb3007f91ffdbf1b5a17c3065af8add7a445f7d439c258aa694c8f60d70a`\n\n## Limitations\n\n- Synthetic fixtures only; no current market opportunity is claimed.\n- Hypothetical paper output is not investment advice or a performance guarantee.\n- Research-only foundations correctly return NO_TRADE without validated risk inputs.\n",
+  "candidate_feed": {
+    "schema_version": "hedge-desk-candidates-1.0.0",
+    "mode": "REAL_EOD",
+    "candidate_definition": "REAL_EOD_PREMIUM_CANDIDATES",
+    "report_sha256": "1b88c82a2ff5b24322c2e8f4a9ae1bab29e43e2dbf1592e91528ec5fbe2cab5b",
+    "candidates": [
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "AAL",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CASH_SECURED_PUT defined-risk premium; strike 12.48; capital required $1248.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "AAL",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "COVERED_CALL defined-risk premium; strike 15.26; capital required $1387.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "AAL",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CREDIT_SPREAD defined-risk premium; strike 5.00 wide; capital required $500.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "CCL",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CASH_SECURED_PUT defined-risk premium; strike 20.02; capital required $2002.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "CCL",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "COVERED_CALL defined-risk premium; strike 24.48; capital required $2225.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "CCL",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CREDIT_SPREAD defined-risk premium; strike 5.00 wide; capital required $500.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "DVN",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CASH_SECURED_PUT defined-risk premium; strike 42.34; capital required $4234.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "DVN",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "COVERED_CALL defined-risk premium; strike 51.75; capital required $4705.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "DVN",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CREDIT_SPREAD defined-risk premium; strike 5.00 wide; capital required $500.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "F",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CASH_SECURED_PUT defined-risk premium; strike 11.44; capital required $1144.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "F",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "COVERED_CALL defined-risk premium; strike 13.98; capital required $1271.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "F",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CREDIT_SPREAD defined-risk premium; strike 5.00 wide; capital required $500.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "LYFT",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CASH_SECURED_PUT defined-risk premium; strike 13.38; capital required $1338.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "LYFT",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "COVERED_CALL defined-risk premium; strike 16.35; capital required $1486.50",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "LYFT",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CREDIT_SPREAD defined-risk premium; strike 5.00 wide; capital required $500.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "NCLH",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CASH_SECURED_PUT defined-risk premium; strike 13.15; capital required $1315.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "NCLH",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "COVERED_CALL defined-risk premium; strike 16.07; capital required $1461.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "NCLH",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CREDIT_SPREAD defined-risk premium; strike 5.00 wide; capital required $500.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "NKE",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CASH_SECURED_PUT defined-risk premium; strike 32.18; capital required $3218.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "NKE",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "COVERED_CALL defined-risk premium; strike 39.32; capital required $3575.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      },
+      {
+        "desk_id": "overnight-premium-desk",
+        "symbol": "NKE",
+        "instrument_type": "EQUITY_OPTIONS",
+        "stage": "REAL_EOD_CANDIDATE",
+        "method": "CREDIT_SPREAD defined-risk premium; strike 5.00 wide; capital required $500.00",
+        "evidence_needed": "Real option chain for executable premium",
+        "trade_authorized": false
+      }
+    ]
+  },
+  "risk_dashboard": {
+    "schema_version": "hedge-desk-risk-dashboard-1.0.0",
+    "mode": "PAPER_RESEARCH_ONLY",
+    "trade_authorized_count": 0,
+    "live_orders_enabled": false,
+    "candidate_count": 21,
+    "desk_count": 1,
+    "stage_counts": {
+      "REAL_EOD_CANDIDATE": 21
+    },
+    "desk_counts": {
+      "overnight-premium-desk": 21
+    },
+    "evidence_gaps": {
+      "market_microstructure": 21
+    },
+    "attention_queue": [],
+    "executive_actions": [
+      "Keep the web surface research-only: candidate feed shows zero trade-authorized records.",
+      "Prioritize executable bid/ask, option-chain, and liquidity evidence before any premium desk review.",
+      "Use the attention queue as the morning research checklist for human review."
+    ]
+  },
+  "owner": {
+    "display_name": "mbolton",
+    "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"
+  },
+  "research_data_sources": [
+    {
+      "source_id": "papers-with-backtest",
+      "dataset": "All-Daily-News",
+      "status": "ADAPTER_READY",
+      "mode": "LICENSED_RESEARCH_ONLY",
+      "feeds": [
+        "earnings-event-desk",
+        "open-quant-ai-model-lab",
+        "event-futures-desk"
+      ],
+      "controls": [
+        "point-in-time embargo",
+        "explicit source timezone",
+        "entitlement identifier",
+        "content hashes",
+        "no vendor text retention",
+        "no trade authorization"
+      ]
+    }
+  ]
 }

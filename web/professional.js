@@ -2,13 +2,13 @@
 import { currentRoute } from './core.mjs';
 
 const deskMethods = [
-  ['Overnight Premium', 'Sells defined risk premium, and only after liquidity, volatility, event, and spread checks pass.', 'DATA INTEGRATION'],
-  ['Earnings Event', 'Compares what was expected against what the company confirmed, and how the stock reacted.', 'DATA INTEGRATION'],
-  ['Box / Parity Observer', 'Checks parity and box relationships after spreads, fees, settlement, and financing.', 'DATA INTEGRATION'],
-  ['Dividend Opportunity', 'Asks whether the payout can survive: cash generation, shareholder yield, and valuation.', 'DATA INTEGRATION'],
-  ['Global Quant & AI Research Lab', 'Covers quantitative and machine learning research, datasets, benchmarks, and reproducible model checks.', 'DATA INTEGRATION'],
-  ['Futures Event', 'Reads physical events against futures curves, liquidity, and contract specifications.', 'DATA INTEGRATION'],
-  ['Bonds & Rates', 'Uses Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress as the backdrop for other research.', 'ARCHITECTURE ONLY']
+  ['Overnight Premium', 'Sells defined risk premium, and only after liquidity, volatility, event, and spread checks pass.', 'Active'],
+  ['Earnings Event', 'Compares what was expected against what the company confirmed, and how the stock reacted.', 'Active'],
+  ['Box / Parity Observer', 'Checks parity and box relationships after spreads, fees, settlement, and financing.', 'Active'],
+  ['Dividend Opportunity', 'Asks whether the payout can survive: cash generation, shareholder yield, and valuation.', 'Active'],
+  ['Global Quant & AI Research Lab', 'Covers quantitative and machine learning research, datasets, benchmarks, and reproducible model checks.', 'Active'],
+  ['Futures Event', 'Reads physical events against futures curves, liquidity, and contract specifications.', 'Active'],
+  ['Bonds & Rates', 'Uses Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress as the backdrop for other research.', 'Coming soon']
 ];
 
 function applyBrand() {
@@ -44,11 +44,10 @@ function statusStrip() {
     <section id="wall-street-context" class="ws-status" aria-label="Research platform status">
       <div class="ws-tape">
         <span><b>EMPORION</b></span>
-        <span><b>MODE</b> RESEARCH</span>
-        <span><b>DESKS</b> SEVEN</span>
-        <span><b>EVALUATED</b> SIX</span>
-        <span><b>RISK</b> INDEPENDENT GATE</span>
-        <span><b>DECISION</b> HUMAN REVIEW</span>
+        <span>Independent research</span>
+        <span><b>6</b> desks + 1 coming soon</span>
+        <span>Human review</span>
+        <span>No orders placed</span>
         <a href="./README_PUBLIC.md" download>README ↓</a>
       </div>
     </section>`;
@@ -89,7 +88,7 @@ function overviewBlock() {
         <article><strong>User-controlled extension</strong><span>Open-source users may connect their own data and implementation layers outside the default site.</span></article>
       </div>
       <div class="ws-desk-list">
-        <div class="ws-list-head"><span>Research desk</span><span>Operating state</span></div>
+        <div class="ws-list-head"><span>Research desk</span><span>Status</span></div>
         ${deskMethods.map(([name,,state]) => `<div class="ws-list-row"><strong>${name}</strong><span class="ws-state">${state}</span></div>`).join('')}
       </div>
     </section>`;
@@ -123,11 +122,6 @@ function aboutCapitalBlock() {
         <article><h3>Structured decisions</h3><p>Candidates are evaluated through defined research methods, scenarios, documented decision criteria, and a separate portfolio-survival risk state.</p></article>
         <article><h3>Survival discipline</h3><p>Research conviction does not override portfolio-survival controls. Human review remains central, but it does not erase a blocked risk or compliance state.</p></article>
       </div>
-      <div class="ws-inspiration">
-        <div class="ws-label">RESEARCH & INVESTING INSPIRATIONS</div>
-        <p><strong>High-Flyer / DeepSeek team</strong> · <strong>Warren Buffett</strong> · <strong>Benjamin Graham</strong> · <strong>Ray Dalio / Bridgewater Associates</strong></p>
-        <p class="ws-inspiration-note">The design principle carried into Emporion is process over prediction: specialized research, shared intelligence, explicit downside discipline, challenge before commitment, and survival as a prerequisite for compounding. Inspirations only. No affiliation, endorsement, sponsorship, personal relationship, proprietary access, or claim of comparable results.</p>
-      </div>
       <p class="ws-legal">Emporion is an independent research and software project for structured market review. Users remain responsible for their own decisions, accounts, and implementation choices.</p>
     </section>`;
 }
@@ -152,7 +146,7 @@ function installStyle() {
     .ws-desk-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ws-desk-methods article{padding:22px;border-right:1px solid #e6eaed;border-bottom:1px solid #e6eaed}.ws-desk-methods article:nth-child(2n){border-right:0}.ws-desk-methods article:nth-last-child(-n+2){border-bottom:0}.ws-desk-methods h2{font-size:16px;margin:8px 0}.ws-desk-methods p{font-size:12px;line-height:1.6;color:#596871;min-height:38px}
     .ws-capital-head{padding:19px 21px;border-bottom:1px solid #e6eaed;display:flex;align-items:center;justify-content:space-between;gap:18px}.ws-capital-head h2{margin-top:7px}.ws-brandline{margin:6px 0 0;font:10px 'IBM Plex Mono',monospace;letter-spacing:.6px;color:#6d7a83}.ws-boundary{font:10px 'IBM Plex Mono',monospace;letter-spacing:.7px;background:#f3f5f6;border:1px solid #d8dfe3;padding:7px 9px;border-radius:3px;color:#58666f;white-space:nowrap}
     .ws-capital-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ws-capital-grid article{padding:20px 21px;border-right:1px solid #e6eaed;border-bottom:1px solid #e6eaed}.ws-capital-grid article:nth-child(2n){border-right:0}.ws-capital-grid article:nth-last-child(-n+2){border-bottom:0}.ws-capital-grid h3{font-size:14px;margin:0 0 8px}.ws-capital-grid p{font-size:12px;line-height:1.6;color:#596871;margin:0}
-    .ws-inspiration{padding:18px 21px;border-top:1px solid #e6eaed;background:#fafbfc}.ws-inspiration p{font-size:12px;line-height:1.6;color:#53616a;margin:9px 0 0}.ws-inspiration-note{font-size:11px!important;color:#75818a!important}.ws-legal{margin:0;padding:14px 21px;background:#101820;color:#cbd4da;font-size:11px;line-height:1.55}
+    .ws-inspiration-note{font-size:11px!important;color:#75818a!important}.ws-legal{margin:0;padding:14px 21px;background:#101820;color:#cbd4da;font-size:11px;line-height:1.55}
     body[data-route='overview'] #main>.notice,body[data-route='overview'] #main>.stats,body[data-route='overview'] #main>.split,body[data-route='overview'] #main>.lower{display:none}
     body[data-route='desks'] #main>.cards{display:none}
     @media(max-width:800px){.ws-overview-grid,.ws-desk-methods,.ws-continuum,.ws-ror-grid{grid-template-columns:1fr}.ws-overview-grid article,.ws-desk-methods article,.ws-continuum article,.ws-ror-grid article{border-right:0;border-bottom:1px solid #e6eaed}.ws-overview-grid article:last-child,.ws-desk-methods article:last-child,.ws-continuum article:last-child,.ws-ror-grid article:last-child{border-bottom:0}.ws-list-head,.ws-list-row{grid-template-columns:1fr}.ws-state{margin-top:5px}.ws-process-line i{width:12px}}
@@ -169,8 +163,8 @@ function installStyle() {
 // detail dialog (and from there "Write Yellow Sheet") was the hidden one — i.e.
 // unreachable on the Research desks tab. Each visible card/row is wired to the
 // real button app.js rendered, matched by the desk name it displays, so no
-// project id is guessed and a surface with no counterpart (Bonds & Rates, which
-// is architecture-only) is simply left inert.
+// project id is guessed. Bonds & Rates has no evaluated research yet, so its
+// card goes to the institutional rates sources instead of doing nothing.
 function wireDeskRows() {
   const surfaces = [
     ...document.querySelectorAll('#main .ws-desk-methods article'),
@@ -195,6 +189,23 @@ function wireDeskRows() {
     if (node.dataset.wired === 'true') continue;
     const label = nameOf(node.querySelector('h2') || node.querySelector('strong'));
     if (!label) continue;
+    // Bonds & Rates has no evaluated research yet: its card links to the
+    // institutional rates sources rather than sitting inert.
+    if (label.includes('bonds') && label.includes('rates')) {
+      node.dataset.wired = 'true';
+      node.classList.add('ws-desk-openable');
+      node.setAttribute('role', 'link');
+      node.setAttribute('tabindex', '0');
+      const go = (event) => {
+        event.preventDefault();
+        location.hash = '#resources';
+      };
+      node.addEventListener('click', go);
+      node.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') go(event);
+      });
+      continue;
+    }
     const opener = openers.find((button) => {
       const heading = nameOf(button.closest('.desk-card')?.querySelector('h2'));
       if (!heading) return false;

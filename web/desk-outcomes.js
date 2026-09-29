@@ -68,13 +68,13 @@ function deskOutputsPanel(data) {
     `<span>What the earnings and macro desks actually produced in the committed nightly batch. Fixture cards below remain the published reference set.</span></div>` +
     `<div class="stats" data-desk-outcomes-stats="true">` +
     `<article class="stat"><div class="eyebrow">Earnings actuals</div><div class="stat-value">${eCount}</div><div class="stat-foot">Real SEC EDGAR filings</div></article>` +
-    `<article class="stat"><div class="eyebrow">Macro observations</div><div class="stat-value">${mCount}</div><div class="stat-foot">Real FRED observations</div></article>` +
+    `<article class="stat"><div class="eyebrow">Macro data</div><div class="stat-value">${mCount}</div><div class="stat-foot">Real FRED data</div></article>` +
     
     `</div>` +
     `<div class="section-gap">${`<section class="panel"><div class="panel-head"><div><div class="eyebrow">EARNINGS DESK</div><h2>EDGAR actuals</h2></div></div>` +
       `<div class="table-scroll"><table><thead><tr><th>Filer</th><th>Stage</th><th>Latest quarterly EPS</th><th>Period</th></tr></thead>` +
       `<tbody>${earningsRows(earnings) || '<tr><td colspan="4"><span class="small">No earnings actuals in this batch.</span></td></tr>'}</tbody></table></div></section>`}</div>` +
-    `<div class="section-gap">${`<section class="panel"><div class="panel-head"><div><div class="eyebrow">MACRO DESK</div><h2>FRED observations</h2></div></div>` +
+    `<div class="section-gap">${`<section class="panel"><div class="panel-head"><div><div class="eyebrow">MACRO DESK</div><h2>FRED data</h2></div></div>` +
       `<div class="table-scroll"><table><thead><tr><th>Series</th><th>Reading</th><th>Source</th></tr></thead>` +
       `<tbody>${macroRows(macro)}</tbody></table></div></section>`}</div>`;
 }

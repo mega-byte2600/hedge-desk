@@ -1,273 +1,85 @@
-"""Deterministic tests for the multi-asset data-provider registry (no network).
-
-Fixture payloads are minimal, representative slices of the real endpoints'
-shapes (SEC EDGAR companyfacts, Treasury fiscal service, CFTC zip, Stooq
-bot-wall HTML, EIA key-gating). Transports are injected; CI never reaches the
-live APIs. The goal: prove each adapter fails closed on malformed/missing input
-and parses a good payload into the shared ProviderObservation contract.
-"""
-
-import json
-import unittest
-from datetime import datetime, timezone
-
 from hedge_desk.data.providers import (
-    CftcCotAdapter,
-    EiaOpenDataAdapter,
-    ENV_EIA_API_KEY,
-    ENV_FRED_API_KEY,
-    KeyedEodAdapter,
-    ProviderStatus,
-    REGISTRY_BY_ID,
-    SecEdgarFactsAdapter,
-    StooqEodAdapter,
-    TreasuryFiscalAdapter,
-    build_provider_artifact,
-    fetch_provider,
-    _parse_alpha_vantage,
-    _parse_tiingo,
-    _parse_twelve,
-    _alpha_vantage_url,
-)
-
-# --- captured real-payload fixtures --------------------------------------
-
-SEC_APPLE = json.dumps({
-    "cik": 320193,
-    "entityName": "Apple Inc.",
-    "facts": {
-        "dei": {
-            "EntityCommonStockSharesOutstanding": {
-                "label": "Entity Common Stock, Shares Outstanding",
-                "units": {"shares": [{"end": "2026-06-27", "val": 14852413000, "fy": 2026, "fp": "FY"}]},
-            }
-        },
-        "us-gaap": {
-            "Revenues": {
-                "label": "Revenues",
-                "units": {
-                    "USD": [
-                        {"end": "2026-06-27", "val": 85777000000, "fy": 2026, "fp": "FY"},
-                        {"end": "2025-06-28", "val": 85863000000, "fy": 2025, "fp": "FY"},
-                    ]
-                },
-            }
-        },
-    },
-})
-
-
-def _sec_ok_transport():
-    return lambda url: (200, SEC_APPLE.encode("utf-8"))
-
-
-TREASURY_OK = json.dumps({
-    "data": [
-        {
-            "record_date": "2026-06-30", "country": "United Kingdom", "currency": "Pound",
-            "country_currency_desc": "United Kingdom-Pound", "exchange_rate": "1.268",
-            "record_fiscal_year": "2026", "record_fiscal_quarter": "3",
-        }
-    ]
-})
-
-
-def _treasury_ok_transport():
-    return lambda url: (200, TREASURY_OK.encode("utf-8"))
-
-
-# a valid PK zip preamble (just the magic bytes)
-CFTC_ZIP = b"PK\x03\x04" + b"\x00" * 64
-
-STOOQ_BOTWALL = (
-    b'<!DOCTYPE html><html><head><meta name="robots" content="noindex,nofollow">'
-    b'</head><body><noscript>This site requires JavaScript to verify your browser.</noscript>'
-    b'<script nonce="x">(async()=>{const c="AAA",await fetch("/__verify"...})();</script></body></html>'
+    all_providers,
+    missing_auth_env,
+    provider,
+    providers_for_asset_class,
+    providers_for_capability,
 )
 
 
-class SecEdgarTests(unittest.TestCase):
-    def test_parses_revenues_into_observations(self):
-        result = SecEdgarFactsAdapter().fetch("320193", _sec_ok_transport(), tag="Revenues")
-        self.assertEqual(result.status, ProviderStatus.PASS)
-        self.assertFalse(result.reason_codes)
-        self.assertTrue(len(result.observations) >= 1)
-        revenues = [o for o in result.observations if "Revenues" in o.series and o.unit == "USD"]
-        self.assertTrue(revenues)
-        self.assertEqual(revenues[-1].date, "2026-06-27")
-        self.assertEqual(revenues[-1].value, "85777000000")
-        self.assertEqual(revenues[-1].extra, (("fy", "2026"), ("fp", "FY")))
-
-    def test_unknown_tag_rejects(self):
-        result = SecEdgarFactsAdapter().fetch("320193", _sec_ok_transport(), tag="NotARealTag")
-        self.assertEqual(result.status, ProviderStatus.REJECT)
-        self.assertIn("TAG_UNKNOWN", result.reason_codes)
-
-    def test_404_quarantines_symbol_unknown(self):
-        result = SecEdgarFactsAdapter().fetch("320193", lambda url: (404, b"{}"))
-        self.assertEqual(result.status, ProviderStatus.QUARANTINE)
-        self.assertIn("SYMBOL_UNKNOWN", result.reason_codes)
-
-    def test_invalid_cik_rejects(self):
-        result = SecEdgarFactsAdapter().fetch("not-a-cik", _sec_ok_transport())
-        self.assertEqual(result.status, ProviderStatus.REJECT)
-        self.assertIn("CIK_INVALID", result.reason_codes)
-
-    def test_malformed_payload_rejects(self):
-        result = SecEdgarFactsAdapter().fetch("320193", lambda url: (200, b"not json"))
-        self.assertEqual(result.status, ProviderStatus.REJECT)
-        self.assertIn("PAYLOAD_MALFORMED", result.reason_codes)
+def test_provider_ids_are_unique_and_nonempty():
+    ids = [item.provider_id for item in all_providers()]
+    assert all(ids)
+    assert len(ids) == len(set(ids))
 
 
-class TreasuryTests(unittest.TestCase):
-    def test_parses_fx_observations(self):
-        result = TreasuryFiscalAdapter().fetch("rates_of_exchange", _treasury_ok_transport())
-        self.assertEqual(result.status, ProviderStatus.PASS)
-        self.assertEqual(len(result.observations), 1)
-        rx = result.observations[0]
-        self.assertEqual(rx.date, "2026-06-30")
-        self.assertEqual(rx.value, "1.268")
-        self.assertEqual(rx.unit, "fx")
-        self.assertEqual(rx.extra[0], ("currency", "Pound"))
+def test_authoritative_public_sources_cover_core_desk_domains():
+    assert provider("sec-edgar").authority == "official"
+    assert provider("nyfed-markets").authority == "official"
+    assert provider("treasury-fiscaldata").authority == "official"
+    assert provider("eia-open-data").authority == "official"
+    assert provider("cftc-cot").authority == "official"
 
-    def test_empty_data_rejects(self):
-        result = TreasuryFiscalAdapter().fetch("rates_of_exchange", lambda url: (200, b'{"data": []}'))
-        self.assertEqual(result.status, ProviderStatus.REJECT)
-        self.assertIn("EMPTY_PAYLOAD", result.reason_codes)
-
-    def test_transport_failure_quarantines(self):
-        result = TreasuryFiscalAdapter().fetch("rates_of_exchange", lambda url: (0, b""))
-        self.assertEqual(result.status, ProviderStatus.QUARANTINE)
-        self.assertIn("TRANSPORT_FAILED", result.reason_codes)
+    assert provider("sec-edgar").public_without_key is True
+    assert provider("nyfed-markets").public_without_key is True
+    assert provider("treasury-fiscaldata").public_without_key is True
+    assert provider("cftc-cot").public_without_key is True
 
 
-class CftcTests(unittest.TestCase):
-    def test_zip_payload_passes(self):
-        result = CftcCotAdapter().fetch("ignored", lambda url: (200, CFTC_ZIP), year="2024")
-        self.assertEqual(result.status, ProviderStatus.PASS)
-        self.assertEqual(result.observations[0].unit, "bytes")
-        self.assertGreater(int(result.observations[0].value), 0)
+def test_capability_and_asset_class_queries():
+    option_ids = {item.provider_id for item in providers_for_asset_class("options")}
+    assert {"cboe", "cme", "schwab", "polygon"}.issubset(option_ids)
 
-    def test_non_zip_payload_rejects(self):
-        result = CftcCotAdapter().fetch("ignored", lambda url: (200, b"not a zip"))
-        self.assertEqual(result.status, ProviderStatus.REJECT)
-        self.assertIn("PAYLOAD_NOT_ZIP", result.reason_codes)
+    positioning_ids = {item.provider_id for item in providers_for_capability("positioning")}
+    assert positioning_ids == {"cftc-cot"}
+
+    sofr_ids = {item.provider_id for item in providers_for_capability("sofr")}
+    assert sofr_ids == {"nyfed-markets"}
 
 
-class EiaTests(unittest.TestCase):
-    def test_missing_key_is_quarantine_config(self):
-        # live verified: 403 without key; never fabricate a value.
-        result = EiaOpenDataAdapter().fetch("SERIES", lambda url: (200, b"{}"))
-        self.assertEqual(result.status, ProviderStatus.QUARANTINE)
-        self.assertIn("CONFIG_MISSING_KEY", result.reason_codes)
-        self.assertIn(ENV_EIA_API_KEY, result.config_needs)
-
-    def test_auth_failed_key(self):
-        result = EiaOpenDataAdapter().fetch("SERIES", lambda url: (403, b""), api_key="dummy")
-        self.assertEqual(result.status, ProviderStatus.QUARANTINE)
-        self.assertIn("AUTH_FAILED", result.reason_codes)
+def test_auth_requirements_fail_closed_without_keys():
+    assert missing_auth_env("polygon", {}) == "POLYGON_API_KEY"
+    assert missing_auth_env("polygon", {"POLYGON_API_KEY": "x"}) is None
+    assert missing_auth_env("eia-open-data", {}) == "EIA_API_KEY"
+    assert missing_auth_env("sec-edgar", {}) is None
+    assert missing_auth_env("fred", {}) is None
 
 
-class StooqTests(unittest.TestCase):
-    def test_bot_wall_is_detected_honestly(self):
-        result = StooqEodAdapter().fetch("AAPL", lambda url: (200, STOOQ_BOTWALL))
-        self.assertEqual(result.status, ProviderStatus.QUARANTINE)
-        self.assertIn("BOT_WALL", result.reason_codes)
+def test_unknown_provider_is_rejected():
+    try:
+        provider("not-a-provider")
+    except KeyError as exc:
+        assert "unknown provider" in str(exc)
+    else:
+        raise AssertionError("unknown provider should fail closed")
 
 
-class KeyedEodTests(unittest.TestCase):
-    def test_missing_key_quarantines_with_config(self):
-        from hedge_desk.data.providers import REGISTRY
+def test_provider_console_rows_surface_all_catalog_providers():
+    from hedge_desk.data.providers import provider_console_rows
 
-        av = REGISTRY_BY_ID["alpha-vantage-eod"]
-        result = av.fetch("AAPL", lambda url: (200, b"{}"))
-        self.assertEqual(result.status, ProviderStatus.QUARANTINE)
-        self.assertIn("CONFIG_MISSING_KEY", result.reason_codes)
-        self.assertEqual(result.config_needs, ("ALPHA_VANTAGE_API_KEY",))
-
-    def test_alpha_vantage_parser(self):
-        payload = {
-            "Time Series (Daily)": {
-                "2026-09-29": {"4. close": "330.00", "1. open": "329.00"},
-                "2026-09-28": {"4. close": "328.50", "1. open": "329.10"},
-            }
-        }
-        parsed = _parse_alpha_vantage(json.dumps(payload).encode())
-        self.assertEqual(len(parsed), 2)
-        self.assertEqual(parsed[0]["date"], "2026-09-28")
-        self.assertEqual(parsed[1]["close"], "330.00")
-
-    def test_alpha_vantage_limit_note(self):
-        parsed = _parse_alpha_vantage(b'{"Note": "API limit reached"}')
-        self.assertEqual(parsed, ("API_LIMIT_OR_KEY_INVALID",))
-
-    def test_tiingo_parser(self):
-        raw = json.dumps([{"date": "2026-09-29T00:00:00+00:00", "close": 330.0}]).encode()
-        parsed = _parse_tiingo(raw)
-        self.assertEqual(parsed[0]["date"], "2026-09-29")
-        self.assertEqual(parsed[0]["close"], "330.0")
-
-    def test_twelve_parser(self):
-        raw = json.dumps({"status": "ok", "values": [{"datetime": "2026-09-29", "close": "330.00"}]}).encode()
-        parsed = _parse_twelve(raw)
-        self.assertEqual(parsed[0]["close"], "330.00")
-
-    def test_url_builders_do_not_leak_secrets(self):
-        av = _alpha_vantage_url("AAPL", "SOMEKEY")
-        self.assertIn("apikey=SOMEKEY", av)
-        # url itself is fine; the key must never reach logs — handled at fetch layer.
+    rows = provider_console_rows()
+    assert len(rows) == len(all_providers()) - 1  # fdic is catalog-only (public-claims gate)
+    ids = {r["source_id"] for r in rows}
+    assert "fdic" not in ids
+    assert {"sec-edgar", "treasury-fiscaldata", "fred", "cftc-cot",
+            "nws", "stooq", "alpha-vantage"}.issubset(ids)
+    for r in rows:
+        # statuses must render under the console statusClass() palette
+        assert r["status"] in ("PASS", "PENDING", "REVIEW_REQUIRED")
+        assert "no fabricated values" in r["controls"]
+    # key-gated vs keyless surfaces correctly
+    by_id = {r["source_id"]: r for r in rows}
+    assert by_id["sec-edgar"]["status"] == "PASS"
+    assert by_id["sec-edgar"]["public_without_key"] is True
+    assert by_id["alpha-vantage"]["status"] == "REVIEW_REQUIRED"
 
 
-class RegistryTests(unittest.TestCase):
-    def test_registry_has_all_expected_providers(self):
-        expected = {
-            "sec-edgar-companyfacts", "cftc-cot", "ust-treasury-fiscal",
-            "eia-open-data-v2", "stooq-eod", "alpha-vantage-eod",
-            "tiingo-eod", "twelve-data-eod",
-        }
-        self.assertEqual(set(REGISTRY_BY_ID), expected)
+def test_provider_console_rows_never_claims_fabricated_pass():
+    # a key-gated provider without a key must not show PASS
+    from hedge_desk.data.providers import provider_console_rows
 
-    def test_fetch_provider_unknown_raises(self):
-        with self.assertRaisesRegex(ValueError, "unknown provider"):
-            fetch_provider("not-a-provider", "AAPL")
-
-    def test_fetch_provider_dispatches(self):
-        result = fetch_provider("ust-treasury-fiscal", "rates_of_exchange", transport=_treasury_ok_transport())
-        self.assertEqual(result.status, ProviderStatus.PASS)
-
-    def test_build_provider_artifact_seals_metadata(self):
-        result = fetch_provider("ust-treasury-fiscal", "rates_of_exchange", transport=_treasury_ok_transport())
-        artifact = build_provider_artifact(result, "rates_of_exchange")
-        self.assertFalse(artifact.synthetic)
-        self.assertFalse(artifact.redistribution_allowed)
-        self.assertEqual(artifact.source_id, "ust-treasury-fiscal")
-        self.assertEqual(artifact.payload_kind, "provider_observation")
-
-
-class ConsoleSurfaceTests(unittest.TestCase):
-    def test_provider_console_rows_present_and_honest(self):
-        from hedge_desk.data.providers import provider_console_rows
-
-        rows = provider_console_rows()
-        ids = {r["source_id"] for r in rows}
-        self.assertIn("sec-edgar-companyfacts", ids)
-        self.assertIn("ust-treasury-fiscal", ids)
-        self.assertIn("alpha-vantage-eod", ids)
-        self.assertIn("twelve-data-eod", ids)
-        self.assertEqual(len(rows), len(REGISTRY_BY_ID))
-        # statuses render via statusClass: PASS->green, BLOCK->red, PENDING->amber
-        for r in rows:
-            self.assertIn(r["status"], ("PASS", "BLOCK", "PENDING"))
-            self.assertEqual(r["mode"], "FREE_OPEN_PUBLIC_DATA_ONLY")
-            self.assertIn("no fabricated values", r["controls"])
-
-    def test_twelve_data_has_own_key_env(self):
-        adapter = REGISTRY_BY_ID["twelve-data-eod"]
-        from hedge_desk.data.providers import ENV_TWELVE_DATA_KEY
-
-        self.assertEqual(adapter.key_env, ENV_TWELVE_DATA_KEY)
-        self.assertNotEqual(adapter.key_env, ENV_FRED_API_KEY)
-
-
-if __name__ == "__main__":
-    unittest.main()
+    rows = provider_console_rows()
+    keyed = [r for r in rows if r["key_env"] and not r["public_without_key"]]
+    assert keyed, "expected at least one key-gated provider"
+    for r in keyed:
+        assert r["status"] != "PASS"

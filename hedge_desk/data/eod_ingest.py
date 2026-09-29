@@ -27,7 +27,7 @@ from __future__ import annotations
 import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 import urllib.error
 import urllib.request
@@ -46,6 +46,12 @@ EOD_SOURCE_ID = "yahoo-public-chart-v8"
 YAHOO_CHART_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?range={range_param}&interval=1d"
 DEFAULT_YAHOO_RANGE = "5d"   # lightweight daily batch
 FEATURE_YAHOO_RANGE = "3mo"  # enough history for 1/5/21-day + realized-vol features
+
+# Stooq fallback (handoff 2026-09-26: data-source redundancy). Free EOD CSV,
+# no API key. Used only when Yahoo fails — same OHLCV schema, honest source
+# attribution in the result. Symbol format: {ticker}.us, dates YYYYMMDD.
+STOOQ_SOURCE_ID = "stooq-public-csv"
+STOOQ_CSV_URL = "https://stooq.com/q/d/l/?s={symbol}.us&d1={d1}&d2={d2}&i=d"
 
 # Transport injection for deterministic tests.
 Transport = Callable[[str], Tuple[int, bytes]]
@@ -70,6 +76,7 @@ class EodSymbolResult:
     artifact_sha256: str
     source_as_of: datetime
     received_at: datetime
+    source_id: str = EOD_SOURCE_ID  # which source actually served this symbol
 
 
 def _default_transport(url: str) -> Tuple[int, bytes]:
@@ -168,6 +175,43 @@ def _parse_chart_payload(symbol: str, raw: bytes) -> Tuple[Tuple[EodDay, ...], s
     return tuple(rows), ""
 
 
+def _parse_stooq_csv(symbol: str, raw: bytes) -> Tuple[Tuple[EodDay, ...], str]:
+    """Parse Stooq daily CSV (Date,Open,High,Low,Close,Volume) into EodDay rows."""
+    try:
+        text = raw.decode("utf-8").strip()
+    except UnicodeDecodeError:
+        return (), "PAYLOAD_MALFORMED"
+    lines = text.splitlines()
+    if len(lines) < 2:
+        return (), "EMPTY_PAYLOAD"
+    header = lines[0].strip().lower()
+    if not header.startswith("date,"):
+        return (), "PAYLOAD_MALFORMED"
+    rows = []
+    for line in lines[1:]:
+        parts = line.strip().split(",")
+        if len(parts) < 6:
+            continue
+        date_s, open_s, high_s, low_s, close_s, vol_s = parts[:6]
+        # Stooq marks missing data with "N/D".
+        if "N/D" in (open_s, high_s, low_s, close_s):
+            continue
+        if not all(_decimal_ok(v) for v in (open_s, high_s, low_s, close_s)):
+            continue
+        try:
+            volume = int(float(vol_s))
+        except ValueError:
+            continue
+        if volume < 0:
+            continue
+        rows.append(
+            EodDay(date_s, close_s, open_s, high_s, low_s, volume)
+        )
+    if not rows:
+        return (), "NO_VALID_DAYS"
+    return tuple(rows), ""
+
+
 def _fetch_one_symbol(
     symbol: str,
     transport: Transport,
@@ -179,12 +223,52 @@ def _fetch_one_symbol(
     Pure per-symbol work with no shared state, so the batch can run symbols
     concurrently. A transport exception propagates (fail-stop), exactly as in
     the sequential version; HTTP-level failures become QUARANTINE/REJECT rows.
+
+    Redundancy (handoff 2026-09-26): Yahoo is primary; if it fails (transport
+    error or malformed payload), Stooq's free CSV is tried before giving up.
+    The result's source_id says which source actually served the data.
     """
-    url = YAHOO_CHART_URL.format(symbol=symbol, range_param=range_param)
-    status, raw = transport(url)
     received_at = datetime.now(timezone.utc)
     epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
-    if status != 200 or not raw:
+
+    # Primary: Yahoo.
+    url = YAHOO_CHART_URL.format(symbol=symbol, range_param=range_param)
+    status, raw = transport(url)
+    days: Tuple[EodDay, ...] = ()
+    source_id = EOD_SOURCE_ID
+    yahoo_ok = False
+    if status == 200 and raw:
+        days, reason = _parse_chart_payload(symbol, raw)
+        if days:
+            yahoo_ok = True
+        elif reason == "SYMBOL_MISMATCH":
+            # Wrong symbol entirely — don't fall back, it's not a source outage.
+            return EodSymbolResult(
+                symbol, SourceBatchStatus.REJECT, (reason,), (), "0" * 64,
+                epoch, received_at,
+            )
+
+    # Fallback: Stooq free CSV (no key). Only when Yahoo failed.
+    if not yahoo_ok:
+        # Stooq needs an explicit date window; derive it from the cutoff.
+        # range_param "5d" -> 7 calendar days; "3mo" -> 95 days. Generous is fine.
+        window_days = 95 if range_param == FEATURE_YAHOO_RANGE else 7
+        d2 = decision_cutoff.date()
+        d1 = d2 - timedelta(days=window_days)
+        stooq_url = STOOQ_CSV_URL.format(
+            symbol=symbol.lower(),
+            d1=d1.strftime("%Y%m%d"),
+            d2=d2.strftime("%Y%m%d"),
+        )
+        s_status, s_raw = transport(stooq_url)
+        if s_status == 200 and s_raw:
+            s_days, _ = _parse_stooq_csv(symbol, s_raw)
+            if s_days:
+                days = s_days
+                source_id = STOOQ_SOURCE_ID
+
+    if not days:
+        # Both sources failed — honest QUARANTINE, never invented.
         return EodSymbolResult(
             symbol,
             SourceBatchStatus.QUARANTINE,
@@ -193,12 +277,6 @@ def _fetch_one_symbol(
             "0" * 64,
             epoch,
             received_at,
-        )
-    days, reason = _parse_chart_payload(symbol, raw)
-    if not days:
-        return EodSymbolResult(
-            symbol, SourceBatchStatus.REJECT, (reason,), (), "0" * 64,
-            epoch, received_at,
         )
     payload_text = _canonical_payload(symbol, days)
     artifact_hash = sha256(payload_text.encode("utf-8")).hexdigest()
@@ -216,6 +294,7 @@ def _fetch_one_symbol(
         # gate trivially pass and misrepresent the data's actual age.
         datetime.fromisoformat(last_day.date + "T00:00:00+00:00"),
         received_at,
+        source_id,
     )
 
 
@@ -270,8 +349,10 @@ def ingest_eod(
         str(item.symbol): DataArtifact(
             artifact_id=f"eod-{item.symbol}",
             payload_kind="equity_daily",
-            source_id=EOD_SOURCE_ID,
-            license_id="yahoo-public-reference",
+            source_id=item.source_id,
+            license_id="yahoo-public-reference"
+            if item.source_id == EOD_SOURCE_ID
+            else "stooq-public-reference",
             source_as_of=item.source_as_of,
             received_at=item.received_at,
             payload_sha256=item.artifact_sha256,

@@ -312,7 +312,7 @@ def _dispatch(environ, start_response):
     ):
         return _auth_app()(environ, start_response)
     if path == "/api/health":
-        return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _cached("supabase-status", _supabase_status)})
+        return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _cached("supabase-status", _supabase_status), "deploy_sha": os.environ.get("RENDER_GIT_COMMIT", "unknown")[:8]})
     if path == "/api/candidates":
         return _json(start_response, _cached("candidates", build_candidate_feed))
     if path == "/api/eod-candidates":

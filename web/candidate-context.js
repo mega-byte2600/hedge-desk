@@ -19,7 +19,7 @@
         <div class="pipeline-line"><span><strong>3 · Evidence qualification</strong><br><small>Required market evidence must be present before a candidate can become method-qualified.</small></span><strong>QUALIFY</strong></div>
         <div class="pipeline-line"><span><strong>4 · Scenario + Yellow Sheet</strong><br><small>The thesis is challenged under scenarios and the reasoning is documented before a decision.</small></span><strong>CHALLENGE</strong></div>
         <div class="pipeline-line"><span><strong>5 · Human decision</strong><br><small>Research supports judgment. Emporion does not authorize a trade.</small></span><strong>DECIDE</strong></div>
-        <p class="small">This MVP demonstrates that decision process using the Published paper snapshot. Current market evidence and method scoring remain explicitly disconnected on this page. Emporion supports a path toward user-controlled automated trading through future data, model, broker, and execution integrations, but automated trading is not part of the current MVP.</p>
+        <p class="small">This page shows the Published paper snapshot. Live market evidence and method scoring are not connected here yet.</p>
       </div>
     </section>`;
 

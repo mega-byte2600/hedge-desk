@@ -13,7 +13,7 @@ import SwiftUI
 // are explicit; nothing is ever fabricated. If a feed is missing or the
 // server is unreachable, the tab says so plainly.
 
-private let defaultApiBaseURL = "http://localhost:8765"
+private let defaultApiBaseURL = "https://hedge-desk.onrender.com"
 
 // MARK: - Feed models (snake_case JSON -> camelCase via the decoder)
 
@@ -37,8 +37,12 @@ struct EpsObservation: Decodable {
     let latestFyPeriod: String?
 
     private enum Keys: String, CodingKey {
-        case latestQuarterlyEps, latestQuarterlyPeriod, priorQuarterlyEps,
-             priorQuarterlyPeriod, latestFyEps, latestFyPeriod
+        case latestQuarterlyEps = "latest_quarterly_eps"
+        case latestQuarterlyPeriod = "latest_quarterly_period"
+        case priorQuarterlyEps = "prior_quarterly_eps"
+        case priorQuarterlyPeriod = "prior_quarterly_period"
+        case latestFyEps = "latest_fy_eps"
+        case latestFyPeriod = "latest_fy_period"
     }
     private static func number(_ c: KeyedDecodingContainer<Keys>, _ k: Keys) -> Double? {
         (try? c.decodeIfPresent(LenientDouble.self, forKey: k))??.value
@@ -192,7 +196,7 @@ final class TodayStore: ObservableObject {
                 return .failed("The server answered, but the data was not in the expected shape.")
             }
         } catch {
-            return .failed("Could not reach the server at \(base). Start the hedge-desk server (port 8765), or fix the address under the gear icon.")
+            return .failed("Could not reach the server at \(base). Check the address under the gear icon.")
         }
     }
 
@@ -443,7 +447,7 @@ private struct ApiSettingsView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.URL)
-                    Text("Default http://localhost:8765 works in the Simulator on the same Mac as the server. On a physical iPhone, use your Mac's address, e.g. http://192.168.1.20:8765.")
+                    Text("Default is the production research server (https://hedge-desk.onrender.com), which works on iPhone and in the Simulator. Point it at your own Mac instead — e.g. http://192.168.1.20:8765 — if you run the server locally.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Section {
@@ -456,7 +460,7 @@ private struct ApiSettingsView: View {
                     }
                 }
                 Section {
-                    Text("The app only reads research from your own paper-only server. It never places orders. Plain-http addresses on a local network can be blocked by iOS on a physical device; the Simulator on the server's Mac works out of the box.")
+                    Text("The app only reads research from the hedge-desk server. It never places orders. If you point it at a local plain-http address, iOS may block it on a physical device; the production https address works everywhere.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }

@@ -36,8 +36,7 @@ from hedge_desk.data import (
     evaluate_pwb_daily_news,
     load_pwb_daily_news,
     ingest_eod,
-    REGISTRY,
-    fetch_provider,
+    provider_console_rows,
 )
 from hedge_desk.paper import (
     PaperReviewQueue,
@@ -180,25 +179,25 @@ def main() -> None:
     parser.add_argument(
         "--data-provider",
         metavar="PROVIDER",
-        help="fetch a free/open series from a registered provider (see REGISTRY_BY_ID); series via --provider-series",
+        help="fetch a live series via open_market_feeds (fred|sec-edgar|cftc-cot|eia-open-data|treasury|bls|ecb-fx|fdic|world-bank|nyfed); pass a series via --provider-series",
     )
     parser.add_argument(
         "--provider-series",
         metavar="SERIES",
         default="",
-        help="series/tag for --data-provider (e.g. CIK for sec-edgar-companyfacts, rates_of_exchange for ust-treasury-fiscal)",
+        help="series/tag selectors for --data-provider (e.g. a FRED series id, CIK, indicator)",
     )
     parser.add_argument(
         "--provider-param",
         action="append",
         default=[],
         metavar="KEY=VALUE",
-        help="extra adapter param for --data-provider (repeatable)",
+        help="extra feed param for --data-provider (repeatable)",
     )
     parser.add_argument(
         "--list-providers",
         action="store_true",
-        help="print the registered data-provider registry (no network)",
+        help="print the free/open provider catalog (no network)",
     )
     parser.add_argument(
         "--eod-cutoff",
@@ -606,48 +605,91 @@ def main() -> None:
         print(json.dumps([project.__dict__ for project in MVP_PROJECTS], indent=2))
         return
     if args.list_providers:
+        from hedge_desk.data import all_providers
+
         print(json.dumps([
             {
-                "source_id": a.source_id,
-                "free_open": a.free_open,
-                "asset_classes": list(a.asset_classes),
-                "key_env": a.key_env,
-                "doc_url": a.doc_url,
+                "provider_id": p.provider_id,
+                "display_name": p.display_name,
+                "asset_classes": sorted(p.asset_classes),
+                "capabilities": sorted(p.capabilities),
+                "authority": p.authority,
+                "auth_env_var": p.auth_env_var,
+                "public_without_key": p.public_without_key,
+                "notes": p.notes,
             }
-            for a in REGISTRY
+            for p in all_providers()
         ], indent=2))
         return
     if args.data_provider:
+        # Dispatch to a real, free/open feed (no fabricated values). Unknown or
+        # key-gated providers fail-closed with an explicit reason.
+        import hedge_desk.data.open_market_feeds as omf
+
         params: dict = {}
         for pair in args.provider_param:
             if "=" not in pair:
                 parser.error(f"--provider-param must be KEY=VALUE, got {pair!r}")
             key, value = pair.split("=", 1)
             params[key] = value
+        provider_id = args.data_provider
+        dispatch = {
+            "sec-edgar": ("sec_companyfacts", ("cik",)),
+            "cftc-cot": ("cftc_cot", ()),
+            "eia-open-data": ("eia_v2", ()),
+            "treasury-fiscaldata": ("treasury_latest_auctions", ()),
+            "treasury-yield-curve": ("treasury_yield_curve", ()),
+            "bls": ("bls_latest_series", ("series",)),
+            "ecb-fx": ("ecb_exchange_rates", ()),
+            "fdic": ("fdic_failures", ()),
+            "world-bank": ("world_bank_indicator", ("indicator",)),
+            "nyfed-markets": ("nyfed_reference_rates", ()),
+        }
+        if provider_id not in dispatch:
+            parser.error(
+                f"--data-provider: no live feed wired for {provider_id!r}. "
+                f"Available via open_market_feeds: {sorted(dispatch)}. "
+                "Catalog: --list-providers."
+            )
+        fn_name, pos_args = dispatch[provider_id]
+        fn = getattr(omf, fn_name)
+        pos = (args.provider_series,) if pos_args else ()
         try:
-            result = fetch_provider(args.data_provider, args.provider_series, **params)
-        except ValueError as exc:
-            parser.error(str(exc))
-        print(json.dumps({
-            "provider": args.data_provider,
-            "status": result.status.value,
-            "reason_codes": list(result.reason_codes),
-            "config_needs": list(result.config_needs),
-            "source_as_of": result.source_as_of.isoformat() if result.observations else None,
-            "observations": [
-                {
-                    "source_id": obs.source_id,
-                    "series": obs.series,
-                    "date": obs.date,
-                    "value": obs.value,
-                    "unit": obs.unit,
-                    "extra": list(obs.extra),
-                }
-                for obs in result.observations
-            ],
-        }, indent=2))
-        if result.status.value != "PASS":
-            raise SystemExit(1)
+            result = fn(*pos, **params)
+        except Exception as exc:  # fail closed on any transport/payload error
+            parser.error(f"{provider_id} feed failed: {exc}")
+        # open_market_feeds returns OpenFeedResult (rows) or a raw Mapping
+        # (sec-edgar companyfacts). Normalize both; failures raise above.
+        if isinstance(result, dict):
+            rows = []
+            facts = (result.get("facts") or {}).get("us-gaap") or {}
+            entity = result.get("entityName", "")
+            for tag, node in list(facts.items())[:10]:
+                for unit, points in ((node.get("units") or {}) or {}).items():
+                    if not points:
+                        continue
+                    row = dict(points[-1])
+                    row["tag"] = tag
+                    row["unit"] = unit
+                    row["entity"] = entity
+                    rows.append(row)
+                    break
+            out = {
+                "provider": provider_id,
+                "provider_id": provider_id,
+                "dataset": f"{entity} SEC XBRL companyfacts",
+                "row_count": len(rows),
+                "rows": rows[:10],
+            }
+        else:
+            out = {
+                "provider": provider_id,
+                "provider_id": getattr(result, "provider_id", provider_id),
+                "dataset": getattr(result, "dataset", ""),
+                "row_count": len(getattr(result, "rows", [])),
+                "rows": [dict(r) for r in getattr(result, "rows", [])[:10]],
+            }
+        print(json.dumps(out, indent=2))
         return
     if args.eod_batch:
         symbols = tuple(s.strip().upper() for s in args.eod_batch.split(",") if s.strip())

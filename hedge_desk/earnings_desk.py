@@ -20,6 +20,7 @@ License: SEC EDGAR data is public; this is reference use of official filings.
 from __future__ import annotations
 
 import json
+import os
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -34,10 +35,14 @@ Transport = Callable[[str], Tuple[int, bytes]]
 
 
 def _default_transport(url: str) -> Tuple[int, bytes]:
+    # SEC fair-access policy asks for a User-Agent with a real contact.
+    # Set SEC_CONTACT_EMAIL in the environment; fallback keeps the
+    # previous placeholder format so existing deployments keep working.
+    contact = os.environ.get("SEC_CONTACT_EMAIL", "name@example.com").strip()
     req = urllib.request.Request(
         url,
         headers={
-            "User-Agent": "HedgeDesk Research name@example.com",
+            "User-Agent": f"HedgeDesk Research {contact}",
             "Accept-Encoding": "identity",
         },
     )
@@ -159,10 +164,9 @@ def earnings_desk(
         "surprise_computed": False,
         "trade_authorized": False,
         "note": (
-            "Actual reported GAAP EPS from SEC EDGAR (OBSERVED, point-in-time "
-            "filings). A consensus is not fabricated here; surprise is only "
-            "computed when a real analyst estimate is supplied. No forecast, no "
-            "order. trade_authorized=False."
+            "Actual reported GAAP EPS from SEC filings (observed, point-in-time). "
+            "A consensus is not fabricated here; surprise is only computed when "
+            "a real analyst estimate is supplied."
         ),
     }
 

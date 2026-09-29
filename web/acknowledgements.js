@@ -3,8 +3,8 @@ import { currentRoute } from './core.mjs';
 
 function acknowledgementBlock() {
   if (currentRoute() !== 'about') return;
-  const inspirations = document.querySelector('.ws-inspiration');
-  if (!inspirations || inspirations.querySelector('#campbell-acknowledgement')) return;
+  const capitalGrid = document.querySelector('.ws-capital-grid');
+  if (!capitalGrid || capitalGrid.querySelector('#campbell-acknowledgement')) return;
 
   const section = document.createElement('div');
   section.id = 'campbell-acknowledgement';
@@ -15,7 +15,7 @@ function acknowledgementBlock() {
     <p><strong>William Campbell, Ph.D. · University of Wyoming MBA Program</strong></p>
     <p>Emporion gratefully acknowledges Dr. Campbell for professional trade-desk perspective and feedback that helped shape the discipline behind the Yellow Sheet and Trade Log: document why a position is entered, define the plan before capital is committed, record why it is exited, and review what was learned.</p>
     <p class="ws-inspiration-note">Educational mentorship and feedback only. This acknowledgement does not imply endorsement, sponsorship, investment advice, or responsibility for Emporion's research, controls, or results.</p>`;
-  inspirations.appendChild(section);
+  capitalGrid.insertAdjacentElement('afterend', section);
 
   const contact = document.createElement('div');
   contact.id = 'emporion-contribute-contact';
@@ -25,7 +25,7 @@ function acknowledgementBlock() {
     <div class="ws-label">CONTRIBUTE / CONTACT</div>
     <p>Emporion is an open-source research project. Researchers, engineers, data practitioners, and other contributors are welcome to review the repository, open an issue, submit a pull request, or get in touch.</p>
     <p class="emporion-contact-links"><a href="https://github.com/mega-byte2600/hedge-desk" target="_blank" rel="noopener noreferrer">GitHub repository ↗</a><span aria-hidden="true">·</span><a href="mailto:michael.bolton.ph@dartmouth.edu">michael.bolton.ph@dartmouth.edu</a></p>`;
-  inspirations.appendChild(contact);
+  section.insertAdjacentElement('afterend', contact);
 }
 
 function installStyle() {
