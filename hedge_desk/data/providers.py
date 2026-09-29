@@ -147,14 +147,17 @@ _PROVIDERS: Tuple[ProviderSpec, ...] = (
     ProviderSpec(
         "finra",
         "FINRA Public Data",
-        frozenset({"credit", "rates", "fixed_income"}),
-        frozenset({"corporate_bond_breadth", "treasury_aggregates", "market_sentiment", "agency_tba"}),
+        frozenset({"equities", "credit", "rates", "fixed_income"}),
+        frozenset({
+            "corporate_bond_breadth", "treasury_aggregates", "market_sentiment",
+            "agency_tba", "short_interest", "short_sale_volume",
+        }),
         "official",
         "FINRA_CLIENT_ID",
         False,
         False,
         True,
-        "Free FINRA Public Credential OAuth; FINRA_CLIENT_SECRET is also required server-side.",
+        "FINRA Query API credential required; plan terms and fees govern production access. FINRA_CLIENT_SECRET is also required server-side.",
     ),
     ProviderSpec(
         "ecb-fx",
@@ -193,6 +196,18 @@ _PROVIDERS: Tuple[ProviderSpec, ...] = (
         "World Bank public indicators API for global macro context.",
     ),
     ProviderSpec(
+        "bis",
+        "Bank for International Settlements Statistics",
+        frozenset({"macro", "global", "credit", "rates"}),
+        frozenset({"global_liquidity", "cross_border_credit", "international_banking", "credit_to_gdp"}),
+        "official",
+        None,
+        True,
+        False,
+        True,
+        "Official BIS SDMX statistics for global liquidity, international banking, credit, and financial-system context.",
+    ),
+    ProviderSpec(
         "cboe",
         "Cboe",
         frozenset({"equities", "options", "volatility"}),
@@ -203,6 +218,18 @@ _PROVIDERS: Tuple[ProviderSpec, ...] = (
         False,
         False,
         "Existing delayed-chain/VIX source; exchange licensing controls production and redistribution.",
+    ),
+    ProviderSpec(
+        "coinbase-exchange",
+        "Coinbase Exchange Public Market Data",
+        frozenset({"crypto"}),
+        frozenset({"spot_market_data", "trades", "market_microstructure"}),
+        "exchange",
+        None,
+        True,
+        False,
+        False,
+        "Public read-only Exchange REST market data; no account or order endpoints are used.",
     ),
     ProviderSpec(
         "cme",
@@ -349,19 +376,14 @@ def provider_console_rows() -> list[dict]:
     """Surface the provider catalog on the desk console (Controls & evidence).
 
     Honest status derivation, no network at build time:
-    - PASS       : official/public, no key required (fred, sec-edgar, nyfed,
-                   treasury-fiscaldata, bls, nws, cftc-cot, ecb-fx, fdic,
-                   world-bank, cboe, nasdaq-public).
-    - PENDING    : key-gated (bea, usda-nass, eia-open-data, finra) or a
-                   public source that is currently blocked from this host's
-                   network (stooq bot-wall / cfg notes).
-    - REVIEW     : exchange / broker / commercial seams requiring entitlement
-                   review (cme, schwab, nasdaq-data-link, polygon, tiingo,
-                   alpha-vantage, finnhub).
+    - PASS       : official/public, no key required.
+    - PENDING    : key-gated or a public source currently blocked from this host.
+    - REVIEW     : exchange / broker / commercial seams requiring entitlement review.
     """
     official_public = {
         "fred", "sec-edgar", "nyfed-markets", "treasury-fiscaldata", "bls",
-        "nws", "cftc-cot", "ecb-fx", "fdic", "world-bank", "cboe", "nasdaq",
+        "nws", "cftc-cot", "ecb-fx", "fdic", "world-bank", "bis", "cboe",
+        "coinbase-exchange", "nasdaq",
     }
     keyed_or_blocked = {"bea", "usda-nass", "eia-open-data", "finra", "stooq"}
     review = {

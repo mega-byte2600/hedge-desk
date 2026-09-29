@@ -77,6 +77,13 @@ from .open_market_feeds import (
     treasury_yield_curve,
     world_bank_indicator,
 )
+from .institutional_feeds import (
+    BIS_GLOBAL_LIQUIDITY_SERIES,
+    FINRA_EQUITY_DATASETS,
+    bis_global_liquidity,
+    coinbase_product_trades,
+    finra_equity,
+)
 
 __all__ = [
     "DataArtifact", "DataGateResult", "validate_data_artifact",
@@ -105,4 +112,6 @@ __all__ = [
     "nasdaq_earnings_calendar", "nasdaq_option_chain", "nasdaq_quote",
     "nyfed_reference_rates", "sec_companyfacts", "sec_submissions",
     "treasury_latest_auctions", "treasury_yield_curve", "world_bank_indicator",
+    "BIS_GLOBAL_LIQUIDITY_SERIES", "FINRA_EQUITY_DATASETS",
+    "bis_global_liquidity", "coinbase_product_trades", "finra_equity",
 ]
