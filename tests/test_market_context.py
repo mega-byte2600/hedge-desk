@@ -46,6 +46,12 @@ def _common_fakes():
             f"spot-trades:{product}",
             [{"product_id": product, "time": "2026-09-29T12:00:00Z", "trade_id": 1, "price": "65000", "size": "0.1", "side": "sell"}],
         ),
+        "imf_fetch": lambda country: _result(
+            "imf", "NGDP_RPCH", [{"date": "2025", "value": 2.1, "indicator": "NGDP_RPCH", "country": country}]
+        ),
+        "boc_fetch": lambda series: _result(
+            "bank-of-canada", series, [{"date": "2026-09-28", "series": series, "value": "1.4168"}]
+        ),
     }
 
 
@@ -142,7 +148,7 @@ class MarketContextTests(unittest.TestCase):
 
         self.assertEqual(context["schema_version"], MARKET_CONTEXT_SCHEMA)
         self.assertEqual(context["status"], "LIVE")
-        self.assertEqual(context["live_sources"], 18)
+        self.assertEqual(context["live_sources"], 20)
         self.assertEqual(context["sources"]["nws"]["status"], "LIVE")
         self.assertEqual(context["sources"]["bea"]["status"], "LIVE")
         self.assertEqual(context["sources"]["usda-nass"]["status"], "LIVE")

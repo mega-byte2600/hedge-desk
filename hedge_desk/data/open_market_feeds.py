@@ -49,6 +49,12 @@ ECB_EUROFXREF_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.x
 TREASURY_DAILY_RATES_URL = "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml"
 FDIC_FAILURES_URL = "https://api.fdic.gov/banks/failures"
 WORLD_BANK_INDICATOR_URL = "https://api.worldbank.org/v2/country/{country}/indicator/{indicator}"
+# IMF DataMapper API: keyless global macro series (real GDP growth %, etc.).
+IMF_DATAMAPPER_URL = "https://www.imf.org/external/datamapper/api/v1/{indicator}/{country}"
+# Bank of Canada Valet API: official daily FX reference rates (keyless).
+BOC_VALET_URL = "https://www.bankofcanada.ca/valet/observations/{series}/json"
+# Coinbase exchange-rates API: keyless crypto/fiat reference rates.
+COINBASE_RATES_URL = "https://api.coinbase.com/v2/exchange-rates?currency={base}"
 
 # Public FINRA fixed-income datasets that are directly useful to a rates/credit desk.
 # FINRA public data is free, but its Query API requires a Public Credential and
@@ -519,6 +525,97 @@ def world_bank_indicator(
     if not rows:
         raise ValueError("world-bank payload has no observations")
     return OpenFeedResult("world-bank", normalized_indicator, rows)
+
+
+def imf_gdp_growth(
+    country: str = "USA",
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch IMF real GDP growth (%) series (keyless global macro).
+
+    Uses the IMF DataMapper API (official WEO-based series). Returns the
+    indicator's annual observations for the requested country code.
+    """
+    normalized_country = country.strip().upper()
+    if not normalized_country.isalnum() or len(normalized_country) > 3:
+        raise ValueError("invalid IMF country code")
+    url = IMF_DATAMAPPER_URL.format(indicator="NGDP_RPCH", country=normalized_country)
+    payload = _fetch_json(url, "imf", transport)
+    if not isinstance(payload, dict) or not isinstance(payload.get("values"), dict):
+        raise ValueError("imf payload has no values")
+    series = payload["values"].get("NGDP_RPCH", {})
+    if not isinstance(series, dict) or not series:
+        raise ValueError("imf payload has no NGDP_RPCH observations")
+    # DataMapper nests by country: {country_code: {year: value}}.
+    country_series = series.get(normalized_country, {})
+    if not isinstance(country_series, dict) or not country_series:
+        raise ValueError(f"imf payload has no NGDP_RPCH observations for {normalized_country}")
+    rows = tuple(
+        {"date": str(year), "value": value, "indicator": "NGDP_RPCH", "country": normalized_country}
+        for year, value in sorted(country_series.items())
+        if isinstance(value, (int, float))
+    )
+    if not rows:
+        raise ValueError("imf payload has no numeric observations")
+    return OpenFeedResult("imf", "NGDP_RPCH", rows)
+
+
+def bank_of_canada_fx(
+    series: str = "FXUSDCAD",
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch official Bank of Canada daily FX reference rate (keyless).
+
+    Valet API returns daily observations for a named series (e.g. FXUSDCAD).
+    """
+    normalized = series.strip().upper()
+    if not normalized.isalnum() or len(normalized) > 12:
+        raise ValueError("invalid Bank of Canada series code")
+    url = BOC_VALET_URL.format(series=normalized)
+    payload = _fetch_json(url, "bank-of-canada", transport)
+    if not isinstance(payload, dict) or not isinstance(payload.get("observations"), list):
+        raise ValueError("bank-of-canada payload has no observations")
+    rows = []
+    for obs in payload["observations"]:
+        if not isinstance(obs, dict):
+            continue
+        date = str(obs.get("d", ""))
+        val = (obs.get(normalized) or {}).get("v") if isinstance(obs.get(normalized), dict) else None
+        if date and val is not None:
+            rows.append({"date": date, "series": normalized, "value": str(val)})
+    if not rows:
+        raise ValueError("bank-of-canada payload has no numeric observations")
+    return OpenFeedResult("bank-of-canada", normalized, tuple(rows))
+
+
+def coinbase_exchange_rates(
+    base: str = "USD",
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch Coinbase reference exchange rates (keyless crypto/fiat).
+
+    Returns the base currency's rate against a fixed set of major currencies
+    and crypto assets. Rates are Coinbase's public reference rates.
+    """
+    normalized = base.strip().upper()
+    if not normalized.isalnum() or len(normalized) > 5:
+        raise ValueError("invalid Coinbase base currency")
+    url = COINBASE_RATES_URL.format(base=normalized)
+    payload = _fetch_json(url, "coinbase", transport)
+    if not isinstance(payload, dict) or not isinstance(payload.get("data"), dict):
+        raise ValueError("coinbase payload has no data")
+    rates = payload["data"].get("rates", {})
+    if not isinstance(rates, dict) or not rates:
+        raise ValueError("coinbase payload has no rates")
+    wanted = ("BTC", "ETH", "EUR", "JPY", "GBP", "CAD", "AUD", "CHF", "CNY")
+    rows = tuple(
+        {"base": normalized, "quote": code, "rate": str(rates[code])}
+        for code in wanted
+        if code in rates
+    )
+    if not rows:
+        raise ValueError("coinbase payload has no wanted rates")
+    return OpenFeedResult("coinbase", f"exchange-rates-{normalized}", rows)
 
 
 def cftc_cot(
