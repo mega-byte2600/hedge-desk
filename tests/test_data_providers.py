@@ -19,11 +19,14 @@ def test_authoritative_public_sources_cover_core_desk_domains():
     assert provider("treasury-fiscaldata").authority == "official"
     assert provider("eia-open-data").authority == "official"
     assert provider("cftc-cot").authority == "official"
+    assert provider("bis").authority == "official"
 
     assert provider("sec-edgar").public_without_key is True
     assert provider("nyfed-markets").public_without_key is True
     assert provider("treasury-fiscaldata").public_without_key is True
     assert provider("cftc-cot").public_without_key is True
+    assert provider("bis").public_without_key is True
+    assert provider("coinbase-exchange").public_without_key is True
 
 
 def test_capability_and_asset_class_queries():
@@ -36,13 +39,25 @@ def test_capability_and_asset_class_queries():
     sofr_ids = {item.provider_id for item in providers_for_capability("sofr")}
     assert sofr_ids == {"nyfed-markets"}
 
+    liquidity_ids = {item.provider_id for item in providers_for_capability("global_liquidity")}
+    assert liquidity_ids == {"bis"}
+
+    short_ids = {item.provider_id for item in providers_for_capability("short_sale_volume")}
+    assert short_ids == {"finra"}
+
+    crypto_ids = {item.provider_id for item in providers_for_asset_class("crypto")}
+    assert "coinbase-exchange" in crypto_ids
+
 
 def test_auth_requirements_fail_closed_without_keys():
     assert missing_auth_env("polygon", {}) == "POLYGON_API_KEY"
     assert missing_auth_env("polygon", {"POLYGON_API_KEY": "x"}) is None
     assert missing_auth_env("eia-open-data", {}) == "EIA_API_KEY"
+    assert missing_auth_env("finra", {}) == "FINRA_CLIENT_ID"
     assert missing_auth_env("sec-edgar", {}) is None
     assert missing_auth_env("fred", {}) is None
+    assert missing_auth_env("bis", {}) is None
+    assert missing_auth_env("coinbase-exchange", {}) is None
 
 
 def test_unknown_provider_is_rejected():
@@ -62,7 +77,7 @@ def test_provider_console_rows_surface_all_catalog_providers():
     ids = {r["source_id"] for r in rows}
     assert "fdic" not in ids
     assert {"sec-edgar", "treasury-fiscaldata", "fred", "cftc-cot",
-            "nws", "stooq", "alpha-vantage"}.issubset(ids)
+            "nws", "stooq", "alpha-vantage", "bis", "coinbase-exchange"}.issubset(ids)
     for r in rows:
         # statuses must render under the console statusClass() palette
         assert r["status"] in ("PASS", "PENDING", "REVIEW_REQUIRED")
@@ -71,6 +86,8 @@ def test_provider_console_rows_surface_all_catalog_providers():
     by_id = {r["source_id"]: r for r in rows}
     assert by_id["sec-edgar"]["status"] == "PASS"
     assert by_id["sec-edgar"]["public_without_key"] is True
+    assert by_id["bis"]["status"] == "PASS"
+    assert by_id["coinbase-exchange"]["status"] == "PASS"
     assert by_id["alpha-vantage"]["status"] == "REVIEW_REQUIRED"
 
 

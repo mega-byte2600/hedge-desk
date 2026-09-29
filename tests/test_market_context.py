@@ -23,6 +23,9 @@ def _common_fakes():
         "world_bank_fetch": lambda indicator, country, per_page: _result(
             "world-bank", indicator, [{"countryiso3code": "USA", "date": "2025", "value": 100.0}]
         ),
+        "bis_fetch": lambda series, limit: _result(
+            "bis", f"WS_GLI:{series}", [{"TIME_PERIOD": "2026-Q1", "OBS_VALUE": "6.8", "series_alias": series}]
+        ),
         "bls_fetch": lambda series: _result(
             "bls", series, [{"seriesID": series, "year": "2026", "period": "M08", "value": "325.0"}]
         ),
@@ -37,6 +40,11 @@ def _common_fakes():
         ),
         "nasdaq_earn_fetch": lambda day: _result(
             "nasdaq", "earnings-calendar", [{"symbol": "JEF", "calendarDate": "2026-09-29"}]
+        ),
+        "coinbase_fetch": lambda product, limit: _result(
+            "coinbase-exchange",
+            f"spot-trades:{product}",
+            [{"product_id": product, "time": "2026-09-29T12:00:00Z", "trade_id": 1, "price": "65000", "size": "0.1", "side": "sell"}],
         ),
     }
 
@@ -84,6 +92,14 @@ class MarketContextTests(unittest.TestCase):
                 [{"date": "2026-09-25", "advances": 101, "declines": 79}],
             )
 
+        def finra_equity_fetch(dataset, limit):
+            calls.append((dataset, limit))
+            return _result(
+                "finra",
+                dataset,
+                [{"tradeReportDate": "2026-09-25", "securitiesInformationProcessorSymbolIdentifier": "AAPL", "shortParQuantity": 100, "totalParQuantity": 250}],
+            )
+
         def bea_fetch(table_name, frequency, year, limit):
             calls.append(("bea", table_name, frequency, year, limit))
             return _result(
@@ -118,6 +134,7 @@ class MarketContextTests(unittest.TestCase):
                 cftc_fetch=cftc_fetch,
                 eia_fetch=eia_fetch,
                 finra_fetch=finra_fetch,
+                finra_equity_fetch=finra_equity_fetch,
                 bea_fetch=bea_fetch,
                 usda_fetch=usda_fetch,
                 **_common_fakes(),
@@ -125,14 +142,20 @@ class MarketContextTests(unittest.TestCase):
 
         self.assertEqual(context["schema_version"], MARKET_CONTEXT_SCHEMA)
         self.assertEqual(context["status"], "LIVE")
-        self.assertEqual(context["live_sources"], 16)
+        self.assertEqual(context["live_sources"], 18)
         self.assertEqual(context["sources"]["nws"]["status"], "LIVE")
         self.assertEqual(context["sources"]["bea"]["status"], "LIVE")
         self.assertEqual(context["sources"]["usda-nass"]["status"], "LIVE")
+        self.assertEqual(context["sources"]["bis"]["status"], "LIVE")
+        self.assertEqual(context["sources"]["coinbase-exchange"]["status"], "LIVE")
         self.assertEqual(context["sources"]["nasdaq-quotes"]["status"], "LIVE")
         self.assertEqual(context["sources"]["nasdaq-earnings"]["status"], "LIVE")
         self.assertEqual(
             context["sources"]["nasdaq-quotes"]["observations"][0]["lastSalePrice"], "$765.05"
+        )
+        self.assertEqual(
+            context["sources"]["finra"]["observations"]["reg_sho_daily"][0]["shortParQuantity"],
+            100,
         )
         self.assertEqual(context["blocked_sources"], 0)
         self.assertEqual(context["unconfigured_sources"], 0)
@@ -143,6 +166,7 @@ class MarketContextTests(unittest.TestCase):
         )
         self.assertNotIn("do-not-return", repr(context))
         self.assertIn(("corporateMarketBreadth", 10), calls)
+        self.assertIn(("reg_sho_daily", 25), calls)
         self.assertIn(("bea", "T10101", "Q", "X", 25), calls)
         self.assertTrue(any(item[0] == "usda" and item[1] == "CORN" for item in calls))
 

@@ -27,6 +27,11 @@ from hedge_desk.data.open_market_feeds import (
     nyfed_reference_rates,
     treasury_latest_auctions,
 )
+from hedge_desk.data.institutional_feeds import (
+    bis_global_liquidity,
+    coinbase_product_trades,
+    finra_equity,
+)
 from hedge_desk.data.public_signal_feeds import (
     bea_nipa_table,
     nws_active_alerts,
@@ -121,6 +126,24 @@ def _fdic_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
 def _world_bank_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     keys = ("indicator", "country", "countryiso3code", "date", "value", "unit")
     return [_pick(row, keys) for row in result.rows[:10]]
+
+
+def _bis_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = (
+        "TIME_PERIOD",
+        "OBS_VALUE",
+        "TITLE",
+        "UNIT_MEASURE",
+        "CURRENCY",
+        "BORROWERS_CTY",
+        "series_alias",
+    )
+    return [_pick(row, keys) for row in result.rows[:12]]
+
+
+def _coinbase_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = ("time", "trade_id", "product_id", "price", "size", "side")
+    return [_pick(row, keys) for row in result.rows[:100]]
 
 
 def _treasury_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
@@ -264,6 +287,24 @@ def _finra_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     return [_pick(row, keys) for row in result.rows[:10]]
 
 
+def _finra_equity_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = (
+        "tradeReportDate",
+        "securitiesInformationProcessorSymbolIdentifier",
+        "shortParQuantity",
+        "shortExemptParQuantity",
+        "totalParQuantity",
+        "marketCode",
+        "settlementDate",
+        "symbolCode",
+        "currentShortPositionQuantity",
+        "previousShortPositionQuantity",
+        "changePercent",
+        "daysToCoverQuantity",
+    )
+    return [_pick(row, keys) for row in result.rows[:25]]
+
+
 def build_market_context(
     *,
     nyfed_fetch: Callable[..., OpenFeedResult] = nyfed_reference_rates,
@@ -273,15 +314,18 @@ def build_market_context(
     treasury_curve_fetch: Callable[..., OpenFeedResult] = treasury_yield_curve,
     fdic_fetch: Callable[..., OpenFeedResult] = fdic_failures,
     world_bank_fetch: Callable[..., OpenFeedResult] = world_bank_indicator,
+    bis_fetch: Callable[..., OpenFeedResult] = bis_global_liquidity,
     ecb_fetch: Callable[..., OpenFeedResult] = ecb_exchange_rates,
     nws_fetch: Callable[..., OpenFeedResult] = nws_active_alerts,
     bea_fetch: Callable[..., OpenFeedResult] = bea_nipa_table,
     usda_fetch: Callable[..., OpenFeedResult] = usda_nass_crop_progress,
     eia_fetch: Callable[..., OpenFeedResult] = eia_v2,
     finra_fetch: Callable[..., OpenFeedResult] = finra_fixed_income,
+    finra_equity_fetch: Callable[..., OpenFeedResult] = finra_equity,
     fred_fetch: Callable[..., object] = fred_series_rows,
     nasdaq_quote_fetch: Callable[..., OpenFeedResult] = nasdaq_quote,
     nasdaq_earn_fetch: Callable[..., OpenFeedResult] = nasdaq_earnings_calendar,
+    coinbase_fetch: Callable[..., OpenFeedResult] = coinbase_product_trades,
     watchlist: Sequence[str] = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA"),
 ) -> Dict[str, object]:
     """Build fail-closed cross-asset context from authoritative provider APIs."""
@@ -342,6 +386,12 @@ def build_market_context(
         sources["world-bank"] = _blocked(
             "world-bank", "UPSTREAM_OR_PARSE_FAILURE", str(exc)
         )
+
+    try:
+        result = bis_fetch(series="usd_credit_nonbanks_ex_us_yoy", limit=8)
+        sources["bis"] = _live(result, _bis_summary(result))
+    except Exception as exc:
+        sources["bis"] = _blocked("bis", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
 
     try:
         result = bls_fetch("CUUR0000SA0")
@@ -406,8 +456,18 @@ def build_market_context(
     )
     if finra_configured:
         try:
-            result = finra_fetch("corporateMarketBreadth", limit=10)
-            sources["finra"] = _live(result, _finra_summary(result))
+            fixed_income = finra_fetch("corporateMarketBreadth", limit=10)
+            equity_flow = finra_equity_fetch("reg_sho_daily", limit=25)
+            sources["finra"] = {
+                "provider_id": "finra",
+                "dataset": "fixed-income-and-equity-flow",
+                "status": "LIVE",
+                "observation_count": fixed_income.row_count + equity_flow.row_count,
+                "observations": {
+                    "fixed_income": _finra_summary(fixed_income),
+                    "reg_sho_daily": _finra_equity_summary(equity_flow),
+                },
+            }
         except Exception as exc:
             sources["finra"] = _blocked("finra", "UPSTREAM_OR_AUTH_FAILURE", str(exc))
     else:
@@ -427,6 +487,14 @@ def build_market_context(
     except Exception as exc:
         sources["nasdaq-earnings"] = _blocked(
             "nasdaq-earnings", "UPSTREAM_OR_RATE_LIMIT", str(exc)
+        )
+
+    try:
+        result = coinbase_fetch("BTC-USD", limit=100)
+        sources["coinbase-exchange"] = _live(result, _coinbase_summary(result))
+    except Exception as exc:
+        sources["coinbase-exchange"] = _blocked(
+            "coinbase-exchange", "UPSTREAM_OR_RATE_LIMIT", str(exc)
         )
 
     live = sum(1 for item in sources.values() if item.get("status") == "LIVE")
