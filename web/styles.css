@@ -79,3 +79,8 @@ summary{padding:12px 0;margin:-12px 0}
 .cards-table td[data-label]{display:flex;gap:12px;align-items:baseline;font-size:13px}
 .cards-table td[data-label]::before{content:attr(data-label);flex:0 0 104px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600}
 }
+
+/* Increment 7: embedded frames size themselves to their content (same-origin). */
+.autofit-frame{width:100%;border:0;border-radius:10px;display:block;position:relative;z-index:1}
+.guide-frame{height:1400px;background:#0b1220}
+.dash-frame{height:1200px;background:#0f1828}
