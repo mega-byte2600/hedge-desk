@@ -193,6 +193,41 @@ class DashboardBuildTests(unittest.TestCase):
         self.assertIn("World Bank indicator unavailable", html)
         self.assertIn("Treasury fiscal data unavailable", html)
 
+    def test_imf_and_bank_of_canada_panels_render_live(self):
+        # IMF (global GDP growth) and Bank of Canada (official USD/CAD) are
+        # keyless global feeds surfaced on the dashboard. Fixtures are captured
+        # from the live APIs, never invented.
+        html = self._build(market_context={
+            "status": "LIVE",
+            "sources": {
+                "imf": {
+                    "provider_id": "imf", "status": "LIVE", "observation_count": 2,
+                    "observations": [
+                        {"date": "2024", "value": 2.8, "indicator": "NGDP_RPCH", "country": "USA"},
+                        {"date": "2025", "value": 2.1, "indicator": "NGDP_RPCH", "country": "USA"},
+                    ],
+                },
+                "bank-of-canada": {
+                    "provider_id": "bank-of-canada", "status": "LIVE",
+                    "observation_count": 2,
+                    "observations": [
+                        {"date": "2026-09-25", "series": "FXUSDCAD", "value": "1.4145"},
+                        {"date": "2026-09-28", "series": "FXUSDCAD", "value": "1.4168"},
+                    ],
+                },
+            },
+        })
+        self.assertIn("ch_imf_gdp", html)
+        self.assertIn("IMF real GDP growth", html)
+        self.assertIn("ch_boc_fx", html)
+        self.assertIn("Bank of Canada", html)
+        self.assertIn("1.4168", html)
+
+    def test_imf_and_boc_panels_degrade_when_sources_missing(self):
+        html = self._build(market_context={"status": "LIVE", "sources": {}})
+        self.assertIn("IMF indicator unavailable", html)
+        self.assertIn("Bank of Canada FX unavailable", html)
+
     def test_every_rendered_visual_states_its_source(self):
         # The user requires every dashboard visual to be annotated with its
         # data source so any number can be traced back to its origin.

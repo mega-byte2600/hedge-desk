@@ -348,6 +348,60 @@ def treasury_auctions_panel(r: dict) -> str:
             + src_note("U.S. Treasury Fiscal Data API (rates_of_exchange/auctions), keyless"))
 
 
+def imf_gdp_panel(r: dict) -> str:
+    """IMF real GDP growth (%) — global macro context (keyless)."""
+    src = _mc_sources(r).get("imf", {}) or {}
+    obs = src.get("observations") or []
+    if src.get("status") != "LIVE" or not obs:
+        return "<p class='muted'>IMF indicator unavailable in this batch</p>" + src_note("IMF DataMapper API (NGDP_RPCH)")
+    points = []
+    for o in obs:
+        try:
+            points.append((str(o.get("date", "")), _fnum(o.get("value"))))
+        except (TypeError, ValueError):
+            continue
+    points = [(d, v) for d, v in points if v is not None]
+    if len(points) < 2:
+        return "<p class='muted'>IMF GDP series too short to chart</p>" + src_note("IMF DataMapper API")
+    points.sort()
+    years = [d for d, _ in points]
+    growth = [v for _, v in points]
+    fig = go.Figure(go.Bar(
+        x=years, y=growth,
+        marker_color="#7fd1a0",
+        hovertemplate="%{x}<br>real GDP growth %{y:.1f}%<extra></extra>"))
+    fig.update_layout(**base_layout("IMF real GDP growth — USA (annual %)", 320))
+    fig.update_layout(yaxis_title="%", xaxis_title="year")
+    return chart(fig, "ch_imf_gdp", source="IMF DataMapper API (NGDP_RPCH), keyless")
+
+
+def bank_of_canada_panel(r: dict) -> str:
+    """Bank of Canada official USD/CAD reference rate (keyless)."""
+    src = _mc_sources(r).get("bank-of-canada", {}) or {}
+    obs = src.get("observations") or []
+    if src.get("status") != "LIVE" or not obs:
+        return "<p class='muted'>Bank of Canada FX unavailable in this batch</p>" + src_note("Bank of Canada Valet API")
+    points = []
+    for o in obs:
+        try:
+            points.append((str(o.get("date", "")), _fnum(o.get("value"))))
+        except (TypeError, ValueError):
+            continue
+    points = [(d, v) for d, v in points if v > 0]
+    if len(points) < 2:
+        return "<p class='muted'>Bank of Canada FX series too short to chart</p>" + src_note("Bank of Canada Valet API")
+    points.sort()
+    dates = [d for d, _ in points]
+    rates = [v for _, v in points]
+    fig = go.Figure(go.Scatter(
+        x=dates, y=rates, mode="lines+markers",
+        line=dict(color="#e67e22"),
+        hovertemplate="%{x}<br>USD/CAD %{y:.4f}<extra></extra>"))
+    fig.update_layout(**base_layout("Bank of Canada — USD/CAD reference rate", 320))
+    fig.update_layout(yaxis_title="USD/CAD", xaxis_title="date")
+    return chart(fig, "ch_boc_fx", source="Bank of Canada Valet API (FXUSDCAD), keyless")
+
+
 def treasury_curve_chart(r: dict) -> str:
     src = _mc_sources(r).get("treasury-rates", {}) or {}
     obs = src.get("observations") or []
@@ -760,6 +814,8 @@ def build() -> None:
         card("Live public data — FX reference", fx_panel(r)),
         card("Global markets — World Bank GDP", world_bank_gdp_panel(r)),
         card("Global markets — Treasury auctions", treasury_auctions_panel(r)),
+        card("Global markets — IMF GDP growth", imf_gdp_panel(r)),
+        card("Global markets — Bank of Canada FX", bank_of_canada_panel(r)),
         card("Public data plane — source status", market_context_health(r)),
         card("Macro backdrop", macro_panel(r.get("vix_regime", {}), r.get("rates_environment", {}),
                                            r.get("oil_market", {}), r.get("macro_environment", {}))),

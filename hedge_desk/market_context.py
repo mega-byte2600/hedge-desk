@@ -14,10 +14,12 @@ from typing import Callable, Dict, Mapping, Sequence
 
 from hedge_desk.data.open_market_feeds import (
     OpenFeedResult,
+    bank_of_canada_fx,
     bls_latest_series,
     cftc_cot,
     ecb_exchange_rates,
     fdic_failures,
+    imf_gdp_growth,
     nasdaq_earnings_calendar,
     nasdaq_quote,
     treasury_yield_curve,
@@ -200,6 +202,14 @@ def _ecb_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     return [_pick(row, ("currency", "rate", "date", "base")) for row in result.rows[:10]]
 
 
+def _imf_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [_pick(row, ("date", "value", "indicator", "country")) for row in result.rows[-10:]]
+
+
+def _boc_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [_pick(row, ("date", "series", "value")) for row in result.rows[-10:]]
+
+
 def _nws_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     keys = (
         "id",
@@ -326,6 +336,8 @@ def build_market_context(
     nasdaq_quote_fetch: Callable[..., OpenFeedResult] = nasdaq_quote,
     nasdaq_earn_fetch: Callable[..., OpenFeedResult] = nasdaq_earnings_calendar,
     coinbase_fetch: Callable[..., OpenFeedResult] = coinbase_product_trades,
+    imf_fetch: Callable[..., OpenFeedResult] = imf_gdp_growth,
+    boc_fetch: Callable[..., OpenFeedResult] = bank_of_canada_fx,
     watchlist: Sequence[str] = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA"),
 ) -> Dict[str, object]:
     """Build fail-closed cross-asset context from authoritative provider APIs."""
@@ -404,6 +416,20 @@ def build_market_context(
         sources["ecb-fx"] = _live(result, _ecb_summary(result))
     except Exception as exc:
         sources["ecb-fx"] = _blocked("ecb-fx", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+
+    try:
+        result = imf_fetch(country="USA")
+        sources["imf"] = _live(result, _imf_summary(result))
+    except Exception as exc:
+        sources["imf"] = _blocked("imf", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+
+    try:
+        result = boc_fetch(series="FXUSDCAD")
+        sources["bank-of-canada"] = _live(result, _boc_summary(result))
+    except Exception as exc:
+        sources["bank-of-canada"] = _blocked(
+            "bank-of-canada", "UPSTREAM_OR_PARSE_FAILURE", str(exc)
+        )
 
     try:
         result = nws_fetch(limit=25)
