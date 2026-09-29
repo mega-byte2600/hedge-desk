@@ -228,6 +228,27 @@ class DashboardBuildTests(unittest.TestCase):
         self.assertIn("IMF indicator unavailable", html)
         self.assertIn("Bank of Canada FX unavailable", html)
 
+    def test_frankfurter_panel_renders_live(self):
+        html = self._build(market_context={
+            "status": "LIVE",
+            "sources": {
+                "frankfurter": {
+                    "provider_id": "frankfurter", "status": "LIVE", "observation_count": 2,
+                    "observations": [
+                        {"base": "USD", "quote": "EUR", "rate": "0.88067", "date": "2026-09-29"},
+                        {"base": "USD", "quote": "GBP", "rate": "0.75489", "date": "2026-09-29"},
+                    ],
+                },
+            },
+        })
+        self.assertIn("Frankfurter FX", html)
+        self.assertIn("USD/EUR", html)
+        self.assertIn("0.88067", html)
+
+    def test_frankfurter_panel_degrades_when_source_missing(self):
+        html = self._build(market_context={"status": "LIVE", "sources": {}})
+        self.assertIn("Frankfurter FX unavailable", html)
+
     def test_every_rendered_visual_states_its_source(self):
         # The user requires every dashboard visual to be annotated with its
         # data source so any number can be traced back to its origin.

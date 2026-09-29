@@ -402,6 +402,23 @@ def bank_of_canada_panel(r: dict) -> str:
     return chart(fig, "ch_boc_fx", source="Bank of Canada Valet API (FXUSDCAD), keyless")
 
 
+def frankfurter_panel(r: dict) -> str:
+    """Frankfurter USD-base FX reference rates (keyless, ECB data)."""
+    src = _mc_sources(r).get("frankfurter", {}) or {}
+    obs = src.get("observations") or []
+    if src.get("status") != "LIVE" or not obs:
+        return "<p class='muted'>Frankfurter FX unavailable in this batch</p>" + src_note("Frankfurter FX API (ECB data)")
+    cells = []
+    for o in obs:
+        cells.append(
+            f'<div class="metric"><div class="ml">USD/{esc(o.get("quote", "?"))} '
+            f'<span class="src">Frankfurter</span></div>'
+            f'<div class="mv">{esc(o.get("rate", "-"))}</div>'
+            f'<div class="muted">{esc(o.get("date", ""))}</div></div>'
+        )
+    return f'<div class="macropanel">{"".join(cells)}</div>' + src_note("Frankfurter FX API (ECB reference data), keyless")
+
+
 def treasury_curve_chart(r: dict) -> str:
     src = _mc_sources(r).get("treasury-rates", {}) or {}
     obs = src.get("observations") or []
@@ -816,6 +833,7 @@ def build() -> None:
         card("Global markets — Treasury auctions", treasury_auctions_panel(r)),
         card("Global markets — IMF GDP growth", imf_gdp_panel(r)),
         card("Global markets — Bank of Canada FX", bank_of_canada_panel(r)),
+        card("Global markets — Frankfurter FX", frankfurter_panel(r)),
         card("Public data plane — source status", market_context_health(r)),
         card("Macro backdrop", macro_panel(r.get("vix_regime", {}), r.get("rates_environment", {}),
                                            r.get("oil_market", {}), r.get("macro_environment", {}))),

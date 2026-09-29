@@ -19,6 +19,7 @@ from hedge_desk.data.open_market_feeds import (
     cftc_cot,
     ecb_exchange_rates,
     fdic_failures,
+    frankfurter_fx,
     imf_gdp_growth,
     nasdaq_earnings_calendar,
     nasdaq_quote,
@@ -210,6 +211,10 @@ def _boc_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     return [_pick(row, ("date", "series", "value")) for row in result.rows[-10:]]
 
 
+def _frankfurter_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [_pick(row, ("base", "quote", "rate", "date")) for row in result.rows]
+
+
 def _nws_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     keys = (
         "id",
@@ -338,6 +343,7 @@ def build_market_context(
     coinbase_fetch: Callable[..., OpenFeedResult] = coinbase_product_trades,
     imf_fetch: Callable[..., OpenFeedResult] = imf_gdp_growth,
     boc_fetch: Callable[..., OpenFeedResult] = bank_of_canada_fx,
+    frankfurter_fetch: Callable[..., OpenFeedResult] = frankfurter_fx,
     watchlist: Sequence[str] = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA"),
 ) -> Dict[str, object]:
     """Build fail-closed cross-asset context from authoritative provider APIs."""
@@ -430,6 +436,12 @@ def build_market_context(
         sources["bank-of-canada"] = _blocked(
             "bank-of-canada", "UPSTREAM_OR_PARSE_FAILURE", str(exc)
         )
+
+    try:
+        result = frankfurter_fetch(base="USD")
+        sources["frankfurter"] = _live(result, _frankfurter_summary(result))
+    except Exception as exc:
+        sources["frankfurter"] = _blocked("frankfurter", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
 
     try:
         result = nws_fetch(limit=25)
