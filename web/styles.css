@@ -66,3 +66,16 @@ summary{padding:12px 0;margin:-12px 0}
 .dash-mobile .stat{padding:17px}
 .dash-mobile .stat-value{font-size:30px}
 }
+
+/* Increment 5: wide tables become labeled cards on phones. Opt in with .cards-table. */
+@media(max-width:600px){
+.cards-table thead{border:0;clip:rect(0 0 0 0);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px}
+.cards-table table,.cards-table tbody,.cards-table tr,.cards-table td{display:block;width:auto}
+.cards-table tbody tr{padding:15px 0;border-top:1px solid var(--line)}
+.cards-table tbody tr:first-child{border-top:0;padding-top:6px}
+.cards-table td{border:0;padding:3px 0}
+.cards-table td:first-child{padding-bottom:9px}
+.cards-table td:first-child strong{font-size:17px}
+.cards-table td[data-label]{display:flex;gap:12px;align-items:baseline;font-size:13px}
+.cards-table td[data-label]::before{content:attr(data-label);flex:0 0 104px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600}
+}
