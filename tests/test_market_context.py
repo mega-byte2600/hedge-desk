@@ -26,6 +26,31 @@ def _common_fakes():
         "bis_fetch": lambda series, limit: _result(
             "bis", f"WS_GLI:{series}", [{"TIME_PERIOD": "2026-Q1", "OBS_VALUE": "6.8", "series_alias": series}]
         ),
+        "imf_fetch": lambda indicator, entities, periods: _result(
+            "imf-datamapper",
+            indicator,
+            [{"indicator": indicator, "entity": "USA", "period": "2026", "value": 2.0}],
+        ),
+        "oecd_fetch": lambda area, start_period, limit: _result(
+            "oecd-cli",
+            "composite-leading-indicator",
+            [{"reference_area": area, "time_period": "2026-08", "value": "100.3", "unit_measure": "IX", "measure": "LI"}],
+        ),
+        "eurostat_fetch": lambda geo, periods: _result(
+            "eurostat",
+            "prc_hicp_minr",
+            [{"geo": geo, "time_period": "2026-08", "value": 3.3, "unit": "RCH_A", "coicop": "CP00"}],
+        ),
+        "usgs_fetch": lambda days, min_magnitude, limit: _result(
+            "usgs-earthquakes",
+            "fdsn-material-events",
+            [{"event_id": "us123", "magnitude": 6.1, "place": "Example region", "significance": 600}],
+        ),
+        "eonet_fetch": lambda days, limit, status: _result(
+            "nasa-eonet",
+            "natural-events-v3",
+            [{"event_id": "EONET_1", "title": "Example Wildfire", "categories": [{"id": "wildfires", "title": "Wildfires"}]}],
+        ),
         "bls_fetch": lambda series: _result(
             "bls", series, [{"seriesID": series, "year": "2026", "period": "M08", "value": "325.0"}]
         ),
@@ -142,14 +167,13 @@ class MarketContextTests(unittest.TestCase):
 
         self.assertEqual(context["schema_version"], MARKET_CONTEXT_SCHEMA)
         self.assertEqual(context["status"], "LIVE")
-        self.assertEqual(context["live_sources"], 18)
-        self.assertEqual(context["sources"]["nws"]["status"], "LIVE")
-        self.assertEqual(context["sources"]["bea"]["status"], "LIVE")
-        self.assertEqual(context["sources"]["usda-nass"]["status"], "LIVE")
-        self.assertEqual(context["sources"]["bis"]["status"], "LIVE")
-        self.assertEqual(context["sources"]["coinbase-exchange"]["status"], "LIVE")
-        self.assertEqual(context["sources"]["nasdaq-quotes"]["status"], "LIVE")
-        self.assertEqual(context["sources"]["nasdaq-earnings"]["status"], "LIVE")
+        self.assertEqual(context["live_sources"], 23)
+        for source_id in (
+            "nws", "bea", "usda-nass", "bis", "imf-datamapper", "oecd-cli",
+            "eurostat", "usgs-earthquakes", "nasa-eonet", "coinbase-exchange",
+            "nasdaq-quotes", "nasdaq-earnings",
+        ):
+            self.assertEqual(context["sources"][source_id]["status"], "LIVE")
         self.assertEqual(
             context["sources"]["nasdaq-quotes"]["observations"][0]["lastSalePrice"], "$765.05"
         )
@@ -157,6 +181,9 @@ class MarketContextTests(unittest.TestCase):
             context["sources"]["finra"]["observations"]["reg_sho_daily"][0]["shortParQuantity"],
             100,
         )
+        self.assertEqual(context["sources"]["imf-datamapper"]["observations"][0]["entity"], "USA")
+        self.assertEqual(context["sources"]["eurostat"]["observations"][0]["value"], 3.3)
+        self.assertEqual(context["sources"]["usgs-earthquakes"]["observations"][0]["magnitude"], 6.1)
         self.assertEqual(context["blocked_sources"], 0)
         self.assertEqual(context["unconfigured_sources"], 0)
         self.assertFalse(context["trade_authorized"])
@@ -191,6 +218,7 @@ class MarketContextTests(unittest.TestCase):
 
         fakes = _common_fakes()
         fakes["nws_fetch"] = broken
+        fakes["imf_fetch"] = broken
         with patch.dict(os.environ, {}, clear=True):
             context = build_market_context(
                 fred_fetch=broken,
@@ -202,6 +230,7 @@ class MarketContextTests(unittest.TestCase):
         self.assertEqual(context["status"], "DEGRADED")
         self.assertEqual(context["sources"]["nyfed-markets"]["status"], "BLOCKED")
         self.assertEqual(context["sources"]["nws"]["status"], "BLOCKED")
+        self.assertEqual(context["sources"]["imf-datamapper"]["status"], "BLOCKED")
         self.assertIn("detail", context["sources"]["nyfed-markets"])
 
         from hedge_desk.market_context import _blocked
