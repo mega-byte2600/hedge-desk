@@ -61,8 +61,18 @@ def _default_transport(url: str) -> Tuple[int, bytes]:
     try:
         # FRED normally answers in <2s; the timeout is generous for cloud
         # networks where the first connection can be slow, and retries handle
-        # transient stalls so the after-close batch stays bounded.
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        # transient stalls so the after-close batch stays bounded. The
+        # certifi-backed context keeps verification ON with current roots so
+        # modern chains (Sectigo E46, Entrust OV) are not spuriously rejected.
+        import ssl
+
+        try:
+            import certifi
+
+            ctx = ssl.create_default_context(cafile=certifi.where())
+        except Exception:
+            ctx = ssl.create_default_context()
+        with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:
             return resp.status, resp.read()
     except urllib.error.HTTPError as exc:
         return exc.code, exc.read()

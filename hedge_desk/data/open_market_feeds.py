@@ -19,6 +19,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+import ssl
 from dataclasses import dataclass
 from typing import Callable, Mapping, Sequence, Tuple
 
@@ -116,9 +117,26 @@ class OpenFeedResult:
         return len(self.rows)
 
 
+def _system_ssl_context() -> ssl.SSLContext:
+    """A verification-preserving SSL context using certifi's CA bundle.
+
+    Python's bundled default verify path (/private/etc/ssl/cert.pem) can lag the
+    macOS system keychain and reject valid 2024+ roots (Entrust OV, Sectigo E46)
+    that Treasury's and ECB's endpoints present. certifi ships the current roots;
+    using it keeps certificate verification fully ON — this is a trust-store fix,
+    never a disabling of verification.
+    """
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:  # pragma: no cover - certifi is a declared dependency
+        return ssl.create_default_context()
+
+
 def _default_request_transport(request: urllib.request.Request) -> Tuple[int, bytes]:
     try:
-        with urllib.request.urlopen(request, timeout=15) as resp:
+        with urllib.request.urlopen(request, timeout=15, context=_system_ssl_context()) as resp:
             return resp.status, resp.read()
     except urllib.error.HTTPError as exc:
         return exc.code, exc.read()

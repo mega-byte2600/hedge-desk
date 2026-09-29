@@ -156,6 +156,43 @@ class DashboardBuildTests(unittest.TestCase):
         self.assertIn("unavailable in this batch", html)
         self.assertNotIn("$765.05", html)
 
+    def test_global_markets_panels_render_live_world_bank_and_treasury(self):
+        # World Bank GDP + Treasury auctions are keyless global feeds surfaced
+        # on the dashboard. When LIVE they draw real charts/tables; the fixtures
+        # are captured from the live API, never invented.
+        html = self._build(market_context={
+            "status": "LIVE",
+            "sources": {
+                "world-bank": {
+                    "provider_id": "world-bank", "status": "LIVE", "observation_count": 5,
+                    "observations": [
+                        {"countryiso3code": "USA", "date": "2021", "value": 23725645000000},
+                        {"countryiso3code": "USA", "date": "2022", "value": 26054614000000},
+                    ],
+                },
+                "treasury-fiscaldata": {
+                    "provider_id": "treasury-fiscaldata", "status": "LIVE",
+                    "observation_count": 2,
+                    "observations": [
+                        {"security_type": "Treasury Note", "auction_date": "2026-09-28",
+                         "high_investment_rate": "4.100", "maturity_date": "2028-09-30"},
+                        {"security_type": "Treasury Bill", "auction_date": "2026-09-27",
+                         "high_investment_rate": "4.550", "maturity_date": "2026-12-24"},
+                    ],
+                },
+            },
+        })
+        self.assertIn("ch_world_gdp", html)
+        self.assertIn("World Bank GDP", html)
+        self.assertIn("Treasury auctions", html)
+        self.assertIn("Treasury Note", html)
+        self.assertIn("4.100", html)
+
+    def test_global_markets_panels_degrade_when_sources_missing(self):
+        html = self._build(market_context={"status": "LIVE", "sources": {}})
+        self.assertIn("World Bank indicator unavailable", html)
+        self.assertIn("Treasury fiscal data unavailable", html)
+
     def test_every_rendered_visual_states_its_source(self):
         # The user requires every dashboard visual to be annotated with its
         # data source so any number can be traced back to its origin.

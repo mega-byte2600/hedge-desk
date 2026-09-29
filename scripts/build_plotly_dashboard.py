@@ -299,6 +299,55 @@ def fx_panel(r: dict) -> str:
     return f'<div class="macropanel">{"".join(cells)}</div>' + src_note("ECB euro foreign exchange reference rates (daily)")
 
 
+def world_bank_gdp_panel(r: dict) -> str:
+    """World Bank GDP (current US$) trend — global macro context (keyless)."""
+    src = _mc_sources(r).get("world-bank", {}) or {}
+    obs = src.get("observations") or []
+    if src.get("status") != "LIVE" or not obs:
+        return "<p class='muted'>World Bank indicator unavailable in this batch</p>" + src_note("World Bank Open Data API (NY.GDP.MKTP.CD)")
+    # observations: {indicator: {id,value}, country:{...}, date, value, ...}
+    points = []
+    country = "US"
+    for o in obs:
+        try:
+            points.append((str(o.get("date", "")), _fnum(o.get("value"))))
+        except (TypeError, ValueError):
+            continue
+        if o.get("countryiso3code"):
+            country = str(o.get("countryiso3code"))
+    points = [(d, v) for d, v in points if v > 0]
+    if len(points) < 2:
+        return "<p class='muted'>World Bank GDP series too short to chart</p>" + src_note("World Bank Open Data API")
+    points.sort()
+    years = [d for d, _ in points]
+    gdp = [v / 1e12 for _, v in points]
+    fig = go.Figure(go.Bar(
+        x=years, y=gdp,
+        marker_color="#5aaef5",
+        hovertemplate="%{x}<br>GDP $%{y:.2f} trillion<extra></extra>"))
+    fig.update_layout(**base_layout(f"World Bank GDP — {country} (current US$)", 320))
+    fig.update_layout(yaxis_title="USD trillions", xaxis_title="year")
+    return chart(fig, "ch_world_gdp", source="World Bank Open Data API (NY.GDP.MKTP.CD), keyless")
+
+
+def treasury_auctions_panel(r: dict) -> str:
+    """Latest U.S. Treasury auctions (fiscaldata API) — debt issuance context."""
+    src = _mc_sources(r).get("treasury-fiscaldata", {}) or {}
+    obs = src.get("observations") or []
+    if src.get("status") != "LIVE" or not obs:
+        return "<p class='muted'>Treasury fiscal data unavailable in this batch</p>" + src_note("U.S. Treasury Fiscal Data API")
+    trs = "".join(
+        f"<tr><td>{esc(o.get('security_type', o.get('auction_date', '?')))}</td>"
+        f"<td>{esc(o.get('auction_date', '-'))}</td>"
+        f"<td>{esc(o.get('high_investment_rate', '-'))}%</td>"
+        f"<td class='muted'>{esc(o.get('maturity_date', '-'))}</td></tr>"
+        for o in obs[:6]
+    )
+    return (f"<table class='health'><thead><tr><th>security</th><th>auction</th>"
+            f"<th>high rate</th><th>maturity</th></tr></thead><tbody>{trs}</tbody></table>"
+            + src_note("U.S. Treasury Fiscal Data API (rates_of_exchange/auctions), keyless"))
+
+
 def treasury_curve_chart(r: dict) -> str:
     src = _mc_sources(r).get("treasury-rates", {}) or {}
     obs = src.get("observations") or []
@@ -709,6 +758,8 @@ def build() -> None:
         card("Live public data — watchlist quotes", nasdaq_quotes_panel(r), wide=True),
         card("Live public data — Treasury curve", treasury_curve_chart(r), wide=True),
         card("Live public data — FX reference", fx_panel(r)),
+        card("Global markets — World Bank GDP", world_bank_gdp_panel(r)),
+        card("Global markets — Treasury auctions", treasury_auctions_panel(r)),
         card("Public data plane — source status", market_context_health(r)),
         card("Macro backdrop", macro_panel(r.get("vix_regime", {}), r.get("rates_environment", {}),
                                            r.get("oil_market", {}), r.get("macro_environment", {}))),
