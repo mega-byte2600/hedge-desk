@@ -32,7 +32,6 @@ CONSOLE_ASSETS = (
     "ui-polish.js",
     "resources.js",
     "desk-architecture.js",
-    "multi-agent-desk.mjs",
     "timeline.json",
     "navigation-stability.js",
     "disclosures.js",
@@ -40,6 +39,8 @@ CONSOLE_ASSETS = (
     "emporion-institutional-seal.svg",
     "account.js",
     "report.json",
+    "research-brief.json",
+    "research-today.md",
 )
 
 

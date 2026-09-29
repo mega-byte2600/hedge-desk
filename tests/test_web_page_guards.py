@@ -9,7 +9,9 @@ responding.
 
 This happened twice, so each mutating enhancer is pinned here:
   * web/ror-positioning.js   — the RISK tape rewrite froze every page load.
-  * web/multi-agent-desk.mjs — renderDeskView froze on navigating to the #desk tab.
+
+(The former multi-agent desk page, removed 2026-09-29, was the second case:
+web/multi-agent-desk.mjs renderDeskView froze on navigating to the #desk tab.)
 
 It only reproduces on routes that are actually visited, which is why these are
 source-level checks with a route-walk note rather than a load-time smoke test.
@@ -37,25 +39,6 @@ class MutationObserverGuardTests(unittest.TestCase):
         src = (WEB / "ror-positioning.js").read_text(encoding="utf-8")
         self.assertNotIn("new MutationObserver(() => applyRoRPositioning())", src)
         self.assertIn("() => requestAnimationFrame(applyRoRPositioning)", src)
-
-    def test_multi_agent_desk_render_is_reentrancy_guarded(self):
-        """renderDeskView writes #main, which the desk observer watches."""
-        src = (WEB / "multi-agent-desk.mjs").read_text(encoding="utf-8")
-        body = src.split("async function renderDeskView()", 1)[-1].split("\nfunction ", 1)[0]
-        self.assertIn(
-            "_deskRendering",
-            body,
-            "renderDeskView must bail out when a render is already in flight; "
-            "without it the observer re-fires on its own loading-HTML write "
-            "and the microtask queue never drains (the #desk tab hangs the page)",
-        )
-        self.assertIn("_deskRendering = true", body)
-        self.assertIn("_deskRendering = false", body)
-
-    def test_multi_agent_desk_observer_is_deferred(self):
-        src = (WEB / "multi-agent-desk.mjs").read_text(encoding="utf-8")
-        self.assertNotIn("new MutationObserver(() => { if (location.hash", src)
-        self.assertIn("requestAnimationFrame", src)
 
     def test_no_synchronous_observer_callbacks_that_write(self):
         """Every MutationObserver callback that writes to the DOM must defer.

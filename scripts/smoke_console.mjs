@@ -7,7 +7,6 @@
 // to the Python suite and to a plain page load:
 //
 //   * web/ror-positioning.js froze the page ~1s after load.
-//   * web/multi-agent-desk.mjs froze it on navigating to the #desk tab.
 //
 // Both were MutationObserver callbacks that wrote into the subtree they observed
 // without an idempotency guard or deferral. Neither reproduces unless the route is
@@ -37,7 +36,7 @@ if (!playwright) {
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const ALL = ['overview', 'candidates', 'desks', 'scenarios', 'journal', 'resources', 'desk', 'about'];
+const ALL = ['overview', 'candidates', 'desks', 'scenarios', 'journal', 'resources', 'brief', 'about'];
 // A marker element that must exist in #main once the route has fully rendered.
 const MARKER = {
   overview: '.stats', candidates: '.notice', desks: '.cards', scenarios: '#scenario-rows',
@@ -209,7 +208,7 @@ async function checkDeskOpensFromDesksTab(page) {
   const walks = [
     ['forward', ALL],
     ['reverse', [...ALL].reverse()],
-    ['toggle x3', ['journal', 'resources', 'desk', 'about', 'journal', 'resources', 'desk', 'about', 'desk', 'journal', 'about', 'resources']],
+    ['toggle x3', ['journal', 'resources', 'brief', 'about', 'journal', 'resources', 'brief', 'about', 'brief', 'journal', 'about', 'resources']],
   ];
 
   let steps = 0, misses = 0;
