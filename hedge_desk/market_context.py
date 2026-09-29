@@ -27,6 +27,11 @@ from hedge_desk.data.open_market_feeds import (
     nyfed_reference_rates,
     treasury_latest_auctions,
 )
+from hedge_desk.data.public_signal_feeds import (
+    bea_nipa_table,
+    nws_active_alerts,
+    usda_nass_crop_progress,
+)
 from hedge_desk.rates_desk import fred_series_rows
 
 MARKET_CONTEXT_SCHEMA = "hedge-desk-market-context-1.0.0"
@@ -54,13 +59,14 @@ def _blocked(provider_id: str, reason_code: str, detail: str | None = None) -> D
         "reason_code": reason_code,
     }
     if detail:
-        # Sanitize: never leak API keys or credentials in diagnostics
-        clean = detail
-        for secret in ("api_key=", "apiKey=", "token="):
-            if secret in clean.lower():
-                # Redact query param values that look like credentials
-                import re
-                clean = re.sub(r"(api_key|apikey|token)=[^&\s]+", r"\1=[REDACTED]", clean, flags=re.IGNORECASE)
+        import re
+
+        clean = re.sub(
+            r"(api_key|apikey|token|userid|key)=[^&\s]+",
+            r"\1=[REDACTED]",
+            detail,
+            flags=re.IGNORECASE,
+        )
         result["detail"] = clean[:200]
     return result
 
@@ -96,11 +102,13 @@ def _nyfed_summary(result: OpenFeedResult) -> Dict[str, object]:
 
 
 def _treasury_curve_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
-    # FRED DGS tenors (official Treasury par yields via FRED).
     latest: Dict[str, Dict[str, object]] = {}
     for row in result.rows:
         tenor = str(row.get("tenor", ""))
-        if tenor and (tenor not in latest or str(row.get("date", "")) > str(latest[tenor].get("date", ""))):
+        if tenor and (
+            tenor not in latest
+            or str(row.get("date", "")) > str(latest[tenor].get("date", ""))
+        ):
             latest[tenor] = _pick(row, ("tenor", "date", "value"))
     return [latest[tenor] for tenor in sorted(latest)]
 
@@ -159,11 +167,59 @@ def _cftc_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
 
 
 def _bls_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
-    return [_pick(row, ("seriesID", "year", "period", "periodName", "value", "latest")) for row in result.rows[:5]]
+    return [
+        _pick(row, ("seriesID", "year", "period", "periodName", "value", "latest"))
+        for row in result.rows[:5]
+    ]
 
 
 def _ecb_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     return [_pick(row, ("currency", "rate", "date", "base")) for row in result.rows[:10]]
+
+
+def _nws_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = (
+        "id",
+        "event",
+        "severity",
+        "certainty",
+        "urgency",
+        "headline",
+        "areaDesc",
+        "sent",
+        "effective",
+        "expires",
+    )
+    return [_pick(row, keys) for row in result.rows[:25]]
+
+
+def _bea_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = (
+        "TableName",
+        "LineNumber",
+        "LineDescription",
+        "TimePeriod",
+        "DataValue",
+        "UNIT_MULT",
+        "CL_UNIT",
+    )
+    return [_pick(row, keys) for row in result.rows[:25]]
+
+
+def _usda_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    keys = (
+        "commodity_desc",
+        "statisticcat_desc",
+        "unit_desc",
+        "short_desc",
+        "Value",
+        "year",
+        "week_ending",
+        "state_alpha",
+        "agg_level_desc",
+        "domain_desc",
+    )
+    return [_pick(row, keys) for row in result.rows[:25]]
 
 
 def _nasdaq_quote_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
@@ -171,9 +227,15 @@ def _nasdaq_quote_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
         _pick(
             row,
             (
-                "symbol", "assetClass", "lastSalePrice", "netChange",
-                "percentageChange", "lastTradeTimestamp", "isRealTime",
-                "bidPrice", "askPrice",
+                "symbol",
+                "assetClass",
+                "lastSalePrice",
+                "netChange",
+                "percentageChange",
+                "lastTradeTimestamp",
+                "isRealTime",
+                "bidPrice",
+                "askPrice",
             ),
         )
         for row in result.rows
@@ -186,8 +248,6 @@ def _nasdaq_earnings_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
 
 
 def _finra_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
-    # FINRA dataset field names evolve. Preserve only common breadth/date fields
-    # when present instead of coupling the report to a provider-specific schema.
     keys = (
         "date",
         "weekStartDate",
@@ -214,6 +274,9 @@ def build_market_context(
     fdic_fetch: Callable[..., OpenFeedResult] = fdic_failures,
     world_bank_fetch: Callable[..., OpenFeedResult] = world_bank_indicator,
     ecb_fetch: Callable[..., OpenFeedResult] = ecb_exchange_rates,
+    nws_fetch: Callable[..., OpenFeedResult] = nws_active_alerts,
+    bea_fetch: Callable[..., OpenFeedResult] = bea_nipa_table,
+    usda_fetch: Callable[..., OpenFeedResult] = usda_nass_crop_progress,
     eia_fetch: Callable[..., OpenFeedResult] = eia_v2,
     finra_fetch: Callable[..., OpenFeedResult] = finra_fixed_income,
     fred_fetch: Callable[..., object] = fred_series_rows,
@@ -246,7 +309,9 @@ def build_market_context(
         result = nyfed_fetch()
         sources["nyfed-markets"] = _live(result, _nyfed_summary(result))
     except Exception as exc:
-        sources["nyfed-markets"] = _blocked("nyfed-markets", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+        sources["nyfed-markets"] = _blocked(
+            "nyfed-markets", "UPSTREAM_OR_PARSE_FAILURE", str(exc)
+        )
 
     try:
         result = treasury_fetch(limit=5)
@@ -260,7 +325,9 @@ def build_market_context(
         result = treasury_curve_fetch()
         sources["treasury-rates"] = _live(result, _treasury_curve_summary(result))
     except Exception as exc:
-        sources["treasury-rates"] = _blocked("treasury-rates", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+        sources["treasury-rates"] = _blocked(
+            "treasury-rates", "UPSTREAM_OR_PARSE_FAILURE", str(exc)
+        )
 
     try:
         result = fdic_fetch(limit=10)
@@ -272,7 +339,9 @@ def build_market_context(
         result = world_bank_fetch("NY.GDP.MKTP.CD", country="USA", per_page=5)
         sources["world-bank"] = _live(result, _world_bank_summary(result))
     except Exception as exc:
-        sources["world-bank"] = _blocked("world-bank", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+        sources["world-bank"] = _blocked(
+            "world-bank", "UPSTREAM_OR_PARSE_FAILURE", str(exc)
+        )
 
     try:
         result = bls_fetch("CUUR0000SA0")
@@ -287,10 +356,38 @@ def build_market_context(
         sources["ecb-fx"] = _blocked("ecb-fx", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
 
     try:
+        result = nws_fetch(limit=25)
+        sources["nws"] = _live(result, _nws_summary(result))
+    except Exception as exc:
+        sources["nws"] = _blocked("nws", "UPSTREAM_OR_RATE_LIMIT", str(exc))
+
+    try:
         result = cftc_fetch(report="tff_futures_only", limit=25)
         sources["cftc-cot"] = _live(result, _cftc_summary(result))
     except Exception as exc:
-        sources["cftc-cot"] = _blocked("cftc-cot", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+        sources["cftc-cot"] = _blocked(
+            "cftc-cot", "UPSTREAM_OR_PARSE_FAILURE", str(exc)
+        )
+
+    if os.environ.get("BEA_API_KEY", "").strip():
+        try:
+            result = bea_fetch("T10101", frequency="Q", year="X", limit=25)
+            sources["bea"] = _live(result, _bea_summary(result))
+        except Exception as exc:
+            sources["bea"] = _blocked("bea", "UPSTREAM_OR_AUTH_FAILURE", str(exc))
+    else:
+        sources["bea"] = _unconfigured("bea")
+
+    if os.environ.get("USDA_NASS_API_KEY", "").strip():
+        try:
+            result = usda_fetch("CORN", year=date.today().year, limit=25)
+            sources["usda-nass"] = _live(result, _usda_summary(result))
+        except Exception as exc:
+            sources["usda-nass"] = _blocked(
+                "usda-nass", "UPSTREAM_OR_AUTH_FAILURE", str(exc)
+            )
+    else:
+        sources["usda-nass"] = _unconfigured("usda-nass")
 
     if os.environ.get("EIA_API_KEY", "").strip():
         try:
