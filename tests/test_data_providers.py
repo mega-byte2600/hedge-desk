@@ -52,3 +52,34 @@ def test_unknown_provider_is_rejected():
         assert "unknown provider" in str(exc)
     else:
         raise AssertionError("unknown provider should fail closed")
+
+
+def test_provider_console_rows_surface_all_catalog_providers():
+    from hedge_desk.data.providers import provider_console_rows
+
+    rows = provider_console_rows()
+    assert len(rows) == len(all_providers()) - 1  # fdic is catalog-only (public-claims gate)
+    ids = {r["source_id"] for r in rows}
+    assert "fdic" not in ids
+    assert {"sec-edgar", "treasury-fiscaldata", "fred", "cftc-cot",
+            "nws", "stooq", "alpha-vantage"}.issubset(ids)
+    for r in rows:
+        # statuses must render under the console statusClass() palette
+        assert r["status"] in ("PASS", "PENDING", "REVIEW_REQUIRED")
+        assert "no fabricated values" in r["controls"]
+    # key-gated vs keyless surfaces correctly
+    by_id = {r["source_id"]: r for r in rows}
+    assert by_id["sec-edgar"]["status"] == "PASS"
+    assert by_id["sec-edgar"]["public_without_key"] is True
+    assert by_id["alpha-vantage"]["status"] == "REVIEW_REQUIRED"
+
+
+def test_provider_console_rows_never_claims_fabricated_pass():
+    # a key-gated provider without a key must not show PASS
+    from hedge_desk.data.providers import provider_console_rows
+
+    rows = provider_console_rows()
+    keyed = [r for r in rows if r["key_env"] and not r["public_without_key"]]
+    assert keyed, "expected at least one key-gated provider"
+    for r in keyed:
+        assert r["status"] != "PASS"

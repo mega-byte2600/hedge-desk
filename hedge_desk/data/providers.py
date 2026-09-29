@@ -343,3 +343,69 @@ def missing_auth_env(provider_id: str, environment: Dict[str, str]) -> Optional[
     if spec.public_without_key or not spec.auth_env_var:
         return None
     return None if environment.get(spec.auth_env_var) else spec.auth_env_var
+
+
+def provider_console_rows() -> list[dict]:
+    """Surface the provider catalog on the desk console (Controls & evidence).
+
+    Honest status derivation, no network at build time:
+    - PASS       : official/public, no key required (fred, sec-edgar, nyfed,
+                   treasury-fiscaldata, bls, nws, cftc-cot, ecb-fx, fdic,
+                   world-bank, cboe, nasdaq-public).
+    - PENDING    : key-gated (bea, usda-nass, eia-open-data, finra) or a
+                   public source that is currently blocked from this host's
+                   network (stooq bot-wall / cfg notes).
+    - REVIEW     : exchange / broker / commercial seams requiring entitlement
+                   review (cme, schwab, nasdaq-data-link, polygon, tiingo,
+                   alpha-vantage, finnhub).
+    """
+    official_public = {
+        "fred", "sec-edgar", "nyfed-markets", "treasury-fiscaldata", "bls",
+        "nws", "cftc-cot", "ecb-fx", "fdic", "world-bank", "cboe", "nasdaq",
+    }
+    keyed_or_blocked = {"bea", "usda-nass", "eia-open-data", "finra", "stooq"}
+    review = {
+        "cme", "schwab", "nasdaq-data-link", "polygon", "tiingo",
+        "alpha-vantage", "finnhub",
+    }
+
+    def _status(provider_id: str) -> str:
+        if provider_id in official_public:
+            return "PASS"
+        if provider_id in keyed_or_blocked:
+            return "PENDING"
+        if provider_id in review:
+            return "REVIEW_REQUIRED"
+        return "PENDING"
+
+    rows = []
+    for spec in all_providers():
+        # The public-claims gate bans "fdic"/"insured" in shipped copy (implied
+        # insurance the product cannot offer). FDIC stays in the internal
+        # catalog for research; it is simply not surfaced on the public page.
+        if spec.provider_id == "fdic":
+            continue
+        rows.append(
+            {
+                "source_id": spec.provider_id,
+                "display_name": spec.display_name,
+                "dataset": ", ".join(sorted(spec.capabilities)),
+                "status": _status(spec.provider_id),
+                "mode": "FREE_OPEN_PUBLIC_DATA_ONLY"
+                if spec.authority in ("official", "public", "exchange")
+                else "REVIEW_REQUIRED",
+                "feeds": sorted(spec.asset_classes),
+                "authority": spec.authority,
+                "key_env": spec.auth_env_var,
+                "public_without_key": spec.public_without_key,
+                "controls": [
+                    "fail-closed parsing",
+                    "no fabricated values",
+                    "server-side key only",
+                    "no trade authorization",
+                    "no RoR / probability",
+                ],
+                "notes": spec.notes,
+            }
+        )
+    return rows

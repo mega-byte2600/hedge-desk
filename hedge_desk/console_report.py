@@ -12,6 +12,7 @@ from dataclasses import asdict
 
 from hedge_desk.candidates import build_real_eod_candidate_feed
 from hedge_desk.data import PWB_DAILY_NEWS_DATASET
+from hedge_desk.data.providers import provider_console_rows
 from hedge_desk.projects import DESK_ARCHITECTURE
 from hedge_desk.reporting import (
     build_control_summary,
@@ -66,7 +67,8 @@ def build_console_payload(report):
                     "no vendor text retention",
                     "no trade authorization",
                 ],
-            }
+            },
+            *provider_console_rows(),
         ],
     }
     return payload

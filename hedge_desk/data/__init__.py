@@ -50,6 +50,7 @@ from .providers import (
     all_providers,
     missing_auth_env,
     provider,
+    provider_console_rows,
     providers_for_asset_class,
     providers_for_capability,
 )
@@ -95,6 +96,7 @@ __all__ = [
     "EOD_INGEST_VERSION", "EOD_SOURCE_ID", "STOOQ_SOURCE_ID", "EodDay", "EodSymbolResult",
     "ingest_eod",
     "ProviderSpec", "all_providers", "missing_auth_env", "provider",
+    "provider_console_rows",
     "providers_for_asset_class", "providers_for_capability",
     "CFTC_COT_DATASETS", "FINRA_FIXED_INCOME_DATASETS", "NASDAQ_ETF_SYMBOLS",
     "NYFED_REFERENCE_RATES", "TREASURY_DGS_TENORS",

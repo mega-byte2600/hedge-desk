@@ -1,7 +1,7 @@
 {
-  "schema_version": "hedge-desk-nightly-2.2.0",
+  "schema_version": "hedge-desk-nightly-2.1.0",
   "mode": "REAL_EOD_NIGHTLY",
-  "generated_at": "2026-09-28T21:35:46.471238+00:00",
+  "generated_at": "2026-09-29T12:00:00.690917+00:00",
   "watchlist": [
     "NKE",
     "CCL",
@@ -12,13 +12,13 @@
     "DVN"
   ],
   "eod_batch_status": "READY_FOR_RESEARCH",
-  "eod_manifest_sha256": "37903d57cd25c7a8546e6fe78c77e3627180442fd99db2890045c4b499ae1a6a",
+  "eod_manifest_sha256": "968df021db449b898c0c593272e9be5626ad504d6f54e6814a145db6f4301b34",
   "data_freshness": {
     "schema_version": "hedge-desk-data-freshness-1.0.0",
-    "expected_trading_day": "2026-09-28",
+    "expected_trading_day": "2026-09-29",
     "as_of": "2026-09-28",
-    "is_current": true,
-    "note": "Running on 2026-09-28 close (current trading day)."
+    "is_current": false,
+    "note": "Running on 2026-09-28 close; 2026-09-29 close not yet published by the source. Data is the prior trading day's close."
   },
   "candidate_count": 21,
   "symbol_count": 7,
@@ -319,7 +319,7 @@
     }
   ],
   "series": {
-    "as_of": "2026-09-28",
+    "as_of": "2026-09-29",
     "symbols": {
       "AAL": [
         [
@@ -2360,345 +2360,15 @@
       [
         "2026-09-28",
         "16.06999969482422"
+      ],
+      [
+        "2026-09-29",
+        "15.890000343322754"
       ]
     ],
-    "treasury_10y": [
-      [
-        "2026-07-30",
-        "4.68"
-      ],
-      [
-        "2026-07-31",
-        "4.75"
-      ],
-      [
-        "2026-08-03",
-        "4.7"
-      ],
-      [
-        "2026-08-04",
-        "4.63"
-      ],
-      [
-        "2026-08-05",
-        "4.63"
-      ],
-      [
-        "2026-08-06",
-        "4.69"
-      ],
-      [
-        "2026-08-07",
-        "4.65"
-      ],
-      [
-        "2026-08-10",
-        "4.72"
-      ],
-      [
-        "2026-08-11",
-        "4.7"
-      ],
-      [
-        "2026-08-12",
-        "4.68"
-      ],
-      [
-        "2026-08-13",
-        "4.63"
-      ],
-      [
-        "2026-08-14",
-        "4.68"
-      ],
-      [
-        "2026-08-17",
-        "4.72"
-      ],
-      [
-        "2026-08-18",
-        "4.71"
-      ],
-      [
-        "2026-08-19",
-        "4.65"
-      ],
-      [
-        "2026-08-20",
-        "4.69"
-      ],
-      [
-        "2026-08-21",
-        "4.74"
-      ],
-      [
-        "2026-08-24",
-        "4.7"
-      ],
-      [
-        "2026-08-25",
-        "4.64"
-      ],
-      [
-        "2026-08-26",
-        "4.66"
-      ],
-      [
-        "2026-08-27",
-        "4.67"
-      ],
-      [
-        "2026-08-28",
-        "4.73"
-      ],
-      [
-        "2026-08-31",
-        "4.75"
-      ],
-      [
-        "2026-09-01",
-        "4.79"
-      ],
-      [
-        "2026-09-02",
-        "4.79"
-      ],
-      [
-        "2026-09-03",
-        "4.77"
-      ],
-      [
-        "2026-09-04",
-        "4.78"
-      ],
-      [
-        "2026-09-08",
-        "4.8"
-      ],
-      [
-        "2026-09-09",
-        "4.83"
-      ],
-      [
-        "2026-09-10",
-        "4.95"
-      ],
-      [
-        "2026-09-11",
-        "4.96"
-      ],
-      [
-        "2026-09-14",
-        "4.97"
-      ],
-      [
-        "2026-09-15",
-        "5"
-      ],
-      [
-        "2026-09-16",
-        "5.01"
-      ],
-      [
-        "2026-09-17",
-        "4.94"
-      ],
-      [
-        "2026-09-18",
-        "5.01"
-      ],
-      [
-        "2026-09-21",
-        "4.96"
-      ],
-      [
-        "2026-09-22",
-        "4.96"
-      ],
-      [
-        "2026-09-23",
-        "5.11"
-      ],
-      [
-        "2026-09-24",
-        "5.18"
-      ],
-      [
-        "2026-09-25",
-        "5.17"
-      ]
-    ],
-    "treasury_2y": [
-      [
-        "2026-07-30",
-        "4.23"
-      ],
-      [
-        "2026-07-31",
-        "4.28"
-      ],
-      [
-        "2026-08-03",
-        "4.25"
-      ],
-      [
-        "2026-08-04",
-        "4.2"
-      ],
-      [
-        "2026-08-05",
-        "4.18"
-      ],
-      [
-        "2026-08-06",
-        "4.25"
-      ],
-      [
-        "2026-08-07",
-        "4.19"
-      ],
-      [
-        "2026-08-10",
-        "4.25"
-      ],
-      [
-        "2026-08-11",
-        "4.22"
-      ],
-      [
-        "2026-08-12",
-        "4.2"
-      ],
-      [
-        "2026-08-13",
-        "4.15"
-      ],
-      [
-        "2026-08-14",
-        "4.17"
-      ],
-      [
-        "2026-08-17",
-        "4.19"
-      ],
-      [
-        "2026-08-18",
-        "4.19"
-      ],
-      [
-        "2026-08-19",
-        "4.19"
-      ],
-      [
-        "2026-08-20",
-        "4.19"
-      ],
-      [
-        "2026-08-21",
-        "4.24"
-      ],
-      [
-        "2026-08-24",
-        "4.24"
-      ],
-      [
-        "2026-08-25",
-        "4.17"
-      ],
-      [
-        "2026-08-26",
-        "4.19"
-      ],
-      [
-        "2026-08-27",
-        "4.2"
-      ],
-      [
-        "2026-08-28",
-        "4.34"
-      ],
-      [
-        "2026-08-31",
-        "4.34"
-      ],
-      [
-        "2026-09-01",
-        "4.39"
-      ],
-      [
-        "2026-09-02",
-        "4.39"
-      ],
-      [
-        "2026-09-03",
-        "4.34"
-      ],
-      [
-        "2026-09-04",
-        "4.37"
-      ],
-      [
-        "2026-09-08",
-        "4.39"
-      ],
-      [
-        "2026-09-09",
-        "4.43"
-      ],
-      [
-        "2026-09-10",
-        "4.56"
-      ],
-      [
-        "2026-09-11",
-        "4.63"
-      ],
-      [
-        "2026-09-14",
-        "4.65"
-      ],
-      [
-        "2026-09-15",
-        "4.67"
-      ],
-      [
-        "2026-09-16",
-        "4.74"
-      ],
-      [
-        "2026-09-17",
-        "4.67"
-      ],
-      [
-        "2026-09-18",
-        "4.76"
-      ],
-      [
-        "2026-09-21",
-        "4.76"
-      ],
-      [
-        "2026-09-22",
-        "4.71"
-      ],
-      [
-        "2026-09-23",
-        "4.85"
-      ],
-      [
-        "2026-09-24",
-        "4.87"
-      ],
-      [
-        "2026-09-25",
-        "4.81"
-      ]
-    ],
+    "treasury_10y": null,
+    "treasury_2y": null,
     "wti": [
-      [
-        "2026-09-23",
-        "92.16000366210938"
-      ],
       [
         "2026-09-24",
         "94.61000061035156"
@@ -2709,7 +2379,11 @@
       ],
       [
         "2026-09-28",
-        "93.29000091552734"
+        "92.5999984741211"
+      ],
+      [
+        "2026-09-29",
+        "91.13999938964844"
       ]
     ]
   },
@@ -2718,7 +2392,7 @@
       "symbol": "AAL",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "131a0f4500a831f276a0552d89b5c1c895c8f66ddc764eacbda25e48d31daf1b",
+      "artifact_sha256": "4c7058af91616687dd25903c4f411f311f3d725b676eb1a823dd437122bb31a9",
       "days_count": 64,
       "last_day_close": "13.520000457763672",
       "last_day": "2026-09-28",
@@ -3225,15 +2899,15 @@
           "open": "13.579999923706055",
           "high": "13.970000267028809",
           "low": "13.380000114440918",
-          "volume": 76000300
+          "volume": 76084500
         },
         {
           "date": "2026-09-28",
           "close": "13.520000457763672",
-          "open": "13.552000045776367",
-          "high": "13.725000381469727",
+          "open": "13.579999923706055",
+          "high": "13.729999542236328",
           "low": "13.3100004196167",
-          "volume": 63577335
+          "volume": 63589900
         }
       ]
     },
@@ -3241,7 +2915,7 @@
       "symbol": "CCL",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "c0c2c73a7f3d8f3631d2ce994c4c373588a136f1418195355b46c1f8ef15d343",
+      "artifact_sha256": "a92788bb987268871cfd8ae1f8ca184faeb3190335a16d607e2bbb4f0d18e17f",
       "days_count": 64,
       "last_day_close": "22.139999389648438",
       "last_day": "2026-09-28",
@@ -3748,15 +3422,15 @@
           "open": "21.959999084472656",
           "high": "22.670000076293945",
           "low": "21.690000534057617",
-          "volume": 22083100
+          "volume": 22098900
         },
         {
           "date": "2026-09-28",
           "close": "22.139999389648438",
           "open": "21.850000381469727",
-          "high": "22.649999618530273",
+          "high": "22.65999984741211",
           "low": "21.850000381469727",
-          "volume": 30913074
+          "volume": 31165600
         }
       ]
     },
@@ -3764,7 +3438,7 @@
       "symbol": "DVN",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "f3e78a4c34de268fe3f199b4175e5b1790fd769fc5b4117c8fb3bd631a14bc95",
+      "artifact_sha256": "19d5a22254cc1cf3c209a588e08f71c22b03f99cd44d9f61a20f338fd79b6f4e",
       "days_count": 64,
       "last_day_close": "46.72999954223633",
       "last_day": "2026-09-28",
@@ -4276,10 +3950,10 @@
         {
           "date": "2026-09-28",
           "close": "46.72999954223633",
-          "open": "47.775001525878906",
-          "high": "47.79499816894531",
-          "low": "46.564998626708984",
-          "volume": 9405145
+          "open": "47.779998779296875",
+          "high": "48.0",
+          "low": "46.56999969482422",
+          "volume": 9408700
         }
       ]
     },
@@ -4287,7 +3961,7 @@
       "symbol": "F",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "8f56ed7cd340f5b80ec1eedb4bd2dcbbe0b9df3acedc8c99d2c88b811e654cc9",
+      "artifact_sha256": "d1b0886f2080ac20e817fa2968329b315906b2c049731f70124e256719797b75",
       "days_count": 64,
       "last_day_close": "12.380000114440918",
       "last_day": "2026-09-28",
@@ -4794,15 +4468,15 @@
           "open": "12.609999656677246",
           "high": "12.8100004196167",
           "low": "12.529999732971191",
-          "volume": 35038000
+          "volume": 35094400
         },
         {
           "date": "2026-09-28",
           "close": "12.380000114440918",
           "open": "12.630000114440918",
-          "high": "12.66919994354248",
+          "high": "12.670000076293945",
           "low": "12.289999961853027",
-          "volume": 45124683
+          "volume": 45432600
         }
       ]
     },
@@ -4810,7 +4484,7 @@
       "symbol": "LYFT",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "e2c1564772b024f07547cb28101c15a09b72556b650b78930e8284c5781cdfb1",
+      "artifact_sha256": "5bb6dd37c895bcb255bd393af7a27803f13c15891799844a8a5c308de3b103f9",
       "days_count": 64,
       "last_day_close": "14.880000114440918",
       "last_day": "2026-09-28",
@@ -5323,9 +4997,9 @@
           "date": "2026-09-28",
           "close": "14.880000114440918",
           "open": "14.729999542236328",
-          "high": "14.899999618530273",
+          "high": "14.90999984741211",
           "low": "14.444999694824219",
-          "volume": 6723323
+          "volume": 6723700
         }
       ]
     },
@@ -5333,7 +5007,7 @@
       "symbol": "NCLH",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "7e9acfe741756d0c407025b6878cc27092cda4f55bf899a3977239cd3ba426fe",
+      "artifact_sha256": "8b92980bf94b1e079f6eae076e305f733030e0fb5b68dd073c223afe06616c41",
       "days_count": 64,
       "last_day_close": "14.3100004196167",
       "last_day": "2026-09-28",
@@ -5840,15 +5514,15 @@
           "open": "14.430000305175781",
           "high": "14.869999885559082",
           "low": "14.119999885559082",
-          "volume": 18745800
+          "volume": 18789300
         },
         {
           "date": "2026-09-28",
           "close": "14.3100004196167",
           "open": "14.449999809265137",
-          "high": "14.614999771118164",
-          "low": "14.164999961853027",
-          "volume": 23280899
+          "high": "14.619999885559082",
+          "low": "14.170000076293945",
+          "volume": 23314000
         }
       ]
     },
@@ -5856,7 +5530,7 @@
       "symbol": "NKE",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "8820bb0f2595ea93b7f4dd16b2ed0adc4c4e38fd01660e88977f657d4c5f8030",
+      "artifact_sha256": "708e6dc153793778f183bb9f23476abb64dd795364d426876bc8e374d8679fac",
       "days_count": 64,
       "last_day_close": "36.38999938964844",
       "last_day": "2026-09-28",
@@ -6363,15 +6037,15 @@
           "open": "35.25",
           "high": "36.18000030517578",
           "low": "35.220001220703125",
-          "volume": 38219700
+          "volume": 38246000
         },
         {
           "date": "2026-09-28",
           "close": "36.38999938964844",
           "open": "35.459999084472656",
-          "high": "36.665000915527344",
+          "high": "36.66999816894531",
           "low": "35.40999984741211",
-          "volume": 33792976
+          "volume": 33863600
         }
       ]
     }
@@ -6381,89 +6055,19 @@
       "schema_version": "hedge-desk-cboe-chain-1.0.0",
       "mode": "REAL_CBOE_CHAIN_INCOME",
       "symbol": "SPY",
-      "underlying_bid": "765.68",
-      "underlying_ask": "765.84",
-      "cutoff": "2026-09-28T21:35:46.471238+00:00",
+      "underlying_bid": "766.81",
+      "underlying_ask": "766.86",
+      "cutoff": "2026-09-29T12:00:00.690917+00:00",
       "scan_disposition": "CANDIDATES_FOR_CONTROL_PIPELINE",
       "pair_count": 5356,
-      "admissible_count": 5335,
+      "admissible_count": 5333,
       "income_structures": [
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00769000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "1.717",
-          "net_credit": "171.70",
-          "maximum_loss": "128.30",
-          "break_even": "767.717",
-          "return_on_risk": "1.338269680436477007014809041",
-          "spread_width": "3",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00770000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "2.277",
-          "net_credit": "227.70",
-          "maximum_loss": "172.30",
-          "break_even": "768.277",
-          "return_on_risk": "1.321532211259431224608241439",
-          "spread_width": "4",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00768000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "1.137",
-          "net_credit": "113.70",
-          "maximum_loss": "86.30",
-          "break_even": "767.137",
-          "return_on_risk": "1.317497103128621089223638470",
-          "spread_width": "2",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00771000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "2.827",
-          "net_credit": "282.70",
-          "maximum_loss": "217.30",
-          "break_even": "768.827",
-          "return_on_risk": "1.300966405890473999079613438",
-          "spread_width": "5",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00772000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "3.357",
-          "net_credit": "335.70",
-          "maximum_loss": "264.30",
-          "break_even": "769.357",
-          "return_on_risk": "1.270147559591373439273552781",
-          "spread_width": "6",
-          "trade_authorized": false
-        },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00767000--SPY261030C00770000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.667",
           "net_credit": "166.70",
           "maximum_loss": "133.30",
@@ -6477,7 +6081,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00771000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.217",
           "net_credit": "221.70",
           "maximum_loss": "178.30",
@@ -6488,24 +6092,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00773000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "3.877",
-          "net_credit": "387.70",
-          "maximum_loss": "312.30",
-          "break_even": "769.877",
-          "return_on_risk": "1.241434518091578610310598783",
-          "spread_width": "7",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00767000--SPY261030C00769000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.107",
           "net_credit": "110.70",
           "maximum_loss": "89.30",
@@ -6519,7 +6109,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00772000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.747",
           "net_credit": "274.70",
           "maximum_loss": "225.30",
@@ -6530,38 +6120,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00774000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "4.377",
-          "net_credit": "437.70",
-          "maximum_loss": "362.30",
-          "break_even": "770.377",
-          "return_on_risk": "1.208114821970742478608887662",
-          "spread_width": "8",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00767000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "0.547",
-          "net_credit": "54.70",
-          "maximum_loss": "45.30",
-          "break_even": "766.547",
-          "return_on_risk": "1.207505518763796909492273731",
-          "spread_width": "1",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00767000--SPY261030C00773000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "3.267",
           "net_credit": "326.70",
           "maximum_loss": "273.30",
@@ -6575,7 +6137,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00771000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.627",
           "net_credit": "162.70",
           "maximum_loss": "137.30",
@@ -6586,24 +6148,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00775000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "4.857",
-          "net_credit": "485.70",
-          "maximum_loss": "414.30",
-          "break_even": "770.857",
-          "return_on_risk": "1.172338884866039102099927589",
-          "spread_width": "9",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00768000--SPY261030C00772000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.157",
           "net_credit": "215.70",
           "maximum_loss": "184.30",
@@ -6617,7 +6165,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00770000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.077",
           "net_credit": "107.70",
           "maximum_loss": "92.30",
@@ -6631,7 +6179,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00774000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "3.767",
           "net_credit": "376.70",
           "maximum_loss": "323.30",
@@ -6645,7 +6193,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00773000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.677",
           "net_credit": "267.70",
           "maximum_loss": "232.30",
@@ -6656,24 +6204,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00776000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "5.327",
-          "net_credit": "532.70",
-          "maximum_loss": "467.30",
-          "break_even": "771.327",
-          "return_on_risk": "1.139952921035737213781296811",
-          "spread_width": "10",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00767000--SPY261030C00775000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "4.247",
           "net_credit": "424.70",
           "maximum_loss": "375.30",
@@ -6687,7 +6221,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00774000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "3.177",
           "net_credit": "317.70",
           "maximum_loss": "282.30",
@@ -6701,7 +6235,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00768000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "0.527",
           "net_credit": "52.70",
           "maximum_loss": "47.30",
@@ -6715,7 +6249,7 @@
           "contract_id": "SPY261030C00769000--SPY261030C00772000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.577",
           "net_credit": "157.70",
           "maximum_loss": "142.30",
@@ -6726,24 +6260,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00777000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "5.777",
-          "net_credit": "577.70",
-          "maximum_loss": "522.30",
-          "break_even": "771.777",
-          "return_on_risk": "1.106069308826345012444955007",
-          "spread_width": "11",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00769000--SPY261030C00773000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.097",
           "net_credit": "209.70",
           "maximum_loss": "190.30",
@@ -6757,7 +6277,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00776000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "4.717",
           "net_credit": "471.70",
           "maximum_loss": "428.30",
@@ -6771,7 +6291,7 @@
           "contract_id": "SPY261030C00769000--SPY261030C00771000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.047",
           "net_credit": "104.70",
           "maximum_loss": "95.30",
@@ -6785,7 +6305,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00775000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "3.657",
           "net_credit": "365.70",
           "maximum_loss": "334.30",
@@ -6799,7 +6319,7 @@
           "contract_id": "SPY261030C00769000--SPY261030C00774000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.597",
           "net_credit": "259.70",
           "maximum_loss": "240.30",
@@ -6810,24 +6330,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00778000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "6.217",
-          "net_credit": "621.70",
-          "maximum_loss": "578.30",
-          "break_even": "772.217",
-          "return_on_risk": "1.075047553173093550060522220",
-          "spread_width": "12",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00768000--SPY261030C00769000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "0.517",
           "net_credit": "51.70",
           "maximum_loss": "48.30",
@@ -6841,7 +6347,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00777000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "5.167",
           "net_credit": "516.70",
           "maximum_loss": "483.30",
@@ -6855,7 +6361,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00776000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "4.127",
           "net_credit": "412.70",
           "maximum_loss": "387.30",
@@ -6869,7 +6375,7 @@
           "contract_id": "SPY261030C00769000--SPY261030C00775000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "3.077",
           "net_credit": "307.70",
           "maximum_loss": "292.30",
@@ -6883,7 +6389,7 @@
           "contract_id": "SPY261030C00770000--SPY261030C00773000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.537",
           "net_credit": "153.70",
           "maximum_loss": "146.30",
@@ -6894,24 +6400,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00779000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "6.627",
-          "net_credit": "662.70",
-          "maximum_loss": "637.30",
-          "break_even": "772.627",
-          "return_on_risk": "1.039855640985407186568335164",
-          "spread_width": "13",
-          "trade_authorized": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00767000--SPY261030C00778000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "5.607",
           "net_credit": "560.70",
           "maximum_loss": "539.30",
@@ -6925,7 +6417,7 @@
           "contract_id": "SPY261030C00770000--SPY261030C00774000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.037",
           "net_credit": "203.70",
           "maximum_loss": "196.30",
@@ -6939,12 +6431,194 @@
           "contract_id": "SPY261030C00768000--SPY261030C00777000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "4.577",
           "net_credit": "457.70",
           "maximum_loss": "442.30",
           "break_even": "772.577",
           "return_on_risk": "1.034817996834727560479312684",
+          "spread_width": "9",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00770000--SPY261030C00772000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "1.017",
+          "net_credit": "101.70",
+          "maximum_loss": "98.30",
+          "break_even": "771.017",
+          "return_on_risk": "1.034587995930824008138351984",
+          "spread_width": "2",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00769000--SPY261030C00776000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "3.547",
+          "net_credit": "354.70",
+          "maximum_loss": "345.30",
+          "break_even": "772.547",
+          "return_on_risk": "1.027222704894294816101940342",
+          "spread_width": "7",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00770000--SPY261030C00775000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "2.517",
+          "net_credit": "251.70",
+          "maximum_loss": "248.30",
+          "break_even": "772.517",
+          "return_on_risk": "1.013693113169552960128876359",
+          "spread_width": "5",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00768000--SPY261030C00778000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "5.017",
+          "net_credit": "501.70",
+          "maximum_loss": "498.30",
+          "break_even": "773.017",
+          "return_on_risk": "1.006823198876179008629339755",
+          "spread_width": "10",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00767000--SPY261030C00779000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "6.017",
+          "net_credit": "601.70",
+          "maximum_loss": "598.30",
+          "break_even": "773.017",
+          "return_on_risk": "1.005682767842219622263078723",
+          "spread_width": "12",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00769000--SPY261030C00777000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "3.997",
+          "net_credit": "399.70",
+          "maximum_loss": "400.30",
+          "break_even": "772.997",
+          "return_on_risk": "0.9985011241568823382463152636",
+          "spread_width": "8",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00770000--SPY261030C00776000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "2.987",
+          "net_credit": "298.70",
+          "maximum_loss": "301.30",
+          "break_even": "772.987",
+          "return_on_risk": "0.9913707268503153003650846333",
+          "spread_width": "6",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00769000--SPY261030C00770000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "0.497",
+          "net_credit": "49.70",
+          "maximum_loss": "50.30",
+          "break_even": "769.497",
+          "return_on_risk": "0.9880715705765407554671968191",
+          "spread_width": "1",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00771000--SPY261030C00774000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "1.487",
+          "net_credit": "148.70",
+          "maximum_loss": "151.30",
+          "break_even": "772.487",
+          "return_on_risk": "0.9828155981493721083939193655",
+          "spread_width": "3",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00767000--SPY261030C00780000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "6.417",
+          "net_credit": "641.70",
+          "maximum_loss": "658.30",
+          "break_even": "773.417",
+          "return_on_risk": "0.9747835333434604283761203099",
+          "spread_width": "13",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00771000--SPY261030C00773000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "0.987",
+          "net_credit": "98.70",
+          "maximum_loss": "101.30",
+          "break_even": "771.987",
+          "return_on_risk": "0.9743336623889437314906219151",
+          "spread_width": "2",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00768000--SPY261030C00779000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "5.427",
+          "net_credit": "542.70",
+          "maximum_loss": "557.30",
+          "break_even": "773.427",
+          "return_on_risk": "0.9738022609007715772474430289",
+          "spread_width": "11",
+          "trade_authorized": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00769000--SPY261030C00778000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "4.437",
+          "net_credit": "443.70",
+          "maximum_loss": "456.30",
+          "break_even": "773.437",
+          "return_on_risk": "0.9723865877712031558185404339",
           "spread_width": "9",
           "trade_authorized": false
         }
@@ -6955,105 +6629,10 @@
       "gated_income_structures": [
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00769000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "1.717",
-          "net_credit": "171.70",
-          "maximum_loss": "128.30",
-          "break_even": "767.717",
-          "return_on_risk": "1.338269680436477007014809041",
-          "spread_width": "3",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00770000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "2.277",
-          "net_credit": "227.70",
-          "maximum_loss": "172.30",
-          "break_even": "768.277",
-          "return_on_risk": "1.321532211259431224608241439",
-          "spread_width": "4",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00768000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "1.137",
-          "net_credit": "113.70",
-          "maximum_loss": "86.30",
-          "break_even": "767.137",
-          "return_on_risk": "1.317497103128621089223638470",
-          "spread_width": "2",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00771000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "2.827",
-          "net_credit": "282.70",
-          "maximum_loss": "217.30",
-          "break_even": "768.827",
-          "return_on_risk": "1.300966405890473999079613438",
-          "spread_width": "5",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00772000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "3.357",
-          "net_credit": "335.70",
-          "maximum_loss": "264.30",
-          "break_even": "769.357",
-          "return_on_risk": "1.270147559591373439273552781",
-          "spread_width": "6",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00767000--SPY261030C00770000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.667",
           "net_credit": "166.70",
           "maximum_loss": "133.30",
@@ -7072,7 +6651,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00771000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.217",
           "net_credit": "221.70",
           "maximum_loss": "178.30",
@@ -7088,29 +6667,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00773000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "3.877",
-          "net_credit": "387.70",
-          "maximum_loss": "312.30",
-          "break_even": "769.877",
-          "return_on_risk": "1.241434518091578610310598783",
-          "spread_width": "7",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00767000--SPY261030C00769000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.107",
           "net_credit": "110.70",
           "maximum_loss": "89.30",
@@ -7129,7 +6689,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00772000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.747",
           "net_credit": "274.70",
           "maximum_loss": "225.30",
@@ -7145,48 +6705,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00774000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "4.377",
-          "net_credit": "437.70",
-          "maximum_loss": "362.30",
-          "break_even": "770.377",
-          "return_on_risk": "1.208114821970742478608887662",
-          "spread_width": "8",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00767000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "0.547",
-          "net_credit": "54.70",
-          "maximum_loss": "45.30",
-          "break_even": "766.547",
-          "return_on_risk": "1.207505518763796909492273731",
-          "spread_width": "1",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00767000--SPY261030C00773000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "3.267",
           "net_credit": "326.70",
           "maximum_loss": "273.30",
@@ -7205,7 +6727,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00771000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.627",
           "net_credit": "162.70",
           "maximum_loss": "137.30",
@@ -7221,29 +6743,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00775000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "4.857",
-          "net_credit": "485.70",
-          "maximum_loss": "414.30",
-          "break_even": "770.857",
-          "return_on_risk": "1.172338884866039102099927589",
-          "spread_width": "9",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00768000--SPY261030C00772000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.157",
           "net_credit": "215.70",
           "maximum_loss": "184.30",
@@ -7262,7 +6765,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00770000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.077",
           "net_credit": "107.70",
           "maximum_loss": "92.30",
@@ -7281,7 +6784,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00774000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "3.767",
           "net_credit": "376.70",
           "maximum_loss": "323.30",
@@ -7300,7 +6803,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00773000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.677",
           "net_credit": "267.70",
           "maximum_loss": "232.30",
@@ -7316,29 +6819,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00776000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "5.327",
-          "net_credit": "532.70",
-          "maximum_loss": "467.30",
-          "break_even": "771.327",
-          "return_on_risk": "1.139952921035737213781296811",
-          "spread_width": "10",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00767000--SPY261030C00775000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "4.247",
           "net_credit": "424.70",
           "maximum_loss": "375.30",
@@ -7357,7 +6841,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00774000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "3.177",
           "net_credit": "317.70",
           "maximum_loss": "282.30",
@@ -7376,7 +6860,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00768000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "0.527",
           "net_credit": "52.70",
           "maximum_loss": "47.30",
@@ -7395,7 +6879,7 @@
           "contract_id": "SPY261030C00769000--SPY261030C00772000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.577",
           "net_credit": "157.70",
           "maximum_loss": "142.30",
@@ -7411,29 +6895,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00777000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "5.777",
-          "net_credit": "577.70",
-          "maximum_loss": "522.30",
-          "break_even": "771.777",
-          "return_on_risk": "1.106069308826345012444955007",
-          "spread_width": "11",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00769000--SPY261030C00773000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.097",
           "net_credit": "209.70",
           "maximum_loss": "190.30",
@@ -7452,7 +6917,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00776000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "4.717",
           "net_credit": "471.70",
           "maximum_loss": "428.30",
@@ -7471,7 +6936,7 @@
           "contract_id": "SPY261030C00769000--SPY261030C00771000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.047",
           "net_credit": "104.70",
           "maximum_loss": "95.30",
@@ -7490,7 +6955,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00775000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "3.657",
           "net_credit": "365.70",
           "maximum_loss": "334.30",
@@ -7509,7 +6974,7 @@
           "contract_id": "SPY261030C00769000--SPY261030C00774000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.597",
           "net_credit": "259.70",
           "maximum_loss": "240.30",
@@ -7525,29 +6990,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00778000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "6.217",
-          "net_credit": "621.70",
-          "maximum_loss": "578.30",
-          "break_even": "772.217",
-          "return_on_risk": "1.075047553173093550060522220",
-          "spread_width": "12",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00768000--SPY261030C00769000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "0.517",
           "net_credit": "51.70",
           "maximum_loss": "48.30",
@@ -7566,7 +7012,7 @@
           "contract_id": "SPY261030C00767000--SPY261030C00777000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "5.167",
           "net_credit": "516.70",
           "maximum_loss": "483.30",
@@ -7585,7 +7031,7 @@
           "contract_id": "SPY261030C00768000--SPY261030C00776000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "4.127",
           "net_credit": "412.70",
           "maximum_loss": "387.30",
@@ -7604,7 +7050,7 @@
           "contract_id": "SPY261030C00769000--SPY261030C00775000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "3.077",
           "net_credit": "307.70",
           "maximum_loss": "292.30",
@@ -7623,7 +7069,7 @@
           "contract_id": "SPY261030C00770000--SPY261030C00773000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "1.537",
           "net_credit": "153.70",
           "maximum_loss": "146.30",
@@ -7639,29 +7085,10 @@
         },
         {
           "structure": "VERTICAL_CREDIT_SPREAD",
-          "contract_id": "SPY261030C00766000--SPY261030C00779000",
-          "underlying": "SPY",
-          "expiration": "2026-10-30",
-          "days_to_expiration": 32,
-          "net_credit_per_share": "6.627",
-          "net_credit": "662.70",
-          "maximum_loss": "637.30",
-          "break_even": "772.627",
-          "return_on_risk": "1.039855640985407186568335164",
-          "spread_width": "13",
-          "trade_authorized": false,
-          "gate_decision": "INDETERMINATE",
-          "gate_reasons": [
-            "MISSING_REAL_RISK_INPUT"
-          ],
-          "kill_switch_armed": false
-        },
-        {
-          "structure": "VERTICAL_CREDIT_SPREAD",
           "contract_id": "SPY261030C00767000--SPY261030C00778000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "5.607",
           "net_credit": "560.70",
           "maximum_loss": "539.30",
@@ -7680,7 +7107,7 @@
           "contract_id": "SPY261030C00770000--SPY261030C00774000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "2.037",
           "net_credit": "203.70",
           "maximum_loss": "196.30",
@@ -7699,12 +7126,259 @@
           "contract_id": "SPY261030C00768000--SPY261030C00777000",
           "underlying": "SPY",
           "expiration": "2026-10-30",
-          "days_to_expiration": 32,
+          "days_to_expiration": 31,
           "net_credit_per_share": "4.577",
           "net_credit": "457.70",
           "maximum_loss": "442.30",
           "break_even": "772.577",
           "return_on_risk": "1.034817996834727560479312684",
+          "spread_width": "9",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00770000--SPY261030C00772000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "1.017",
+          "net_credit": "101.70",
+          "maximum_loss": "98.30",
+          "break_even": "771.017",
+          "return_on_risk": "1.034587995930824008138351984",
+          "spread_width": "2",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00769000--SPY261030C00776000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "3.547",
+          "net_credit": "354.70",
+          "maximum_loss": "345.30",
+          "break_even": "772.547",
+          "return_on_risk": "1.027222704894294816101940342",
+          "spread_width": "7",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00770000--SPY261030C00775000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "2.517",
+          "net_credit": "251.70",
+          "maximum_loss": "248.30",
+          "break_even": "772.517",
+          "return_on_risk": "1.013693113169552960128876359",
+          "spread_width": "5",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00768000--SPY261030C00778000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "5.017",
+          "net_credit": "501.70",
+          "maximum_loss": "498.30",
+          "break_even": "773.017",
+          "return_on_risk": "1.006823198876179008629339755",
+          "spread_width": "10",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00767000--SPY261030C00779000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "6.017",
+          "net_credit": "601.70",
+          "maximum_loss": "598.30",
+          "break_even": "773.017",
+          "return_on_risk": "1.005682767842219622263078723",
+          "spread_width": "12",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00769000--SPY261030C00777000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "3.997",
+          "net_credit": "399.70",
+          "maximum_loss": "400.30",
+          "break_even": "772.997",
+          "return_on_risk": "0.9985011241568823382463152636",
+          "spread_width": "8",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00770000--SPY261030C00776000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "2.987",
+          "net_credit": "298.70",
+          "maximum_loss": "301.30",
+          "break_even": "772.987",
+          "return_on_risk": "0.9913707268503153003650846333",
+          "spread_width": "6",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00769000--SPY261030C00770000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "0.497",
+          "net_credit": "49.70",
+          "maximum_loss": "50.30",
+          "break_even": "769.497",
+          "return_on_risk": "0.9880715705765407554671968191",
+          "spread_width": "1",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00771000--SPY261030C00774000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "1.487",
+          "net_credit": "148.70",
+          "maximum_loss": "151.30",
+          "break_even": "772.487",
+          "return_on_risk": "0.9828155981493721083939193655",
+          "spread_width": "3",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00767000--SPY261030C00780000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "6.417",
+          "net_credit": "641.70",
+          "maximum_loss": "658.30",
+          "break_even": "773.417",
+          "return_on_risk": "0.9747835333434604283761203099",
+          "spread_width": "13",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00771000--SPY261030C00773000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "0.987",
+          "net_credit": "98.70",
+          "maximum_loss": "101.30",
+          "break_even": "771.987",
+          "return_on_risk": "0.9743336623889437314906219151",
+          "spread_width": "2",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00768000--SPY261030C00779000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "5.427",
+          "net_credit": "542.70",
+          "maximum_loss": "557.30",
+          "break_even": "773.427",
+          "return_on_risk": "0.9738022609007715772474430289",
+          "spread_width": "11",
+          "trade_authorized": false,
+          "gate_decision": "INDETERMINATE",
+          "gate_reasons": [
+            "MISSING_REAL_RISK_INPUT"
+          ],
+          "kill_switch_armed": false
+        },
+        {
+          "structure": "VERTICAL_CREDIT_SPREAD",
+          "contract_id": "SPY261030C00769000--SPY261030C00778000",
+          "underlying": "SPY",
+          "expiration": "2026-10-30",
+          "days_to_expiration": 31,
+          "net_credit_per_share": "4.437",
+          "net_credit": "443.70",
+          "maximum_loss": "456.30",
+          "break_even": "773.437",
+          "return_on_risk": "0.9723865877712031558185404339",
           "spread_width": "9",
           "trade_authorized": false,
           "gate_decision": "INDETERMINATE",
@@ -7821,20 +7495,43 @@
     "note": "Deterministic technical context from the real overnight batch. No probability, no RoR, no forecast, no order."
   },
   "cash_secured_put_scan": {
-    "AAL": {
+    "CCL": {
       "mode": "CASH_SECURED_PUT",
-      "symbol": "AAL",
+      "symbol": "CCL",
       "candidate": {
         "found": true,
-        "contract_id": "AAL261030P00012000",
-        "strike": "12",
+        "contract_id": "CCL261030P00020000",
+        "strike": "20",
         "expiration": "2026-10-30",
-        "dte": 32,
-        "underlying_mid": "13.54",
-        "net_credit_per_share": "0.14",
-        "collateral_required": "1186.00",
-        "return_on_capital": "0.0118",
-        "max_loss": "1186.00"
+        "dte": 31,
+        "underlying_mid": "22.17",
+        "net_credit_per_share": "0.4",
+        "collateral_required": "1960.00",
+        "return_on_capital": "0.0204",
+        "max_loss": "1960.00"
+      },
+      "data_source": "cboe-delayed-public-http-200",
+      "trade_authorized": false,
+      "survivability": "INDETERMINATE",
+      "fits_gp_rules": false,
+      "eval_reasons": [
+        "RETURN_NOT_IN_GP_BAND"
+      ]
+    },
+    "F": {
+      "mode": "CASH_SECURED_PUT",
+      "symbol": "F",
+      "candidate": {
+        "found": true,
+        "contract_id": "F261030P00011000",
+        "strike": "11",
+        "expiration": "2026-10-30",
+        "dte": 31,
+        "underlying_mid": "12.37",
+        "net_credit_per_share": "0.1",
+        "collateral_required": "1090.00",
+        "return_on_capital": "0.0092",
+        "max_loss": "1090.00"
       },
       "data_source": "cboe-delayed-public-http-200",
       "trade_authorized": false,
@@ -7850,56 +7547,12 @@
         "contract_id": "NCLH261030P00013000",
         "strike": "13",
         "expiration": "2026-10-30",
-        "dte": 32,
-        "underlying_mid": "14.305",
+        "dte": 31,
+        "underlying_mid": "14.31",
         "net_credit_per_share": "0.28",
         "collateral_required": "1272.00",
         "return_on_capital": "0.0220",
         "max_loss": "1272.00"
-      },
-      "data_source": "cboe-delayed-public-http-200",
-      "trade_authorized": false,
-      "survivability": "INDETERMINATE",
-      "fits_gp_rules": false,
-      "eval_reasons": [
-        "RETURN_NOT_IN_GP_BAND"
-      ]
-    },
-    "DVN": {
-      "mode": "CASH_SECURED_PUT",
-      "symbol": "DVN",
-      "candidate": {
-        "found": true,
-        "contract_id": "DVN261030P00042000",
-        "strike": "42",
-        "expiration": "2026-10-30",
-        "dte": 32,
-        "underlying_mid": "46.775",
-        "net_credit_per_share": "0.31",
-        "collateral_required": "4169.00",
-        "return_on_capital": "0.0074",
-        "max_loss": "4169.00"
-      },
-      "data_source": "cboe-delayed-public-http-200",
-      "trade_authorized": false,
-      "survivability": "INDETERMINATE",
-      "fits_gp_rules": true,
-      "eval_reasons": []
-    },
-    "CCL": {
-      "mode": "CASH_SECURED_PUT",
-      "symbol": "CCL",
-      "candidate": {
-        "found": true,
-        "contract_id": "CCL261030P00020000",
-        "strike": "20",
-        "expiration": "2026-10-30",
-        "dte": 32,
-        "underlying_mid": "22.23",
-        "net_credit_per_share": "0.4",
-        "collateral_required": "1960.00",
-        "return_on_capital": "0.0204",
-        "max_loss": "1960.00"
       },
       "data_source": "cboe-delayed-public-http-200",
       "trade_authorized": false,
@@ -7917,8 +7570,8 @@
         "contract_id": "LYFT261030P00013500",
         "strike": "13.5",
         "expiration": "2026-10-30",
-        "dte": 32,
-        "underlying_mid": "14.84",
+        "dte": 31,
+        "underlying_mid": "14.895",
         "net_credit_per_share": "0.16",
         "collateral_required": "1334.00",
         "return_on_capital": "0.0120",
@@ -7930,20 +7583,43 @@
       "fits_gp_rules": true,
       "eval_reasons": []
     },
-    "F": {
+    "AAL": {
       "mode": "CASH_SECURED_PUT",
-      "symbol": "F",
+      "symbol": "AAL",
       "candidate": {
         "found": true,
-        "contract_id": "F261030P00011000",
-        "strike": "11",
+        "contract_id": "AAL261030P00012500",
+        "strike": "12.5",
         "expiration": "2026-10-30",
-        "dte": 32,
-        "underlying_mid": "12.38",
-        "net_credit_per_share": "0.1",
-        "collateral_required": "1090.00",
-        "return_on_capital": "0.0092",
-        "max_loss": "1090.00"
+        "dte": 31,
+        "underlying_mid": "13.68",
+        "net_credit_per_share": "0.31",
+        "collateral_required": "1219.00",
+        "return_on_capital": "0.0254",
+        "max_loss": "1219.00"
+      },
+      "data_source": "cboe-delayed-public-http-200",
+      "trade_authorized": false,
+      "survivability": "INDETERMINATE",
+      "fits_gp_rules": false,
+      "eval_reasons": [
+        "RETURN_NOT_IN_GP_BAND"
+      ]
+    },
+    "DVN": {
+      "mode": "CASH_SECURED_PUT",
+      "symbol": "DVN",
+      "candidate": {
+        "found": true,
+        "contract_id": "DVN261030P00042000",
+        "strike": "42",
+        "expiration": "2026-10-30",
+        "dte": 31,
+        "underlying_mid": "46.945",
+        "net_credit_per_share": "0.31",
+        "collateral_required": "4169.00",
+        "return_on_capital": "0.0074",
+        "max_loss": "4169.00"
       },
       "data_source": "cboe-delayed-public-http-200",
       "trade_authorized": false,
@@ -7959,8 +7635,8 @@
         "contract_id": "NKE261030P00033000",
         "strike": "33",
         "expiration": "2026-10-30",
-        "dte": 32,
-        "underlying_mid": "36.345",
+        "dte": 31,
+        "underlying_mid": "36.515",
         "net_credit_per_share": "0.6",
         "collateral_required": "3240.00",
         "return_on_capital": "0.0185",
@@ -8019,361 +7695,8 @@
     "note": "Decision ledger; not performance. No P&L claimed."
   },
   "rates_environment": {
-    "schema_version": "hedge-desk-rates-desk-1.0.0",
-    "mode": "REAL_FRED_RATES",
-    "as_of": "2026-09-28",
-    "fed_funds_effective_rate": "3.88",
-    "fed_funds_latest_date": "2026-09-25",
-    "fed_funds_change_over_window": "0.25",
-    "treasury_2y": "4.81",
-    "treasury_2y_date": "2026-09-25",
-    "treasury_10y": "5.17",
-    "treasury_10y_date": "2026-09-25",
-    "spread_10y_2y_points": "36.00",
-    "curve_slope": "0.045000",
-    "curve_shape": "UPWARD_SLOPING",
-    "lookback_days": 60,
-    "treasury_2y_history": [
-      [
-        "2026-07-30",
-        "4.23"
-      ],
-      [
-        "2026-07-31",
-        "4.28"
-      ],
-      [
-        "2026-08-03",
-        "4.25"
-      ],
-      [
-        "2026-08-04",
-        "4.2"
-      ],
-      [
-        "2026-08-05",
-        "4.18"
-      ],
-      [
-        "2026-08-06",
-        "4.25"
-      ],
-      [
-        "2026-08-07",
-        "4.19"
-      ],
-      [
-        "2026-08-10",
-        "4.25"
-      ],
-      [
-        "2026-08-11",
-        "4.22"
-      ],
-      [
-        "2026-08-12",
-        "4.2"
-      ],
-      [
-        "2026-08-13",
-        "4.15"
-      ],
-      [
-        "2026-08-14",
-        "4.17"
-      ],
-      [
-        "2026-08-17",
-        "4.19"
-      ],
-      [
-        "2026-08-18",
-        "4.19"
-      ],
-      [
-        "2026-08-19",
-        "4.19"
-      ],
-      [
-        "2026-08-20",
-        "4.19"
-      ],
-      [
-        "2026-08-21",
-        "4.24"
-      ],
-      [
-        "2026-08-24",
-        "4.24"
-      ],
-      [
-        "2026-08-25",
-        "4.17"
-      ],
-      [
-        "2026-08-26",
-        "4.19"
-      ],
-      [
-        "2026-08-27",
-        "4.2"
-      ],
-      [
-        "2026-08-28",
-        "4.34"
-      ],
-      [
-        "2026-08-31",
-        "4.34"
-      ],
-      [
-        "2026-09-01",
-        "4.39"
-      ],
-      [
-        "2026-09-02",
-        "4.39"
-      ],
-      [
-        "2026-09-03",
-        "4.34"
-      ],
-      [
-        "2026-09-04",
-        "4.37"
-      ],
-      [
-        "2026-09-08",
-        "4.39"
-      ],
-      [
-        "2026-09-09",
-        "4.43"
-      ],
-      [
-        "2026-09-10",
-        "4.56"
-      ],
-      [
-        "2026-09-11",
-        "4.63"
-      ],
-      [
-        "2026-09-14",
-        "4.65"
-      ],
-      [
-        "2026-09-15",
-        "4.67"
-      ],
-      [
-        "2026-09-16",
-        "4.74"
-      ],
-      [
-        "2026-09-17",
-        "4.67"
-      ],
-      [
-        "2026-09-18",
-        "4.76"
-      ],
-      [
-        "2026-09-21",
-        "4.76"
-      ],
-      [
-        "2026-09-22",
-        "4.71"
-      ],
-      [
-        "2026-09-23",
-        "4.85"
-      ],
-      [
-        "2026-09-24",
-        "4.87"
-      ],
-      [
-        "2026-09-25",
-        "4.81"
-      ]
-    ],
-    "treasury_10y_history": [
-      [
-        "2026-07-30",
-        "4.68"
-      ],
-      [
-        "2026-07-31",
-        "4.75"
-      ],
-      [
-        "2026-08-03",
-        "4.7"
-      ],
-      [
-        "2026-08-04",
-        "4.63"
-      ],
-      [
-        "2026-08-05",
-        "4.63"
-      ],
-      [
-        "2026-08-06",
-        "4.69"
-      ],
-      [
-        "2026-08-07",
-        "4.65"
-      ],
-      [
-        "2026-08-10",
-        "4.72"
-      ],
-      [
-        "2026-08-11",
-        "4.7"
-      ],
-      [
-        "2026-08-12",
-        "4.68"
-      ],
-      [
-        "2026-08-13",
-        "4.63"
-      ],
-      [
-        "2026-08-14",
-        "4.68"
-      ],
-      [
-        "2026-08-17",
-        "4.72"
-      ],
-      [
-        "2026-08-18",
-        "4.71"
-      ],
-      [
-        "2026-08-19",
-        "4.65"
-      ],
-      [
-        "2026-08-20",
-        "4.69"
-      ],
-      [
-        "2026-08-21",
-        "4.74"
-      ],
-      [
-        "2026-08-24",
-        "4.7"
-      ],
-      [
-        "2026-08-25",
-        "4.64"
-      ],
-      [
-        "2026-08-26",
-        "4.66"
-      ],
-      [
-        "2026-08-27",
-        "4.67"
-      ],
-      [
-        "2026-08-28",
-        "4.73"
-      ],
-      [
-        "2026-08-31",
-        "4.75"
-      ],
-      [
-        "2026-09-01",
-        "4.79"
-      ],
-      [
-        "2026-09-02",
-        "4.79"
-      ],
-      [
-        "2026-09-03",
-        "4.77"
-      ],
-      [
-        "2026-09-04",
-        "4.78"
-      ],
-      [
-        "2026-09-08",
-        "4.8"
-      ],
-      [
-        "2026-09-09",
-        "4.83"
-      ],
-      [
-        "2026-09-10",
-        "4.95"
-      ],
-      [
-        "2026-09-11",
-        "4.96"
-      ],
-      [
-        "2026-09-14",
-        "4.97"
-      ],
-      [
-        "2026-09-15",
-        "5"
-      ],
-      [
-        "2026-09-16",
-        "5.01"
-      ],
-      [
-        "2026-09-17",
-        "4.94"
-      ],
-      [
-        "2026-09-18",
-        "5.01"
-      ],
-      [
-        "2026-09-21",
-        "4.96"
-      ],
-      [
-        "2026-09-22",
-        "4.96"
-      ],
-      [
-        "2026-09-23",
-        "5.11"
-      ],
-      [
-        "2026-09-24",
-        "5.18"
-      ],
-      [
-        "2026-09-25",
-        "5.17"
-      ]
-    ],
-    "sofr": "3.9",
-    "sofr_date": "2026-09-25",
-    "effr": "3.88",
-    "effr_date": "2026-09-25",
-    "obfr": "3.88",
-    "obfr_date": "2026-09-25",
-    "data_source": "fred-public-csv-http-200",
-    "trade_authorized": false,
-    "note": "Observations of official FRED daily series. Fed funds/src curve change is a measured fact, not a forecast and not advice. No order placed."
+    "mode": "BLOCKED",
+    "reason": "fred fetch failed for DFF (status 0)"
   },
   "vix_regime": {
     "schema_version": "hedge-desk-vix-regime-1.0.0",
@@ -8639,10 +7962,14 @@
       [
         "2026-09-28",
         "16.06999969482422"
+      ],
+      [
+        "2026-09-29",
+        "15.890000343322754"
       ]
     ],
-    "last_close": "16.06999969482422",
-    "last_day": "2026-09-28",
+    "last_close": "15.890000343322754",
+    "last_day": "2026-09-29",
     "regime": "NORMAL",
     "data_source": "yahoo-public-chart-http-200",
     "note": "Real delayed VIX close. Regime is a descriptive band (LOW/NORMAL/ELEVATED/HIGH), context for when to sell premium, not a signal and not advice. No order placed.",
@@ -8650,36 +7977,30 @@
   },
   "macro_environment": {
     "schema_version": "hedge-desk-macro-desk-1.0.0",
-    "mode": "REAL_FRED_MACRO",
-    "as_of": "2026-09-28",
+    "mode": "BLOCKED",
+    "as_of": "2026-09-29",
     "data_source": "fred-public-csv-http-200",
     "trade_authorized": false,
     "blocked": [
-      "CPIAUCSL_YOY"
+      "CPIAUCSL",
+      "UNRATE",
+      "DGS5",
+      "DGS30"
     ],
-    "unemployment_rate_pct": "4.1",
-    "unemployment_date": "2026-08-01",
-    "treasury_5y": "4.98",
-    "treasury_5y_date": "2026-09-25",
-    "treasury_30y": "5.49",
-    "treasury_30y_date": "2026-09-25",
+    "reason": "all_fred_series_blocked",
     "note": "Official FRED observations (CPI YoY, unemployment, 5y/30y curve). Measured facts, not a forecast and not advice. No order placed."
   },
   "oil_market": {
     "schema_version": "hedge-desk-oil-desk-1.0.0",
     "mode": "REAL_YAHOO_WTI",
     "symbol": "CL=F",
-    "as_of": "2026-09-28",
-    "last_close": "93.29000091552734",
-    "window_first_date": "2026-09-23",
-    "window_first_close": "92.16000366210938",
-    "net_change_over_window": "1.12999725341796",
+    "as_of": "2026-09-29",
+    "last_close": "91.13999938964844",
+    "window_first_date": "2026-09-24",
+    "window_first_close": "94.61000061035156",
+    "net_change_over_window": "-3.47000122070312",
     "observation_count": 4,
     "window_closes": [
-      [
-        "2026-09-23",
-        "92.16000366210938"
-      ],
       [
         "2026-09-24",
         "94.61000061035156"
@@ -8690,7 +8011,11 @@
       ],
       [
         "2026-09-28",
-        "93.29000091552734"
+        "92.5999984741211"
+      ],
+      [
+        "2026-09-29",
+        "91.13999938964844"
       ]
     ],
     "lookback_days": 5,
@@ -8698,678 +8023,27 @@
     "trade_authorized": false,
     "note": "Front-month WTI crude (CL=F) daily closes observed from public Yahoo Finance chart data. Net change is a measured fact over the lookback window, not a forecast and not advice. No order placed; no trade authorized."
   },
-  "earnings_actuals": {},
-  "market_context": {
-    "schema_version": "hedge-desk-market-context-1.0.0",
-    "status": "DEGRADED",
-    "live_sources": 8,
-    "blocked_sources": 3,
-    "unconfigured_sources": 2,
-    "sources": {
-      "fred": {
-        "provider_id": "fred",
-        "dataset": "DFF",
-        "status": "LIVE",
-        "observation_count": 12,
-        "observations": [
-          {
-            "date": "2026-09-21",
-            "value": "3.88"
-          },
-          {
-            "date": "2026-09-22",
-            "value": "3.88"
-          },
-          {
-            "date": "2026-09-23",
-            "value": "3.88"
-          },
-          {
-            "date": "2026-09-24",
-            "value": "3.88"
-          },
-          {
-            "date": "2026-09-25",
-            "value": "3.88"
-          }
-        ]
+  "earnings_actuals": {
+    "0000320193": {
+      "schema_version": "hedge-desk-earnings-desk-1.0.0",
+      "mode": "REAL_EDGAR_EARNINGS",
+      "cik": "0000320193",
+      "observation_count": 338,
+      "observation": {
+        "latest_fy_eps": "7.49",
+        "latest_fy_period": "2025-09-27",
+        "latest_quarterly_eps": "2.03",
+        "latest_quarterly_period": "2026-06-27",
+        "prior_quarterly_eps": "2.02",
+        "prior_quarterly_period": "2026-03-28"
       },
-      "nyfed-markets": {
-        "provider_id": "nyfed-markets",
-        "status": "BLOCKED",
-        "observation_count": 0,
-        "reason_code": "UPSTREAM_OR_PARSE_FAILURE",
-        "detail": "nyfed-markets fetch failed (status 0) body=The read operation timed out"
-      },
-      "treasury-fiscaldata": {
-        "provider_id": "treasury-fiscaldata",
-        "dataset": "treasury-securities-auctions",
-        "status": "LIVE",
-        "observation_count": 5,
-        "observations": [
-          {
-            "auction_date": "2026-09-29",
-            "issue_date": "2026-10-01",
-            "maturity_date": "2027-09-30",
-            "security_type": "Bill",
-            "security_term": "52-Week",
-            "high_investment_rate": "null",
-            "high_yield": "null",
-            "total_tendered": "null",
-            "total_accepted": "null"
-          },
-          {
-            "auction_date": "2026-09-29",
-            "issue_date": "2026-10-01",
-            "maturity_date": "2026-11-12",
-            "security_type": "Bill",
-            "security_term": "6-Week",
-            "high_investment_rate": "null",
-            "high_yield": "null",
-            "total_tendered": "null",
-            "total_accepted": "null"
-          },
-          {
-            "auction_date": "2026-09-28",
-            "issue_date": "2026-10-01",
-            "maturity_date": "2027-04-01",
-            "security_type": "Bill",
-            "security_term": "26-Week",
-            "high_investment_rate": "4.441000",
-            "high_yield": "null",
-            "total_tendered": "224151160200",
-            "total_accepted": "89845222700"
-          },
-          {
-            "auction_date": "2026-09-28",
-            "issue_date": "2026-10-01",
-            "maturity_date": "2026-12-31",
-            "security_type": "Bill",
-            "security_term": "13-Week",
-            "high_investment_rate": "4.211000",
-            "high_yield": "null",
-            "total_tendered": "292802908400",
-            "total_accepted": "104090004400"
-          },
-          {
-            "auction_date": "2026-09-24",
-            "issue_date": "2026-09-30",
-            "maturity_date": "2033-09-30",
-            "security_type": "Note",
-            "security_term": "7-Year",
-            "high_investment_rate": "null",
-            "high_yield": "5.0850",
-            "total_tendered": "113215981000",
-            "total_accepted": "50624250500"
-          }
-        ]
-      },
-      "treasury-rates": {
-        "provider_id": "fred",
-        "dataset": "treasury_par_yield_curve_DGS",
-        "status": "LIVE",
-        "observation_count": 55,
-        "observations": [
-          {
-            "tenor": "DGS1",
-            "date": "2026-09-25",
-            "value": "4.50"
-          },
-          {
-            "tenor": "DGS10",
-            "date": "2026-09-25",
-            "value": "5.17"
-          },
-          {
-            "tenor": "DGS1MO",
-            "date": "2026-09-25",
-            "value": "4.04"
-          },
-          {
-            "tenor": "DGS2",
-            "date": "2026-09-25",
-            "value": "4.81"
-          },
-          {
-            "tenor": "DGS20",
-            "date": "2026-09-25",
-            "value": "5.54"
-          },
-          {
-            "tenor": "DGS3",
-            "date": "2026-09-25",
-            "value": "4.94"
-          },
-          {
-            "tenor": "DGS30",
-            "date": "2026-09-25",
-            "value": "5.49"
-          },
-          {
-            "tenor": "DGS3MO",
-            "date": "2026-09-25",
-            "value": "4.24"
-          },
-          {
-            "tenor": "DGS5",
-            "date": "2026-09-25",
-            "value": "4.98"
-          },
-          {
-            "tenor": "DGS6MO",
-            "date": "2026-09-25",
-            "value": "4.33"
-          },
-          {
-            "tenor": "DGS7",
-            "date": "2026-09-25",
-            "value": "5.06"
-          }
-        ]
-      },
-      "fdic": {
-        "provider_id": "fdic",
-        "dataset": "bank-failures",
-        "status": "LIVE",
-        "observation_count": 10,
-        "observations": [
-          {
-            "NAME": "SMALL BUSINESS BANK",
-            "CERT": 25744,
-            "FIN": "10553",
-            "CITYST": "LENEXA, KS",
-            "FAILDATE": "7/17/2026",
-            "SAVR": "DIF",
-            "RESTYPE1": "PA"
-          },
-          {
-            "NAME": "KENTLAND FS&LA",
-            "CERT": 28722,
-            "FIN": "10552",
-            "CITYST": "KENTLAND, IN",
-            "FAILDATE": "7/10/2026",
-            "SAVR": "DIF",
-            "RESTYPE1": "PA"
-          },
-          {
-            "NAME": "COMMUNITY BANK AND TRUST - WEST GEORGIA",
-            "CERT": 25796,
-            "FIN": "10551",
-            "CITYST": "LAGRANGE, GA",
-            "FAILDATE": "5/1/2026",
-            "SAVR": "DIF",
-            "RESTYPE1": "PI"
-          },
-          {
-            "NAME": "METROPOLITAN CAPITAL B&T",
-            "CERT": 57488,
-            "FIN": "10550",
-            "CITYST": "CHICAGO, IL",
-            "FAILDATE": "1/30/2026",
-            "SAVR": "DIF",
-            "RESTYPE1": "PA"
-          },
-          {
-            "NAME": "SANTA ANNA NATIONAL BANK",
-            "CERT": 5520,
-            "FIN": "10549",
-            "CITYST": "SANTA ANNA, TX",
-            "FAILDATE": "6/27/2025",
-            "SAVR": "DIF",
-            "RESTYPE1": "PI"
-          },
-          {
-            "NAME": "PULASKI SAVINGS BANK",
-            "CERT": 28611,
-            "FIN": "10548",
-            "CITYST": "CHICAGO, IL",
-            "FAILDATE": "1/17/2025",
-            "SAVR": "DIF",
-            "RESTYPE1": "PA"
-          },
-          {
-            "NAME": "FIRST NB OF LINDSAY",
-            "CERT": 4134,
-            "FIN": "10547",
-            "CITYST": "LINDSAY, OK",
-            "FAILDATE": "10/18/2024",
-            "SAVR": "DIF",
-            "RESTYPE1": "PI"
-          },
-          {
-            "NAME": "REPUBLIC BANK",
-            "CERT": 27332,
-            "FIN": "10546",
-            "CITYST": "PHILADELPHIA, PA",
-            "FAILDATE": "4/26/2024",
-            "SAVR": "DIF",
-            "RESTYPE1": "PA"
-          },
-          {
-            "NAME": "CITIZENS BANK",
-            "CERT": 8758,
-            "FIN": "10545",
-            "CITYST": "SAC CITY, IA",
-            "FAILDATE": "11/3/2023",
-            "SAVR": "DIF",
-            "RESTYPE1": "PA"
-          },
-          {
-            "NAME": "HEARTLAND TRI-STATE BANK",
-            "CERT": 25851,
-            "FIN": "10544",
-            "CITYST": "ELKHART, KS",
-            "FAILDATE": "7/28/2023",
-            "SAVR": "DIF",
-            "RESTYPE1": "PA"
-          }
-        ]
-      },
-      "world-bank": {
-        "provider_id": "world-bank",
-        "dataset": "NY.GDP.MKTP.CD",
-        "status": "LIVE",
-        "observation_count": 5,
-        "observations": [
-          {
-            "indicator": {
-              "id": "NY.GDP.MKTP.CD",
-              "value": "GDP (current US$)"
-            },
-            "country": {
-              "id": "US",
-              "value": "United States"
-            },
-            "countryiso3code": "USA",
-            "date": "2025",
-            "value": 30769700000000
-          },
-          {
-            "indicator": {
-              "id": "NY.GDP.MKTP.CD",
-              "value": "GDP (current US$)"
-            },
-            "country": {
-              "id": "US",
-              "value": "United States"
-            },
-            "countryiso3code": "USA",
-            "date": "2024",
-            "value": 29298013000000
-          },
-          {
-            "indicator": {
-              "id": "NY.GDP.MKTP.CD",
-              "value": "GDP (current US$)"
-            },
-            "country": {
-              "id": "US",
-              "value": "United States"
-            },
-            "countryiso3code": "USA",
-            "date": "2023",
-            "value": 27811517000000
-          },
-          {
-            "indicator": {
-              "id": "NY.GDP.MKTP.CD",
-              "value": "GDP (current US$)"
-            },
-            "country": {
-              "id": "US",
-              "value": "United States"
-            },
-            "countryiso3code": "USA",
-            "date": "2022",
-            "value": 26054614000000
-          },
-          {
-            "indicator": {
-              "id": "NY.GDP.MKTP.CD",
-              "value": "GDP (current US$)"
-            },
-            "country": {
-              "id": "US",
-              "value": "United States"
-            },
-            "countryiso3code": "USA",
-            "date": "2021",
-            "value": 23725645000000
-          }
-        ]
-      },
-      "bls": {
-        "provider_id": "bls",
-        "dataset": "CUUR0000SA0",
-        "status": "LIVE",
-        "observation_count": 1,
-        "observations": [
-          {
-            "seriesID": "CUUR0000SA0",
-            "year": "2026",
-            "period": "M08",
-            "periodName": "August",
-            "value": "334.980",
-            "latest": "true"
-          }
-        ]
-      },
-      "ecb-fx": {
-        "provider_id": "ecb-fx",
-        "status": "BLOCKED",
-        "observation_count": 0,
-        "reason_code": "UPSTREAM_OR_PARSE_FAILURE",
-        "detail": "ecb-fx fetch failed (status 0) body=The read operation timed out"
-      },
-      "cftc-cot": {
-        "provider_id": "cftc-cot",
-        "status": "BLOCKED",
-        "observation_count": 0,
-        "reason_code": "UPSTREAM_OR_PARSE_FAILURE",
-        "detail": "cftc-cot fetch failed (status 0) body=The read operation timed out"
-      },
-      "eia-open-data": {
-        "provider_id": "eia-open-data",
-        "status": "UNCONFIGURED",
-        "observation_count": 0,
-        "reason_code": "CREDENTIALS_NOT_CONFIGURED"
-      },
-      "finra": {
-        "provider_id": "finra",
-        "status": "UNCONFIGURED",
-        "observation_count": 0,
-        "reason_code": "CREDENTIALS_NOT_CONFIGURED"
-      },
-      "nasdaq-quotes": {
-        "provider_id": "nasdaq",
-        "dataset": "quote-info",
-        "status": "LIVE",
-        "observation_count": 6,
-        "observations": [
-          {
-            "symbol": "SPY",
-            "assetClass": "etf",
-            "lastSalePrice": "$765.6162",
-            "netChange": "+0.0662",
-            "percentageChange": "+0.01%",
-            "lastTradeTimestamp": "Sep 28, 2026 5:37 PM ET",
-            "isRealTime": true,
-            "bidPrice": "$765.61",
-            "askPrice": "$765.86"
-          },
-          {
-            "symbol": "QQQ",
-            "assetClass": "etf",
-            "lastSalePrice": "$736.794",
-            "netChange": "+0.264",
-            "percentageChange": "+0.04%",
-            "lastTradeTimestamp": "Sep 28, 2026 5:37 PM ET",
-            "isRealTime": true,
-            "bidPrice": "$736.73",
-            "askPrice": "$736.80"
-          },
-          {
-            "symbol": "AAPL",
-            "assetClass": "stocks",
-            "lastSalePrice": "$338.38",
-            "netChange": "-0.02",
-            "percentageChange": "-0.01%",
-            "lastTradeTimestamp": "Sep 28, 2026 5:38 PM ET",
-            "isRealTime": true,
-            "bidPrice": "$338.38",
-            "askPrice": "$338.50"
-          },
-          {
-            "symbol": "MSFT",
-            "assetClass": "stocks",
-            "lastSalePrice": "$509.50",
-            "netChange": "+0.28",
-            "percentageChange": "+0.05%",
-            "lastTradeTimestamp": "Sep 28, 2026 5:38 PM ET",
-            "isRealTime": true,
-            "bidPrice": "$509.30",
-            "askPrice": "$509.55"
-          },
-          {
-            "symbol": "NVDA",
-            "assetClass": "stocks",
-            "lastSalePrice": "$229.1797",
-            "netChange": "+0.3197",
-            "percentageChange": "+0.14%",
-            "lastTradeTimestamp": "Sep 28, 2026 5:38 PM ET",
-            "isRealTime": true,
-            "bidPrice": "$229.17",
-            "askPrice": "$229.18"
-          },
-          {
-            "symbol": "TSLA",
-            "assetClass": "stocks",
-            "lastSalePrice": "$357.8447",
-            "netChange": "+0.3947",
-            "percentageChange": "+0.11%",
-            "lastTradeTimestamp": "Sep 28, 2026 5:38 PM ET",
-            "isRealTime": true,
-            "bidPrice": "$357.79",
-            "askPrice": "$357.85"
-          }
-        ]
-      },
-      "nasdaq-earnings": {
-        "provider_id": "nasdaq",
-        "dataset": "earnings-calendar",
-        "status": "LIVE",
-        "observation_count": 18,
-        "observations": [
-          {
-            "symbol": "CCL",
-            "name": "Carnival Corporation Ltd.",
-            "marketCap": "$30,474,692,600",
-            "time": "time-pre-market",
-            "epsForecast": "$1.36",
-            "noOfEsts": "7",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "KMX",
-            "name": "CarMax Inc",
-            "marketCap": "$8,118,733,800",
-            "time": "time-pre-market",
-            "epsForecast": "$0.68",
-            "noOfEsts": "8",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "AIR",
-            "name": "AAR Corp.",
-            "marketCap": "$4,674,454,000",
-            "time": "time-after-hours",
-            "noOfEsts": "N/A",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "UEC",
-            "name": "Uranium Energy Corp.",
-            "marketCap": "$4,656,749,100",
-            "time": "time-pre-market",
-            "epsForecast": "($0.04)",
-            "noOfEsts": "1",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "CNXC",
-            "name": "Concentrix Corporation",
-            "marketCap": "$1,652,376,960",
-            "time": "time-after-hours",
-            "epsForecast": "$2.40",
-            "noOfEsts": "1",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "IPX",
-            "name": "IperionX Limited",
-            "marketCap": "$678,768,130",
-            "time": "time-not-supplied",
-            "epsForecast": "($0.16)",
-            "noOfEsts": "N/A",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "TMQ",
-            "name": "Trilogy Metals Inc.",
-            "marketCap": "$552,786,050",
-            "time": "time-not-supplied",
-            "epsForecast": "($0.01)",
-            "noOfEsts": "1",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "AREC",
-            "name": "American Resources Corporation",
-            "marketCap": "$203,245,424",
-            "time": "time-not-supplied",
-            "epsForecast": "($0.06)",
-            "noOfEsts": "1",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "ELME",
-            "name": "Elme Communities",
-            "marketCap": "$153,724,144",
-            "time": "time-not-supplied",
-            "noOfEsts": "N/A",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "ZENA",
-            "name": "ZenaTech, Inc.",
-            "marketCap": "$121,997,920",
-            "time": "time-not-supplied",
-            "epsForecast": "($0.21)",
-            "noOfEsts": "1",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "INTG",
-            "name": "The Intergroup Corporation",
-            "marketCap": "$71,619,904",
-            "time": "time-not-supplied",
-            "noOfEsts": "N/A",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "ALPS",
-            "name": "ALPS Group Inc",
-            "marketCap": "$65,894,524",
-            "time": "time-not-supplied",
-            "noOfEsts": "N/A",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "BRLS",
-            "name": "Borealis Foods Inc.",
-            "marketCap": "$29,833,996",
-            "time": "time-not-supplied",
-            "noOfEsts": "N/A",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "AAME",
-            "name": "Atlantic American Corporation",
-            "marketCap": "$27,740,230",
-            "time": "time-not-supplied",
-            "noOfEsts": "N/A",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "NAII",
-            "name": "Natural Alternatives International, Inc.",
-            "marketCap": "$10,981,651",
-            "time": "time-not-supplied",
-            "noOfEsts": "N/A",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "SEGG",
-            "name": "Sports Entertainment Gaming Global Corporation ",
-            "marketCap": "$9,354,728",
-            "time": "time-not-supplied",
-            "noOfEsts": "N/A",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "BRTX",
-            "name": "BioRestorative Therapies, Inc.",
-            "marketCap": "$3,521,876",
-            "time": "time-not-supplied",
-            "epsForecast": "$3",
-            "noOfEsts": "1",
-            "calendarDate": "2026-09-29"
-          },
-          {
-            "symbol": "GTEN",
-            "name": "Gores Holdings X, Inc.",
-            "time": "time-not-supplied",
-            "noOfEsts": "N/A",
-            "calendarDate": "2026-09-29"
-          }
-        ]
-      }
-    },
-    "trade_authorized": false
+      "quarterly_eps_change": "0.01",
+      "data_source": "sec-edgar-xbrl-http-200",
+      "surprise_computed": false,
+      "trade_authorized": false,
+      "note": "Actual reported GAAP EPS from SEC EDGAR (OBSERVED, point-in-time filings). A consensus is not fabricated here; surprise is only computed when a real analyst estimate is supplied. No forecast, no order. trade_authorized=False."
+    }
   },
-  "note": "Equity candidates use real EOD closes with Yahoo->Stooq redundancy; options use real delayed Cboe chains; SEC EDGAR supplies issuer facts. WTI market price context remains sourced from the existing oil desk, while EIA supplies official energy fundamentals. Rates/macro retain FRED with authoritative cross-checks from the New York Fed and U.S. Treasury. CFTC supplies futures positioning and FINRA supplies public fixed-income breadth when credentials are configured. No provider failure is replaced with fabricated data. No order placed; trade_authorized=False.",
-  "data_quality": {
-    "schema_version": "hedge-desk-data-quality-1.0.0",
-    "as_of": "2026-09-28",
-    "overall": "MISSING",
-    "alert_count": 1,
-    "alerts": [
-      {
-        "source": "Macro/FRED",
-        "severity": "OK",
-        "message": "Macro/FRED current as of 2026-09-28",
-        "detail": ""
-      },
-      {
-        "source": "Rates/FRED",
-        "severity": "OK",
-        "message": "Rates/FRED current as of 2026-09-28",
-        "detail": ""
-      },
-      {
-        "source": "EOD",
-        "severity": "OK",
-        "message": "EOD current: 2026-09-28 close",
-        "detail": ""
-      },
-      {
-        "source": "Oil/WTI",
-        "severity": "OK",
-        "message": "Oil/WTI present",
-        "detail": ""
-      },
-      {
-        "source": "Earnings/SEC",
-        "severity": "MISSING",
-        "message": "Earnings/SEC section missing from report",
-        "detail": ""
-      },
-      {
-        "source": "Options/Cboe",
-        "severity": "OK",
-        "message": "Options/Cboe present",
-        "detail": ""
-      }
-    ],
-    "loud_alerts": [
-      {
-        "source": "Earnings/SEC",
-        "severity": "MISSING",
-        "message": "Earnings/SEC section missing from report",
-        "detail": ""
-      }
-    ],
-    "summary": "1 data-quality alert(s): Earnings/SEC=MISSING"
-  },
-  "report_sha256": "93933d7d99fb9705b4b1441000e0d683469c056d8130e283be0fa1e012044eaf"
+  "note": "Equity candidates: collateral/margin from real EOD closes. Premium desk: executable net credit from REAL Cboe delayed option chains. Rates: real FRED observations. Oil: front-month WTI (CL=F) observations from public Yahoo chart data. Earnings: real SEC EDGAR actuals. No probability or Risk of Ruin. No order placed; no trade authorized (every candidate trade_authorized=False).",
+  "report_sha256": "60a67ee417a767612233a6ccc639dc7f9366f61a96118dabfd644406d7402676"
 }

@@ -4,7 +4,7 @@
     "report_type": "paper_hypothetical_morning_evaluation",
     "runner_version": "1.0.0",
     "code_commit": "LOCAL_UNSPECIFIED",
-    "generated_at": "2026-09-28T21:45:20.592891+00:00",
+    "generated_at": "2026-09-29T16:28:23.456442+00:00",
     "environment": "paper",
     "complete": true,
     "live_orders_enabled": false,
@@ -2009,12 +2009,12 @@
       "live_transition_authorized": false,
       "artifact_sha256": "9cc2c210afb346587dc3890a87ff3f7570f2ecdf9f1e547145948a0f2f63fa61"
     },
-    "report_sha256": "fcdad3586bd5c1d66e04e9d1b7cc1fb69a8be4efed02e7089060902366539e1c"
+    "report_sha256": "44ec20354367d902d67a471a8fa0169d590d74d69c416250cad1666a13bf4fd8"
   },
   "summary": {
     "report_type": "paper_morning_control_summary",
     "code_commit": "LOCAL_UNSPECIFIED",
-    "report_sha256": "fcdad3586bd5c1d66e04e9d1b7cc1fb69a8be4efed02e7089060902366539e1c",
+    "report_sha256": "44ec20354367d902d67a471a8fa0169d590d74d69c416250cad1666a13bf4fd8",
     "projects_evaluated": 6,
     "human_review": 1,
     "no_trade_projects": 5,
@@ -2086,7 +2086,7 @@
       "objective": "Anchor cross-asset research in Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress."
     }
   ],
-  "morning_markdown": "# Hedge Desk Morning Evaluation\n\nGenerated: 2026-09-28T21:45:20.592891+00:00\nCode commit: `LOCAL_UNSPECIFIED`\n\n## Actual status\n\n- Real money P&L: $0\n- Real trades executed: 0\n- Environment: PAPER / HYPOTHETICAL\n- Live orders enabled: false\n\n## Project evaluation\n\n| Project | Disposition |\n|---|---|\n| overnight-premium-desk | HUMAN_REVIEW |\n| earnings-event-desk | NO_TRADE |\n| arbitrage-observer | NO_TRADE |\n| dividend-opportunity-desk | NO_TRADE |\n| open-quant-ai-model-lab | NO_TRADE |\n| event-futures-desk | NO_TRADE |\n\n## Synthetic war games\n\n- Total declared scenarios: 73\n- NO_TRADE controls: 46\n- Premium profitable stresses: 1\n- Premium losing stresses: 4\n- Premium synthetic total P&L: $-848.00\n- Premium synthetic maximum drawdown: $925.40\n- Premium synthetic expected shortfall: $-407.60\n- Earnings equity-arm synthetic total: $-22\n- Earnings option-arm synthetic total: $-312.00\n- Earnings hedged-arm synthetic total: $-5\n- Arbitrage gated-policy synthetic total: $45\n- Dividend shares-arm synthetic total: $-1083.00\n- Dividend call-arm synthetic total: $-310.00\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n- STAT Brier score: 0.23\n- STAT inference: INSUFFICIENT_SAMPLE\n- STAT p-value: None\n- STAT 95% CI: None\n- BIG proposal (agent research): defined-risk synthetic put credit spread\n- Deterministic risk model: finite-capital-ruin-approximation 0.1.0-unvalidated\n- Validated risk-input artifact: `d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0`\n\n## Combined-MVP capital stress\n\n- Synthetic scenarios: 5\n- Starting synthetic capital: $100000\n- Synthetic total P&L: $-9936.00\n- Synthetic maximum drawdown: $10034.40\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n\n## Control verification\n\n- Data batch: READY_FOR_RESEARCH\n- Chronological replay valid: true\n- Audit chain valid: true\n- Paper Back Office reconciliation: pass\n- Paper reconciliation live-release eligible: false\n- Premium new-entry evaluation allowed: true\n- Premium monitoring allowed: true\n- Premium exit-policy review scenarios: 3\n- Live release status: LIVE_RELEASE_BLOCKED\n- Live transition authorized: false\n- Unsatisfied live-release requirements: 9\n- Report SHA-256: `fcdad3586bd5c1d66e04e9d1b7cc1fb69a8be4efed02e7089060902366539e1c`\n\n## Limitations\n\n- Synthetic fixtures only; no current market opportunity is claimed.\n- Hypothetical paper output is not investment advice or a performance guarantee.\n- Research-only foundations correctly return NO_TRADE without validated risk inputs.\n",
+  "morning_markdown": "# Hedge Desk Morning Evaluation\n\nGenerated: 2026-09-29T16:28:23.456442+00:00\nCode commit: `LOCAL_UNSPECIFIED`\n\n## Actual status\n\n- Real money P&L: $0\n- Real trades executed: 0\n- Environment: PAPER / HYPOTHETICAL\n- Live orders enabled: false\n\n## Project evaluation\n\n| Project | Disposition |\n|---|---|\n| overnight-premium-desk | HUMAN_REVIEW |\n| earnings-event-desk | NO_TRADE |\n| arbitrage-observer | NO_TRADE |\n| dividend-opportunity-desk | NO_TRADE |\n| open-quant-ai-model-lab | NO_TRADE |\n| event-futures-desk | NO_TRADE |\n\n## Synthetic war games\n\n- Total declared scenarios: 73\n- NO_TRADE controls: 46\n- Premium profitable stresses: 1\n- Premium losing stresses: 4\n- Premium synthetic total P&L: $-848.00\n- Premium synthetic maximum drawdown: $925.40\n- Premium synthetic expected shortfall: $-407.60\n- Earnings equity-arm synthetic total: $-22\n- Earnings option-arm synthetic total: $-312.00\n- Earnings hedged-arm synthetic total: $-5\n- Arbitrage gated-policy synthetic total: $45\n- Dividend shares-arm synthetic total: $-1083.00\n- Dividend call-arm synthetic total: $-310.00\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n- STAT Brier score: 0.23\n- STAT inference: INSUFFICIENT_SAMPLE\n- STAT p-value: None\n- STAT 95% CI: None\n- BIG proposal (agent research): defined-risk synthetic put credit spread\n- Deterministic risk model: finite-capital-ruin-approximation 0.1.0-unvalidated\n- Validated risk-input artifact: `d846c0a03d578500864f8b4f1a3f5c844b46619471e7370a9b8695559ae74bd0`\n\n## Combined-MVP capital stress\n\n- Synthetic scenarios: 5\n- Starting synthetic capital: $100000\n- Synthetic total P&L: $-9936.00\n- Synthetic maximum drawdown: $10034.40\n- Inference status: INSUFFICIENT_SYNTHETIC_SAMPLE\n\n## Control verification\n\n- Data batch: READY_FOR_RESEARCH\n- Chronological replay valid: true\n- Audit chain valid: true\n- Paper Back Office reconciliation: pass\n- Paper reconciliation live-release eligible: false\n- Premium new-entry evaluation allowed: true\n- Premium monitoring allowed: true\n- Premium exit-policy review scenarios: 3\n- Live release status: LIVE_RELEASE_BLOCKED\n- Live transition authorized: false\n- Unsatisfied live-release requirements: 9\n- Report SHA-256: `44ec20354367d902d67a471a8fa0169d590d74d69c416250cad1666a13bf4fd8`\n\n## Limitations\n\n- Synthetic fixtures only; no current market opportunity is claimed.\n- Hypothetical paper output is not investment advice or a performance guarantee.\n- Research-only foundations correctly return NO_TRADE without validated risk inputs.\n",
   "candidate_feed": {
     "schema_version": "hedge-desk-candidates-1.0.0",
     "mode": "REAL_EOD",
@@ -2330,6 +2330,544 @@
         "no vendor text retention",
         "no trade authorization"
       ]
+    },
+    {
+      "source_id": "fred",
+      "display_name": "Federal Reserve Economic Data (FRED)",
+      "dataset": "economic_series, macro_regimes, release_history",
+      "status": "PASS",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "commodities",
+        "macro",
+        "rates"
+      ],
+      "authority": "official",
+      "key_env": "FRED_API_KEY",
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Official St. Louis Fed macro series; API key enables the JSON route."
+    },
+    {
+      "source_id": "sec-edgar",
+      "display_name": "SEC EDGAR",
+      "dataset": "company_facts, corporate_events, filings, xbrl",
+      "status": "PASS",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "credit",
+        "equities"
+      ],
+      "authority": "official",
+      "key_env": null,
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Official submissions and XBRL company-facts APIs; identify the client per SEC policy."
+    },
+    {
+      "source_id": "nyfed-markets",
+      "display_name": "Federal Reserve Bank of New York Markets Data",
+      "dataset": "effr, obfr, reference_rates, repo, sofr",
+      "status": "PASS",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "credit",
+        "macro",
+        "rates"
+      ],
+      "authority": "official",
+      "key_env": null,
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Official administered reference rates and money-market data."
+    },
+    {
+      "source_id": "treasury-fiscaldata",
+      "display_name": "U.S. Treasury Fiscal Data",
+      "dataset": "auctions, debt, fiscal_series, treasury_data",
+      "status": "PASS",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "credit",
+        "macro",
+        "rates"
+      ],
+      "authority": "official",
+      "key_env": null,
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Official Treasury fiscal datasets; use Treasury terms for downstream redistribution."
+    },
+    {
+      "source_id": "bls",
+      "display_name": "U.S. Bureau of Labor Statistics",
+      "dataset": "cpi, economic_series, employment, unemployment",
+      "status": "PASS",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "inflation",
+        "labor",
+        "macro"
+      ],
+      "authority": "official",
+      "key_env": null,
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Official BLS public time-series API for labor and inflation context."
+    },
+    {
+      "source_id": "bea",
+      "display_name": "U.S. Bureau of Economic Analysis",
+      "dataset": "economic_series, gdp, international_trade, nipa, regional",
+      "status": "PENDING",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "growth",
+        "macro",
+        "trade"
+      ],
+      "authority": "official",
+      "key_env": "BEA_API_KEY",
+      "public_without_key": false,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Official BEA Data API. Free key stays server-side; NIPA provides GDP and national-accounts context."
+    },
+    {
+      "source_id": "nws",
+      "display_name": "National Weather Service API",
+      "dataset": "alerts, forecasts, hazards, observations",
+      "status": "PASS",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "commodities",
+        "logistics",
+        "weather"
+      ],
+      "authority": "official",
+      "key_env": null,
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Official api.weather.gov open data. Use a declared User-Agent and respect rate limits."
+    },
+    {
+      "source_id": "usda-nass",
+      "display_name": "USDA NASS Quick Stats",
+      "dataset": "agricultural_statistics, crop_condition, crop_progress, production",
+      "status": "PENDING",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "agriculture",
+        "commodities",
+        "macro"
+      ],
+      "authority": "official",
+      "key_env": "USDA_NASS_API_KEY",
+      "public_without_key": false,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Official USDA NASS Quick Stats API. Free key stays server-side; use narrow queries rather than bulk extraction."
+    },
+    {
+      "source_id": "eia-open-data",
+      "display_name": "U.S. Energy Information Administration Open Data",
+      "dataset": "energy_prices, gas, inventories, oil, power, production",
+      "status": "PENDING",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "commodities",
+        "macro"
+      ],
+      "authority": "official",
+      "key_env": "EIA_API_KEY",
+      "public_without_key": false,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Official EIA API v2 for petroleum, natural gas, electricity, inventories, and production."
+    },
+    {
+      "source_id": "cftc-cot",
+      "display_name": "CFTC Commitments of Traders",
+      "dataset": "cot, open_interest, positioning",
+      "status": "PASS",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "commodities",
+        "futures",
+        "fx",
+        "rates"
+      ],
+      "authority": "official",
+      "key_env": null,
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Official CFTC positioning data for futures markets; useful for crowding and regime context."
+    },
+    {
+      "source_id": "finra",
+      "display_name": "FINRA Public Data",
+      "dataset": "agency_tba, corporate_bond_breadth, market_sentiment, treasury_aggregates",
+      "status": "PENDING",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "credit",
+        "fixed_income",
+        "rates"
+      ],
+      "authority": "official",
+      "key_env": "FINRA_CLIENT_ID",
+      "public_without_key": false,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Free FINRA Public Credential OAuth; FINRA_CLIENT_SECRET is also required server-side."
+    },
+    {
+      "source_id": "ecb-fx",
+      "display_name": "European Central Bank Euro Reference Rates",
+      "dataset": "fx_reference, reference_rates",
+      "status": "PASS",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "fx",
+        "macro"
+      ],
+      "authority": "official",
+      "key_env": null,
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Official ECB euro foreign-exchange reference rates."
+    },
+    {
+      "source_id": "world-bank",
+      "display_name": "World Bank Indicators API",
+      "dataset": "country_macro, global_indicators",
+      "status": "PASS",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "global",
+        "macro"
+      ],
+      "authority": "official",
+      "key_env": null,
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "World Bank public indicators API for global macro context."
+    },
+    {
+      "source_id": "cboe",
+      "display_name": "Cboe",
+      "dataset": "delayed_quotes, market_statistics, option_chains, vix",
+      "status": "PASS",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "equities",
+        "options",
+        "volatility"
+      ],
+      "authority": "exchange",
+      "key_env": null,
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Existing delayed-chain/VIX source; exchange licensing controls production and redistribution."
+    },
+    {
+      "source_id": "cme",
+      "display_name": "CME Group Market Data APIs",
+      "dataset": "greeks, implied_volatility, market_statistics, real_time_top_of_book, reference_data, trades",
+      "status": "REVIEW_REQUIRED",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "commodities",
+        "crypto",
+        "futures",
+        "fx",
+        "options",
+        "rates"
+      ],
+      "authority": "exchange",
+      "key_env": "CME_API_KEY",
+      "public_without_key": false,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Authoritative futures/options source. Production use requires appropriate CME licensing/entitlements."
+    },
+    {
+      "source_id": "schwab",
+      "display_name": "Charles Schwab Trader API",
+      "dataset": "account_positions, option_chains, orders_readonly, quotes, transactions",
+      "status": "REVIEW_REQUIRED",
+      "mode": "REVIEW_REQUIRED",
+      "feeds": [
+        "account",
+        "equities",
+        "etfs",
+        "options"
+      ],
+      "authority": "broker",
+      "key_env": "SCHWAB_CLIENT_ID",
+      "public_without_key": false,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Broker/account seam. Keep credentials server-side and preserve read-only boundaries unless separately reviewed."
+    },
+    {
+      "source_id": "nasdaq-data-link",
+      "display_name": "Nasdaq Data Link",
+      "dataset": "historical_datasets, reference_data, streaming, tables",
+      "status": "REVIEW_REQUIRED",
+      "mode": "REVIEW_REQUIRED",
+      "feeds": [
+        "alternative",
+        "equities",
+        "futures",
+        "macro",
+        "options"
+      ],
+      "authority": "commercial",
+      "key_env": "NASDAQ_DATA_LINK_API_KEY",
+      "public_without_key": false,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Optional commercial/alternative-data adapter; dataset-specific licenses govern use."
+    },
+    {
+      "source_id": "polygon",
+      "display_name": "Polygon.io",
+      "dataset": "aggregates, corporate_actions, option_chains, quotes, reference_data, trades",
+      "status": "REVIEW_REQUIRED",
+      "mode": "REVIEW_REQUIRED",
+      "feeds": [
+        "crypto",
+        "equities",
+        "fx",
+        "options"
+      ],
+      "authority": "commercial",
+      "key_env": "POLYGON_API_KEY",
+      "public_without_key": false,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Optional consolidated market-data adapter; entitlement and redistribution depend on plan/exchange agreements."
+    },
+    {
+      "source_id": "tiingo",
+      "display_name": "Tiingo",
+      "dataset": "corporate_actions, eod, fundamentals, news",
+      "status": "REVIEW_REQUIRED",
+      "mode": "REVIEW_REQUIRED",
+      "feeds": [
+        "crypto",
+        "equities",
+        "fx",
+        "news"
+      ],
+      "authority": "commercial",
+      "key_env": "TIINGO_API_KEY",
+      "public_without_key": false,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Optional lower-cost research adapter and secondary EOD/fundamentals source."
+    },
+    {
+      "source_id": "alpha-vantage",
+      "display_name": "Alpha Vantage",
+      "dataset": "economic_indicators, eod, fundamentals, intraday, news_sentiment",
+      "status": "REVIEW_REQUIRED",
+      "mode": "REVIEW_REQUIRED",
+      "feeds": [
+        "commodities",
+        "crypto",
+        "equities",
+        "fx",
+        "macro",
+        "options"
+      ],
+      "authority": "commercial",
+      "key_env": "ALPHA_VANTAGE_API_KEY",
+      "public_without_key": false,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Optional research fallback. Rate limits and plan rights must be respected."
+    },
+    {
+      "source_id": "finnhub",
+      "display_name": "Finnhub",
+      "dataset": "earnings_calendar, economic_calendar, fundamentals, news, quotes",
+      "status": "REVIEW_REQUIRED",
+      "mode": "REVIEW_REQUIRED",
+      "feeds": [
+        "crypto",
+        "equities",
+        "fx",
+        "news"
+      ],
+      "authority": "commercial",
+      "key_env": "FINNHUB_API_KEY",
+      "public_without_key": false,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "Optional event/calendar/news adapter; useful for catalyst desks."
+    },
+    {
+      "source_id": "stooq",
+      "display_name": "Stooq",
+      "dataset": "eod",
+      "status": "PENDING",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "commodities",
+        "equities",
+        "fx",
+        "indices"
+      ],
+      "authority": "public",
+      "key_env": null,
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "No-key EOD fallback. 2026-09-28: BLOCKED \u2014 /q/l/ 404s and /q/d/l/ serves a JS bot challenge from this network. Treat as secondary when available."
+    },
+    {
+      "source_id": "nasdaq",
+      "display_name": "Nasdaq public market-data API",
+      "dataset": "earnings_calendar, option_chains, quotes",
+      "status": "PASS",
+      "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+      "feeds": [
+        "equities",
+        "options"
+      ],
+      "authority": "exchange",
+      "key_env": null,
+      "public_without_key": true,
+      "controls": [
+        "fail-closed parsing",
+        "no fabricated values",
+        "server-side key only",
+        "no trade authorization",
+        "no RoR / probability"
+      ],
+      "notes": "No-key public API (browser UA required). Rate-sensitive: batch callers must cache; fail closed on 429."
     }
   ]
 }
