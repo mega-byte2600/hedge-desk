@@ -24,7 +24,7 @@ return head('Research overview','What the desk has evaluated, and what is waitin
 }
 function brief(){return head('Daily brief','Today\u2019s research input from the six desks. Replaced every morning.',`<a class="btn" href="./research-today.md" download>↓ Full package (.md)</a>`)+
 `<section class="panel" id="research-brief" aria-live="polite"><div class="panel-body"><p class="muted">Loading today\u2019s brief\u2026</p></div></section>`;}
-async function hydrateBrief(){const host=document.getElementById('research-brief');if(!host)return;try{const r=await fetch('./research-brief.json',{cache:'no-store'});if(!r.ok)throw Error('brief unavailable');const b=await r.json();
+async function hydrateBrief(){const host=document.getElementById('research-brief');if(!host)return;try{const r=await fetch('./research-brief.json',{cache:'default'});if(!r.ok)throw Error('brief unavailable');const b=await r.json();
 host.innerHTML=`<div class="panel-head"><div><div class="eyebrow">${e(b.date||'')}</div><h2>${e(b.headline||'Daily research brief')}</h2></div></div><div class="panel-body">`+
 (b.items||[]).map(it=>`<div class="brief-item"><h3>${e(it.title)}</h3><p>${e(it.detail)}</p></div>`).join('')+
 `<details><summary>Per-desk one-liners</summary><div class="table-scroll"><table><thead><tr><th>Desk</th><th>Note</th></tr></thead><tbody>${Object.entries(b.desks||{}).map(([k,v])=>`<tr><td><strong>${e(k)}</strong></td><td>${e(v)}</td></tr>`).join('')}</tbody></table></div></details>`+
