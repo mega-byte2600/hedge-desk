@@ -25,7 +25,6 @@ CONSOLE_ASSETS = (
     "core.mjs",
     "professional.js",
     "ror-positioning.js",
-    "yellow-sheet.css",
     "yellow-sheet.js",
     "acknowledgements.js",
     "brand-logo.js",
