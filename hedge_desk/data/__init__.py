@@ -84,6 +84,17 @@ from .institutional_feeds import (
     coinbase_product_trades,
     finra_equity,
 )
+from .global_public_feeds import (
+    EUROSTAT_HICP_GEOS,
+    IMF_ENTITIES,
+    IMF_INDICATORS,
+    OECD_CLI_AREAS,
+    eurostat_hicp_inflation,
+    imf_datamapper,
+    nasa_eonet_events,
+    oecd_composite_leading_indicator,
+    usgs_material_earthquakes,
+)
 
 __all__ = [
     "DataArtifact", "DataGateResult", "validate_data_artifact",
@@ -114,4 +125,7 @@ __all__ = [
     "treasury_latest_auctions", "treasury_yield_curve", "world_bank_indicator",
     "BIS_GLOBAL_LIQUIDITY_SERIES", "FINRA_EQUITY_DATASETS",
     "bis_global_liquidity", "coinbase_product_trades", "finra_equity",
+    "EUROSTAT_HICP_GEOS", "IMF_ENTITIES", "IMF_INDICATORS", "OECD_CLI_AREAS",
+    "eurostat_hicp_inflation", "imf_datamapper", "nasa_eonet_events",
+    "oecd_composite_leading_indicator", "usgs_material_earthquakes",
 ]
