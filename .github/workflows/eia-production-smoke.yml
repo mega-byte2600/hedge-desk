@@ -1,0 +1,126 @@
+name: Production Demo Smoke
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production-demo-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify production APIs and demo surface
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          import time
+          import urllib.request
+
+          bases = (
+              "https://hedge-desk2600.onrender.com",
+              "https://hedge-desk.onrender.com",
+          )
+          core_sources = {
+              "fred",
+              "nyfed-markets",
+              "treasury-fiscaldata",
+              "cftc-cot",
+              "sec-edgar",
+          }
+
+          def safe_detail(value):
+              text = str(value or "")[:220]
+              return re.sub(r"(api_key|apikey|token)=([^&\\s]+)", r"\\1=[REDACTED]", text, flags=re.I)
+
+          def get(url, json_response=False):
+              started = time.perf_counter()
+              last = None
+              for attempt in range(2):
+                  try:
+                      req = urllib.request.Request(
+                          url,
+                          headers={"User-Agent": "hedge-desk-prod-smoke/3.0"},
+                      )
+                      with urllib.request.urlopen(req, timeout=90) as response:
+                          body = response.read()
+                          if response.status != 200:
+                              raise RuntimeError(f"HTTP {response.status}")
+                          elapsed = time.perf_counter() - started
+                          print(f"HTTP {response.status} {url} in {elapsed:.2f}s")
+                          return json.loads(body.decode("utf-8")) if json_response else body.decode("utf-8", "replace")
+                  except Exception as exc:
+                      last = exc
+                      if attempt == 0:
+                          time.sleep(3)
+              raise RuntimeError(f"production endpoint unavailable after {time.perf_counter()-started:.1f}s: {last}")
+
+          failures = []
+          for base in bases:
+              print(f"\n=== {base} ===")
+
+              home = get(base + "/")
+              if "EMPORION" not in home or "styles.css" not in home or "viewport" not in home:
+                  failures.append((base, "public-home", "missing brand/layout hooks"))
+              else:
+                  print("PASS public home: brand + responsive layout hooks present")
+
+              css = get(base + "/styles.css")
+              if len(css) < 5000 or ".sidebar" not in css or ".panel" not in css or "@media" not in css:
+                  failures.append((base, "styles", "stylesheet incomplete"))
+              else:
+                  print(f"PASS stylesheet: {len(css)} bytes, responsive UI rules present")
+
+              health = get(base + "/api/health", True)
+              print("PASS health:", json.dumps(health, sort_keys=True))
+
+              status = get(base + "/api/data-sources", True)
+              sources = status.get("sources") or {}
+              print(
+                  f"Data sources: {status.get('live_count')} LIVE / "
+                  f"{status.get('blocked_count')} BLOCKED / "
+                  f"{status.get('unconfigured_count')} UNCONFIGURED"
+              )
+              for provider, probe in sorted(sources.items()):
+                  print(
+                      f"  {provider}: {probe.get('status')} "
+                      f"rows={probe.get('observation_count')} "
+                      f"configured={probe.get('configured')} "
+                      f"reason={probe.get('reason_code')} "
+                      f"detail={safe_detail(probe.get('detail'))}"
+                  )
+
+              for provider in sorted(core_sources):
+                  probe = sources.get(provider)
+                  if not probe:
+                      failures.append((base, provider, "missing from data-source status"))
+                      continue
+                  if probe.get("status") != "LIVE" or int(probe.get("observation_count") or 0) < 1:
+                      failures.append((base, provider, safe_detail(probe.get("detail") or probe.get("reason_code"))))
+
+              finra = sources.get("finra")
+              if finra and finra.get("configured"):
+                  if finra.get("status") != "LIVE" or int(finra.get("observation_count") or 0) < 1:
+                      failures.append((base, "finra", safe_detail(finra.get("detail") or finra.get("reason_code"))))
+                  else:
+                      print("PASS finra: configured and LIVE")
+              elif finra:
+                  print("INFO finra: credential not configured; not required for public demo")
+
+              eia = sources.get("eia-open-data")
+              if eia and eia.get("status") == "LIVE" and int(eia.get("observation_count") or 0) >= 1:
+                  print("PASS eia-open-data: LIVE")
+              else:
+                  print("INFO eia-open-data: pending credential rotation; non-fatal for this demo smoke")
+
+          if failures:
+              print("\nFAILURES")
+              for failure in failures:
+                  print(" -", failure)
+              raise SystemExit(1)
+
+          print("\nPASS: production demo surface and all required non-EIA sources are healthy on both services")
+          PY

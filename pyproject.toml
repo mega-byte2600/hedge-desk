@@ -13,7 +13,7 @@ dependencies = [
 
 [project.scripts]
 hedge-desk = "hedge_desk.cli:main"
-hedge-desk-web = "hedge_desk.web_app:main"
+hedge-desk-web = "hedge_desk.production:main"
 
 [project.optional-dependencies]
 news = [
