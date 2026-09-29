@@ -15,6 +15,7 @@ from hedge_desk.data.providers import (
     CftcCotAdapter,
     EiaOpenDataAdapter,
     ENV_EIA_API_KEY,
+    ENV_FRED_API_KEY,
     KeyedEodAdapter,
     ProviderStatus,
     REGISTRY_BY_ID,
@@ -241,6 +242,31 @@ class RegistryTests(unittest.TestCase):
         self.assertFalse(artifact.redistribution_allowed)
         self.assertEqual(artifact.source_id, "ust-treasury-fiscal")
         self.assertEqual(artifact.payload_kind, "provider_observation")
+
+
+class ConsoleSurfaceTests(unittest.TestCase):
+    def test_provider_console_rows_present_and_honest(self):
+        from hedge_desk.data.providers import provider_console_rows
+
+        rows = provider_console_rows()
+        ids = {r["source_id"] for r in rows}
+        self.assertIn("sec-edgar-companyfacts", ids)
+        self.assertIn("ust-treasury-fiscal", ids)
+        self.assertIn("alpha-vantage-eod", ids)
+        self.assertIn("twelve-data-eod", ids)
+        self.assertEqual(len(rows), len(REGISTRY_BY_ID))
+        # statuses render via statusClass: PASS->green, BLOCK->red, PENDING->amber
+        for r in rows:
+            self.assertIn(r["status"], ("PASS", "BLOCK", "PENDING"))
+            self.assertEqual(r["mode"], "FREE_OPEN_PUBLIC_DATA_ONLY")
+            self.assertIn("no fabricated values", r["controls"])
+
+    def test_twelve_data_has_own_key_env(self):
+        adapter = REGISTRY_BY_ID["twelve-data-eod"]
+        from hedge_desk.data.providers import ENV_TWELVE_DATA_KEY
+
+        self.assertEqual(adapter.key_env, ENV_TWELVE_DATA_KEY)
+        self.assertNotEqual(adapter.key_env, ENV_FRED_API_KEY)
 
 
 if __name__ == "__main__":

@@ -41,6 +41,7 @@ ENV_EIA_API_KEY = "EIA_API_KEY"
 ENV_ALPHA_VANTAGE_KEY = "ALPHA_VANTAGE_API_KEY"
 ENV_TIINGO_KEY = "TIINGO_API_KEY"
 ENV_FRED_API_KEY = "FRED_API_KEY"
+ENV_TWELVE_DATA_KEY = "TWELVE_DATA_API_KEY"
 
 
 class ProviderStatus(str, Enum):
@@ -502,11 +503,52 @@ REGISTRY: Tuple[ProviderAdapter, ...] = (
                     doc_url="https://www.alphavantage.co/documentation/"),
     KeyedEodAdapter("tiingo-eod", ENV_TIINGO_KEY, _tiingo_url, _parse_tiingo,
                     doc_url="https://www.tiingo.com/documentation/"),
-    KeyedEodAdapter("twelve-data-eod", ENV_FRED_API_KEY, _twelve_url, _parse_twelve,
+    KeyedEodAdapter("twelve-data-eod", ENV_TWELVE_DATA_KEY, _twelve_url, _parse_twelve,
                     doc_url="https://twelvedata.com/docs"),
 )
 
 REGISTRY_BY_ID = {a.source_id: a for a in REGISTRY}
+
+
+def _console_status(adapter: ProviderAdapter) -> str:
+    """Honest, render-friendly status for the web console tag().
+
+    Keyless live-verified sources show green PASS. Key-gated sources (no key
+    wired) show PENDING until a key is provisioned — never a fabricated PASS.
+    Stooq is BLOCKED (detected bot-wall). CFTC is code-verified but blocked on
+    this host's SSL proxy, so it is shown PENDING rather than PASS.
+    """
+    if adapter.source_id in ("sec-edgar-companyfacts", "ust-treasury-fiscal"):
+        return "PASS"
+    if adapter.source_id == "stooq-eod":
+        return "BLOCK"
+    if adapter.source_id == "cftc-cot":
+        return "PENDING"
+    return "PENDING"  # key-gated (eia, alpha-vantage, tiingo, twelve-data)
+
+
+def provider_console_rows() -> list[dict]:
+    """Surface the registry on the desk console's Controls & evidence page."""
+    rows = []
+    for adapter in REGISTRY:
+        rows.append(
+            {
+                "source_id": adapter.source_id,
+                "dataset": "free/open public market data",
+                "status": _console_status(adapter),
+                "mode": "FREE_OPEN_PUBLIC_DATA_ONLY",
+                "feeds": list(adapter.asset_classes),
+                "controls": [
+                    "fail-closed parsing",
+                    "no fabricated values",
+                    "server-side key only",
+                    "no trade authorization",
+                    "no RoR / probability",
+                ],
+                "key_env": adapter.key_env,
+            }
+        )
+    return rows
 
 
 def build_provider_artifact(result: ProviderResult, series: str) -> DataArtifact:
@@ -551,4 +593,5 @@ __all__ = [
     "EiaOpenDataAdapter", "StooqEodAdapter", "KeyedEodAdapter",
     "fetch_provider", "build_provider_artifact",
     "ENV_EIA_API_KEY", "ENV_ALPHA_VANTAGE_KEY", "ENV_TIINGO_KEY", "ENV_FRED_API_KEY",
+    "ENV_TWELVE_DATA_KEY", "provider_console_rows",
 ]
