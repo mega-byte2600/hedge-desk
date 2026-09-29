@@ -55,6 +55,8 @@ IMF_DATAMAPPER_URL = "https://www.imf.org/external/datamapper/api/v1/{indicator}
 BOC_VALET_URL = "https://www.bankofcanada.ca/valet/observations/{series}/json"
 # Coinbase exchange-rates API: keyless crypto/fiat reference rates.
 COINBASE_RATES_URL = "https://api.coinbase.com/v2/exchange-rates?currency={base}"
+# Frankfurter: keyless daily FX reference rates (ECB data, USD-base option).
+FRANKFURTER_URL = "https://api.frankfurter.app/latest?from={base}&to={quotes}"
 
 # Public FINRA fixed-income datasets that are directly useful to a rates/credit desk.
 # FINRA public data is free, but its Query API requires a Public Credential and
@@ -616,6 +618,44 @@ def coinbase_exchange_rates(
     if not rows:
         raise ValueError("coinbase payload has no wanted rates")
     return OpenFeedResult("coinbase", f"exchange-rates-{normalized}", rows)
+
+
+def frankfurter_fx(
+    base: str = "USD",
+    quotes: Sequence[str] = ("EUR", "GBP", "JPY", "CAD", "CHF"),
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch Frankfurter daily FX reference rates (keyless, ECB data).
+
+    USD-base reference rates that complement the ECB euro-base feed. Returns
+    the chosen base currency's rate against a set of major quote currencies.
+    """
+    normalized = base.strip().upper()
+    if not normalized.isalnum() or len(normalized) > 5:
+        raise ValueError("invalid Frankfurter base currency")
+    wanted = []
+    for q in quotes:
+        code = str(q).strip().upper()
+        if not code.isalnum() or len(code) > 5:
+            raise ValueError(f"invalid Frankfurter quote currency: {q}")
+        if code not in wanted:
+            wanted.append(code)
+    if not wanted:
+        raise ValueError("at least one Frankfurter quote currency is required")
+    url = FRANKFURTER_URL.format(base=normalized, quotes=",".join(wanted))
+    payload = _fetch_json(url, "frankfurter", transport)
+    if not isinstance(payload, dict) or not isinstance(payload.get("rates"), dict):
+        raise ValueError("frankfurter payload has no rates")
+    rates = payload["rates"]
+    ref_date = str(payload.get("date", ""))
+    rows = tuple(
+        {"base": str(payload.get("base", normalized)), "quote": code, "rate": str(rates[code]), "date": ref_date}
+        for code in wanted
+        if code in rates
+    )
+    if not rows:
+        raise ValueError("frankfurter payload has no wanted rates")
+    return OpenFeedResult("frankfurter", f"fx-{normalized}", rows)
 
 
 def cftc_cot(

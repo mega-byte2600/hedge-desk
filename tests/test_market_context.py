@@ -52,6 +52,9 @@ def _common_fakes():
         "boc_fetch": lambda series: _result(
             "bank-of-canada", series, [{"date": "2026-09-28", "series": series, "value": "1.4168"}]
         ),
+        "frankfurter_fetch": lambda base: _result(
+            "frankfurter", f"fx-{base}", [{"base": base, "quote": "EUR", "rate": "0.88067", "date": "2026-09-29"}]
+        ),
     }
 
 
@@ -148,7 +151,7 @@ class MarketContextTests(unittest.TestCase):
 
         self.assertEqual(context["schema_version"], MARKET_CONTEXT_SCHEMA)
         self.assertEqual(context["status"], "LIVE")
-        self.assertEqual(context["live_sources"], 20)
+        self.assertEqual(context["live_sources"], 21)
         self.assertEqual(context["sources"]["nws"]["status"], "LIVE")
         self.assertEqual(context["sources"]["bea"]["status"], "LIVE")
         self.assertEqual(context["sources"]["usda-nass"]["status"], "LIVE")
