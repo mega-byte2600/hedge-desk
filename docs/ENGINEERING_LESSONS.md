@@ -45,6 +45,15 @@ button did nothing" was wrong.
 behaviour, never a status code. When a test fails, decide whether the test or the app is
 wrong before reporting a defect — an assertion is a hypothesis, not proof.
 
+**Addendum, incident 2026-09-29.** `node --check web/app.js` exited 0 on a file
+containing a hard `SyntaxError` (`async armFramesResize();`), because Node's `--check`
+does not validate `.js` files that contain ESM `import`/`export` syntax — it passes
+them silently. The corrupted file shipped to production with CI green and killed the
+entire frontend module (the app never got past "Loading research workspace...").
+A syntax gate must parse with the same goal the browser uses: check shipped `.js`
+modules via a `.mjs` copy (`cp web/app.js /tmp/syntax-check.mjs && node --check
+/tmp/syntax-check.mjs`), which fails loudly on the same input.
+
 ## 3. Do not park a testable path as "unverified"
 
 "Unverified" is honest only when the means are genuinely absent: no credentials, no hardware,
