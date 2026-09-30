@@ -36,6 +36,10 @@ COPY_GLOBS = ("*.js", "*.mjs", "*.html", "*.css")
 COPY_EXTRA = (
     ROOT / "scripts" / "build_plotly_dashboard.py",
     ROOT / "hedge_desk" / "web_app.py",  # contains dashboard JS template
+    # Incident 2026-09-29: the daily brief publishes to production with no
+    # human review. Its rendered copy (titles, details, desk notes) gets the
+    # same slop/jargon gate as every other user-facing surface.
+    WEB / "research-brief.json",
 )
 SKIP_FILES = {p.name for p in WEB.glob("*.test.*")}
 
