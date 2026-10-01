@@ -40,6 +40,9 @@ CONSOLE_ASSETS = (
     "report.json",
     "research-brief.json",
     "research-today.md",
+    "options-workbench-ui.js",
+    "options-workbench.mjs",
+    "vendor/plotly-2.35.2.min.js",
 )
 
 
@@ -104,6 +107,8 @@ if __name__ == "__main__":
         distribution.mkdir(exist_ok=True)
         _verify_console_assets(ROOT / "web")
         for filename in CONSOLE_ASSETS:
-            shutil.copyfile(ROOT / "web" / filename, distribution / filename)
+            target = distribution / filename
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / "web" / filename, target)
         shutil.copyfile(ROOT / "README_PUBLIC.md", distribution / "README_PUBLIC.md")
     print("Validated console report exported to", args.output)
