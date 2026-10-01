@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -39,6 +39,19 @@ TARGET_DTE = 30
 MIN_DTE = 7  # must clear the desk's 7-day pre-expiry exit window
 MAX_DTE = 30  # workbench scope: contracts of no more than 30 days
 TARGET_PUT_DELTA = Decimal("-0.30")
+
+# Data-mode contract the workbench UI relies on (the `data_mode` field):
+#   "batch"    — weekly-refreshed derived analytics from a delayed chain
+#                (this seed); `as_of` is when the chain snapshot was taken.
+#   "live"     — reserved: a real-time quote for the same contract (not wired).
+#   "scenario" — user-driven hypothetical projection from real base data;
+#                never presented as market data.
+DATA_MODES = ("batch", "live", "scenario")
+DATA_MODE = "batch"
+
+# Freshness contract: the refresh job runs weekly; the UI shows
+# "batch · <date> — stale, refresh pending" when older than this.
+SEED_FRESHNESS_DAYS = 8
 
 
 @dataclass(frozen=True)
@@ -222,7 +235,7 @@ def seed_to_dict(
         "underlying_price": str(cboe_chain._d(raw_data.get("current_price"))),
         "as_of": as_of.isoformat(),
         "source": "cboe-delayed",
-        "data_mode": "batch",
+        "data_mode": DATA_MODE,
         "refresh": refresh,
         "trade_authorized": False,
         "note": (
@@ -234,8 +247,73 @@ def seed_to_dict(
 
 
 __all__ = [
+    "DATA_MODE",
+    "DATA_MODES",
+    "SEED_FRESHNESS_DAYS",
     "SEED_SCHEMA_VERSION",
     "SeedContract",
+    "seed_freshness",
     "select_seed_put",
     "seed_to_dict",
+    "validate_seed_dict",
 ]
+
+
+def seed_freshness(as_of: datetime, now: datetime) -> str:
+    """Return "fresh" if the seed snapshot `as_of` is within
+    SEED_FRESHNESS_DAYS of `now`, else "stale". Pure: pass fixed clocks.
+    Both args must be timezone-aware; a future `as_of` counts as fresh."""
+    if as_of.tzinfo is None or now.tzinfo is None:
+        raise ValueError("as_of and now must be timezone-aware")
+    return "fresh" if now - as_of <= timedelta(days=SEED_FRESHNESS_DAYS) else "stale"
+
+
+def validate_seed_dict(d: Dict[str, Any]) -> None:
+    """Fail-closed validation of a seed dict before the workbench models from
+    it. Raises ValueError with a machine-readable reason on anything that
+    smells synthetic: wrong schema, unknown data_mode, missing contract
+    identity, non-executable bid/ask, null IV, zero-filled or undeclared
+    greeks, or DTE beyond the 30-day workbench scope. A rejected seed renders
+    as "data unavailable" in the UI — never as invented numbers.
+
+    Greeks rule (mirrors the unavailable-field policy in select_seed_put):
+    an unavailable greek is None AND declared in unavailable_fields with a
+    reason; a present greek is never exactly 0.0 (the source emits 0.0 for
+    analytics it did not compute, which select_seed_put surfaces as null).
+    """
+    if not isinstance(d, dict):
+        raise ValueError("seed_not_a_dict")
+    if d.get("schema_version") != SEED_SCHEMA_VERSION:
+        raise ValueError("seed_bad_schema_version")
+    if d.get("data_mode") not in DATA_MODES:
+        raise ValueError("seed_unknown_data_mode")
+    for f in ("contract_id", "expiration", "as_of", "source"):
+        if not d.get(f):
+            raise ValueError(f"seed_missing_{f}")
+    dte = d.get("days_to_expiration")
+    if not isinstance(dte, int) or dte <= 0 or dte > MAX_DTE:
+        raise ValueError("seed_dte_out_of_workbench_scope")
+
+    def _money(v: Any) -> Decimal:
+        try:
+            return Decimal(str(v))
+        except Exception:
+            raise ValueError("seed_bad_money") from None
+
+    bid, ask = _money(d.get("bid")), _money(d.get("ask"))
+    if bid <= 0 or ask <= 0 or ask < bid:
+        raise ValueError("seed_unexecutable_quote")
+    iv = d.get("implied_volatility")
+    if iv is None or _money(iv) <= 0:
+        raise ValueError("seed_null_or_zero_iv")
+
+    declared = {
+        e.get("field") for e in d.get("unavailable_fields", []) if isinstance(e, dict)
+    }
+    for field in ("delta", "gamma", "theta", "vega", "rho"):
+        v = d.get(field)
+        if v is None:
+            if field not in declared:
+                raise ValueError(f"seed_undeclared_unavailable_greek:{field}")
+        elif _money(v) == 0:
+            raise ValueError(f"seed_zero_filled_greek:{field}")
