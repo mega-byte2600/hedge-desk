@@ -202,6 +202,7 @@ function seedFacts(seed, sc) {
   };
   add('Spot', `${W.fmtMoney(seed.spot, 2)} (bid ${W.fmtMoney(seed.spotBid ?? seed.spot, 2)} / ask ${W.fmtMoney(seed.spotAsk ?? seed.spot, 2)})`);
   add('Quote', `bid ${W.fmtMoney(seed.bid, 2)} · ask ${W.fmtMoney(seed.ask, 2)} · mid ${W.fmtMoney(seed.mid, 2)}`);
+  add('Contract', seed.contractId);
   add('Implied vol', `${seed.ivPct.toFixed(2)}%`);
   add('DTE', String(seed.dte));
   if (seed.greeks.delta !== null) {

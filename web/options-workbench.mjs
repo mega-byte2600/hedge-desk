@@ -99,7 +99,9 @@ export function validateSeed(raw) {
 /** Normalize a validated seed into the shape the workbench models. */
 export function parseSeed(raw) {
   const ivRaw = num(raw.implied_volatility);
-  const ivPct = ivRaw <= 1 ? ivRaw * 100 : ivRaw; // schema stores a fraction; tolerate percent
+  // Round to 2 decimals: 0.1526*100 is 15.260000000000002 in binary FP, and
+  // the raw value feeds number inputs directly (visible float dust otherwise).
+  const ivPct = Math.round((ivRaw <= 1 ? ivRaw * 100 : ivRaw) * 100) / 100; // schema stores a fraction; tolerate percent
   const g = (f) => (raw[f] === undefined || raw[f] === null ? null : num(raw[f]));
   const asOf = new Date(raw.as_of);
   return {
