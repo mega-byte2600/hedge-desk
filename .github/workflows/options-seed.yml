@@ -1,0 +1,60 @@
+name: Options seed refresh
+
+# Weekly refresh of the Emporion workbench seed: the ~30-DTE SPY put selected
+# from the real Cboe delayed chain. Free-tier clean by design — the schedule
+# runs here (GitHub Actions, free for public repos), NOT as a Render cron
+# (paid-only). The job commits derived analytics only (artifacts/ is gitignored
+# for runtime output, so the seed is force-added like am-report-latest.json);
+# raw Cboe chain payloads are parsed in memory and never committed.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays 15:30 UTC (08:30 PT) — after the US open, ahead of the week.
+    - cron: '30 15 * * 1'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+      - name: Refresh options seed
+        run: python -m hedge_desk.options_seed_refresh
+      - name: Validate seed artifact
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('artifacts/options-seed-latest.json')
+          d = json.loads(p.read_text())
+          assert d['schema_version'] == 'hedge-desk-options-seed-1.0.0', d.get('schema_version')
+          assert d['mode'] == 'REAL_CBOE_DELAYED_SEED'
+          assert d['symbol'] == 'SPY' and d['option_type'] == 'PUT'
+          assert 7 < d['days_to_expiration'] <= 30, d['days_to_expiration']
+          assert d['source'] == 'cboe-delayed' and d['data_mode'] == 'batch'
+          assert d['trade_authorized'] is False
+          assert d['refresh']['status'] in ('ok', 'fetch_failed'), d['refresh']
+          # money is Decimal-serialised strings, never floats
+          for f in ('bid', 'ask', 'mid', 'strike'):
+              assert isinstance(d[f], str), f
+          # no Risk of Ruin value anywhere in a seed payload
+          blob = json.dumps(d).lower()
+          assert 'risk_of_ruin' not in blob and '"ror"' not in blob
+          print('seed:', d['contract_id'], 'dte', d['days_to_expiration'], 'status', d['refresh']['status'])
+          PY
+      - name: Commit seed
+        run: |
+          git add -f artifacts/options-seed-latest.json
+          if git diff --cached --quiet; then
+            echo "no seed change"
+          else
+            git -c user.name='Toby' -c user.email='toby@muse.ai' \
+              commit -m "chore: weekly options seed refresh"
+            git push
+          fi

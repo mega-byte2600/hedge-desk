@@ -84,3 +84,61 @@ summary{padding:12px 0;margin:-12px 0}
 .autofit-frame{width:100%;border:0;border-radius:10px;display:block;position:relative;z-index:1}
 .guide-frame{height:1400px;background:#0b1220}
 .dash-frame{height:1200px;background:#0f1828}
+
+/* Options Workbench — phone-first, on the console's tokens. */
+.wb{max-width:640px;margin:0 auto;display:grid;gap:16px}
+.wb-title{font-size:22px;letter-spacing:-.5px;margin:0}
+.wb-state{display:flex;flex-wrap:wrap;gap:8px}
+.wb-chip{font:11px 'IBM Plex Mono',monospace;letter-spacing:.4px;border:1px solid var(--line);background:#fff;border-radius:4px;padding:6px 9px;color:#48555e}
+.wb-chip-batch{background:#edf5e3;color:#527527;border-color:#d4e2c3}
+.wb-chip-stale{background:#fff3d8;color:#986a13;border-color:#ecd9a8}
+.wb-chip-missing{background:#faeae8;color:#b94442;border-color:#eec5c1}
+.wb-chip-loading{background:#eef1f3;color:#65727c}
+.wb-chip-scenario{background:#e9f0fa;color:#2f5b9e;border-color:#c9dcf2}
+.wb-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:18px;overflow:hidden}
+.wb-card h3{font-size:16px;margin:0 0 10px}
+.wb-card h4{font-size:15px;margin:0 0 8px}
+.wb-card h5{font-size:13px;margin:14px 0 6px}
+.wb-body,.wb-main{display:grid;gap:16px}
+.wb-facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin:0 0 10px}
+.wb-facts dt{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+.wb-facts dd{margin:0;font-weight:550;overflow-wrap:anywhere}
+.wb-figcap{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 0}
+.wb-src{font-size:11px;color:var(--muted)}
+.wb-unavail{background:#fff7f6;border:1px solid #e1beb9;border-radius:4px;padding:12px 14px;font-size:13px;color:#b94442;margin:10px 0}
+.wb-note{font-size:12px;color:var(--muted);line-height:1.6}
+.wb-warn{background:#fff3d8;border:1px solid #ecd9a8;border-radius:4px;padding:12px 14px;font-size:13px;color:#986a13}
+.wb-ctls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+.wb-ctl{display:grid;gap:6px;font-size:13px}
+.wb-ctl-label{font-weight:600;font-size:12px}
+.wb-ctl input,.wb-ctl select{border:1px solid #d5dde2;border-radius:4px;background:#fff;padding:10px 12px;font-size:14px;width:100%}
+.wb-ctl-note{font-size:11px;color:var(--muted)}
+.wb-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.wb-tab{flex:1 0 auto;border:1px solid #d6dde1;background:#fff;border-radius:4px;padding:10px 12px;font-size:12px;font-weight:600;white-space:nowrap}
+.wb-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.wb-tabpanel{margin-top:12px}
+.wb-econgrid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:0 0 10px}
+.wb-econ{display:grid;gap:2px;padding:9px 0;border-top:1px solid #edf0f2}
+.wb-econ dt{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.wb-econ dd{margin:0;font-size:14px;font-weight:600;overflow-wrap:anywhere}
+.wb-bs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.wb-bs-col{border:1px solid var(--line);border-radius:4px;padding:12px}
+.wb-bs-col h5{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.wb-bs-col p{font-size:12px;margin:6px 0;overflow-wrap:anywhere}
+.wb-fig{margin:16px 0 4px;border-top:1px solid var(--line);padding-top:8px}
+.wb-plot{width:100%;min-height:260px}
+.wb-table{border-collapse:collapse;width:100%;font-size:12px;display:block;overflow-x:auto}
+.wb-table th{background:#fafbfc;font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:#5f6b73;font-weight:600;padding:10px 12px;text-align:left;white-space:nowrap}
+.wb-table td{padding:10px 12px;border-top:1px solid #edf0f2;vertical-align:top}
+.wb-table td.neg{color:#b94442;font-weight:600}
+.wb-table td.pos{color:#527527;font-weight:600}
+.wb-rank{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
+.wb-rank li{border:1px solid var(--line);border-radius:4px;padding:12px 14px}
+.wb-rank li strong{font-size:13px}
+.wb-rank li p{font-size:12px;margin:6px 0 0;color:#48555e}
+.wb-rank-cash{background:#fafbfc}
+.wb-check{display:flex;gap:10px;align-items:flex-start;font-size:13px;margin:10px 0}
+.wb-check input{margin-top:3px;width:18px;height:18px;flex:none}
+.wb-ror{border-color:#c9dcf2}
+.wb-iv h5{margin-top:14px}
+@media(max-width:600px){.wb-ctls{grid-template-columns:1fr}.wb-econgrid{grid-template-columns:1fr 1fr}.wb-bs{grid-template-columns:1fr}}

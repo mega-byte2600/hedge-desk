@@ -340,6 +340,12 @@ def _dispatch(environ, start_response):
         return _redirect(start_response, "/dashboard")
     if path == "/api/am-report":
         return _serve_artifact(start_response, ARTIFACTS / "am-report-latest.json", as_json=True)
+    # Emporion workbench data foundation: the weekly-refreshed ~30-DTE SPY put
+    # seed (derived analytics only — raw Cboe chain payloads are never
+    # committed). Fails closed to 404 artifact_missing when no seed exists;
+    # the refresh job preserves last-good on fetch failure, never synthetic.
+    if path == "/api/options-seed":
+        return _serve_artifact(start_response, ARTIFACTS / "options-seed-latest.json", as_json=True)
     # Muse/Toby's Selling Options Premium visual guide (static, self-contained).
     if path in ("/guide/selling-options-premium", "/guide/selling-options-premium.html"):
         guide = DEPLOY_ROOT / "docs" / "guides" / "selling-options-premium-visual-guide.html"
