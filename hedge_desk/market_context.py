@@ -21,6 +21,10 @@ from hedge_desk.data.open_market_feeds import (
     fdic_failures,
     frankfurter_fx,
     imf_gdp_growth,
+    oecd_composite_leading_indicator,
+    eurostat_quarterly_gdp,
+    usgs_earthquakes,
+    nasa_eonet_events,
     nasdaq_earnings_calendar,
     nasdaq_quote,
     treasury_yield_curve,
@@ -207,6 +211,22 @@ def _imf_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     return [_pick(row, ("date", "value", "indicator", "country")) for row in result.rows[-10:]]
 
 
+def _oecd_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [_pick(row, ("TIME_PERIOD", "OBS_VALUE", "REF_AREA", "MEASURE")) for row in result.rows[-24:]]
+
+
+def _eurostat_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [_pick(row, ("date", "value", "geo", "indicator", "unit")) for row in result.rows[-8:]]
+
+
+def _usgs_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [_pick(row, ("event_id", "magnitude", "time", "place", "longitude", "latitude", "depth_km", "title", "url")) for row in result.rows[:25]]
+
+
+def _nasa_eonet_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [_pick(row, ("event_id", "title", "categories", "sources", "date", "geometry_type", "coordinates")) for row in result.rows[:25]]
+
+
 def _boc_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     return [_pick(row, ("date", "series", "value")) for row in result.rows[-10:]]
 
@@ -344,6 +364,10 @@ def build_market_context(
     imf_fetch: Callable[..., OpenFeedResult] = imf_gdp_growth,
     boc_fetch: Callable[..., OpenFeedResult] = bank_of_canada_fx,
     frankfurter_fetch: Callable[..., OpenFeedResult] = frankfurter_fx,
+    oecd_fetch: Callable[..., OpenFeedResult] = oecd_composite_leading_indicator,
+    eurostat_fetch: Callable[..., OpenFeedResult] = eurostat_quarterly_gdp,
+    usgs_fetch: Callable[..., OpenFeedResult] = usgs_earthquakes,
+    nasa_eonet_fetch: Callable[..., OpenFeedResult] = nasa_eonet_events,
     watchlist: Sequence[str] = ("SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA"),
 ) -> Dict[str, object]:
     """Build fail-closed cross-asset context from authoritative provider APIs."""
@@ -428,6 +452,18 @@ def build_market_context(
         sources["imf"] = _live(result, _imf_summary(result))
     except Exception as exc:
         sources["imf"] = _blocked("imf", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+
+    for provider_id, fetcher, summary, kwargs in (
+        ("oecd", oecd_fetch, _oecd_summary, {"country": "USA", "limit": 24}),
+        ("eurostat", eurostat_fetch, _eurostat_summary, {"geo": "EA20", "periods": 8}),
+        ("usgs", usgs_fetch, _usgs_summary, {"days": 30, "min_magnitude": 4.5, "limit": 25}),
+        ("nasa-eonet", nasa_eonet_fetch, _nasa_eonet_summary, {"days": 30, "limit": 25}),
+    ):
+        try:
+            result = fetcher(**kwargs)
+            sources[provider_id] = _live(result, summary(result))
+        except Exception as exc:
+            sources[provider_id] = _blocked(provider_id, "UPSTREAM_OR_PARSE_FAILURE", str(exc))
 
     try:
         result = boc_fetch(series="FXUSDCAD")
