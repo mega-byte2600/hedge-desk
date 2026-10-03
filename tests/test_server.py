@@ -3,7 +3,7 @@ import unittest
 from contextlib import nullcontext
 from unittest.mock import patch
 
-from hedge_desk.server import _supabase_status, application
+from hedge_desk.server import _static_cache_control, _supabase_status, application
 
 class ServerTests(unittest.TestCase):
     def request(self, path):
@@ -13,6 +13,14 @@ class ServerTests(unittest.TestCase):
             captured['headers'] = headers
         body = b''.join(application({'PATH_INFO': path}, start))
         return captured['status'], json.loads(body)
+
+
+    def test_javascript_assets_must_revalidate(self):
+        self.assertEqual(_static_cache_control(__import__("pathlib").Path("app.js")),
+                         "no-cache, must-revalidate")
+        self.assertEqual(_static_cache_control(__import__("pathlib").Path("core.mjs")),
+                         "no-cache, must-revalidate")
+        self.assertIn("max-age=300", _static_cache_control(__import__("pathlib").Path("styles.css")))
 
     def test_health_is_paper_only_and_reports_unconfigured_supabase(self):
         with patch.dict('os.environ', {}, clear=True):
