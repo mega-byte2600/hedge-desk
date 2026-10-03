@@ -1,0 +1,40 @@
+name: Supabase keepalive
+
+# Supabase Free Plan projects can be paused after a low-activity 7-day window.
+# Their documentation says a few user database requests per day are typically
+# enough to keep an actively used project from being considered inactive.
+#
+# This workflow performs one tiny read from a dedicated one-row table three
+# times per day. It uses only the public project URL + publishable key and never
+# touches member, session, broker, or trading data.
+#
+# Manual dispatch is included so the probe can be tested from the Actions tab.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5,13,21 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Query Supabase health probe
+        env:
+          SUPABASE_URL: https://pwwzqijuphsmlryhtphx.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_6uXfGZexrKQ3-_0ND1buZw_P5kQSmi0
+        run: |
+          set -euo pipefail
+          response="$(
+            curl --fail --silent --show-error               --connect-timeout 10               --max-time 20               -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}"               "${SUPABASE_URL}/rest/v1/health_probe?id=eq.1&select=id"
+          )"
+          test "$response" = '[{"id":1}]'
+          echo "Supabase database probe succeeded."
