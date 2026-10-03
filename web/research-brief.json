@@ -1,1 +1,29 @@
-{"date": "2026-10-02", "headline": "Daily research brief — Friday, October 2", "items": [{"title": "Binary-event premium dominates the watchlist's front end", "detail": "AAPL, MSFT, TSLA and NVDA term structures hump exactly over their earnings dates — implied event moves of ~4.5%, ~6.7%, ~8.0% and ~7.2% respectively. Those IV-over-realized gaps are event pricing, not mispricings; premium into any of the four event windows stays off-limits. The only un-conflicted premium is at the index level: SPY 30-day IV 12.45% vs 20-day realized 10.07%, a modest +2.4 point cushion nearly clean of single-day contamination."}, {"title": "Energy is a mild-but-persistent margin headwind with a diesel tail", "detail": "WTI pulled back ~3% on the G-7's 100M-barrel emergency release plan (diesel front-loaded over 20 days), but the physical market disagrees — Dated Brent above $120 against ICE Brent near $101. Distillates sit 14% below the five-year seasonal average and China reinstated its refined-product export ban for October. OPEC+ meets Sunday (expected hold); both are the near-term swing factors."}, {"title": "24-year-high rates are the valuation headwind", "detail": "The 10-year retreated to ~5.2% after September's soft jobs report (29K nonfarm vs ~84–90K expected; unemployment 4.1% to 4.2%), cutting October Fed-hike odds from ~70% to ~21%. Discount-rate pressure persists on high-multiple names — AAPL, MSFT, NVDA — even as the pause repricing is mildly supportive. Richer carry mechanically fattens call premium, which favors the premium-selling side."}, {"title": "One implementable lab find; calendars quiet otherwise", "detail": "purgedcv — a test-pinned, sklearn-native purged walk-forward CV implementation — scored 80: integrate, pending license confirmation. It closes the methodology gap flagged in the 9/25 sweep. Earnings and dividend calendars are clean in-window; QQQ's ~7.6% distribution cut is already ex and reflected in option pricing. IV rank remains unverified for all names."}], "desks": {"Dividends": "No watchlist ex-divs inside Oct 2–30. QQQ's ~7.6% distribution cut is already ex and priced; MSFT's $0.98 raise (ex Nov 19) is a November-horizon item.", "Earnings": "Quiet window — no watchlist reports Oct 2–16. The action is the Oct 21–29 cluster: TSLA 10/21 confirmed, MSFT ~10/27–28 and AAPL ~10/29 estimated but unconfirmed. TSLA's Q3 deliveries beat (486,532 vs ~461K consensus) is already in price.", "Futures": "G-7 emergency release (100M bbl crude + fuels, diesel front-loaded 20 days) vs the physical squeeze: Dated Brent >$120 against ICE ~$101. Distillates 14% below the 5-yr average; China's October export ban in force; OPEC+ meets Sunday (likely hold).", "Parity": "Nothing material. Parity-implied VIX-futures forwards (Oct 17.89 / Nov 18.49) sit within 0.16 of quoted feeds — parity holding. The lab's 'Year-End Toll' 2–3 bp Dec-31 rate wedge is logged as a rate-extraction caution, not a violation.", "Premium": "IV exceeds realized on all six, but the AAPL/MSFT/TSLA/NVDA gaps are binary-event pricing, not mispricings. Un-conflicted only at the index level: SPY 30-day IV 12.45% vs 20-day realized 10.07% (+2.4 pts, just under the window-contingency line). IV rank unverified for all.", "Quant lab": "purgedcv scored 80 — integrate (license confirmation pending), replacing ad-hoc desk code. Five watches, four archives. Two groups converging on Householder-seeded near-machine-precision IV inversion — verify one code release for a free solver upgrade."}, "full_report": "./research-today.md", "generated_at": "2026-10-02T16:55:56-07:00", "note": "Research input only. Paper context — no trade authorization."}
+{
+  "date": "2026-10-03",
+  "headline": "Daily research brief \u2014 Saturday, October 3",
+  "items": [
+    {
+      "title": "Friday closed higher across the board, tech leading",
+      "detail": "SPY finished Friday at 769.64 (+0.74%), QQQ at 749.58 (+1.02%) leading the major indices, DIA at 511.10 (+0.49%) and IWM at 281.52 (+0.90%). Breadth was healthy \u2014 small caps participating alongside large caps, not a narrow rally. Markets are closed Saturday; these are Friday's closing levels."
+    },
+    {
+      "title": "SPY strength pushes the workbench seed further out of the money",
+      "detail": "With SPY closing at 769.64, the workbench reference seed (Oct-30 749 put, bid 6.45 / ask 6.52 as of Oct 1) sits roughly 20 points out of the money. Premium sellers should note the underlying has moved favorably for existing short-put exposure, but new put sales at the 749 strike now collect less premium per unit of risk than when the seed was captured."
+    },
+    {
+      "title": "Weekend posture: no new information until Monday's open",
+      "detail": "No economic releases or earnings are scheduled for the weekend. The next scheduled catalyst is Monday's regular session. Paper context only \u2014 no trade authorization, no positions implied."
+    }
+  ],
+  "desks": {
+    "Premium": "SPY 30-day index premium remains the un-conflicted harvest ground; single-name event windows stay off-limits into earnings.",
+    "Earnings": "Quiet weekend \u2014 no watchlist reports scheduled until the Oct 21\u201329 cluster.",
+    "Dividends": "No action items carried into the weekend.",
+    "Quant": "Friday's breadth (IWM +0.90% alongside SPY +0.74%) reads as healthy participation, not concentration.",
+    "Futures": "Weekend \u2014 next catalysts arrive with Monday's session.",
+    "Parity": "No dislocations flagged on Friday's close."
+  },
+  "full_report": "./research-today.md",
+  "generated_at": "2026-10-03T15:54:02.191145+00:00",
+  "note": "Morning market snapshot from live Friday closing data (Yahoo Finance). Full six-desk research pipeline runs weekday afternoons; this brief covers the weekend gap. Research input only. Paper context \u2014 no trade authorization."
+}
