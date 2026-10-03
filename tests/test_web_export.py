@@ -3,7 +3,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from scripts.build_web import export_report
+from scripts.build_web import _version_app_entrypoint, export_report
 
 
 class WebExportTests(unittest.TestCase):
@@ -14,6 +14,20 @@ class WebExportTests(unittest.TestCase):
             self.assertFalse(stub["synthetic_data"])
             on_disk = json.loads((Path(folder) / "report.json").read_text(encoding="utf-8"))
             self.assertEqual(on_disk["status"], "data_unavailable")
+
+
+    def test_build_versions_app_entrypoint_from_content_hash(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "app.js").write_text("console.log('v1')\n", encoding="utf-8")
+            (root / "index.html").write_text(
+                '<script type="module" src="./app.js"></script>\n',
+                encoding="utf-8",
+            )
+            first = _version_app_entrypoint(root)
+            html = (root / "index.html").read_text(encoding="utf-8")
+            self.assertTrue(first.startswith("./app.js?v="))
+            self.assertIn(f'src="{first}"', html)
 
     def test_export_never_embeds_report_content(self):
         # Even if handed a full report, the static export must not embed it:
