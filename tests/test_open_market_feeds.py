@@ -425,6 +425,71 @@ class OpenMarketFeedTests(unittest.TestCase):
             nasa_eonet_events(limit=501, transport=transport)
         self.assertEqual(called, [])
 
+    def test_oecd_rejects_invalid_periods_and_empty_or_malformed_csv(self):
+        for country in ("US", "U$A", "ééé"):
+            with self.subTest(country=country), self.assertRaisesRegex(ValueError, "country code"):
+                oecd_composite_leading_indicator(country=country, transport=lambda _url: (200, b""))
+        for kwargs in (
+            {"start_period": "2026-1"},
+            {"end_period": "2026-00"},
+            {"start_period": "2026-03", "end_period": "2026-02"},
+        ):
+            with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                oecd_composite_leading_indicator(**kwargs, transport=lambda _url: (200, b""))
+        for raw in (b"", b"TIME_PERIOD,OTHER\n2026-01,x\n", b"TIME_PERIOD,OBS_VALUE\n2026-01,\n"):
+            with self.subTest(raw=raw), self.assertRaisesRegex(ValueError, "oecd"):
+                oecd_composite_leading_indicator(
+                    start_period="2026-01", end_period="2026-01",
+                    transport=lambda _url, value=raw: (200, value),
+                )
+
+    def test_eurostat_rejects_ambiguous_sparse_and_malformed_jsonstat(self):
+        malformed = (
+            ([], "not an object"),
+            ({"id": "time", "size": [], "dimension": {}}, "dimensions"),
+            ({"id": ["geo"], "size": [1], "dimension": {}}, "time dimension"),
+            ({"id": ["time"], "size": [], "dimension": {}}, "time dimension"),
+            ({"id": ["time", "geo"], "size": [2, 2], "dimension": {}}, "ambiguous"),
+            ({"id": ["time"], "size": [1], "dimension": {"time": {"category": {"index": {}}}}}, "time categories"),
+            ({"id": ["time"], "size": [1], "dimension": {"time": {"category": {"index": {"2026Q1": 0}}}}}, "no observation values"),
+            ({"id": ["time"], "size": [1], "dimension": {"time": {"category": {"index": {"2026Q1": 0}}}}, "value": []}, "no GDP observations"),
+        )
+        for payload, expected in malformed:
+            with self.subTest(expected=expected), self.assertRaisesRegex(ValueError, expected):
+                eurostat_quarterly_gdp(transport=_transport(payload))
+        sparse = {"id": ["time"], "size": [2],
+                  "dimension": {"time": {"category": {"index": {"2026Q1": 0, "2026Q2": 1}}}},
+                  "value": {"1": 124.0}}
+        result = eurostat_quarterly_gdp(transport=_transport(sparse))
+        self.assertEqual(result.rows, ({"date": "2026Q2", "value": 124.0, "geo": "EA20",
+                                       "indicator": "B1GQ", "unit": "CLV10_MEUR"},))
+
+    def test_event_feeds_skip_incomplete_records_and_fail_closed_on_bad_payloads(self):
+        with self.assertRaisesRegex(ValueError, "magnitude"):
+            usgs_earthquakes(min_magnitude=float("nan"), transport=_transport({"features": []}))
+        with self.assertRaisesRegex(ValueError, "features"):
+            usgs_earthquakes(transport=_transport({}))
+        earthquakes = usgs_earthquakes(transport=_transport({"features": [
+            None,
+            {"properties": "bad"},
+            {"id": "sparse", "properties": {"mag": 4.8}, "geometry": {"coordinates": []}},
+        ]}))
+        self.assertEqual(earthquakes.row_count, 1)
+        self.assertEqual(earthquakes.rows[0], {"event_id": "sparse", "magnitude": 4.8})
+
+        with self.assertRaisesRegex(ValueError, "events"):
+            nasa_eonet_events(transport=_transport({}))
+        events = nasa_eonet_events(transport=_transport({"events": [
+            None,
+            {"id": "bare", "geometry": [], "categories": "bad", "sources": "bad"},
+            {"id": "located", "geometry": [{"date": "2026-10-03", "coordinates": [1, 2]}],
+             "categories": [{"id": "fire"}, None, {}], "sources": [{"id": "official"}]},
+        ]}))
+        self.assertEqual(events.row_count, 2)
+        self.assertEqual(events.rows[0]["categories"], [])
+        self.assertIsNone(events.rows[0]["date"])
+        self.assertEqual(events.rows[1]["categories"], ["fire"])
+
     def test_cftc_tff_uses_official_public_reporting_api(self):
         seen = []
         result = cftc_cot(
