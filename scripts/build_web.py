@@ -84,15 +84,19 @@ def _verify_console_assets(web_root: Path) -> None:
 
 
 def export_report(report, destination):
-    from hedge_desk.console_report import build_console_payload
-
-    payload = build_console_payload(report)
+    """Write a fail-closed stub. The live console loads /api/report; the
+    static report.json must never carry synthetic fixtures."""
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=True)
+    stub = {
+        "status": "data_unavailable",
+        "reason": "Static snapshot disabled. The console loads live market data from /api/report.",
+        "synthetic_data": False,
+    }
     temporary = destination / "report.json.tmp"
-    temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    temporary.write_text(json.dumps(stub, indent=2) + "\n", encoding="utf-8")
     temporary.replace(destination / "report.json")
-    return payload
+    return stub
 
 
 if __name__ == "__main__":
