@@ -49,6 +49,18 @@ def _common_fakes():
         "imf_fetch": lambda country: _result(
             "imf", "NGDP_RPCH", [{"date": "2025", "value": 2.1, "indicator": "NGDP_RPCH", "country": country}]
         ),
+        "oecd_fetch": lambda country, limit: _result(
+            "oecd", "DSD_STES", [{"TIME_PERIOD": "2026-08", "OBS_VALUE": "99.8", "REF_AREA": country, "MEASURE": "LI"}]
+        ),
+        "eurostat_fetch": lambda geo, periods: _result(
+            "eurostat", "namq_10_gdp", [{"date": "2026-Q2", "value": 100.4, "geo": geo, "indicator": "B1GQ", "unit": "CLV10_MEUR"}]
+        ),
+        "usgs_fetch": lambda days, min_magnitude, limit: _result(
+            "usgs", "earthquakes", [{"event_id": "us-test", "magnitude": 4.8, "time": "2026-09-28T12:00:00Z", "place": "test location"}]
+        ),
+        "nasa_eonet_fetch": lambda days, limit: _result(
+            "nasa-eonet", "open-events", [{"event_id": "EONET-test", "title": "Wildfire", "date": "2026-09-28"}]
+        ),
         "boc_fetch": lambda series: _result(
             "bank-of-canada", series, [{"date": "2026-09-28", "series": series, "value": "1.4168"}]
         ),
@@ -151,12 +163,16 @@ class MarketContextTests(unittest.TestCase):
 
         self.assertEqual(context["schema_version"], MARKET_CONTEXT_SCHEMA)
         self.assertEqual(context["status"], "LIVE")
-        self.assertEqual(context["live_sources"], 21)
+        self.assertEqual(context["live_sources"], 25)
         self.assertEqual(context["sources"]["nws"]["status"], "LIVE")
         self.assertEqual(context["sources"]["bea"]["status"], "LIVE")
         self.assertEqual(context["sources"]["usda-nass"]["status"], "LIVE")
         self.assertEqual(context["sources"]["bis"]["status"], "LIVE")
         self.assertEqual(context["sources"]["coinbase-exchange"]["status"], "LIVE")
+        self.assertEqual(context["sources"]["oecd"]["status"], "LIVE")
+        self.assertEqual(context["sources"]["eurostat"]["status"], "LIVE")
+        self.assertEqual(context["sources"]["usgs"]["status"], "LIVE")
+        self.assertEqual(context["sources"]["nasa-eonet"]["status"], "LIVE")
         self.assertEqual(context["sources"]["nasdaq-quotes"]["status"], "LIVE")
         self.assertEqual(context["sources"]["nasdaq-earnings"]["status"], "LIVE")
         self.assertEqual(

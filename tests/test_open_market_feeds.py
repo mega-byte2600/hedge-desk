@@ -18,6 +18,10 @@ from hedge_desk.data.open_market_feeds import (
     eia_v2,
     finra_fixed_income,
     nyfed_reference_rates,
+    oecd_composite_leading_indicator,
+    eurostat_quarterly_gdp,
+    usgs_earthquakes,
+    nasa_eonet_events,
     sec_companyfacts,
     sec_submissions,
     treasury_latest_auctions,
@@ -331,6 +335,95 @@ class OpenMarketFeedTests(unittest.TestCase):
         self.assertEqual(urlparse(seen[0]).hostname, "api.worldbank.org")
         with self.assertRaisesRegex(ValueError, "unsupported World Bank"):
             world_bank_indicator("BAD.SERIES", transport=_transport(payload))
+
+    def test_oecd_cli_is_bounded_official_csv(self):
+        seen = []
+        raw = b"REF_AREA,MEASURE,TIME_PERIOD,OBS_VALUE\nUSA,CLI,2025-10,99.5\nUSA,CLI,2025-11,99.7\n"
+        result = oecd_composite_leading_indicator(
+            start_period="2025-10", end_period="2025-11",
+            transport=lambda url: (seen.append(url) or (200, raw)),
+        )
+        self.assertEqual((result.provider_id, result.dataset, result.row_count), ("oecd", "DF_CLI", 2))
+        self.assertEqual(result.rows[-1]["OBS_VALUE"], "99.7")
+        parsed = urlparse(seen[0])
+        self.assertEqual(parsed.hostname, "sdmx.oecd.org")
+        self.assertIn("USA.M.LI...AA...H", parsed.path)
+        query = parse_qs(parsed.query)
+        self.assertEqual(query["startPeriod"], ["2025-10"])
+        self.assertEqual(query["endPeriod"], ["2025-11"])
+        self.assertEqual(query["format"], ["csvfile"])
+
+    def test_eurostat_quarterly_gdp_parses_jsonstat_and_narrows_query(self):
+        seen = []
+        payload = {
+            "id": ["freq", "unit", "na_item", "s_adj", "geo", "time"],
+            "size": [1, 1, 1, 1, 1, 2],
+            "dimension": {"time": {"category": {"index": {"2025Q4": 0, "2026Q1": 1}}}},
+            "value": ["123.4", "124.5"],
+        }
+        result = eurostat_quarterly_gdp(transport=_transport(payload, seen=seen))
+        self.assertEqual(result.provider_id, "eurostat")
+        self.assertEqual(result.row_count, 2)
+        self.assertEqual(result.rows[-1]["value"], "124.5")
+        parsed = urlparse(seen[0])
+        self.assertEqual(parsed.hostname, "ec.europa.eu")
+        self.assertTrue(parsed.path.endswith("/namq_10_gdp"))
+        query = parse_qs(parsed.query)
+        self.assertEqual(query["geo"], ["EA20"])
+        self.assertEqual(query["na_item"], ["B1GQ"])
+        self.assertEqual(query["lastTimePeriod"], ["8"])
+
+    def test_usgs_earthquakes_uses_bounded_geojson_query(self):
+        seen = []
+        payload = {"features": [{
+            "id": "us-test", "properties": {"mag": 5.2, "time": 1790000000000,
+                "place": "30 km west of example", "title": "M 5.2 - example", "url": "https://earthquake.usgs.gov/test"},
+            "geometry": {"coordinates": [-120.1, 35.4, 8.2]},
+        }]}
+        result = usgs_earthquakes(transport=_transport(payload, seen=seen))
+        self.assertEqual(result.provider_id, "usgs")
+        self.assertEqual(result.row_count, 1)
+        self.assertEqual(result.rows[0]["magnitude"], 5.2)
+        self.assertEqual(result.rows[0]["latitude"], 35.4)
+        parsed = urlparse(seen[0])
+        self.assertEqual(parsed.hostname, "earthquake.usgs.gov")
+        self.assertTrue(parsed.path.endswith("/fdsnws/event/1/query"))
+        query = parse_qs(parsed.query)
+        self.assertEqual(query["format"], ["geojson"])
+        self.assertEqual(query["minmagnitude"], ["4.5"])
+        self.assertEqual(query["limit"], ["25"])
+
+    def test_nasa_eonet_returns_open_event_evidence_with_bounded_query(self):
+        seen = []
+        payload = {"events": [{
+            "id": "EONET_1", "title": "Example wildfire",
+            "categories": [{"id": "wildfires"}], "sources": [{"id": "InciWeb"}],
+            "geometry": [{"date": "2026-10-02T12:00:00Z", "type": "Point", "coordinates": [-120.0, 37.0]}],
+        }]}
+        result = nasa_eonet_events(transport=_transport(payload, seen=seen))
+        self.assertEqual(result.provider_id, "nasa-eonet")
+        self.assertEqual(result.row_count, 1)
+        self.assertEqual(result.rows[0]["categories"], ["wildfires"])
+        parsed = urlparse(seen[0])
+        self.assertEqual(parsed.hostname, "eonet.gsfc.nasa.gov")
+        self.assertTrue(parsed.path.endswith("/api/v3/events"))
+        query = parse_qs(parsed.query)
+        self.assertEqual(query["status"], ["open"])
+        self.assertEqual(query["days"], ["30"])
+        self.assertEqual(query["limit"], ["25"])
+
+    def test_global_feed_adapters_reject_unbounded_or_malformed_inputs(self):
+        called = []
+        transport = lambda url: (called.append(url) or (200, b"{}"))
+        with self.assertRaises(ValueError):
+            oecd_composite_leading_indicator(start_period="2026-13", transport=transport)
+        with self.assertRaises(ValueError):
+            eurostat_quarterly_gdp(periods=41, transport=transport)
+        with self.assertRaises(ValueError):
+            usgs_earthquakes(days=366, transport=transport)
+        with self.assertRaises(ValueError):
+            nasa_eonet_events(limit=501, transport=transport)
+        self.assertEqual(called, [])
 
     def test_cftc_tff_uses_official_public_reporting_api(self):
         seen = []

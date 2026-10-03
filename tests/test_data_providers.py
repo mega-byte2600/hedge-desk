@@ -20,6 +20,10 @@ def test_authoritative_public_sources_cover_core_desk_domains():
     assert provider("eia-open-data").authority == "official"
     assert provider("cftc-cot").authority == "official"
     assert provider("bis").authority == "official"
+    for provider_id in ("imf", "oecd", "eurostat", "usgs", "nasa-eonet"):
+        assert provider(provider_id).authority == "official"
+        assert provider(provider_id).public_without_key is True
+        assert missing_auth_env(provider_id, {}) is None
 
     assert provider("sec-edgar").public_without_key is True
     assert provider("nyfed-markets").public_without_key is True
@@ -77,7 +81,8 @@ def test_provider_console_rows_surface_all_catalog_providers():
     ids = {r["source_id"] for r in rows}
     assert "fdic" not in ids
     assert {"sec-edgar", "treasury-fiscaldata", "fred", "cftc-cot",
-            "nws", "stooq", "alpha-vantage", "bis", "coinbase-exchange"}.issubset(ids)
+            "nws", "stooq", "alpha-vantage", "bis", "coinbase-exchange",
+            "imf", "oecd", "eurostat", "usgs", "nasa-eonet"}.issubset(ids)
     for r in rows:
         # statuses must render under the console statusClass() palette
         assert r["status"] in ("PASS", "PENDING", "REVIEW_REQUIRED")
@@ -87,6 +92,8 @@ def test_provider_console_rows_surface_all_catalog_providers():
     assert by_id["sec-edgar"]["status"] == "PASS"
     assert by_id["sec-edgar"]["public_without_key"] is True
     assert by_id["bis"]["status"] == "PASS"
+    for provider_id in ("imf", "oecd", "eurostat", "usgs", "nasa-eonet"):
+        assert by_id[provider_id]["status"] == "PASS"
     assert by_id["coinbase-exchange"]["status"] == "PASS"
     assert by_id["alpha-vantage"]["status"] == "REVIEW_REQUIRED"
 

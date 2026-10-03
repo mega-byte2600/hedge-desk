@@ -21,6 +21,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 import ssl
 from dataclasses import dataclass
+from datetime import date, timedelta
 from typing import Callable, Mapping, Sequence, Tuple
 
 
@@ -51,6 +52,13 @@ FDIC_FAILURES_URL = "https://api.fdic.gov/banks/failures"
 WORLD_BANK_INDICATOR_URL = "https://api.worldbank.org/v2/country/{country}/indicator/{indicator}"
 # IMF DataMapper API: keyless global macro series (real GDP growth %, etc.).
 IMF_DATAMAPPER_URL = "https://www.imf.org/external/datamapper/api/v1/{indicator}/{country}"
+# Official OECD SDMX API: composite leading indicator, machine-readable CSV.
+OECD_CLI_URL = "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_CLI/{key}"
+# Official Eurostat statistics API: quarterly GDP, returned as JSON-stat.
+EUROSTAT_GDP_URL = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/namq_10_gdp"
+# Official FDSN Earthquake Catalog GeoJSON query and NASA EONET v3 events API.
+USGS_EARTHQUAKE_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query"
+NASA_EONET_EVENTS_URL = "https://eonet.gsfc.nasa.gov/api/v3/events"
 # Bank of Canada Valet API: official daily FX reference rates (keyless).
 BOC_VALET_URL = "https://www.bankofcanada.ca/valet/observations/{series}/json"
 # Coinbase exchange-rates API: keyless crypto/fiat reference rates.
@@ -562,6 +570,168 @@ def imf_gdp_growth(
     return OpenFeedResult("imf", "NGDP_RPCH", rows)
 
 
+def oecd_composite_leading_indicator(
+    country: str = "USA",
+    start_period: str | None = None,
+    end_period: str | None = None,
+    limit: int = 36,
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch a bounded OECD composite-leading-indicator time series."""
+    normalized_country = country.strip().upper()
+    if len(normalized_country) != 3 or not normalized_country.isascii() or not normalized_country.isalpha():
+        raise ValueError("invalid OECD country code")
+    limit = _positive_limit(limit, 200)
+    today = date.today()
+    start_period = start_period or today.replace(year=today.year - 2).strftime("%Y-%m")
+    end_period = end_period or today.strftime("%Y-%m")
+    for period in (start_period, end_period):
+        if (len(period) != 7 or period[4] != "-" or not period[:4].isdigit()
+                or not period[5:].isdigit() or not 1 <= int(period[5:]) <= 12):
+            raise ValueError("periods must be YYYY-MM")
+    if start_period > end_period:
+        raise ValueError("start_period must not follow end_period")
+    # The OECD sample key selects monthly CLI amplitude-adjusted index data.
+    key = f"{normalized_country}.M.LI...AA...H"
+    query = urllib.parse.urlencode({
+        "startPeriod": start_period,
+        "endPeriod": end_period,
+        "dimensionAtObservation": "AllDimensions",
+        "format": "csvfile",
+    })
+    raw = _fetch_bytes(OECD_CLI_URL.format(key=key) + "?" + query, "oecd", transport)
+    reader = csv.DictReader(io.StringIO(raw.decode("utf-8-sig")))
+    if not reader.fieldnames or not {"TIME_PERIOD", "OBS_VALUE"}.issubset(reader.fieldnames):
+        raise ValueError("oecd CSV is missing observation columns")
+    rows = tuple(
+        {key: row.get(key) for key in ("REF_AREA", "MEASURE", "TIME_PERIOD", "OBS_VALUE") if row.get(key) not in (None, "")}
+        for row in reader
+        if row.get("TIME_PERIOD") and row.get("OBS_VALUE") not in (None, "")
+    )[-limit:]
+    if not rows:
+        raise ValueError("oecd payload has no observations")
+    return OpenFeedResult("oecd", "DF_CLI", rows)
+
+
+def eurostat_quarterly_gdp(
+    geo: str = "EA20",
+    periods: int = 8,
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch recent Euro-area quarterly GDP from Eurostat's JSON-stat API."""
+    normalized_geo = geo.strip().upper()
+    if not normalized_geo.isascii() or not normalized_geo.replace("_", "").isalnum() or len(normalized_geo) > 16:
+        raise ValueError("invalid Eurostat geography code")
+    periods = _positive_limit(periods, 40)
+    query = urllib.parse.urlencode({
+        "freq": "Q", "unit": "CLV10_MEUR", "na_item": "B1GQ",
+        "s_adj": "SCA", "geo": normalized_geo,
+        "lastTimePeriod": str(periods), "lang": "en",
+    })
+    payload = _fetch_json(EUROSTAT_GDP_URL + "?" + query, "eurostat", transport)
+    if not isinstance(payload, dict):
+        raise ValueError("eurostat payload is not an object")
+    dimensions, sizes = payload.get("id"), payload.get("size")
+    dimension = payload.get("dimension")
+    values = payload.get("value")
+    if not isinstance(dimensions, list) or not isinstance(sizes, list) or not isinstance(dimension, dict):
+        raise ValueError("eurostat payload has no JSON-stat dimensions")
+    if "time" not in dimensions or len(dimensions) != len(sizes):
+        raise ValueError("eurostat payload has no time dimension")
+    time_index = dimensions.index("time")
+    if any(size != 1 for i, size in enumerate(sizes) if i != time_index):
+        raise ValueError("eurostat query returned ambiguous non-time dimensions")
+    categories = dimension.get("time", {}).get("category", {}).get("index")
+    if not isinstance(categories, dict) or not categories:
+        raise ValueError("eurostat payload has no time categories")
+    stride = 1
+    for size in sizes[time_index + 1:]:
+        stride *= size
+    rows = []
+    for period, category_index in sorted(categories.items(), key=lambda item: item[1]):
+        offset = category_index * stride
+        if isinstance(values, list):
+            value = values[offset] if offset < len(values) else None
+        elif isinstance(values, dict):
+            value = values.get(str(offset))
+        else:
+            raise ValueError("eurostat payload has no observation values")
+        if value not in (None, ""):
+            rows.append({"date": str(period), "value": value, "geo": normalized_geo,
+                         "indicator": "B1GQ", "unit": "CLV10_MEUR"})
+    if not rows:
+        raise ValueError("eurostat payload has no GDP observations")
+    return OpenFeedResult("eurostat", "namq_10_gdp", tuple(rows))
+
+
+def usgs_earthquakes(
+    days: int = 30,
+    min_magnitude: float = 4.5,
+    limit: int = 25,
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch recent material earthquakes using a bounded USGS GeoJSON query."""
+    days = _positive_limit(days, 365)
+    limit = _positive_limit(limit, 500)
+    if not isinstance(min_magnitude, (int, float)) or not 0 <= min_magnitude <= 10:
+        raise ValueError("min_magnitude must be between 0 and 10")
+    end = date.today()
+    query = urllib.parse.urlencode({
+        "format": "geojson", "starttime": (end - timedelta(days=days)).isoformat(),
+        "endtime": end.isoformat(), "minmagnitude": str(min_magnitude),
+        "orderby": "time", "limit": str(limit),
+    })
+    payload = _fetch_json(USGS_EARTHQUAKE_URL + "?" + query, "usgs", transport)
+    if not isinstance(payload, dict) or not isinstance(payload.get("features"), list):
+        raise ValueError("usgs payload has no GeoJSON features")
+    rows = []
+    for feature in payload["features"][:limit]:
+        if not isinstance(feature, dict) or not isinstance(feature.get("properties"), dict):
+            continue
+        properties = feature["properties"]
+        geometry = feature.get("geometry") if isinstance(feature.get("geometry"), dict) else {}
+        coordinates = geometry.get("coordinates")
+        row = {"event_id": feature.get("id"), "magnitude": properties.get("mag"),
+               "time": properties.get("time"), "place": properties.get("place"),
+               "title": properties.get("title"), "url": properties.get("url")}
+        if isinstance(coordinates, list) and len(coordinates) >= 2:
+            row.update({"longitude": coordinates[0], "latitude": coordinates[1]})
+            if len(coordinates) > 2:
+                row["depth_km"] = coordinates[2]
+        rows.append({key: value for key, value in row.items() if value not in (None, "")})
+    return OpenFeedResult("usgs", "earthquakes-m4_5-30d", tuple(rows))
+
+
+def nasa_eonet_events(
+    days: int = 30,
+    limit: int = 25,
+    transport: Transport = _default_transport,
+) -> OpenFeedResult:
+    """Fetch recent open natural events from NASA EONET v3."""
+    days = _positive_limit(days, 365)
+    limit = _positive_limit(limit, 500)
+    query = urllib.parse.urlencode({"status": "open", "days": str(days), "limit": str(limit)})
+    payload = _fetch_json(NASA_EONET_EVENTS_URL + "?" + query, "nasa-eonet", transport)
+    if not isinstance(payload, dict) or not isinstance(payload.get("events"), list):
+        raise ValueError("nasa-eonet payload has no events")
+    rows = []
+    for event in payload["events"][:limit]:
+        if not isinstance(event, dict):
+            continue
+        geometries = event.get("geometry") if isinstance(event.get("geometry"), list) else []
+        latest = geometries[-1] if geometries and isinstance(geometries[-1], dict) else {}
+        categories = event.get("categories") if isinstance(event.get("categories"), list) else []
+        sources = event.get("sources") if isinstance(event.get("sources"), list) else []
+        rows.append({
+            "event_id": event.get("id"), "title": event.get("title"),
+            "categories": [item.get("id") for item in categories if isinstance(item, dict) and item.get("id")],
+            "sources": [item.get("id") for item in sources if isinstance(item, dict) and item.get("id")],
+            "date": latest.get("date"), "geometry_type": latest.get("type"),
+            "coordinates": latest.get("coordinates"),
+        })
+    return OpenFeedResult("nasa-eonet", "open-natural-events", tuple(rows))
+
+
 def bank_of_canada_fx(
     series: str = "FXUSDCAD",
     transport: Transport = _default_transport,
@@ -929,6 +1099,13 @@ __all__ = [
     "treasury_yield_curve",
     "fdic_failures",
     "nyfed_reference_rates",
+    "imf_gdp_growth",
+    "oecd_composite_leading_indicator",
+    "eurostat_quarterly_gdp",
+    "usgs_earthquakes",
+    "nasa_eonet_events",
+    "bank_of_canada_fx",
+    "frankfurter_fx",
     "sec_companyfacts",
     "sec_submissions",
     "treasury_latest_auctions",
