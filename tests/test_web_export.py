@@ -1,57 +1,27 @@
-"""Console export must retain the engine's publication boundary."""
-import copy
+"""Static export must never carry synthetic data (fail-closed stub)."""
 import json
 import tempfile
 import unittest
-from datetime import datetime, timezone
 from pathlib import Path
 from scripts.build_web import export_report
-from hedge_desk.overnight import build_morning_report
 
 
 class WebExportTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.report = build_morning_report(datetime(2026, 9, 6, tzinfo=timezone.utc), 'fixed-test-commit')
-
-    def test_valid_export_preserves_immutable_engine_result(self):
+    def test_export_writes_fail_closed_stub(self):
         with tempfile.TemporaryDirectory() as folder:
-            export_report(self.report, folder)
-            result = json.loads((Path(folder) / 'report.json').read_text())
-            self.assertEqual(result['report'], json.loads(json.dumps(self.report)))
-            self.assertEqual(result['summary']['report_sha256'], self.report['report_sha256'])
-            self.assertEqual(len(result['report']['projects']), 6)
-            self.assertEqual(len(result['registry']), 7)
-            self.assertEqual(result['registry'][-1]['project_id'], 'bonds-rates-desk')
-            self.assertEqual(result['registry'][-1]['status'], 'architecture_only')
-            self.assertFalse(result['report']['live_orders_enabled'])
-            self.assertEqual(result['candidate_feed']['schema_version'], 'hedge-desk-candidates-1.0.0')
-            evaluated_ids = {project['project_id'] for project in result['report']['projects']}
-            candidate_ids = {row['desk_id'] for row in result['candidate_feed']['candidates']}
-            # Real-EOD contract: the candidate feed is the overnight wheel universe
-            # (matches the dashboard), not the 6-desk static seed.
-            self.assertEqual(result['candidate_feed']['mode'], 'REAL_EOD')
-            self.assertEqual(candidate_ids, {'overnight-premium-desk'})
-            self.assertTrue({'AAL', 'CCL', 'DVN', 'F', 'LYFT', 'NCLH', 'NKE'}.issubset(
-                {row['symbol'] for row in result['candidate_feed']['candidates']}
-            ))
-            self.assertTrue(all(not row['trade_authorized'] for row in result['candidate_feed']['candidates']))
-            self.assertEqual(result['owner']['linkedin_url'], 'https://www.linkedin.com/in/bolton-2600/')
+            stub = export_report({}, folder)
+            self.assertEqual(stub["status"], "data_unavailable")
+            self.assertFalse(stub["synthetic_data"])
+            on_disk = json.loads((Path(folder) / "report.json").read_text(encoding="utf-8"))
+            self.assertEqual(on_disk["status"], "data_unavailable")
 
-    def test_tampered_report_does_not_replace_published_snapshot(self):
+    def test_export_never_embeds_report_content(self):
+        # Even if handed a full report, the static export must not embed it:
+        # the console loads live data from /api/report.
+        fake_report = {"report_type": "paper_hypothetical_morning_evaluation",
+                       "projects": [{"project_id": "x"}]}
         with tempfile.TemporaryDirectory() as folder:
-            export_report(self.report, folder)
-            original = (Path(folder) / 'report.json').read_bytes()
-            modified = copy.deepcopy(self.report)
-            modified['projects'][0]['layers'][3]['metrics']['risk_of_ruin'] = '0.2'
-            with self.assertRaises(ValueError):
-                export_report(modified, folder)
-            self.assertEqual((Path(folder) / 'report.json').read_bytes(), original)
-
-    def test_live_report_cannot_be_exported(self):
-        modified = copy.deepcopy(self.report)
-        modified['live_orders_enabled'] = True
-        with tempfile.TemporaryDirectory() as folder:
-            with self.assertRaises(ValueError):
-                export_report(modified, folder)
-            self.assertFalse((Path(folder) / 'report.json').exists())
+            export_report(fake_report, folder)
+            text = (Path(folder) / "report.json").read_text(encoding="utf-8")
+            self.assertNotIn("paper_hypothetical", text)
+            self.assertNotIn("project_id", text)

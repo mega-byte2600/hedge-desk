@@ -98,6 +98,8 @@ class TestNoSyntheticFrontend(unittest.TestCase):
         self.assertNotIn("synthetic research fixtures", app_js)
         self.assertNotIn("Synthetic inputs only", app_js)
         self.assertNotIn("SYNTHETIC RESEARCH", app_js)
+        index_html = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
+        self.assertNotIn("synthetic test-drive", index_html.lower())
 
     def test_build_web_writes_fail_closed_stub(self):
         import scripts.build_web as build_web
