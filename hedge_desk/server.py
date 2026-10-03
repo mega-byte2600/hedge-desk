@@ -208,15 +208,43 @@ def performance_snapshot():
 
 
 def build_live_console_payload():
-    """Regenerate a fresh, validated desk-console payload from the engine.
+    """Build the desk-console payload from real market data. No synthetic fixtures.
 
-    Mirrors the deploy-time export (scripts/build_web.py) but runs the engine
-    now, so the console can show a report generated moments ago rather than
-    only the last committed deploy snapshot. Rejected by the release gate if
-    the freshly computed report is not publishable.
+    Uses live public API data (cached per API_CACHE_SECONDS). Fail-closed:
+    raises RuntimeError when no real data is available; the route maps this
+    to a 503 with an explicit reason instead of serving synthetic data.
     """
-    report = current_morning_report()
-    return build_console_payload(report)
+    from hedge_desk.live_desk_data import build_live_console_report
+    from hedge_desk.candidates import build_real_eod_candidate_feed
+    from hedge_desk.data.providers import provider_console_rows
+    from hedge_desk.projects import DESK_ARCHITECTURE
+    from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
+    from dataclasses import asdict
+    import os
+
+    code_commit = os.environ.get("HEDGE_DESK_CODE_COMMIT", "LOCAL_UNSPECIFIED")
+    report = build_live_console_report(code_commit)
+    candidate_feed = build_real_eod_candidate_feed()
+    scenarios = report["scenarios"]
+    return {
+        "schema_version": "desk-console-1",
+        "report": report,
+        "summary": {
+            "desks_reporting": report["summary"]["desks_reporting"],
+            "desks_total": report["summary"]["desks_total"],
+            "scenarios": len(scenarios),
+            "data_as_of": report["generated_at"],
+            "report_sha256": "",
+        },
+        "registry": [asdict(project) for project in DESK_ARCHITECTURE],
+        "candidate_feed": candidate_feed,
+        "risk_dashboard": build_candidate_risk_dashboard(candidate_feed),
+        "owner": {
+            "display_name": "mbolton",
+            "linkedin_url": "https://www.linkedin.com/in/bolton-2600/",
+        },
+        "research_data_sources": list(provider_console_rows()),
+    }
 
 
 NIGHTLY_OUTCOMES_SCHEMA = "hedge-desk-nightly-outcomes-1.0.0"
@@ -328,7 +356,13 @@ def _dispatch(environ, start_response):
     if path == "/api/about":
         return _json(start_response, {"display_name": "mbolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
     if path == "/api/report":
-        return _json(start_response, _cached("console-report", build_live_console_payload))
+        try:
+            return _json(start_response, _cached("console-report", build_live_console_payload))
+        except RuntimeError as exc:
+            # Fail-closed: no synthetic fallback. The console renders
+            # "data unavailable" with this reason.
+            start_response("503 Service Unavailable", [("Content-Type", "application/json")])
+            return [json.dumps({"status": "data_unavailable", "reason": str(exc)}).encode()]
     # True-MVP demo: serve the regenerated AM report page / live report JSON
     # straight from artifacts/ (the real EOD -> overnight -> AM candidate output).
     # Live overview dashboard (was /am-demo); old path redirects. Root serves

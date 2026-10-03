@@ -243,12 +243,15 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("function renderScenarios()", app)
         self.assertIn("scenarioRows(report)", app)
         self.assertIn("filterRows(scenarioRows(report)", app)
-        self.assertIn("report.war_games", core)
-        self.assertIn("report.portfolio_stress.scenarios", core)
+        # Real-data contract: scenarios come from report.scenarios (hypothetical
+        # projections from live base data), never synthetic war games.
+        self.assertIn("report.scenarios", core)
+        self.assertNotIn("report.war_games", core)
+        self.assertNotIn("report.portfolio_stress", core)
+        self.assertIn("hypothetical projection from real base data", app)
         self.assertIn("candidate.report?.environment!=='paper'", app)
         self.assertIn("candidate.report.live_orders_enabled!==false", app)
-        self.assertIn("candidate.report.projects.length!==6", app)
-        self.assertIn("Exact engine record from the overnight report.", app)
+        self.assertIn("candidate.report.synthetic_data!==false", app)
         self.assertNotIn("runScenario", app)
         self.assertNotIn("executeScenario", app)
 

@@ -77,8 +77,21 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status2, '200 OK')
         self.assertEqual(len({row['desk_id'] for row in report['candidates']}), 6)
 
+    @staticmethod
+    def _fake_quotes(symbols, timeout=8):
+        quotes = {}
+        for i, s in enumerate(symbols):
+            quotes[s] = {
+                "symbol": s, "name": s, "last": 100.0 + i,
+                "prev_close": 99.0 + i, "change_pct": 1.0,
+                "source": "Yahoo Finance",
+            }
+        return quotes, []
+
     def test_live_report_recomputes_a_valid_paper_only_console_payload(self):
-        status, payload = self.request('/api/report')
+        from hedge_desk.live_desk_data import STATUS_LIVE
+        with patch('hedge_desk.live_desk_data.fetch_market_snapshot', self._fake_quotes):
+            status, payload = self.request('/api/report')
 
         self.assertEqual(status, '200 OK')
         self.assertEqual(payload['schema_version'], 'desk-console-1')
@@ -86,12 +99,14 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(report['environment'], 'paper')
         self.assertFalse(report['live_orders_enabled'])
         self.assertEqual(report['real_trades_executed'], 0)
-        self.assertEqual(len(report['projects']), 6)
-        self.assertIn('report_sha256', report)
+        self.assertFalse(report.get('synthetic_data', True))
         self.assertIn('generated_at', report)
+        # every desk carries real quotes or an explicit unavailable reason
+        for project in report['projects']:
+            self.assertIn(project['data_status'], ('live', 'batch', 'data_unavailable'))
         # registry + summary present for the console to render
-        self.assertEqual(len(payload['registry']), len(payload['report']['projects']) + 1)
-        self.assertIn('projects_evaluated', payload['summary'])
+        self.assertIn('desks_reporting', payload['summary'])
+        self.assertIn('scenarios', payload['summary'])
 
     def test_live_report_is_cached_but_fresh_within_cache_window(self):
         # Two calls inside the API cache window return the same generated_at
@@ -106,20 +121,16 @@ class ServerTests(unittest.TestCase):
         )
 
     def test_live_report_uses_engine_not_the_committed_snapshot(self):
-        # The endpoint must be recomputing from the engine (fresh timestamp),
-        # not serving the static dist/report.json snapshot. We assert the
-        # report hash matches a direct engine build at the same moment.
-        from hedge_desk.console_report import build_console_payload
-        from hedge_desk.overnight import build_morning_report
-        from datetime import datetime, timezone
-
-        engine = build_console_payload(
-            build_morning_report(datetime.now(timezone.utc), "TEST-LIVE")
-        )
-        status, payload = self.request('/api/report')
+        # The endpoint must be recomputing from live data (fresh timestamp),
+        # not serving a static snapshot. We assert the payload carries the
+        # live report type and real quotes, not synthetic fixtures.
+        with patch('hedge_desk.live_desk_data.fetch_market_snapshot', self._fake_quotes):
+            status, payload = self.request('/api/report')
         self.assertEqual(status, '200 OK')
-        self.assertEqual(payload['report']['environment'], engine['report']['environment'])
-        self.assertEqual(len(payload['report']['projects']), len(engine['report']['projects']))
+        self.assertEqual(payload['report']['report_type'], 'live_market_console')
+        live = [p for p in payload['report']['projects'] if p['data_status'] == 'live']
+        self.assertTrue(live, 'at least one desk must have live data')
+        self.assertIn('last', live[0]['live_data'][next(iter(live[0]['live_data']))])
 
     def test_auth_tier_and_broker_routes_are_forwarded_to_the_auth_app(self):
         # Regression: the server previously forwarded only /api/auth/*, so
