@@ -118,7 +118,7 @@ class FakeSupabase:
             row = self.rows.get(email)
             if not row:
                 return 200, b"[]"
-            return 200, json.dumps([{k: row[k] for k in ("broker", "account_label", "updated_at")}]).encode()
+            return 200, json.dumps([row]).encode()
         if method == "POST":
             row = json.loads(body)
             self.rows[row["email"]] = row
@@ -143,6 +143,8 @@ class SupabaseBrokerStoreTests(unittest.TestCase):
         self.assertEqual(conn["broker"], "schwab")
         self.assertEqual(conn["account_label"], "Main")
         self.assertNotIn("token", conn)
+        creds = self.store.credentials("m@x.com", key=self.key)
+        self.assertEqual(creds["access_token"], "tok")
 
     def test_guest_cannot_link(self):
         with self.assertRaises(PermissionError):
