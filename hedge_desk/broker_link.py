@@ -22,14 +22,18 @@ Real adapter hooks: a concrete broker (e.g. Schwab) adapter implements
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import hmac
+import json
 import os
 import secrets
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
+
+from cryptography.fernet import Fernet, InvalidToken
 
 from hedge_desk.sqlite_thread import new_lock, open_connection, thread_safe
 from hedge_desk.tier_access import can_access_real_data
@@ -66,24 +70,63 @@ def _default_http_transport(method, url, headers, body):
         return exc.code, exc.read()
 
 
+def _fernet(key: bytes) -> Fernet:
+    """Derive a stable Fernet key from the server-side BROKER_LINK_KEY."""
+    if not key:
+        raise ValueError("broker encryption key is required")
+    derived = hashlib.sha256(key).digest()
+    return Fernet(base64.urlsafe_b64encode(derived))
+
+
 def _encrypt_token(token: str, key: bytes) -> str:
-    # Envelope: random nonce + HMAC-authenticated token. Not cryptographic
-    # storage-grade on its own; it only guards an at-rest reference until a
-    # real broker adapter and key-management story land.
-    nonce = secrets.token_hex(16)
-    tag = hmac.new(key, (nonce + token).encode("utf-8"), hashlib.sha256).hexdigest()
-    return f"{nonce}:{tag}:{token}"
+    """Authenticated encryption for broker credential bundles."""
+    encrypted = _fernet(key).encrypt(token.encode("utf-8")).decode("ascii")
+    return "fernet:" + encrypted
 
 
 def _decrypt_token(blob: str, key: bytes) -> Optional[str]:
+    """Decrypt current Fernet blobs; accept legacy HMAC envelopes for migration."""
     try:
+        if blob.startswith("fernet:"):
+            return _fernet(key).decrypt(blob.split(":", 1)[1].encode("ascii")).decode("utf-8")
+        # Legacy format from the read-only scaffold. Read it only so an existing
+        # connection can be re-saved under Fernet on its next successful refresh.
         nonce, tag, token = blob.split(":", 2)
         expect = hmac.new(key, (nonce + token).encode("utf-8"), hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(tag, expect):
-            return None
-        return token
-    except Exception:
+        return token if hmac.compare_digest(tag, expect) else None
+    except (InvalidToken, ValueError, UnicodeDecodeError):
         return None
+
+
+def _bundle_json(
+    access_token: str,
+    refresh_token: str = "",
+    expires_at: str = "",
+    account_hash: str = "",
+    account_number: str = "",
+) -> str:
+    return json.dumps(
+        {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "expires_at": expires_at,
+            "account_hash": account_hash,
+            "account_number": account_number,
+        },
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+
+
+def _parse_bundle(raw: str) -> dict:
+    try:
+        data = json.loads(raw)
+        if isinstance(data, dict) and data.get("access_token"):
+            return data
+    except Exception:
+        pass
+    # Backward compatibility for a pre-bundle stored access token.
+    return {"access_token": raw, "refresh_token": "", "expires_at": "", "account_hash": "", "account_number": ""}
 
 
 @thread_safe
@@ -110,6 +153,10 @@ class BrokerLinkStore:
         token: str,
         account_label: str = "",
         key: Optional[bytes] = None,
+        refresh_token: str = "",
+        expires_at: str = "",
+        account_hash: str = "",
+        account_number: str = "",
     ) -> dict:
         """Store a broker connection for a member. Fail closed on tier or key."""
         if role.upper() not in _ROLES_ALLOWED:
@@ -119,7 +166,7 @@ class BrokerLinkStore:
             if not key:
                 raise ValueError("BROKER_LINK_KEY not set; refusing to store broker token")
         now = _utcnow()
-        enc = _encrypt_token(token, key)
+        enc = _encrypt_token(_bundle_json(token, refresh_token, expires_at, account_hash, account_number), key)
         self._conn.execute(
             "INSERT INTO broker_links (email, broker, account_label, token_enc, created_at, updated_at) "
             "VALUES (?, ?, ?, ?, ?, ?) "
@@ -150,6 +197,25 @@ class BrokerLinkStore:
             "account_label": row[1],
             "updated_at": row[2],
         }
+
+    def credentials(self, email: str, key: Optional[bytes] = None) -> dict:
+        """Return decrypted broker credentials for server-side adapter use only."""
+        if not key:
+            key = (os.environ.get("BROKER_LINK_KEY") or "").encode("utf-8")
+        if not key:
+            return {"status": "error", "error": "broker_key_missing"}
+        row = self._conn.execute(
+            "SELECT broker, account_label, token_enc FROM broker_links WHERE email=?",
+            (email.lower(),),
+        ).fetchone()
+        if not row or not row[2]:
+            return {"status": "error", "error": "no_broker_linked"}
+        raw = _decrypt_token(row[2], key)
+        if not raw:
+            return {"status": "error", "error": "credential_decrypt_failed"}
+        bundle = _parse_bundle(raw)
+        bundle.update({"status": "ok", "broker": row[0], "account_label": row[1]})
+        return bundle
 
     def unlink(self, email: str) -> None:
         self._conn.execute("DELETE FROM broker_links WHERE email=?", (email.lower(),))
@@ -218,7 +284,10 @@ class SupabaseBrokerLinkStore:
     def close(self) -> None:
         return None
 
-    def link(self, email, role, broker, token, account_label="", key=None) -> dict:
+    def link(
+        self, email, role, broker, token, account_label="", key=None,
+        refresh_token="", expires_at="", account_hash="", account_number=""
+    ) -> dict:
         if str(role).upper() not in _ROLES_ALLOWED:
             raise PermissionError("broker link requires member/LP/GP")
         if not key:
@@ -226,7 +295,7 @@ class SupabaseBrokerLinkStore:
             if not key:
                 raise ValueError("BROKER_LINK_KEY not set; refusing to store broker token")
         now = _utcnow()
-        enc = _encrypt_token(token, key)
+        enc = _encrypt_token(_bundle_json(token, refresh_token, expires_at, account_hash, account_number), key)
         self._call(
             "POST",
             body={
@@ -252,6 +321,28 @@ class SupabaseBrokerLinkStore:
             "account_label": r.get("account_label"),
             "updated_at": r.get("updated_at"),
         }
+
+    def credentials(self, email: str, key: Optional[bytes] = None) -> dict:
+        if not key:
+            key = (os.environ.get("BROKER_LINK_KEY") or "").encode("utf-8")
+        if not key:
+            return {"status": "error", "error": "broker_key_missing"}
+        rows = self._call(
+            "GET",
+            f"email=eq.{email.lower()}&select=broker,account_label,token_enc",
+        )
+        if not rows or not rows[0].get("token_enc"):
+            return {"status": "error", "error": "no_broker_linked"}
+        raw = _decrypt_token(rows[0]["token_enc"], key)
+        if not raw:
+            return {"status": "error", "error": "credential_decrypt_failed"}
+        bundle = _parse_bundle(raw)
+        bundle.update({
+            "status": "ok",
+            "broker": rows[0].get("broker"),
+            "account_label": rows[0].get("account_label"),
+        })
+        return bundle
 
     def unlink(self, email: str) -> None:
         self._call("DELETE", f"email=eq.{email.lower()}")

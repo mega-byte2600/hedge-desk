@@ -41,17 +41,18 @@ class SchwabReadOnlyTests(unittest.TestCase):
         self.assertEqual(result["status"], "ok")
         self.assertTrue(result["read_only"])
         self.assertEqual(result["account_numbers"], ["12345678", "87654321"])
+        self.assertEqual(result["accounts"][0]["account_hash"], "abc")
 
     def test_positions_read_only(self):
         broker = SchwabReadOnlyBroker(transport=make_transport(200, FIXTURE_POSITIONS))
-        result = broker.positions("tok", "12345678")
+        result = broker.positions("tok", "abc")
         self.assertEqual(result["status"], "ok")
         self.assertTrue(result["read_only"])
         self.assertIn("securitiesAccount", result["positions"])
 
     def test_balances_read_only(self):
         broker = SchwabReadOnlyBroker(transport=make_transport(200, FIXTURE_POSITIONS))
-        result = broker.balances("tok", "12345678")
+        result = broker.balances("tok", "abc")
         self.assertEqual(result["status"], "ok")
         self.assertTrue(result["read_only"])
 

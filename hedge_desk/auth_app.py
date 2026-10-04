@@ -23,7 +23,9 @@ from __future__ import annotations
 import json
 import os
 import sys
+from datetime import datetime, timedelta, timezone
 from http.cookies import SimpleCookie
+from urllib.parse import parse_qs
 from typing import Callable, Optional
 from pathlib import Path
 
@@ -216,6 +218,141 @@ def make_auth_app(
             audit.record(event, email_addr, actor=actor, detail=detail)
         except Exception as exc:
             _warn(f"audit append failed for {event!r} ({email_addr}): {exc!r}")
+
+    def _expires_at(expires_in) -> str:
+        try:
+            seconds = max(60, int(expires_in or 1800))
+        except (TypeError, ValueError):
+            seconds = 1800
+        return (datetime.now(timezone.utc) + timedelta(seconds=seconds)).isoformat()
+
+    def _is_expiring(expires_at: str) -> bool:
+        if not expires_at:
+            return True
+        try:
+            when = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            if when.tzinfo is None:
+                when = when.replace(tzinfo=timezone.utc)
+            return when <= datetime.now(timezone.utc) + timedelta(seconds=60)
+        except (TypeError, ValueError):
+            return True
+
+    def _persist_broker_credentials(email_addr: str, role: str, tokens: dict, account: dict, account_label: str = "") -> dict:
+        broker_store.link(
+            email_addr,
+            role,
+            getattr(broker_oauth, "name", "schwab"),
+            tokens["access_token"],
+            account_label=account_label or account.get("account_number", ""),
+            refresh_token=tokens.get("refresh_token", ""),
+            expires_at=_expires_at(tokens.get("expires_in")),
+            account_hash=account.get("account_hash", ""),
+            account_number=account.get("account_number", ""),
+        )
+        return {
+            "access_token": tokens["access_token"],
+            "refresh_token": tokens.get("refresh_token", ""),
+            "expires_at": _expires_at(tokens.get("expires_in")),
+            "account_hash": account.get("account_hash", ""),
+            "account_number": account.get("account_number", ""),
+        }
+
+    def _complete_broker_link(email_addr: str, role: str, code: str, state: str, account_label: str = "") -> dict:
+        if not state or not store.verify_otp(email_addr, state, purpose="broker_state"):
+            return {"status": "error", "error": "invalid_state", "http_status": 400}
+        tokens = broker_oauth.exchange_code(code)
+        if tokens.get("status") != "ok":
+            return {
+                "status": "error",
+                "error": "token_exchange_failed",
+                "detail": tokens.get("error") or tokens.get("http_status"),
+                "http_status": 502,
+            }
+        accounts = broker_adapter.account_numbers(tokens["access_token"])
+        if accounts.get("status") != "ok" or not accounts.get("accounts"):
+            return {
+                "status": "error",
+                "error": "account_discovery_failed",
+                "detail": accounts.get("error") or accounts.get("http_status"),
+                "http_status": 502,
+            }
+        account = accounts["accounts"][0]
+        try:
+            _persist_broker_credentials(email_addr, role, tokens, account, account_label)
+        except (PermissionError, ValueError, RuntimeError) as exc:
+            return {"status": "error", "error": str(exc), "http_status": 400}
+        _audit("broker_linked", email_addr, actor=email_addr, detail=str(getattr(broker_oauth, "name", "schwab")))
+        return {
+            "status": "linked",
+            "broker": "schwab",
+            "read_only": True,
+            "account_label": account_label or account.get("account_number", ""),
+        }
+
+    def _live_broker_credentials(email_addr: str, role: str) -> dict:
+        if not broker_store or not broker_oauth or not broker_adapter:
+            return {"status": "error", "error": "broker_not_configured"}
+        creds = broker_store.credentials(email_addr)
+        if creds.get("status") != "ok":
+            return creds
+        if _is_expiring(creds.get("expires_at", "")):
+            refreshed = broker_oauth.refresh_token(creds.get("refresh_token", ""))
+            if refreshed.get("status") != "ok":
+                return {
+                    "status": "error",
+                    "error": "token_refresh_failed",
+                    "detail": refreshed.get("error") or refreshed.get("http_status"),
+                }
+            account = {
+                "account_hash": creds.get("account_hash", ""),
+                "account_number": creds.get("account_number", ""),
+            }
+            try:
+                broker_store.link(
+                    email_addr,
+                    role,
+                    creds.get("broker", "schwab"),
+                    refreshed["access_token"],
+                    account_label=creds.get("account_label", ""),
+                    refresh_token=refreshed.get("refresh_token") or creds.get("refresh_token", ""),
+                    expires_at=_expires_at(refreshed.get("expires_in")),
+                    account_hash=account["account_hash"],
+                    account_number=account["account_number"],
+                )
+            except (PermissionError, ValueError, RuntimeError) as exc:
+                return {"status": "error", "error": f"credential_persist_failed:{exc}"}
+            creds.update(
+                {
+                    "access_token": refreshed["access_token"],
+                    "refresh_token": refreshed.get("refresh_token") or creds.get("refresh_token", ""),
+                    "expires_at": _expires_at(refreshed.get("expires_in")),
+                }
+            )
+        if not creds.get("account_hash"):
+            accounts = broker_adapter.account_numbers(creds.get("access_token", ""))
+            if accounts.get("status") != "ok" or not accounts.get("accounts"):
+                return {
+                    "status": "error",
+                    "error": "account_discovery_failed",
+                    "detail": accounts.get("error") or accounts.get("http_status"),
+                }
+            account = accounts["accounts"][0]
+            try:
+                broker_store.link(
+                    email_addr,
+                    role,
+                    creds.get("broker", "schwab"),
+                    creds["access_token"],
+                    account_label=creds.get("account_label", "") or account.get("account_number", ""),
+                    refresh_token=creds.get("refresh_token", ""),
+                    expires_at=creds.get("expires_at", ""),
+                    account_hash=account.get("account_hash", ""),
+                    account_number=account.get("account_number", ""),
+                )
+            except (PermissionError, ValueError, RuntimeError) as exc:
+                return {"status": "error", "error": f"credential_persist_failed:{exc}"}
+            creds.update(account)
+        return creds
 
     def dispatch(environ, start_response):
         path = environ.get("PATH_INFO", "")
@@ -499,39 +636,65 @@ def make_auth_app(
             state = store.issue_otp(email, purpose="broker_state")
             return _json_response(start_response, {"authorize_url": broker_oauth.authorize_url(state)})
 
-        # ---- broker: link (exchange code; member/LP only) --------------------
+        # ---- broker: callback (browser OAuth redirect) -----------------------
+        if path == "/api/broker/callback" and method == "GET":
+            if not email:
+                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
+            decision = store.access_for(email)
+            role = _role_for(email, decision)
+            if not decision.allowed or not can_access_real_data(role or ""):
+                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
+            if not (broker_oauth and broker_store and broker_adapter):
+                return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
+            query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
+            code = str((query.get("code") or [""])[0]).strip()
+            state = str((query.get("state") or [""])[0]).strip()
+            result = _complete_broker_link(email, role, code, state)
+            if result.get("status") != "linked":
+                status_code = int(result.get("http_status", 400))
+                status_text = "Bad Gateway" if status_code == 502 else "Bad Request"
+                return _json_response(
+                    start_response,
+                    {k: v for k, v in result.items() if k != "http_status"},
+                    f"{status_code} {status_text}",
+                )
+            start_response(
+                "302 Found",
+                [
+                    ("Location", "/?broker=linked#overview"),
+                    ("Cache-Control", "no-store"),
+                    ("Content-Length", "0"),
+                ],
+            )
+            return [b""]
+
+        # ---- broker: link (client-side callback compatibility) ---------------
         if path == "/api/broker/link" and method == "POST":
             if not email:
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
+            role = _role_for(email, decision)
+            if not decision.allowed or not can_access_real_data(role or ""):
                 return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
-            if not (broker_oauth and broker_store):
+            if not (broker_oauth and broker_store and broker_adapter):
                 return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
             data = _read_json(environ)
-            code = str(data.get("code", "")).strip()
-            state = str(data.get("state", "")).strip()
-            if not state or not store.verify_otp(email, state, purpose="broker_state"):
-                return _json_response(start_response, {"error": "invalid_state"}, "400 Bad Request")
-            tokens = broker_oauth.exchange_code(code)
-            if tokens.get("status") != "ok":
+            result = _complete_broker_link(
+                email,
+                role,
+                str(data.get("code", "")).strip(),
+                str(data.get("state", "")).strip(),
+                str(data.get("account_label", ""))[:64],
+            )
+            if result.get("status") != "linked":
+                status_code = int(result.get("http_status", 400))
+                status_text = "Bad Gateway" if status_code == 502 else "Bad Request"
                 return _json_response(
                     start_response,
-                    {"error": "token_exchange_failed", "detail": tokens.get("error")},
-                    "502 Bad Gateway",
+                    {k: v for k, v in result.items() if k != "http_status"},
+                    f"{status_code} {status_text}",
                 )
-            try:
-                broker_store.link(
-                    email,
-                    _role_for(email, decision),
-                    getattr(broker_oauth, "name", "schwab"),
-                    tokens["access_token"],
-                    account_label=str(data.get("account_label", ""))[:64],
-                )
-            except (PermissionError, ValueError) as exc:
-                return _json_response(start_response, {"error": str(exc)}, "400 Bad Request")
-            _audit("broker_linked", email, actor=email, detail=str(getattr(broker_oauth, "name", "schwab")))
-            return _json_response(start_response, {"status": "linked", "broker": "schwab", "read_only": True})
+            return _json_response(start_response, result)
 
         # ---- broker: unlink --------------------------------------------------
         if path == "/api/broker/unlink" and method == "POST":
@@ -541,23 +704,46 @@ def make_auth_app(
                 broker_store.unlink(email)
             return _json_response(start_response, {"status": "unlinked"})
 
-        # ---- broker: read-only positions (member/LP + linked) ----------------
-        if path == "/api/broker/positions" and method == "GET":
+        # ---- broker: read-only positions + balances ---------------------------
+        if path in ("/api/broker/positions", "/api/broker/balances") and method == "GET":
             if not email:
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
+            role = _role_for(email, decision)
+            if not decision.allowed or not can_access_real_data(role or ""):
                 return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
-            if not broker_store or not broker_adapter:
+            if not broker_store or not broker_adapter or not broker_oauth:
                 return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
             conn = broker_store.connection(email)
             if not conn.get("linked"):
                 return _json_response(start_response, {"error": "no_broker_linked"}, "409 Conflict")
-            # Read-only: the adapter never places orders.
-            positions = broker_adapter.positions("")
+            creds = _live_broker_credentials(email, role)
+            if creds.get("status") != "ok":
+                return _json_response(
+                    start_response,
+                    {"error": creds.get("error", "broker_credentials_unavailable"), "detail": creds.get("detail")},
+                    "502 Bad Gateway",
+                )
+            if path.endswith("/positions"):
+                payload = broker_adapter.positions(creds["access_token"], creds["account_hash"])
+                key = "positions"
+            else:
+                payload = broker_adapter.balances(creds["access_token"], creds["account_hash"])
+                key = "balances"
+            if payload.get("status") != "ok":
+                return _json_response(
+                    start_response,
+                    {"error": "broker_read_failed", "detail": payload.get("error") or payload.get("http_status")},
+                    "502 Bad Gateway",
+                )
             return _json_response(
                 start_response,
-                {"broker": conn.get("broker"), "read_only": True, "positions": positions},
+                {
+                    "broker": conn.get("broker"),
+                    "read_only": True,
+                    "account_label": conn.get("account_label"),
+                    key: payload.get(key),
+                },
             )
 
         return _json_response(start_response, {"error": "not_found"}, "404 Not Found")
