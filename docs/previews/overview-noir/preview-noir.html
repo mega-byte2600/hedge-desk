@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emporion — Hedge Desk Overview (noir preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Noir Institutional — Emporion overview preview.
+ * Near-black, muted brass, warm whites. Green appears ONLY for live data.
+ */
+:root {
+  --noir-bg: #0a0a0c;
+  --noir-surface: #121215;
+  --noir-surface-2: #0e0e11;
+  --noir-line: #232329;
+  --noir-hairline: #1b1b20;
+  --noir-ink: #f4f1e8;
+  --noir-muted: #a39e93;
+  --noir-faint: #6e6a61;
+  --brass: #c6a15b;
+  --brass-bright: #dcb96f;
+  --brass-deep: #8a6d3b;
+  --live: #35c26e;
+  --batch: #c6a15b;
+  --none: #55555c;
+  --serif: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+html { font-size: 16px; }
+body {
+  margin: 0; background: var(--noir-bg); color: var(--noir-ink);
+  font-family: var(--sans); padding: 0 0 64px;
+  -webkit-font-smoothing: antialiased;
+}
+.preview-badge {
+  position: fixed; top: 0; right: 0; z-index: 50;
+  background: #101014; color: var(--brass);
+  border: 1px solid var(--noir-line); border-top: 0; border-right: 0;
+  font: 10px var(--mono); letter-spacing: .8px; padding: 8px 14px;
+  border-bottom-left-radius: 8px;
+}
+.noir-shell { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+@media (min-width: 640px) { .noir-shell { padding: 0 32px; } }
+
+/* Brand lockup */
+.brand {
+  position: relative; text-align: center;
+  padding: 56px 0 40px; overflow: hidden;
+}
+.brand .compass {
+  position: absolute; left: 50%; top: 44%; width: 520px; height: 520px;
+  transform: translate(-50%, -50%); opacity: .055; pointer-events: none;
+}
+.brand .seal {
+  width: 132px; height: 132px; display: block; margin: 0 auto 22px;
+  filter: drop-shadow(0 6px 24px rgba(198, 161, 91, .18));
+}
+.brand h1 {
+  font-family: var(--serif); font-weight: 600; font-size: 40px;
+  letter-spacing: .14em; margin: 0 0 10px; text-indent: .14em;
+}
+.brand .rule {
+  width: 64px; height: 1px; background: var(--brass);
+  margin: 0 auto 14px; opacity: .85;
+}
+.brand .tagline {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 3.2px;
+  color: var(--brass); text-indent: 3.2px; font-weight: 500;
+}
+.brand .lede {
+  font-family: var(--serif); font-size: 21px; font-weight: 500;
+  color: var(--noir-ink); margin: 26px 0 0; letter-spacing: .01em;
+}
+.brand .lede-sub {
+  font-size: 13px; color: var(--noir-muted); margin: 10px 0 0; letter-spacing: .02em;
+}
+
+/* Overview module — noir skin */
+.ov {
+  --ov-surface: var(--noir-surface);
+  --ov-surface-2: var(--noir-surface-2);
+  --ov-faint: var(--noir-hairline);
+  --ov-ink: var(--noir-ink);
+  --ov-muted: var(--noir-muted);
+  --ov-line: var(--noir-line);
+  --ov-mono: var(--mono);
+  --ov-dot-live: var(--live);
+  --ov-dot-batch: var(--batch);
+  --ov-dot-none: var(--none);
+  --ov-dot-fresh: var(--live);
+  --ov-dot-stale: var(--batch);
+  --ov-dot-old: var(--none);
+  color: var(--ov-ink);
+}
+.ov-sr { position: absolute; width: 1px; height: 1px; margin: -1px; clip: rect(0 0 0 0); overflow: hidden; white-space: nowrap; }
+.ov-eyebrow {
+  font-family: var(--ov-mono); font-size: 10px; letter-spacing: 1.6px;
+  text-transform: uppercase; color: var(--brass); font-weight: 500;
+}
+.ov-muted { color: var(--ov-muted); }
+.mono { font-family: var(--ov-mono); }
+
+.ov-hero {
+  background: linear-gradient(180deg, #141417 0%, #101013 100%);
+  border: 1px solid var(--ov-line); border-radius: 10px;
+  padding: 24px 24px 26px; margin-bottom: 22px;
+  position: relative;
+}
+.ov-hero::before {
+  content: ''; position: absolute; top: 0; left: 24px; right: 24px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--brass-deep), transparent);
+  opacity: .6;
+}
+.ov-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--ov-line); border: 1px solid var(--ov-line);
+  border-radius: 8px; overflow: hidden; margin-top: 16px;
+}
+.ov-stat { background: var(--ov-surface); padding: 18px 20px; min-width: 0; }
+.ov-value {
+  font-family: var(--mono); font-size: 38px; letter-spacing: -1px; font-weight: 500;
+  margin: 12px 0 10px; line-height: 1; color: var(--brass-bright);
+  font-variant-numeric: tabular-nums;
+}
+.ov-value small { font-size: 18px; color: var(--noir-faint); letter-spacing: 0; }
+.ov-value-sm { font-size: 19px; letter-spacing: -0.3px; font-weight: 500; font-family: var(--mono); }
+.ov-foot { font-size: 12px; color: var(--ov-muted); display: flex; align-items: center; gap: 8px; }
+.ov-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ov-dot-none); flex: none; }
+.ov-fresh { background: var(--ov-dot-fresh); box-shadow: 0 0 8px rgba(53, 194, 110, .55); }
+.ov-stale { background: var(--ov-dot-stale); }
+.ov-old { background: var(--ov-dot-old); }
+.ov-live .ov-dot { background: var(--ov-dot-live); box-shadow: 0 0 8px rgba(53, 194, 110, .55); }
+.ov-batch .ov-dot { background: var(--ov-dot-batch); }
+.ov-none .ov-dot { background: var(--ov-dot-none); }
+
+.ov-desks { margin-bottom: 22px; }
+.ov-desks > .ov-eyebrow { margin: 0 2px 14px; }
+.ov-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.ov-desk {
+  background: var(--ov-surface); border: 1px solid var(--ov-line);
+  border-radius: 10px; padding: 18px 20px 16px;
+  display: flex; flex-direction: column; gap: 10px; min-width: 0;
+  transition: border-color .2s ease;
+}
+.ov-desk:hover { border-color: #33333b; }
+.ov-desk-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.ov-status {
+  font-family: var(--ov-mono); font-size: 10px; letter-spacing: .8px;
+  text-transform: uppercase; color: var(--ov-muted);
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+}
+.ov-desk h3 {
+  font-family: var(--serif); font-size: 19px; font-weight: 600;
+  letter-spacing: .01em; margin: 0;
+}
+.ov-desk p { font-size: 13px; line-height: 1.6; color: var(--ov-muted); margin: 0; }
+.ov-desk-foot {
+  margin-top: auto; padding-top: 10px; border-top: 1px solid var(--ov-faint);
+  font-size: 11px; color: var(--noir-faint);
+}
+
+.ov-pipeline {
+  background: var(--ov-surface-2); border: 1px solid var(--ov-line);
+  border-radius: 10px; padding: 18px 20px; margin-bottom: 22px;
+}
+.ov-pipeline > .ov-eyebrow { margin-bottom: 14px; }
+.ov-steps {
+  list-style: none; margin: 0; padding: 0; display: flex; gap: 8px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.ov-steps li {
+  flex: 1 0 auto; display: flex; align-items: center; gap: 10px;
+  font-family: var(--ov-mono); font-size: 11px; letter-spacing: .5px;
+  text-transform: uppercase; color: var(--ov-ink);
+  background: var(--ov-surface); border: 1px solid var(--ov-line);
+  border-radius: 6px; padding: 11px 14px; white-space: nowrap;
+}
+.ov-step-n { color: var(--brass); font-size: 10px; }
+.ov-steps li + li { position: relative; }
+.ov-steps li + li::before {
+  content: '›'; position: absolute; left: -13px; top: 50%;
+  transform: translateY(-50%); color: var(--noir-faint); font-size: 15px;
+}
+
+.ov-boundary { border-top: 1px solid var(--ov-line); padding: 18px 2px 4px; }
+.ov-boundary > .ov-eyebrow { margin-bottom: 12px; }
+.ov-boundary p { font-size: 12.5px; line-height: 1.65; color: var(--ov-muted); margin: 0 0 6px; }
+.ov-boundary p:last-child { margin-bottom: 0; }
+
+.noir-foot {
+  text-align: center; margin-top: 44px; padding-top: 22px;
+  border-top: 1px solid var(--noir-hairline);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1.4px;
+  color: var(--noir-faint); text-transform: uppercase;
+}
+.noir-foot b { color: var(--brass); font-weight: 500; }
+
+@media (min-width: 640px) {
+  .ov-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ov-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .brand h1 { font-size: 52px; }
+  .brand .seal { width: 148px; height: 148px; }
+}
+@media (min-width: 1024px) {
+  .ov-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ov-steps { -webkit-overflow-scrolling: auto; }
+  .ov-desk { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="preview-badge">PREVIEW DATA &mdash; NOT LIVE</div>
+<div class="noir-shell">
+
+  <header class="brand">
+    <svg class="compass" viewBox="0 0 200 200" aria-hidden="true">
+      <g fill="none" stroke="#c6a15b" stroke-width="1">
+        <circle cx="100" cy="100" r="96"/>
+        <circle cx="100" cy="100" r="78"/>
+        <path d="M100 4v20M100 176v20M4 100h20M176 100h20"/>
+        <path d="M100 22l7 71 71 7-71 7-7 71-7-71-71-7 71-7z"/>
+        <path d="M45 45l12 12M155 45l-12 12M45 155l12-12M155 155l-12-12" stroke-width="2"/>
+      </g>
+      <text x="100" y="18" text-anchor="middle" fill="#c6a15b" font-family="IBM Plex Mono, monospace" font-size="9" letter-spacing="2">N</text>
+    </svg>
+    <svg class="seal" viewBox="0 0 256 256" role="img" aria-label="Emporion institutional seal">
+      <defs>
+        <radialGradient id="nbg" cx="42%" cy="35%" r="75%"><stop offset="0" stop-color="#122238"/><stop offset="1" stop-color="#07111f"/></radialGradient>
+        <linearGradient id="ngold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d59a"/><stop offset=".42" stop-color="#d1a65e"/><stop offset="1" stop-color="#9b6c2e"/></linearGradient>
+        <filter id="nsoft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1.2" stdDeviation="1.1" flood-color="#000" flood-opacity=".45"/></filter>
+        <g id="nkey"><path d="M116 15h24v6h-18v7h12v6h-18V22h-6v18h30V10h-30v6z" fill="url(#ngold)"/></g>
+      </defs>
+      <circle cx="128" cy="128" r="124" fill="url(#nbg)"/><circle cx="128" cy="128" r="118" fill="none" stroke="url(#ngold)" stroke-width="3"/><circle cx="128" cy="128" r="99" fill="none" stroke="#d1a65e" stroke-width="2"/>
+      <g opacity=".98"><use href="#nkey" transform="rotate(0 128 128)"/><use href="#nkey" transform="rotate(30 128 128)"/><use href="#nkey" transform="rotate(60 128 128)"/><use href="#nkey" transform="rotate(90 128 128)"/><use href="#nkey" transform="rotate(120 128 128)"/><use href="#nkey" transform="rotate(150 128 128)"/><use href="#nkey" transform="rotate(180 128 128)"/><use href="#nkey" transform="rotate(210 128 128)"/><use href="#nkey" transform="rotate(240 128 128)"/><use href="#nkey" transform="rotate(270 128 128)"/><use href="#nkey" transform="rotate(300 128 128)"/><use href="#nkey" transform="rotate(330 128 128)"/></g>
+      <g filter="url(#nsoft)"><path d="M109 84c20-15 50-15 68-2 8 6 12 14 14 24 2 10-1 17-5 23-4 6-6 12-4 18 2 6 7 9 12 12 3 2 3 5 0 7-4 3-10 4-15 4-1 7-5 12-10 16-7 5-14 5-22 3-7-2-12-1-16 4-5 6-6 13-6 20H87c2-17 8-31 19-42 5-5 7-10 6-17-2-9-7-17-8-27-2-17 1-31 5-43z" fill="url(#ngold)"/><path d="M157 113c8-2 16 0 22 4-8 1-15 2-21 6 5 2 9 5 12 9-8-3-15-4-22-1 5 4 8 9 9 15-7-6-13-10-21-10" fill="none" stroke="#553719" stroke-width="3" stroke-linecap="round"/><path d="M169 145c4 1 7 2 10 4-4 1-7 1-10 0" fill="#553719"/><path d="M168 160c5 2 10 2 15 0" fill="none" stroke="#553719" stroke-width="2.2" stroke-linecap="round"/></g>
+      <path d="M83 111c16-25 37-40 65-45 23-4 45 0 67 13-12 10-25 17-41 20-24 5-49 4-74 4-7 0-13 3-17 8z" fill="url(#ngold)" stroke="#6e461f" stroke-width="2"/><path d="M81 111c35 7 74 7 116-2-22 14-47 20-77 18-16-1-29-6-39-16z" fill="#8f5f29" opacity=".45"/>
+      <g fill="url(#ngold)" stroke="#6e461f" stroke-width="1.4"><path d="M105 82c-23-24-42-37-59-39 15 10 26 22 34 37-18-15-35-21-51-20 19 8 34 18 45 31-17-8-32-10-44-5 22 7 40 15 54 25 8-6 15-15 21-29z"/><path d="M79 61c10 3 18 9 25 17M63 68c12 3 22 9 30 17M55 82c12 1 23 5 33 12" fill="none" stroke="#7a4e22" stroke-width="2"/></g>
+      <g fill="none" stroke="#6e461f" stroke-width="2.2" stroke-linecap="round"><path d="M122 153c-11 8-16 17-14 27M126 160c-8 9-10 18-6 27M132 166c-4 7-4 15-1 21"/></g>
+    </svg>
+    <h1>EMPORION</h1>
+    <div class="rule"></div>
+    <div class="tagline">MARKETS &middot; INTELLIGENCE &middot; DISCIPLINE</div>
+    <p class="lede">Six desks. One decision.</p>
+    <p class="lede-sub">Live research, evaluated around the clock.</p>
+  </header>
+
+  <main id="preview-host"></main>
+
+  <footer class="noir-foot">
+    <b>Emporion</b> &nbsp;&middot;&nbsp; A Bolton Investment Group Project &nbsp;&middot;&nbsp; Paper research only
+  </footer>
+</div>
+<script src="./overview-revamp.js"></script>
+<script>
+(function () {
+  var fixture = {"data": {"summary": {"desks_reporting": 5, "desks_total": 6, "scenarios": 14, "data_as_of": "2026-10-04T16:14:21.157216+00:00"}, "candidate_feed": {"schema_version": "hedge-desk-candidates-1.0.0", "candidates": [{"symbol": "SPY", "desk_id": "overnight-premium-desk", "stage": "REAL_EOD_CANDIDATE", "instrument_type": "equity"}, {"symbol": "QQQ", "desk_id": "earnings-event-desk", "stage": "WATCH", "instrument_type": "equity"}, {"symbol": "AAPL", "desk_id": "arbitrage-observer", "stage": "EVALUATING", "instrument_type": "equity"}, {"symbol": "MSFT", "desk_id": "dividend-opportunity-desk", "stage": "REAL_EOD_CANDIDATE", "instrument_type": "equity"}, {"symbol": "NVDA", "desk_id": "open-quant-ai-model-lab", "stage": "WATCH", "instrument_type": "equity"}, {"symbol": "AMD", "desk_id": "event-futures-desk", "stage": "EVALUATING", "instrument_type": "equity"}, {"symbol": "TSLA", "desk_id": "overnight-premium-desk", "stage": "REAL_EOD_CANDIDATE", "instrument_type": "equity"}, {"symbol": "META", "desk_id": "earnings-event-desk", "stage": "WATCH", "instrument_type": "equity"}, {"symbol": "JPM", "desk_id": "arbitrage-observer", "stage": "EVALUATING", "instrument_type": "equity"}, {"symbol": "XOM", "desk_id": "dividend-opportunity-desk", "stage": "REAL_EOD_CANDIDATE", "instrument_type": "equity"}, {"symbol": "GLD", "desk_id": "open-quant-ai-model-lab", "stage": "WATCH", "instrument_type": "equity"}, {"symbol": "TLT", "desk_id": "event-futures-desk", "stage": "EVALUATING", "instrument_type": "equity"}, {"symbol": "DIA", "desk_id": "overnight-premium-desk", "stage": "REAL_EOD_CANDIDATE", "instrument_type": "equity"}, {"symbol": "IWM", "desk_id": "earnings-event-desk", "stage": "WATCH", "instrument_type": "equity"}, {"symbol": "NFLX", "desk_id": "arbitrage-observer", "stage": "EVALUATING", "instrument_type": "equity"}, {"symbol": "CRM", "desk_id": "dividend-opportunity-desk", "stage": "REAL_EOD_CANDIDATE", "instrument_type": "equity"}, {"symbol": "AVGO", "desk_id": "open-quant-ai-model-lab", "stage": "WATCH", "instrument_type": "equity"}, {"symbol": "COST", "desk_id": "event-futures-desk", "stage": "EVALUATING", "instrument_type": "equity"}, {"symbol": "PLTR", "desk_id": "overnight-premium-desk", "stage": "REAL_EOD_CANDIDATE", "instrument_type": "equity"}, {"symbol": "COIN", "desk_id": "earnings-event-desk", "stage": "WATCH", "instrument_type": "equity"}, {"symbol": "MSTR", "desk_id": "arbitrage-observer", "stage": "EVALUATING", "instrument_type": "equity"}, {"symbol": "USO", "desk_id": "dividend-opportunity-desk", "stage": "REAL_EOD_CANDIDATE", "instrument_type": "equity"}, {"symbol": "HYG", "desk_id": "open-quant-ai-model-lab", "stage": "WATCH", "instrument_type": "equity"}, {"symbol": "ES", "desk_id": "event-futures-desk", "stage": "EVALUATING", "instrument_type": "equity"}]}, "registry": []}, "report": {"generated_at": "2026-10-04T15:54:21.157216+00:00", "report_type": "paper", "projects": [{"project_id": "overnight-premium-desk", "data_status": "live", "data_as_of": "2026-10-04T16:14:21.157216+00:00", "disposition": "PASS"}, {"project_id": "earnings-event-desk", "data_status": "live", "data_as_of": "2026-10-04T16:14:21.157216+00:00", "disposition": "PASS"}, {"project_id": "arbitrage-observer", "data_status": "live", "data_as_of": "2026-10-04T16:14:21.157216+00:00", "disposition": "PASS"}, {"project_id": "dividend-opportunity-desk", "data_status": "live", "data_as_of": "2026-10-04T16:14:21.157216+00:00", "disposition": "PASS"}, {"project_id": "open-quant-ai-model-lab", "data_status": "batch", "data_as_of": "2026-10-04T16:14:21.157216+00:00", "disposition": "PASS"}, {"project_id": "event-futures-desk", "data_status": "live", "data_as_of": "2026-10-04T16:14:21.157216+00:00", "disposition": "PASS"}], "scenarios": []}, "brief": {"date": "2026-10-03", "headline": "Daily research brief \u2014 Saturday, October 3"}};
+  document.getElementById('preview-host').innerHTML =
+    HedgeDeskOverview.render(fixture.data, fixture.report, fixture.brief);
+})();
+</script>
+</body>
+</html>
