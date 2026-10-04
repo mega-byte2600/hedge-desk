@@ -5,7 +5,7 @@ import json
 import time
 import unittest
 
-from hedge_desk.supabase_auth import SupabaseJwtVerifier, verifier_from_env
+from hedge_desk.supabase_auth import SupabaseJwtVerifier, SupabaseRemoteVerifier, verifier_from_env
 
 
 def _b64(obj) -> str:
@@ -79,6 +79,38 @@ class SupabaseJwtTests(unittest.TestCase):
     def test_requires_secret(self):
         with self.assertRaises(ValueError):
             SupabaseJwtVerifier("")
+
+    def test_remote_verifier_uses_supabase_user_endpoint(self):
+        seen = {}
+        def transport(request):
+            seen["url"] = request.full_url
+            seen["auth"] = request.get_header("Authorization")
+            seen["apikey"] = request.get_header("Apikey")
+            return 200, json.dumps({"email": "Remote@Example.com"}).encode()
+        verifier = SupabaseRemoteVerifier(
+            "https://project.supabase.co", "publishable-key", transport=transport
+        )
+        self.assertEqual(verifier.email_from("access-token"), "remote@example.com")
+        self.assertEqual(seen["url"], "https://project.supabase.co/auth/v1/user")
+        self.assertEqual(seen["auth"], "Bearer access-token")
+        self.assertEqual(seen["apikey"], "publishable-key")
+
+    def test_remote_verifier_fails_closed(self):
+        verifier = SupabaseRemoteVerifier(
+            "https://project.supabase.co",
+            "publishable-key",
+            transport=lambda request: (401, b'{"message":"invalid"}'),
+        )
+        self.assertIsNone(verifier.email_from("bad-token"))
+
+    def test_verifier_from_env_uses_remote_when_no_jwt_secret(self):
+        verifier = verifier_from_env(
+            {
+                "SUPABASE_URL": "https://project.supabase.co",
+                "SUPABASE_PUBLISHABLE_KEY": "publishable-key",
+            }
+        )
+        self.assertIsInstance(verifier, SupabaseRemoteVerifier)
 
 
 if __name__ == "__main__":
