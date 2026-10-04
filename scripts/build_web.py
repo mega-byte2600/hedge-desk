@@ -36,7 +36,6 @@ CONSOLE_ASSETS = (
     "navigation-stability.js",
     "disclosures.js",
     "disclosures.json",
-    "emporion-institutional-seal.svg",
     "account.js",
     "report.json",
     "research-brief.json",
@@ -53,6 +52,7 @@ CONSOLE_ASSETS = (
     "overview-revamp-noir.css",
     "brand/emporion-logo-hermes.jpg",
     "brand/emporion-logo-hermes-512.png",
+    "brand/emporion-logo-hermes-transparent.png",
     "noir-shell.css",
 )
 

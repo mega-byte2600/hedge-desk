@@ -292,6 +292,17 @@ class DashboardBuildTests(unittest.TestCase):
         self.assertNotIn("<script>alert(1)</script>", html)
         self.assertIn("&lt;script&gt;", html)
 
+    def test_dashboard_uses_emporion_noir_brand(self):
+        html = self._build()
+        self.assertIn("/brand/emporion-logo-hermes-transparent.png", html)
+        self.assertIn("Markets · Intelligence · Discipline", html)
+        self.assertNotIn("⚓", html)
+        self.assertNotIn("compass · real data", html)
+        self.assertIn("#0a0a0c", html)
+        self.assertIn("#c6a15b", html)
+        self.assertNotIn("#0b1220", html)
+        self.assertNotIn("#6ea8ff", html)
+
     def test_missing_report_exits(self):
         with self.assertRaises(SystemExit):
             dash.build()
