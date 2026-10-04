@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
 <title id="title">Emporion Institutional Seal</title>
-<desc id="desc">Winged petasos of Hermes in gold within a Greek-key institutional medallion.</desc>
+<desc id="desc">Helmeted Hermes steering a compass, in gold within a Greek-key institutional medallion.</desc>
 <defs>
 <radialGradient id="bg" cx="42%" cy="35%" r="75%"><stop offset="0" stop-color="#122238"/><stop offset="1" stop-color="#07111f"/></radialGradient>
 <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d59a"/><stop offset=".42" stop-color="#d1a65e"/><stop offset="1" stop-color="#9b6c2e"/></linearGradient>
@@ -25,12 +25,17 @@
 <use href="#k2" transform="rotate(292.5 128 128) translate(128 20)"/>
 <use href="#k2" transform="rotate(315 128 128) translate(128 20)"/>
 <use href="#k2" transform="rotate(337.5 128 128) translate(128 20)"/></g>
-<g fill="url(#gold)">
-<path d="M150 100c10-20 28-34 46-40-6 16-16 30-28 40-9 8-21 13-32 15 6-6 10-10 14-15z"/>
-<path d="M155 124c10-14 26-25 44-30-7 12-17 23-29 31-8 5-18 8-27 10 5-4 8-7 12-11z"/>
-<path d="M159 144c7-8 18-14 30-17-5 8-12 14-21 18-5 3-11 4-17 5 3-2 5-4 8-6z"/>
-<path d="M94 152c0-32 15-56 34-56s34 24 34 56z"/>
-<ellipse cx="128" cy="154" rx="64" ry="15"/>
-<rect x="94" y="146" width="68" height="8" opacity=".85"/>
+<g fill="none" stroke="#c6a15b" opacity=".65">
+<circle cx="128" cy="128" r="86" stroke-width="1.6"/>
+<circle cx="128" cy="128" r="78" stroke-width="1"/>
+<path d="M128 48v26M128 182v26M48 128h26M182 128h26" stroke-width="2"/>
+<path d="M72 72l18 18M184 72l-18 18M72 184l18-18M184 184l-18-18" stroke-width="1.4"/>
 </g>
+<g fill="url(#gold)">
+<path d="M120 70C118 44 122 24 132 10c8 14 12 34 10 60z"/>
+<path d="M78 170v-30c0-44 24-74 50-74s50 30 50 74v30z"/>
+<path d="M78 170h100l10 26c-40 8-80 8-120 0z"/>
+</g>
+<path d="M98 170v-26c0-30 12-50 30-50s30 20 30 50v26z" fill="#0a1526"/>
+<rect x="90" y="106" width="10" height="64" fill="url(#gold)"/>
 </svg>
