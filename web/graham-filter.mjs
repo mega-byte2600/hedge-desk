@@ -7,7 +7,7 @@ export const BML = Object.freeze({
   hurdles: Object.freeze({ SPY: 15, QQQ: 15, AAPL: 20, TSLA: 25, NVDA: 22, MSFT: 18 }),
 });
 
-const finite = value => Number.isFinite(Number(value));
+const finite = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
 
 export function mrMarketContext(vix, config = BML) {
   const value = Number(vix);
