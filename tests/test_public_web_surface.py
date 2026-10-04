@@ -51,7 +51,8 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("Emporion", combined)
         self.assertIn("Markets · Intelligence · Discipline", combined)
         self.assertIn("A Bolton Investment Group (BIG) Project", combined)
-        self.assertIn('emporion-institutional-seal.svg', combined)
+        self.assertIn('brand/emporion-logo-hermes-transparent.png', index)
+        self.assertNotIn('emporion-institutional-seal.svg', combined)
         self.assertIn('Independent research platform', combined)
         self.assertIn('RESEARCH PLATFORM', combined)
         self.assertIn('Seven research desks.<br>Six evaluated workflows.', combined)
@@ -61,6 +62,23 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertNotIn('brandmark', combined)
         self.assertNotIn('Controls & evidence', combined)
         self.assertNotIn('function controlsBlock()', professional)
+
+    def test_noir_brand_contrast_is_enforced(self):
+        index = (WEB / "index.html").read_text(encoding="utf-8")
+        noir = (WEB / "noir-shell.css").read_text(encoding="utf-8")
+        build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
+
+        self.assertLess(index.index("./styles.css"), index.index("./noir-shell.css"))
+        self.assertIn("brand/emporion-logo-hermes-transparent.png", index)
+        self.assertIn('"brand/emporion-logo-hermes-transparent.png"', build)
+        self.assertNotIn("emporion-institutional-seal.svg", index)
+        self.assertIn("body, .shell, main", noir)
+        self.assertIn(".wb-card, .wb-chip", noir)
+        self.assertIn("background: var(--noir-surface) !important", noir)
+        self.assertIn(".brand-logo, .emporion-about-logo", noir)
+        self.assertIn("background: transparent !important", noir)
+        self.assertIn(".graham-needs-you", noir)
+        self.assertIn("color: var(--brass-bright) !important", noir)
 
     def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
         public_assets = [
