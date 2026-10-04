@@ -25,46 +25,45 @@
   --sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
-html { font-size: 16px; }
-body {
+body[data-route='overview'] {
   margin: 0; background: var(--noir-bg); color: var(--noir-ink);
   font-family: var(--sans); padding: 0 0 64px;
   -webkit-font-smoothing: antialiased;
 }
 
-.noir-shell { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
-@media (min-width: 640px) { .noir-shell { padding: 0 32px; } }
+body[data-route='overview'] #main { max-width: 1080px; margin: 0 auto; padding: 0 20px 64px; }
+@media (min-width: 640px) { body[data-route='overview'] #main { padding: 0 32px; } }
 
 /* Brand lockup */
-.brand {
+.ov-brand {
   position: relative; text-align: center;
   padding: 56px 0 40px; overflow: hidden;
 }
-.brand .compass {
+.ov-brand .compass {
   position: absolute; left: 50%; top: 44%; width: 520px; height: 520px;
   transform: translate(-50%, -50%); opacity: .055; pointer-events: none;
 }
-.brand .seal {
+.ov-brand .seal {
   width: 132px; height: 132px; display: block; margin: 0 auto 22px;
   filter: drop-shadow(0 6px 24px rgba(198, 161, 91, .18));
 }
-.brand h1 {
+.ov-brand h1 {
   font-family: var(--serif); font-weight: 600; font-size: 40px;
   letter-spacing: .14em; margin: 0 0 10px; text-indent: .14em;
 }
-.brand .rule {
+.ov-brand .rule {
   width: 64px; height: 1px; background: var(--brass);
   margin: 0 auto 14px; opacity: .85;
 }
-.brand .tagline {
+.ov-brand .tagline {
   font-family: var(--mono); font-size: 10.5px; letter-spacing: 3.2px;
   color: var(--brass); text-indent: 3.2px; font-weight: 500;
 }
-.brand .lede {
+.ov-brand .lede {
   font-family: var(--serif); font-size: 21px; font-weight: 500;
   color: var(--noir-ink); margin: 26px 0 0; letter-spacing: .01em;
 }
-.brand .lede-sub {
+.ov-brand .lede-sub {
   font-size: 13px; color: var(--noir-muted); margin: 10px 0 0; letter-spacing: .02em;
 }
 
@@ -191,8 +190,8 @@ body {
 @media (min-width: 640px) {
   .ov-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .ov-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .brand h1 { font-size: 52px; }
-  .brand .seal { width: 148px; height: 148px; }
+  .ov-brand h1 { font-size: 52px; }
+  .ov-brand .seal { width: 148px; height: 148px; }
 }
 @media (min-width: 1024px) {
   .ov-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
