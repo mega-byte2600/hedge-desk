@@ -94,7 +94,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
             return (high + 0.05) / (low + 0.05)
 
         backgrounds = ("#0a0a0c", "#121215", "#0e0e11")
-        foregrounds = ("#c6a15b", "#dcb96f", "#f4f1e8", "#a39e93")
+        foregrounds = ("#c6a15b", "#dcb96f", "#f4f1e8", "#a39e93", "#8f8a81")
         for foreground in foregrounds:
             for background in backgrounds:
                 self.assertGreaterEqual(
@@ -102,6 +102,78 @@ class PublicWebSurfaceTests(unittest.TestCase):
                     4.5,
                     f"{foreground} on {background} must remain WCAG AA readable",
                 )
+
+    def test_professional_desk_surface_is_noir_not_light(self):
+        professional = (WEB / "professional.js").read_text(encoding="utf-8")
+        self.assertIn("background:#121215", professional)
+        self.assertIn("color:#dcb96f", professional)
+        self.assertIn("color:#f4f1e8", professional)
+        self.assertNotIn("border:1px solid #d7dee2;background:#fff", professional)
+        self.assertNotIn(".ws-ror{border-top:1px solid #e6eaed;background:#fff", professional)
+        self.assertNotIn("background:#fafbfc", professional)
+        self.assertNotIn("background:#f7f9fa", professional)
+
+    def test_no_gold_on_white_or_grey_on_navy_on_key_routes(self):
+        assets = [
+            WEB / "professional.js",
+            WEB / "acknowledgements.js",
+            WEB / "real-estate.css",
+            WEB / "real-estate.html",
+            WEB / "resources.js",
+            WEB / "iphone-preview.html",
+        ]
+        combined = "\n".join(path.read_text(encoding="utf-8") for path in assets).lower()
+
+        forbidden_light_surfaces = [
+            "background:#fff",
+            "background:white",
+            "background:#fafbfc",
+            "background:#f6f8fa",
+            "background:#f3f5f6",
+        ]
+        forbidden_navy_surfaces = [
+            "#101820",
+            "#0b1220",
+            "#0f1828",
+            "#1a2a4a",
+            "#24406e",
+            "#2a3f6a",
+        ]
+        forbidden_legacy_blue = [
+            "#b8d8ff",
+            "#6ea8ff",
+            "#3498db",
+            "#5aaef5",
+            "#2f5b9e",
+        ]
+
+        for token in forbidden_light_surfaces + forbidden_navy_surfaces + forbidden_legacy_blue:
+            self.assertNotIn(token, combined)
+
+        for required in ["#0a0a0c", "#121215", "#0e0e11", "#f4f1e8", "#dcb96f"]:
+            self.assertIn(required, combined)
+
+    def test_real_estate_and_about_are_readable_noir(self):
+        real_estate = (WEB / "real-estate.css").read_text(encoding="utf-8")
+        real_estate_page = (WEB / "real-estate.html").read_text(encoding="utf-8")
+        professional = (WEB / "professional.js").read_text(encoding="utf-8")
+        acknowledgements = (WEB / "acknowledgements.js").read_text(encoding="utf-8")
+        resources = (WEB / "resources.js").read_text(encoding="utf-8")
+
+        for required in [
+            "background:#121215",
+            "color:#f4f1e8",
+            "color:#dcb96f",
+            "background:#0a0a0c",
+        ]:
+            self.assertIn(required, real_estate + real_estate_page + professional + resources)
+
+        self.assertIn("border-top:1px solid #232329", acknowledgements)
+        self.assertIn("color:#f4f1e8", acknowledgements)
+        self.assertIn("color:#dcb96f", acknowledgements)
+        self.assertIn(".re-shell .notice{background:#121215", real_estate)
+        self.assertIn(".ws-capital-grid p{font-size:12px;line-height:1.6;color:#f4f1e8", professional)
+        self.assertIn(".resource-open{font:10px 'IBM Plex Mono',monospace;letter-spacing:.45px;color:#dcb96f", resources)
 
     def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
         public_assets = [

@@ -45,13 +45,13 @@ function installResourceStyles() {
   const style = document.createElement('style');
   style.id = 'resource-page-style';
   style.textContent = `
-    .resource-intro{margin-bottom:22px}.resource-intro strong{color:#101820}
-    .resource-section{margin:0 0 24px}.resource-section-head{margin:0 0 12px}.resource-section-head h2{margin:0 0 4px}.resource-section-head p{margin:0;color:#6b7780;font-size:12px}
+    .resource-intro{margin-bottom:22px}.resource-intro strong{color:#f4f1e8}
+    .resource-section{margin:0 0 24px}.resource-section-head{margin:0 0 12px}.resource-section-head h2{margin:0 0 4px}.resource-section-head p{margin:0;color:#a39e93;font-size:12px}
     .resource-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .resource-card{display:block;padding:20px;border:1px solid #dce2e6;border-radius:6px;background:#fff;color:inherit;text-decoration:none;transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease}
-    .resource-card:hover{transform:translateY(-1px);border-color:#9aa8b1;box-shadow:0 4px 14px rgba(16,24,32,.06)}
-    .resource-card h2{font-size:16px;margin:8px 0 8px}.resource-card p{font-size:12px;line-height:1.6;color:#596871;margin:0 0 16px}.resource-open{font:10px 'IBM Plex Mono',monospace;letter-spacing:.45px;color:#334a5c;text-transform:uppercase}
-    .resource-disclaimer{margin-top:6px;padding:14px 16px;border:1px solid #e2e6e9;border-radius:5px;background:#fafbfc;color:#6b7780;font-size:11px;line-height:1.55}
+    .resource-card{display:block;padding:20px;border:1px solid #232329;border-radius:6px;background:#121215;color:inherit;text-decoration:none;transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease}
+    .resource-card:hover{transform:translateY(-1px);border-color:#8a6d3b;box-shadow:0 4px 14px rgba(16,24,32,.06)}
+    .resource-card h2{font-size:16px;margin:8px 0 8px}.resource-card p{font-size:12px;line-height:1.6;color:#a39e93;margin:0 0 16px}.resource-open{font:10px 'IBM Plex Mono',monospace;letter-spacing:.45px;color:#dcb96f;text-transform:uppercase}
+    .resource-disclaimer{margin-top:6px;padding:14px 16px;border:1px solid #232329;border-radius:5px;background:#0e0e11;color:#a39e93;font-size:11px;line-height:1.55}
     @media(max-width:760px){.resource-grid{grid-template-columns:1fr}}
   `;
   document.head.appendChild(style);

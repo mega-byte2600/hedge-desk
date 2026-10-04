@@ -33,11 +33,11 @@ function installStyle() {
   const style = document.createElement('style');
   style.id = 'campbell-ack-style';
   style.textContent = `
-    .campbell-ack,.emporion-contact{margin-top:18px;padding-top:18px;border-top:1px solid #e1e6e9}
-    .campbell-ack p,.emporion-contact p{max-width:980px}
+    .campbell-ack,.emporion-contact{margin-top:18px;padding-top:18px;border-top:1px solid #232329}
+    .campbell-ack p,.emporion-contact p{max-width:980px;color:#f4f1e8}
     .campbell-ack p:last-child,.emporion-contact p:last-child{margin-bottom:0}
     .emporion-contact-links{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .emporion-contact a{font-weight:600;text-decoration:none}
+    .emporion-contact a{font-weight:600;text-decoration:none;color:#dcb96f}
     .emporion-contact a:hover{text-decoration:underline}
   `;
   document.head.appendChild(style);
