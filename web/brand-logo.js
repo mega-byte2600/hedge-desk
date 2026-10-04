@@ -1,4 +1,4 @@
-const LOGO = './emporion-institutional-seal.svg';
+const LOGO = './brand/emporion-logo-hermes.jpg?v=20261004';
 
 function installBrandStyle() {
   if (document.getElementById('emporion-logo-style')) return;
@@ -21,7 +21,7 @@ function applyLogo() {
   const icon = document.querySelector('link[rel="icon"]');
   if (icon) {
     icon.setAttribute('href', LOGO);
-    icon.setAttribute('type', 'image/svg+xml');
+    icon.setAttribute('type', 'image/jpeg');
   }
 
   const brand = document.querySelector('.brand');
