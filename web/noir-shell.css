@@ -1,0 +1,119 @@
+/* noir-shell.css — Noir Institutional theme for the Emporion shell.
+ * Approved visual direction (user, 2026-10-04): NOIR ONLY.
+ * Near-black backgrounds, muted brass as the single accent, warm-white text.
+ * Green appears ONLY for live-data semantics.
+ * Load AFTER styles.css; these rules win on equal specificity. */
+
+:root {
+  --noir-bg: #0a0a0c;
+  --noir-surface: #121215;
+  --noir-surface-2: #0e0e11;
+  --noir-line: #232329;
+  --noir-hairline: #1b1b20;
+  --noir-ink: #f4f1e8;
+  --noir-muted: #a39e93;
+  --noir-faint: #6e6a61;
+  --brass: #c6a15b;
+  --brass-bright: #dcb96f;
+  --brass-deep: #8a6d3b;
+  --live: #35c26e;
+}
+
+html, body {
+  background: var(--noir-bg);
+  color: var(--noir-ink);
+  font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+}
+h1, h2, h3, .brand { font-family: 'Fraunces', Georgia, 'Times New Roman', serif; }
+.mono, .metrics strong, .hash, .reason, .desk-index, .mode, .stat-value, .stat-foot, td { font-variant-numeric: tabular-nums; }
+.metrics strong, .hash, .reason, .desk-index, .mode { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+/* Sidebar */
+.sidebar { background: #0a0a0c; color: var(--noir-ink); border-right: 1px solid var(--noir-line); }
+.brand small { color: var(--noir-faint); }
+.brandmark { background: var(--brass); color: #0a0a0c; }
+.workspace-label { color: var(--noir-faint); }
+.sidebar nav a { color: var(--noir-muted); }
+.sidebar nav a > span { color: var(--noir-faint); }
+.sidebar nav a:hover { background: #141419; }
+.sidebar nav a.active { color: var(--brass-bright); background: rgba(198,161,91,.12); }
+.sidebar nav a.active > span { color: var(--brass-bright); }
+.sidebar nav b { color: var(--noir-faint); }
+.sidebar-bottom p, .sidebar-bottom > a { color: var(--noir-muted); }
+.mode { color: var(--brass); border-color: var(--brass-deep); }
+
+/* Topbar */
+.topbar { background: var(--noir-surface-2); border-bottom: 1px solid var(--noir-line); color: var(--noir-ink); }
+.top-status, .topbar .muted { color: var(--noir-muted); }
+.separator { color: var(--noir-faint); }
+.top-account .acct-btn { background: var(--noir-surface); border-color: #2a2a30; color: var(--noir-ink); }
+.top-account .acct-btn:hover { background: #1a1a1f; }
+.acct-caret { color: var(--noir-faint); }
+
+/* Content surfaces */
+.stat, .panel, .gate-card { background: var(--noir-surface); border-color: var(--noir-line); }
+.panel-head { border-bottom-color: var(--noir-line); }
+.panel-head p { color: var(--noir-muted); }
+.eyebrow { color: var(--brass); }
+.stat-value { color: var(--noir-ink); }
+.stat-foot, .muted, .subtitle, td small, .small, .small-note, .empty, .loading { color: var(--noir-muted); }
+th { background: var(--noir-surface-2); color: var(--noir-muted); }
+td { border-top-color: var(--noir-hairline); color: var(--noir-ink); }
+.keyvalue > span { color: var(--noir-muted); }
+.keyvalue > strong { color: var(--noir-ink); }
+.hash, .desk-index { color: var(--noir-faint); }
+.pipeline-line { border-bottom-color: var(--noir-hairline); }
+.pipeline-line strong { color: var(--noir-ink); }
+.legend, .legend i.gray { color: var(--noir-muted); }
+.stress-track { background: #1a1a1f; }
+.stress-row .mono { color: var(--noir-ink); }
+.desk-card p { color: var(--noir-muted); }
+.saved-note { border-bottom-color: var(--noir-line); }
+.saved-note p { color: var(--noir-ink); }
+
+/* Buttons & links */
+.btn { background: var(--noir-surface); border-color: #2a2a30; color: var(--noir-ink); }
+.btn:hover { background: #1a1a1f; }
+.btn.primary { background: var(--brass); border-color: var(--brass); color: #0a0a0c; }
+.btn.primary:hover { background: var(--brass-bright); }
+.text-link, .row-button { color: var(--brass-bright); }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, summary:focus-visible { outline-color: var(--brass); }
+
+/* Tags */
+.tag { background: #1a1a1f; color: var(--noir-muted); }
+.tag.pending { background: rgba(198,161,91,.14); color: var(--brass-bright); }
+.tag.blocked { background: rgba(224,108,91,.14); color: #e08a7a; }
+.tag.pass { background: rgba(53,194,110,.12); color: var(--live); }
+
+/* Notices, inputs, dialogs */
+.notice { background: var(--noir-surface); border-color: var(--noir-line); }
+.notice strong { color: var(--noir-ink); }
+.input, .toolbar input, .toolbar select, .form-field textarea {
+  background: var(--noir-surface-2); border-color: #2a2a30; color: var(--noir-ink);
+}
+dialog, #acct-modal { background: var(--noir-surface); color: var(--noir-ink); border-color: var(--noir-line); }
+.dialog-head, .acct-head { background: var(--noir-surface); border-bottom-color: var(--noir-line); }
+.dialog-head .subtitle, .acct-head .subtitle { color: var(--noir-muted); }
+.close, .acct-modal .close { background: var(--noir-surface); border-color: #2a2a30; color: var(--noir-ink); }
+.acct-error { color: #e08a7a; }
+.acct-tier { background: var(--noir-surface-2); border-color: var(--noir-line); color: var(--noir-muted); }
+.acct-divider { color: var(--noir-faint); }
+.acct-divider::before, .acct-divider::after { background: var(--noir-line); }
+.acct-status { color: var(--live); }
+.acct-broker, .acct-gp, .acct-manage { border-top-color: var(--noir-line); }
+.code-details pre { background: var(--noir-surface-2); color: var(--noir-ink); }
+.error { background: #1a1214; border-color: #5a2a24; }
+#toast { background: #1a1a1f; color: var(--noir-ink); }
+footer { border-top-color: var(--noir-line); color: var(--noir-faint); }
+.skip { background: var(--noir-surface); color: var(--noir-ink); }
+
+/* Focus panel (already dark; align to noir) */
+.focus { background: var(--noir-surface-2); }
+.focus .panel-head { border-color: var(--noir-line); }
+.focus .eyebrow { color: var(--brass); }
+.focus p, .focus .small-note, .metrics label { color: var(--noir-muted); }
+.focus .metrics { border-color: var(--noir-line); }
+.focus .metrics strong { color: var(--noir-ink); }
+.focus .btn { background: var(--brass); color: #0a0a0c; }
+.reason { color: #e08a7a; }
