@@ -31,7 +31,7 @@ import { BML, FILTER_KEY, OWN_IT_KEY, assessShortPut, extractShortPutRows, mrMar
   assert.equal(r.reason, 'OWNERSHIP_QUESTION_UNANSWERED');
 }
 {
-  const r = assessShortPut({ symbol:'XYZ', spot:100, strike:94, premium:1, dte:30, ownIt:true, vix:31 });
+  const r = assessShortPut({ symbol:'XYZ', spot:100, strike:97, premium:0.5, dte:30, ownIt:true, vix:31 });
   assert.equal(r.market.regime, 'MANIC');
   assert.equal(r.marginRating, 'THIN');
   assert.equal(r.hurdlePct, BML.hurdleDefault);
