@@ -1,4 +1,4 @@
-const LOGO = './brand/emporion-logo-hermes.jpg?v=20261004';
+const LOGO = './brand/emporion-logo-hermes-transparent.png?v=20261004-noir';
 
 function installBrandStyle() {
   if (document.getElementById('emporion-logo-style')) return;
@@ -21,7 +21,7 @@ function applyLogo() {
   const icon = document.querySelector('link[rel="icon"]');
   if (icon) {
     icon.setAttribute('href', LOGO);
-    icon.setAttribute('type', 'image/jpeg');
+    icon.setAttribute('type', 'image/png');
   }
 
   const brand = document.querySelector('.brand');
