@@ -20,6 +20,8 @@ import hmac
 import json
 import os
 import time
+import urllib.error
+import urllib.request
 from typing import Callable, Optional
 
 
@@ -85,13 +87,66 @@ class SupabaseJwtVerifier:
         return str(claims["email"]).strip().lower()
 
 
-def verifier_from_env(env: Optional[dict] = None) -> Optional[SupabaseJwtVerifier]:
-    """Build a verifier from SUPABASE_JWT_SECRET, or None if unset."""
+class SupabaseRemoteVerifier:
+    """Validate a Supabase access token through the project's Auth API."""
+
+    def __init__(
+        self,
+        url: str,
+        publishable_key: str,
+        *,
+        transport=None,
+    ) -> None:
+        self.url = url.rstrip("/")
+        self.publishable_key = publishable_key
+        self._transport = transport or self._default_transport
+
+    @staticmethod
+    def _default_transport(request: urllib.request.Request):
+        try:
+            with urllib.request.urlopen(request, timeout=8) as response:
+                return response.status, response.read()
+        except urllib.error.HTTPError as exc:
+            return exc.code, exc.read()
+        except Exception:
+            return 0, b""
+
+    def email_from(self, token: str) -> Optional[str]:
+        if not token or not self.url or not self.publishable_key:
+            return None
+        request = urllib.request.Request(
+            self.url + "/auth/v1/user",
+            headers={
+                "apikey": self.publishable_key,
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/json",
+            },
+        )
+        status, raw = self._transport(request)
+        if status != 200 or not raw:
+            return None
+        try:
+            payload = json.loads(raw.decode("utf-8"))
+        except Exception:
+            return None
+        email = str(payload.get("email", "")).strip().lower()
+        return email or None
+
+
+def verifier_from_env(env: Optional[dict] = None):
+    """Build the strongest available Supabase verifier from environment."""
     source = env if env is not None else os.environ
     secret = str(source.get("SUPABASE_JWT_SECRET", "")).strip()
-    if not secret:
-        return None
-    return SupabaseJwtVerifier(secret)
+    if secret:
+        return SupabaseJwtVerifier(secret)
+    url = str(source.get("SUPABASE_URL", "")).strip()
+    key = (
+        str(source.get("SUPABASE_PUBLISHABLE_KEY", "")).strip()
+        or str(source.get("SUPABASE_ANON_KEY", "")).strip()
+    )
+    if url and key:
+        return SupabaseRemoteVerifier(url, key)
+    return None
 
 
-__all__ = ["SupabaseJwtVerifier", "verifier_from_env"]
+__all__ = ["SupabaseJwtVerifier", "SupabaseRemoteVerifier", "verifier_from_env"]
