@@ -153,6 +153,10 @@ class BrokerLinkStore:
         token: str,
         account_label: str = "",
         key: Optional[bytes] = None,
+        refresh_token: str = "",
+        expires_at: str = "",
+        account_hash: str = "",
+        account_number: str = "",
     ) -> dict:
         """Store a broker connection for a member. Fail closed on tier or key."""
         if role.upper() not in _ROLES_ALLOWED:
@@ -162,7 +166,7 @@ class BrokerLinkStore:
             if not key:
                 raise ValueError("BROKER_LINK_KEY not set; refusing to store broker token")
         now = _utcnow()
-        enc = _encrypt_token(token, key)
+        enc = _encrypt_token(_bundle_json(token, refresh_token, expires_at, account_hash, account_number), key)
         self._conn.execute(
             "INSERT INTO broker_links (email, broker, account_label, token_enc, created_at, updated_at) "
             "VALUES (?, ?, ?, ?, ?, ?) "
@@ -193,6 +197,25 @@ class BrokerLinkStore:
             "account_label": row[1],
             "updated_at": row[2],
         }
+
+    def credentials(self, email: str, key: Optional[bytes] = None) -> dict:
+        """Return decrypted broker credentials for server-side adapter use only."""
+        if not key:
+            key = (os.environ.get("BROKER_LINK_KEY") or "").encode("utf-8")
+        if not key:
+            return {"status": "error", "error": "broker_key_missing"}
+        row = self._conn.execute(
+            "SELECT broker, account_label, token_enc FROM broker_links WHERE email=?",
+            (email.lower(),),
+        ).fetchone()
+        if not row or not row[2]:
+            return {"status": "error", "error": "no_broker_linked"}
+        raw = _decrypt_token(row[2], key)
+        if not raw:
+            return {"status": "error", "error": "credential_decrypt_failed"}
+        bundle = _parse_bundle(raw)
+        bundle.update({"status": "ok", "broker": row[0], "account_label": row[1]})
+        return bundle
 
     def unlink(self, email: str) -> None:
         self._conn.execute("DELETE FROM broker_links WHERE email=?", (email.lower(),))
@@ -261,7 +284,10 @@ class SupabaseBrokerLinkStore:
     def close(self) -> None:
         return None
 
-    def link(self, email, role, broker, token, account_label="", key=None) -> dict:
+    def link(
+        self, email, role, broker, token, account_label="", key=None,
+        refresh_token="", expires_at="", account_hash="", account_number=""
+    ) -> dict:
         if str(role).upper() not in _ROLES_ALLOWED:
             raise PermissionError("broker link requires member/LP/GP")
         if not key:
@@ -269,7 +295,7 @@ class SupabaseBrokerLinkStore:
             if not key:
                 raise ValueError("BROKER_LINK_KEY not set; refusing to store broker token")
         now = _utcnow()
-        enc = _encrypt_token(token, key)
+        enc = _encrypt_token(_bundle_json(token, refresh_token, expires_at, account_hash, account_number), key)
         self._call(
             "POST",
             body={
@@ -295,6 +321,28 @@ class SupabaseBrokerLinkStore:
             "account_label": r.get("account_label"),
             "updated_at": r.get("updated_at"),
         }
+
+    def credentials(self, email: str, key: Optional[bytes] = None) -> dict:
+        if not key:
+            key = (os.environ.get("BROKER_LINK_KEY") or "").encode("utf-8")
+        if not key:
+            return {"status": "error", "error": "broker_key_missing"}
+        rows = self._call(
+            "GET",
+            f"email=eq.{email.lower()}&select=broker,account_label,token_enc",
+        )
+        if not rows or not rows[0].get("token_enc"):
+            return {"status": "error", "error": "no_broker_linked"}
+        raw = _decrypt_token(rows[0]["token_enc"], key)
+        if not raw:
+            return {"status": "error", "error": "credential_decrypt_failed"}
+        bundle = _parse_bundle(raw)
+        bundle.update({
+            "status": "ok",
+            "broker": rows[0].get("broker"),
+            "account_label": rows[0].get("account_label"),
+        })
+        return bundle
 
     def unlink(self, email: str) -> None:
         self._call("DELETE", f"email=eq.{email.lower()}")
