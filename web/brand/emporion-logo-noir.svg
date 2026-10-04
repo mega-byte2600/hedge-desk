@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Emporion Hermes compass mark">
+  <defs>
+    <clipPath id="clip"><circle cx="50" cy="50" r="49"/></clipPath>
+  </defs>
+  <circle cx="50" cy="50" r="50" fill="#050607"/>
+  <g clip-path="url(#clip)">
+    <image href="emporion-logo-hermes.jpg?v=20261004" x="-21" y="-21" width="142" height="142" preserveAspectRatio="xMidYMid slice"/>
+  </g>
+  <circle cx="50" cy="50" r="49" fill="none" stroke="#b98a3d" stroke-width="1.2" opacity=".85"/>
+</svg>
