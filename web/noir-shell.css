@@ -123,3 +123,59 @@ footer { border-top-color: var(--noir-line); color: var(--noir-faint); }
 div.mr-market { background: var(--surface); border-color: var(--noir-line); }
 div.mr-market strong { color: var(--brass-bright); letter-spacing: .08em; }
 div.mr-market span { color: var(--noir-ink); }
+
+
+/* Noir enforcement layer — runtime surfaces that still have legacy light defaults in styles.css.
+ * Keep this stylesheet loaded last. Brass/gold UI text must never sit on a white/light surface. */
+body, .shell, main {
+  background: var(--noir-bg) !important;
+  color: var(--noir-ink) !important;
+}
+.brand-logo, .emporion-about-logo {
+  background: transparent !important;
+  border-radius: 0 !important;
+  filter: drop-shadow(0 2px 8px rgba(198,161,91,.22)) !important;
+}
+.wb-card, .wb-chip, .wb-ctl input, .wb-ctl select, .wb-tab,
+.wb-bs-col, .graham-toolbar, .graham-own select {
+  background: var(--noir-surface) !important;
+  border-color: var(--noir-line) !important;
+  color: var(--noir-ink) !important;
+}
+.wb-table th, .wb-rank-cash {
+  background: var(--noir-surface-2) !important;
+  color: var(--noir-muted) !important;
+}
+.wb-tab.active {
+  background: var(--brass) !important;
+  border-color: var(--brass) !important;
+  color: var(--noir-bg) !important;
+}
+.wb-chip-batch, .wb-chip-stale, .wb-chip-loading, .wb-chip-scenario {
+  background: rgba(198,161,91,.10) !important;
+  border-color: var(--brass-deep) !important;
+  color: var(--brass-bright) !important;
+}
+.wb-chip-missing, .wb-unavail, .wb-warn {
+  background: #1a1214 !important;
+  border-color: #5a2a24 !important;
+  color: #e08a7a !important;
+}
+.graham-investment {
+  background: rgba(53,194,110,.12) !important;
+  color: var(--live) !important;
+}
+.graham-needs-you {
+  background: rgba(198,161,91,.14) !important;
+  color: var(--brass-bright) !important;
+}
+.graham-speculation {
+  background: rgba(224,108,91,.14) !important;
+  color: #e08a7a !important;
+}
+.skeleton {
+  background: #18181d !important;
+}
+.skeleton::after {
+  background: linear-gradient(90deg, transparent, #24242a, transparent) !important;
+}
