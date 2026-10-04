@@ -142,3 +142,19 @@ summary{padding:12px 0;margin:-12px 0}
 .wb-ror{border-color:#c9dcf2}
 .wb-iv h5{margin-top:14px}
 @media(max-width:600px){.wb-ctls{grid-template-columns:1fr}.wb-econgrid{grid-template-columns:1fr 1fr}.wb-bs{grid-template-columns:1fr}}
+
+
+/* Graham candidate discipline */
+.mr-market{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:0 0 12px;padding:12px 14px;border:1px solid var(--line,#d8dde2);border-radius:10px;background:var(--surface,#fff)}
+.mr-market strong{font-size:12px;letter-spacing:.08em}
+.graham-toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:0 0 16px}
+.graham-toolbar label{display:flex;gap:8px;align-items:center;font-weight:700}
+.graham-cell{min-width:220px}
+.graham-badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;letter-spacing:.04em;border:1px solid currentColor}
+.graham-investment{color:#176b45;background:#edf8f2}
+.graham-needs-you{color:#7b5b00;background:#fff8dc}
+.graham-speculation{color:#9b2c2c;background:#fff1f1}
+.graham-own{display:flex;gap:6px;align-items:center;margin-top:7px;font-size:11px;font-weight:700}
+.graham-own .input{min-width:112px;padding:5px 7px}
+.graham-cell small{display:block;margin-top:6px;line-height:1.35}
+@media(max-width:760px){.mr-market,.graham-toolbar{align-items:flex-start;flex-direction:column}.graham-cell{min-width:0}}
