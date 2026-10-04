@@ -24,9 +24,9 @@ OUT = ROOT / "artifacts" / "am-demo.html"
 
 PLOTLY_JS = "https://cdn.plot.ly/plotly-2.35.2.min.js"
 
-BG = "#0f1828"
-FG = "#e8eef7"
-MUTED = "#93a5c4"
+BG = "#121215"
+FG = "#f4f1e8"
+MUTED = "#a39e93"
 
 
 def esc(value) -> str:
@@ -195,17 +195,17 @@ def history_trend_chart() -> str:
         return "<p class='muted'>need 2+ dated reports for a trend</p>"
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=dates, y=cands, name="candidates", mode="lines+markers",
-                             line=dict(color="#3498db"), hovertemplate="%{x}<br>%{y} candidates<extra></extra>"))
+                             line=dict(color="#c6a15b"), hovertemplate="%{x}<br>%{y} candidates<extra></extra>"))
     fig.add_trace(go.Scatter(x=dates, y=roc, name="avg return on collateral", mode="lines+markers",
-                             line=dict(color="#e67e22"), yaxis="y2",
+                             line=dict(color="#dcb96f"), yaxis="y2",
                              hovertemplate="%{x}<br>avg RoC %{y:.2%}<extra></extra>"))
     fig.add_trace(go.Scatter(x=dates, y=vix, name="VIX", mode="lines+markers",
-                             line=dict(color="#9b59b6"), yaxis="y3",
+                             line=dict(color="#8a6d3b"), yaxis="y3",
                              hovertemplate="%{x}<br>VIX %{y:.1f}<extra></extra>"))
     fig.update_layout(margin=dict(l=10, r=10, t=40, b=10), height=340,
                       title="Multi-Day Trend — real nightly history",
                       xaxis_title="date", legend=dict(orientation="h", y=1.12),
-                      yaxis=dict(title="candidates", gridcolor="#1e2b47"),
+                      yaxis=dict(title="candidates", gridcolor="#232329"),
                       yaxis2=dict(title="avg RoC", overlaying="y", side="right", tickformat=".1%", showgrid=False),
                       yaxis3=dict(title="VIX", overlaying="y", side="right", position=1.0, showgrid=False),
                       font=dict(color="#e8eef7"), paper_bgcolor="#0f1828", plot_bgcolor="#0f1828")
@@ -323,7 +323,7 @@ def world_bank_gdp_panel(r: dict) -> str:
     gdp = [v / 1e12 for _, v in points]
     fig = go.Figure(go.Bar(
         x=years, y=gdp,
-        marker_color="#5aaef5",
+        marker_color="#c6a15b",
         hovertemplate="%{x}<br>GDP $%{y:.2f} trillion<extra></extra>"))
     fig.update_layout(**base_layout(f"World Bank GDP — {country} (current US$)", 320))
     fig.update_layout(yaxis_title="USD trillions", xaxis_title="year")
@@ -395,7 +395,7 @@ def bank_of_canada_panel(r: dict) -> str:
     rates = [v for _, v in points]
     fig = go.Figure(go.Scatter(
         x=dates, y=rates, mode="lines+markers",
-        line=dict(color="#e67e22"),
+        line=dict(color="#dcb96f"),
         hovertemplate="%{x}<br>USD/CAD %{y:.4f}<extra></extra>"))
     fig.update_layout(**base_layout("Bank of Canada — USD/CAD reference rate", 320))
     fig.update_layout(yaxis_title="USD/CAD", xaxis_title="date")
@@ -441,11 +441,11 @@ def treasury_curve_chart(r: dict) -> str:
     if len(xs) < 2:
         return "<p class='muted'>Treasury curve unavailable in this batch</p>"
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=xs, y=ys, mode="lines+markers", line=dict(color="#6ea8ff"),
+    fig.add_trace(go.Scatter(x=xs, y=ys, mode="lines+markers", line=dict(color="#c6a15b"),
                              hovertemplate="%{x}: %{y:.2f}%<extra></extra>"))
     fig.update_layout(margin=dict(l=10, r=10, t=40, b=10), height=300,
                       title=f"U.S. Treasury par yield curve — {latest_date}",
-                      yaxis=dict(title="yield %", gridcolor="#1e2b47"),
+                      yaxis=dict(title="yield %", gridcolor="#232329"),
                       xaxis=dict(title="tenor"),
                       font=dict(color="#e8eef7"), paper_bgcolor="#0f1828", plot_bgcolor="#0f1828")
     return chart(fig, "ch_treasury_curve",
@@ -510,9 +510,9 @@ def premium_yield_chart(csp: dict) -> str:
     roc = [r for _, r, _ in rows]
     py = [y for _, _, y in rows]
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=symbols, y=roc, name="return on capital", marker_color="#3498db",
+    fig.add_trace(go.Bar(x=symbols, y=roc, name="return on capital", marker_color="#c6a15b",
                          hovertemplate="%{x}<br>RoC %{y:.2%}<extra></extra>"))
-    fig.add_trace(go.Bar(x=symbols, y=py, name="premium yield (credit/strike)", marker_color="#e67e22",
+    fig.add_trace(go.Bar(x=symbols, y=py, name="premium yield (credit/strike)", marker_color="#dcb96f",
                          hovertemplate="%{x}<br>premium yield %{y:.2%}<extra></extra>"))
     fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=40, b=10), height=340,
                       title="Options Premium — return on capital vs premium yield (real Cboe)",
@@ -673,7 +673,7 @@ def candidates_chart(cands: list) -> str:
     sym = [r[0] for r in rows]
     req = [r[1] for r in rows]
     strat = [r[2] for r in rows]
-    color = {"CASH_SECURED_PUT": "#3498db", "COVERED_CALL": "#e67e22", "CREDIT_SPREAD": "#9b59b6"}
+    color = {"CASH_SECURED_PUT": "#c6a15b", "COVERED_CALL": "#dcb96f", "CREDIT_SPREAD": "#8a6d3b"}
     fig = go.Figure(go.Bar(x=sym, y=req, marker_color=[color.get(s, "#777") for s in strat],
                            customdata=strat,
                            hovertemplate="%{x}<br>%{customdata}<br>collateral %{y:$,.0f}<extra></extra>"))
@@ -692,7 +692,7 @@ def rates_chart(rates: dict, series: dict) -> str:
     if not t10 and not t2:
         return muted("no treasury series in this report (rebuild the overnight report to include them)")
     fig = go.Figure()
-    for label, pts, col in (("10Y", t10, "#6ea8ff"), ("2Y", t2, "#f39c12")):
+    for label, pts, col in (("10Y", t10, "#c6a15b"), ("2Y", t2, "#f39c12")):
         xs, ys = _xy(pts)
         if not xs:
             continue
@@ -782,7 +782,7 @@ def earnings_eps_chart(earnings_actuals: dict) -> str:
     fig = go.Figure()
     fig.add_trace(go.Bar(
         x=labels, y=[r[1] for r in rows], name="latest quarter",
-        marker_color="#6ea8ff",
+        marker_color="#c6a15b",
         customdata=[r[2] for r in rows],
         hovertemplate="%{x} %{customdata}<br>EPS $%{y:.2f}<extra></extra>"))
     fig.add_trace(go.Bar(
@@ -853,36 +853,41 @@ def build() -> None:
     ])
     html_doc = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a0a0c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <title>Emporion — Overnight Desk</title>
 <script src="{PLOTLY_JS}"></script>
 <style>
-body{{margin:0;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#0b1220;color:{FG}}}
-header{{padding:18px 28px;background:#111a2c;border-bottom:1px solid #1e2b47;display:flex;align-items:center;gap:12px}}
-header h1{{margin:0;font-size:20px}} header .tag{{color:#6ea8ff;font-size:12px}}
-.gbtn{{margin-left:auto;color:#e8eef7;text-decoration:none;background:#1a2a4a;border:1px solid #2a3f6a;padding:8px 14px;border-radius:8px;font-size:13px;white-space:nowrap}}
-.gbtn:hover{{background:#24406e}}
+body{{margin:0;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:#0a0a0c;color:{FG}}}
+header{{padding:16px 28px;background:#0a0a0c;border-bottom:1px solid #232329;display:flex;align-items:center;gap:14px}}
+.brand-logo{{width:46px;height:46px;object-fit:contain;display:block;filter:drop-shadow(0 2px 8px rgba(198,161,91,.22))}}
+header h1{{margin:0;font-family:'Fraunces',Georgia,serif;font-size:20px;letter-spacing:.02em;font-weight:600}} header .tag{{color:#c6a15b;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase}}
+.gbtn{{margin-left:auto;color:#f4f1e8;text-decoration:none;background:#121215;border:1px solid #8a6d3b;padding:8px 14px;border-radius:6px;font-size:13px;white-space:nowrap}}
+.gbtn:hover{{background:#17130d}}
 .ts{{padding:10px 28px;color:#93a5c4;font-size:12px}}
 .ts{{padding:10px 28px;color:{MUTED};font-size:12px}}
 .grid{{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 28px 28px}}
-.card{{background:{BG};border:1px solid #1e2b47;border-radius:10px;padding:10px;overflow:hidden}}
+.card{{background:{BG};border:1px solid #232329;border-radius:10px;padding:10px;overflow:hidden}}
 .card.wide{{grid-column:1/-1}}
 .card h3{{margin:6px 4px 10px;font-size:15px;color:{FG}}}
 .card h4{{margin:10px 4px;font-size:13px}}
 .macropanel{{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:8px}}
-.metric{{background:#111c30;border:1px solid #1e2b47;border-radius:8px;padding:14px}}
-.ml{{color:{MUTED};font-size:12px}} .ml .src{{color:#6ea8ff;font-size:10px}}
+.metric{{background:#121215;border:1px solid #232329;border-radius:8px;padding:14px}}
+.ml{{color:{MUTED};font-size:12px}} .ml .src{{color:#c6a15b;font-size:10px}}
 .mv{{font-size:26px;font-weight:600;margin-top:4px}}
 .muted{{color:{MUTED};font-size:12px}}
 .src-note{{color:{MUTED};font-size:11px;margin:6px 2px 0;font-style:italic}}
 table.health{{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0}}
-table.health th,table.health td{{text-align:left;padding:6px 8px;border-bottom:1px solid #1e2b47}}
+table.health th,table.health td{{text-align:left;padding:6px 8px;border-bottom:1px solid #232329}}
 table.health th{{color:{MUTED};font-weight:600}}
 td.ok{{color:#27ae60}} td.warn{{color:#f39c12}}
 .blocked{{background:#2a1a12;border:1px solid #7a4a1f;border-radius:8px;padding:12px;margin:8px 0;font-size:13px}}
 @media(max-width:900px){{.grid{{grid-template-columns:1fr}}.grid{{padding:0 12px 12px}}header{{padding:14px 12px}}.ts{{padding:8px 12px}}}}
 </style></head><body>
-<header><span style="font-size:26px">⚓</span><div><h1>Emporion Overnight Desk</h1>
-<div class="tag">compass · real data</div></div>
+<header><img class="brand-logo" src="/brand/emporion-logo-hermes-transparent.png?v=20261004-power" alt=""><div><h1>Emporion Overnight Desk</h1>
+<div class="tag">Markets · Intelligence · Discipline</div></div>
 <a class="gbtn" href="/guide/selling-options-premium">📘 Selling Options Premium — visual guide</a></header>
 {freshness_strip(r)}
 <div class="grid">
