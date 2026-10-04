@@ -3,11 +3,11 @@ import fs from 'node:fs';
 import { BML, FILTER_KEY, OWN_IT_KEY, assessShortPut, extractShortPutRows, mrMarketContext, readFilter, readOwnIt, saveFilter, saveOwnIt } from './graham-filter.mjs';
 
 {
-  const r = assessShortPut({ symbol:'SPY', spot:100, strike:95, premium:1, dte:30, ownIt:true, vix:20 });
+  const r = assessShortPut({ symbol:'SPY', spot:100, strike:95, premium:1.5, dte:30, ownIt:true, vix:20 });
   assert.equal(r.marginRating, 'STRONG');
   assert.equal(r.verdict, 'INVESTMENT');
-  assert.ok(Math.abs(r.totalMarginPct - (5 + (1/95)*100)) < 1e-12);
-  assert.ok(Math.abs(r.annualizedPct - ((1/95)*100*(365/30))) < 1e-12);
+  assert.ok(Math.abs(r.totalMarginPct - (5 + (1.5/95)*100)) < 1e-12);
+  assert.ok(Math.abs(r.annualizedPct - ((1.5/95)*100*(365/30))) < 1e-12);
 }
 {
   const r = assessShortPut({ symbol:'SPY', spot:100, strike:99, premium:0, dte:30, ownIt:true, vix:20 });
