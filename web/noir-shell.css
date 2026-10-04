@@ -12,7 +12,7 @@
   --noir-hairline: #1b1b20;
   --noir-ink: #f4f1e8;
   --noir-muted: #a39e93;
-  --noir-faint: #6e6a61;
+  --noir-faint: #8f8a81;
   --brass: #c6a15b;
   --brass-bright: #dcb96f;
   --brass-deep: #8a6d3b;
@@ -106,7 +106,7 @@ dialog, #acct-modal { background: var(--noir-surface); color: var(--noir-ink); b
 .code-details pre { background: var(--noir-surface-2); color: var(--noir-ink); }
 .error { background: #1a1214; border-color: #5a2a24; }
 #toast { background: #1a1a1f; color: var(--noir-ink); }
-footer { border-top-color: var(--noir-line); color: var(--noir-faint); }
+footer { background: var(--noir-bg); border-top-color: var(--noir-line); color: var(--noir-muted); }
 .skip { background: var(--noir-surface); color: var(--noir-ink); }
 
 /* Focus panel (already dark; align to noir) */
