@@ -636,39 +636,63 @@ def make_auth_app(
             state = store.issue_otp(email, purpose="broker_state")
             return _json_response(start_response, {"authorize_url": broker_oauth.authorize_url(state)})
 
-        # ---- broker: link (exchange code; member/LP only) --------------------
+        # ---- broker: callback (browser OAuth redirect) -----------------------
+        if path == "/api/broker/callback" and method == "GET":
+            if not email:
+                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
+            decision = store.access_for(email)
+            role = _role_for(email, decision)
+            if not decision.allowed or not can_access_real_data(role or ""):
+                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
+            if not (broker_oauth and broker_store and broker_adapter):
+                return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
+            query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
+            code = str((query.get("code") or [""])[0]).strip()
+            state = str((query.get("state") or [""])[0]).strip()
+            result = _complete_broker_link(email, role, code, state)
+            if result.get("status") != "linked":
+                return _json_response(
+                    start_response,
+                    {k: v for k, v in result.items() if k != "http_status"},
+                    f'{result.get("http_status", 400)} Bad Request',
+                )
+            start_response(
+                "302 Found",
+                [
+                    ("Location", "/?broker=linked#overview"),
+                    ("Cache-Control", "no-store"),
+                    ("Content-Length", "0"),
+                ],
+            )
+            return [b""]
+
+        # ---- broker: link (client-side callback compatibility) ---------------
         if path == "/api/broker/link" and method == "POST":
             if not email:
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
+            role = _role_for(email, decision)
+            if not decision.allowed or not can_access_real_data(role or ""):
                 return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
-            if not (broker_oauth and broker_store):
+            if not (broker_oauth and broker_store and broker_adapter):
                 return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
             data = _read_json(environ)
-            code = str(data.get("code", "")).strip()
-            state = str(data.get("state", "")).strip()
-            if not state or not store.verify_otp(email, state, purpose="broker_state"):
-                return _json_response(start_response, {"error": "invalid_state"}, "400 Bad Request")
-            tokens = broker_oauth.exchange_code(code)
-            if tokens.get("status") != "ok":
+            result = _complete_broker_link(
+                email,
+                role,
+                str(data.get("code", "")).strip(),
+                str(data.get("state", "")).strip(),
+                str(data.get("account_label", ""))[:64],
+            )
+            if result.get("status") != "linked":
+                status_code = int(result.get("http_status", 400))
+                status_text = "Bad Gateway" if status_code == 502 else "Bad Request"
                 return _json_response(
                     start_response,
-                    {"error": "token_exchange_failed", "detail": tokens.get("error")},
-                    "502 Bad Gateway",
+                    {k: v for k, v in result.items() if k != "http_status"},
+                    f"{status_code} {status_text}",
                 )
-            try:
-                broker_store.link(
-                    email,
-                    _role_for(email, decision),
-                    getattr(broker_oauth, "name", "schwab"),
-                    tokens["access_token"],
-                    account_label=str(data.get("account_label", ""))[:64],
-                )
-            except (PermissionError, ValueError) as exc:
-                return _json_response(start_response, {"error": str(exc)}, "400 Bad Request")
-            _audit("broker_linked", email, actor=email, detail=str(getattr(broker_oauth, "name", "schwab")))
-            return _json_response(start_response, {"status": "linked", "broker": "schwab", "read_only": True})
+            return _json_response(start_response, result)
 
         # ---- broker: unlink --------------------------------------------------
         if path == "/api/broker/unlink" and method == "POST":
@@ -678,23 +702,46 @@ def make_auth_app(
                 broker_store.unlink(email)
             return _json_response(start_response, {"status": "unlinked"})
 
-        # ---- broker: read-only positions (member/LP + linked) ----------------
-        if path == "/api/broker/positions" and method == "GET":
+        # ---- broker: read-only positions + balances ---------------------------
+        if path in ("/api/broker/positions", "/api/broker/balances") and method == "GET":
             if not email:
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
+            role = _role_for(email, decision)
+            if not decision.allowed or not can_access_real_data(role or ""):
                 return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
-            if not broker_store or not broker_adapter:
+            if not broker_store or not broker_adapter or not broker_oauth:
                 return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
             conn = broker_store.connection(email)
             if not conn.get("linked"):
                 return _json_response(start_response, {"error": "no_broker_linked"}, "409 Conflict")
-            # Read-only: the adapter never places orders.
-            positions = broker_adapter.positions("")
+            creds = _live_broker_credentials(email, role)
+            if creds.get("status") != "ok":
+                return _json_response(
+                    start_response,
+                    {"error": creds.get("error", "broker_credentials_unavailable"), "detail": creds.get("detail")},
+                    "502 Bad Gateway",
+                )
+            if path.endswith("/positions"):
+                payload = broker_adapter.positions(creds["access_token"], creds["account_hash"])
+                key = "positions"
+            else:
+                payload = broker_adapter.balances(creds["access_token"], creds["account_hash"])
+                key = "balances"
+            if payload.get("status") != "ok":
+                return _json_response(
+                    start_response,
+                    {"error": "broker_read_failed", "detail": payload.get("error") or payload.get("http_status")},
+                    "502 Bad Gateway",
+                )
             return _json_response(
                 start_response,
-                {"broker": conn.get("broker"), "read_only": True, "positions": positions},
+                {
+                    "broker": conn.get("broker"),
+                    "read_only": True,
+                    "account_label": conn.get("account_label"),
+                    key: payload.get(key),
+                },
             )
 
         return _json_response(start_response, {"error": "not_found"}, "404 Not Found")
