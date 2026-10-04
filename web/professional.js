@@ -17,11 +17,11 @@ function applyBrand() {
   if (meta) meta.content = 'Emporion is an independent market research and decision-support platform with a seven-desk research architecture, scenario analysis, Yellow Sheets, portfolio survival controls, and human review. A Bolton Investment Group (BIG) Project.';
 
   const icon = document.querySelector('link[rel="icon"]');
-  if (icon) icon.href = './emporion-institutional-seal.svg';
+  if (icon) icon.href = './brand/emporion-logo-hermes-transparent.png?v=20261004-power';
 
   const brand = document.querySelector('.brand');
   if (brand && !brand.querySelector('.brand-logo')) {
-    brand.innerHTML = '<img class="brand-logo" src="./emporion-institutional-seal.svg" alt="" width="46" height="46"><span>EMPORION<small>MARKETS · INTELLIGENCE · DISCIPLINE</small></span>';
+    brand.innerHTML = '<img class="brand-logo" src="./brand/emporion-logo-hermes-transparent.png?v=20261004-power" alt="" width="46" height="46"><span>EMPORION<small>MARKETS · INTELLIGENCE · DISCIPLINE</small></span>';
   }
 
   const sidebarBottom = document.querySelector('.sidebar-bottom');
