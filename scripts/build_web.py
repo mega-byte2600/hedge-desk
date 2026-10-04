@@ -51,6 +51,7 @@ CONSOLE_ASSETS = (
     "vendor/plotly-2.35.2.min.js",
     "overview-revamp.js",
     "overview-revamp-noir.css",
+    "brand/emporion-logo-hermes.jpg",
 )
 
 
@@ -67,7 +68,7 @@ def _index_html_local_assets(web_root: Path) -> set[str]:
             end = index.find('"', pos + len(token))
             if end == -1:
                 break
-            assets.add(index[pos + len(token):end])
+            assets.add(index[pos + len(token):end].split("?")[0])
             start = end + 1
     return assets
 
@@ -76,7 +77,7 @@ def _verify_console_assets(web_root: Path) -> None:
     """Fail the build if index.html references a local asset not in CONSOLE_ASSETS
     or missing from disk. Prevents deploy-time module/MIME failures."""
     referenced = _index_html_local_assets(web_root)
-    on_disk = {f.name for f in web_root.glob("*") if f.is_file()}
+    on_disk = {str(f.relative_to(web_root)) for f in web_root.rglob("*") if f.is_file()}
     missing_from_list = sorted(referenced - set(CONSOLE_ASSETS))
     if missing_from_list:
         raise SystemExit(
