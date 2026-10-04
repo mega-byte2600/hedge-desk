@@ -119,7 +119,7 @@ def export_report(report, destination):
         "synthetic_data": False,
     }
     temporary = destination / "report.json.tmp"
-    temporary.write_text(json.dumps(stub, indent=2) + "\\n", encoding="utf-8")
+    temporary.write_text(json.dumps(stub, indent=2) + "\n", encoding="utf-8")
     temporary.replace(destination / "report.json")
     return stub
 
