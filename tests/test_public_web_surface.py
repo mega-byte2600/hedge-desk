@@ -80,6 +80,29 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn(".graham-needs-you", noir)
         self.assertIn("color: var(--brass-bright) !important", noir)
 
+    def test_noir_brand_palette_meets_readable_contrast(self):
+        def luminance(hex_color):
+            value = hex_color.lstrip("#")
+            channels = [int(value[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+            def linearize(channel):
+                return channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4
+            r, g, b = [linearize(channel) for channel in channels]
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+        def contrast(foreground, background):
+            high, low = sorted((luminance(foreground), luminance(background)), reverse=True)
+            return (high + 0.05) / (low + 0.05)
+
+        backgrounds = ("#0a0a0c", "#121215", "#0e0e11")
+        foregrounds = ("#c6a15b", "#dcb96f", "#f4f1e8", "#a39e93")
+        for foreground in foregrounds:
+            for background in backgrounds:
+                self.assertGreaterEqual(
+                    contrast(foreground, background),
+                    4.5,
+                    f"{foreground} on {background} must remain WCAG AA readable",
+                )
+
     def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
         public_assets = [
             WEB / "index.html",
