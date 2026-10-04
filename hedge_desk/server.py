@@ -152,7 +152,9 @@ def _static_cache_control(target):
     suffix = target.suffix.lower()
     if suffix == ".json":
         return "public, max-age=60, stale-while-revalidate=300"
-    if suffix in {".css", ".js", ".mjs", ".svg", ".png", ".jpg", ".jpeg", ".webp"}:
+    if suffix in {".js", ".mjs"}:
+        return "no-cache, must-revalidate"
+    if suffix in {".css", ".svg", ".png", ".jpg", ".jpeg", ".webp"}:
         return "public, max-age=300, stale-while-revalidate=600"
     return "no-cache"
 

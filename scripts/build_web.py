@@ -1,5 +1,6 @@
 """Export an engine-validated synthetic report for the read-only web console."""
 import argparse
+import hashlib
 import json
 import sys
 import shutil
@@ -83,6 +84,27 @@ def _verify_console_assets(web_root: Path) -> None:
         )
 
 
+
+def _version_app_entrypoint(distribution: Path) -> str:
+    """Version the SPA entrypoint so a deploy cannot execute stale app.js.
+
+    Browsers can legitimately retain an older app.js under its previous cache
+    headers. A content-derived query string gives each changed bundle a new URL
+    while keeping the source tree readable and deterministic.
+    """
+    distribution = Path(distribution)
+    app = distribution / "app.js"
+    index = distribution / "index.html"
+    digest = hashlib.sha256(app.read_bytes()).hexdigest()[:12]
+    html = index.read_text(encoding="utf-8")
+    needle = "./app.js"
+    if needle not in html:
+        raise SystemExit("build_web.py FAILED: index.html does not reference ./app.js")
+    versioned = f"{needle}?v={digest}"
+    index.write_text(html.replace(needle, versioned, 1), encoding="utf-8")
+    return versioned
+
+
 def export_report(report, destination):
     """Write a fail-closed stub. The live console loads /api/report; the
     static report.json must never carry synthetic fixtures."""
@@ -115,4 +137,5 @@ if __name__ == "__main__":
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / "web" / filename, target)
         shutil.copyfile(ROOT / "README_PUBLIC.md", distribution / "README_PUBLIC.md")
+        _version_app_entrypoint(distribution)
     print("Validated console report exported to", args.output)
