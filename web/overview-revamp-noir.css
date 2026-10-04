@@ -36,35 +36,28 @@ body[data-route="overview"] {
 
 /* Brand lockup */
 .ov-brand {
-  position: relative; text-align: center;
-  padding: 56px 0 40px; overflow: hidden;
+  max-width: 880px; margin: 0 auto; padding: 22px 20px 4px;
+  display: flex; align-items: center; gap: 13px;
 }
-.ov-brand .compass {
-  position: absolute; left: 50%; top: 44%; width: 520px; height: 520px;
-  transform: translate(-50%, -50%); opacity: .055; pointer-events: none;
-}
-.ov-brand .seal {
-  width: 132px; height: 132px; display: block; margin: 0 auto 22px;
-  filter: drop-shadow(0 6px 24px rgba(198, 161, 91, .18));
+.ov-brand .ov-seal {
+  width: 46px; height: 46px; flex: none;
+  filter: drop-shadow(0 2px 8px rgba(198, 161, 91, .18));
 }
 .ov-brand h1 {
-  font-family: var(--serif); font-weight: 600; font-size: 40px;
-  letter-spacing: .14em; margin: 0 0 10px; text-indent: .14em;
+  font-family: var(--serif); font-weight: 600; font-size: 19px;
+  letter-spacing: .18em; margin: 0; color: var(--noir-ink);
 }
-.ov-brand .rule {
-  width: 64px; height: 1px; background: var(--brass);
-  margin: 0 auto 14px; opacity: .85;
+.ov-brand .ov-tagline {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 2.2px;
+  color: var(--brass); margin-top: 4px; font-weight: 500;
 }
-.ov-brand .tagline {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: 3.2px;
-  color: var(--brass); text-indent: 3.2px; font-weight: 500;
+.ov-hed { max-width: 880px; margin: 0 auto; padding: 8px 20px 0; text-align: center; }
+.ov-hed .ov-lede {
+  font-family: var(--serif); font-size: clamp(24px, 5vw, 30px); font-weight: 500;
+  color: var(--noir-ink); margin: 0; letter-spacing: .01em;
 }
-.ov-brand .lede {
-  font-family: var(--serif); font-size: 21px; font-weight: 500;
-  color: var(--noir-ink); margin: 26px 0 0; letter-spacing: .01em;
-}
-.ov-brand .lede-sub {
-  font-size: 13px; color: var(--noir-muted); margin: 10px 0 0; letter-spacing: .02em;
+.ov-hed .ov-lede-sub {
+  font-size: 13px; color: var(--noir-muted); margin: 8px 0 0; letter-spacing: .02em;
 }
 
 /* Overview module — noir skin */
@@ -190,8 +183,8 @@ body[data-route="overview"] {
 @media (min-width: 640px) {
   .ov-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .ov-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ov-brand h1 { font-size: 52px; }
-  .ov-brand .seal { width: 148px; height: 148px; }
+  .ov-brand h1 { font-size: 23px; }
+  .ov-brand .ov-seal { width: 54px; height: 54px; }
 }
 @media (min-width: 1024px) {
   .ov-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
