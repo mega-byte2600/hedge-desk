@@ -158,3 +158,22 @@ summary{padding:12px 0;margin:-12px 0}
 .graham-own .input{min-width:112px;padding:5px 7px}
 .graham-cell small{display:block;margin-top:6px;line-height:1.35}
 @media(max-width:760px){.mr-market,.graham-toolbar{align-items:flex-start;flex-direction:column}.graham-cell{min-width:0}}
+
+
+/* Emporion Noir Institutional shell — approved visual system. */
+:root{font-family:'Inter',Arial,sans-serif;color:#eee9df;background:#08090a;--ink:#eee9df;--muted:#9f9a90;--line:#2b2926;--green:#35c978;--red:#c86b65;--brass:#c6a15b;--noir:#08090a;--surface:#111113;--surface-2:#171719}
+body{background:var(--noir);color:var(--ink)}
+.sidebar{background:#0b0c0e;color:#d8d3c9;border-right:1px solid var(--line)}
+.brand{font-family:'Fraunces',Georgia,serif;color:#f2ede3}.brand small{font-family:'IBM Plex Mono',monospace;color:var(--brass)}
+.sidebar nav a,.sidebar nav a>span{color:#aaa59c}.sidebar nav a.active{color:#eee9df;background:#1a1917}.sidebar nav a.active>span,.sidebar nav a:hover>span{color:var(--brass)}.sidebar nav a:hover{background:#151515}.mode{color:var(--brass);border-color:#5d4c30}.sidebar-bottom p,.sidebar-bottom>a{color:#918c84}
+.shell,.topbar,main,footer{background:var(--noir);color:var(--ink)}.topbar{border-color:var(--line)}footer{border-color:var(--line);color:#8e8981}
+h1,h2,h3,.page-head h1{font-family:'Fraunces',Georgia,serif;color:#f2ede3}.subtitle,.muted,.small,.small-note{color:var(--muted)}
+.panel,.stat,.wb-card{background:var(--surface);border-color:var(--line);color:var(--ink)}.panel-head,.saved-note,.pipeline-line,td,.gate-card,.wb-fig{border-color:var(--line)}
+th,.wb-table th{background:#151515;color:#a8a39a}td small,.eyebrow,.stat-foot,.keyvalue>span{color:#9f9a90}.eyebrow{color:var(--brass)}
+.btn,.top-account .acct-btn,.wb-tab{background:#151515;border-color:#3a3732;color:#eee9df}.btn:hover,.top-account .acct-btn:hover,.wb-tab:hover{background:#201f1c}.btn.primary,.wb-tab.active{background:var(--brass);border-color:var(--brass);color:#0b0c0e}.btn.primary:hover{background:#d0ad67}
+.notice,.acct-tier{background:#171719;border-color:#302e2a;color:#d0cbc1}.input,.wb-ctl input,.wb-ctl select{background:#111113;border-color:#3a3732;color:#eee9df}.input::placeholder{color:#77736d}
+.tag{background:#242321;color:#b5b0a7}.tag.pass{background:#11281c;color:#62d596}.tag.pending{background:#2b2415;color:#d3ae62}.tag.blocked{background:#301b1a;color:#dc8a82}
+dialog,#acct-modal{background:var(--surface);color:var(--ink);border-color:#3a3732}.dialog-head{background:var(--surface);border-color:var(--line)}.close,.acct-modal .close{background:#151515;color:#eee9df;border-color:#3a3732}
+.skeleton{background:#1b1b1d}.skeleton::after{background:linear-gradient(90deg,transparent,#29292c,transparent)}
+.ov-brand .ov-seal,.brand-logo,.emporion-about-logo{background:transparent!important;border-radius:0!important}
+@media(max-width:950px){.sidebar{border-right:0;border-bottom:1px solid var(--line)}}
