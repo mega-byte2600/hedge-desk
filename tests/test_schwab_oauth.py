@@ -68,6 +68,27 @@ class SchwabOAuthTests(unittest.TestCase):
         oauth = SchwabOAuth(CFG, transport=transport_ok())
         self.assertEqual(oauth.exchange_code("")["error"], "missing_code")
 
+    def test_refresh_token_success_preserves_rotated_or_existing_refresh_token(self):
+        capture = []
+        oauth = SchwabOAuth(
+            CFG,
+            transport=transport_ok(
+                {"access_token": "NEWAT", "expires_in": 1800, "token_type": "Bearer"},
+                capture=capture,
+            ),
+        )
+        result = oauth.refresh_token("RT")
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["access_token"], "NEWAT")
+        self.assertEqual(result["refresh_token"], "RT")
+        self.assertIn(b"grant_type=refresh_token", capture[0]["body"])
+        self.assertIn(b"refresh_token=RT", capture[0]["body"])
+        self.assertNotIn(b"csecret", capture[0]["body"])
+
+    def test_refresh_token_fails_closed_without_refresh_token(self):
+        oauth = SchwabOAuth(CFG, transport=transport_ok())
+        self.assertEqual(oauth.refresh_token("")["error"], "missing_refresh_token")
+
     def test_env_config(self):
         cfg = SchwabOAuthConfig.from_environment(
             {"SCHWAB_CLIENT_ID": "a", "SCHWAB_CLIENT_SECRET": "b", "SCHWAB_REDIRECT_URI": "c"}
