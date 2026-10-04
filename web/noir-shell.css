@@ -17,6 +17,7 @@
   --brass-bright: #dcb96f;
   --brass-deep: #8a6d3b;
   --live: #35c26e;
+  --surface: #121215;
 }
 
 html, body {
@@ -117,3 +118,8 @@ footer { border-top-color: var(--noir-line); color: var(--noir-faint); }
 .focus .metrics strong { color: var(--noir-ink); }
 .focus .btn { background: var(--brass); color: #0a0a0c; }
 .reason { color: #e08a7a; }
+
+/* Market regime banner (uses var(--surface) fallback) */
+.mr-market { background: var(--surface); border-color: var(--noir-line); }
+.mr-market strong { color: var(--brass-bright); letter-spacing: .08em; }
+.mr-market span { color: var(--noir-ink); }
