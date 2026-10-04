@@ -55,13 +55,19 @@ def _fetch_yahoo(symbol, timeout=8):
         result = (payload.get("chart") or {}).get("result") or []
         if not result:
             return None
+        series = result[0]
         closes = [
-            c for c in (result[0].get("indicators") or {}).get("quote", [{}])[0].get("close", [])
+            c for c in (series.get("indicators") or {}).get("quote", [{}])[0].get("close", [])
             if c is not None
         ]
         if len(closes) < 2:
             return None
         prev, last = closes[-2], closes[-1]
+        timestamps = [t for t in series.get("timestamp", []) if t is not None]
+        observed_at = (
+            datetime.fromtimestamp(timestamps[-1], tz=timezone.utc).isoformat()
+            if timestamps else ""
+        )
         change_pct = (last - prev) / prev * 100 if prev else 0.0
         return {
             "symbol": symbol,
@@ -69,7 +75,9 @@ def _fetch_yahoo(symbol, timeout=8):
             "last": round(last, 2),
             "prev_close": round(prev, 2),
             "change_pct": round(change_pct, 2),
-            "source": "Yahoo Finance",
+            "source": "Yahoo Finance daily chart",
+            "observed_at": observed_at,
+            "data_frequency": "daily_close",
         }
     except Exception:
         return None
@@ -127,8 +135,11 @@ def build_desk_projects(fetcher=None):
             "project_id": project_id,
             "evaluated_at": now,
             "data_status": status,
-            "data_as_of": now,
-            "data_source": "Yahoo Finance (free public API)",
+            "data_as_of": max(
+                (q.get("observed_at") or "" for q in live_data.values()),
+                default=now,
+            ),
+            "data_source": "Yahoo Finance daily chart (delayed/EOD)",
             "reason": reason,
             "live_data": live_data,
             "unavailable": missing,
@@ -162,7 +173,7 @@ def build_live_console_report(code_commit):
             "desks_total": len(projects),
         },
         "limitations": [
-            "Live market data from free public APIs (Yahoo Finance).",
+            "Delayed/EOD market observations from the Yahoo Finance daily chart API.",
             "Paper research context only; no trade authorization.",
             "Data may be delayed; verify before any decision.",
         ],
