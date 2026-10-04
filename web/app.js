@@ -62,6 +62,7 @@ function candidates(){
     : 'Loading real nightly VIX and short-put chain data…';
   const hidden=assessed.length-rows.length;
   return head('Research candidates','Real symbols entering your six desk methods. Graham discipline is applied inline to short puts; it does not authorize trades.',btn('export-candidates','↓ Candidate feed'))+
+  `<div class="notice"><strong>Overnight candidates</strong><span>Overnight wheel candidates from the nightly batch (Yahoo/Cboe). Graham inputs use the same real nightly report.</span></div>`+
   `<div class="mr-market"><strong>MR. MARKET · ${e(market.regime)}</strong><span>${marketCopy}</span></div>`+
   `<div class="graham-toolbar"><label><input id="graham-filter-toggle" type="checkbox" ${filterOn?'checked':''}> Hide Graham speculation</label><span class="small">${hidden} filtered · NEEDS YOU remains visible</span></div>`+
   `<div class="stats">${stat('Symbols',new Set(assessed.map(r=>r.symbol)).size,'Real tickers and futures roots')}${stat('Desk assignments',assessed.length,'Shared client-neutral feed')}${stat('Short puts',assessed.filter(r=>r.grahamEligible).length,'Graham-eligible rows')}</div>`+
