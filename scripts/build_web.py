@@ -42,7 +42,7 @@ CONSOLE_ASSETS = (
     "research-brief.json",
     "research-today.md",
     "options-workbench-ui.js",
-    "options-workbench.mjs",
+    "options-workbench.mjs",\n    "real-estate-ui.js",\n    "real-estate-model.mjs",\n    "real-estate.css",
     "vendor/plotly-2.35.2.min.js",
 )
 
