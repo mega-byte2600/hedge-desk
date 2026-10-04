@@ -9,7 +9,8 @@
 <circle cx="128" cy="128" r="124" fill="url(#bg)"/>
 <circle cx="128" cy="128" r="118" fill="none" stroke="url(#gold)" stroke-width="3"/>
 <circle cx="128" cy="128" r="99" fill="none" stroke="#d1a65e" stroke-width="2"/>
-<g><use href="#k2" transform="rotate(0 128 128) translate(128 20)"/>
+<g>
+<use href="#k2" transform="rotate(0 128 128) translate(128 20)"/>
 <use href="#k2" transform="rotate(22.5 128 128) translate(128 20)"/>
 <use href="#k2" transform="rotate(45 128 128) translate(128 20)"/>
 <use href="#k2" transform="rotate(67.5 128 128) translate(128 20)"/>
@@ -24,7 +25,8 @@
 <use href="#k2" transform="rotate(270 128 128) translate(128 20)"/>
 <use href="#k2" transform="rotate(292.5 128 128) translate(128 20)"/>
 <use href="#k2" transform="rotate(315 128 128) translate(128 20)"/>
-<use href="#k2" transform="rotate(337.5 128 128) translate(128 20)"/></g>
+<use href="#k2" transform="rotate(337.5 128 128) translate(128 20)"/>
+</g>
 <g fill="none" stroke="#c6a15b" opacity=".9">
 <circle cx="128" cy="128" r="86" stroke-width="2.2"/>
 <circle cx="128" cy="128" r="78" stroke-width="1.5"/>
@@ -32,12 +34,14 @@
 <path d="M72 72l18 18M184 72l-18 18M72 184l18-18M184 184l-18-18" stroke-width="2"/>
 </g>
 <g fill="url(#gold)">
-<path d="M146 124C152 100 158 74 168 48C166 76 160 102 152 126C149 131 146 129 146 124Z"/>
-<path d="M154 130C164 106 176 80 188 56C184 84 176 110 166 132C161 139 156 136 154 130Z"/>
-<path d="M162 140C174 118 190 94 204 72C198 98 188 122 176 140C170 147 164 145 162 140Z"/>
-<path d="M110 124C104 100 98 74 88 48C90 76 96 102 104 126C107 131 110 129 110 124Z"/>
-<path d="M102 130C92 106 80 80 68 56C72 84 80 110 90 132C95 139 100 136 102 130Z"/>
-<path d="M94 140C82 118 66 94 52 72C58 98 68 122 80 140C86 147 92 145 94 140Z"/>
+<path d="M146 122C156 102 168 84 188 66C186 90 178 110 166 126C158 134 148 130 146 122Z" fill="url(#gold)"/>
+<path d="M152 132C162 114 174 98 196 84C192 106 184 124 172 136C164 143 154 139 152 132Z" fill="url(#gold)"/>
+<path d="M158 142C168 126 180 114 200 104C194 122 186 136 176 144C168 150 160 148 158 142Z" fill="url(#gold)"/>
+<path d="M162 150C170 140 180 132 196 124C190 138 182 148 174 152C168 155 163 153 162 150Z" fill="url(#gold)"/>
+<path d="M110 122C100 102 88 84 68 66C70 90 78 110 90 126C98 134 108 130 110 122Z" fill="url(#gold)"/>
+<path d="M104 132C94 114 82 98 60 84C64 106 72 124 84 136C92 143 102 139 104 132Z" fill="url(#gold)"/>
+<path d="M98 142C88 126 76 114 56 104C62 122 70 136 80 144C88 150 96 148 98 142Z" fill="url(#gold)"/>
+<path d="M94 150C86 140 76 132 60 124C66 138 74 148 82 152C88 155 93 153 94 150Z" fill="url(#gold)"/>
 <path d="M94 156C94 118 104 92 128 92C152 92 162 118 162 156L155 172C140 178 116 178 101 172Z"/>
 </g>
 <path d="M101 146C115 151 141 151 155 146L151 169C139 174 117 174 105 169Z" fill="#0a1526"/>
