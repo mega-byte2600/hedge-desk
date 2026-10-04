@@ -53,47 +53,6 @@ function statusStrip() {
     </section>`;
 }
 
-function overviewBlock() {
-  if (currentRoute() !== 'overview') return '';
-  return `
-    <section class="ws-operational ws-overview" aria-label="Research platform overview">
-      <div class="ws-overview-grid">
-        <article><div class="ws-label">PROBLEM</div><h2>Too much information, too little decision discipline.</h2><p>Emporion organizes market ideas so a user can move from curiosity to documented research without turning the site into a signal service.</p></article>
-        <article><div class="ws-label">PROMISE</div><h2>Bring your watchlist. Research it your way.</h2><p>Start from the symbols and questions you already care about, then use a repeatable process to examine evidence, scenarios, thesis quality, and portfolio survival.</p></article>
-        <article><div class="ws-label">OWNERSHIP</div><h2>Your choice. Your data. Your money.</h2><p>The default product is research oriented. Users remain responsible for their own decisions, accounts, data, and implementation choices.</p></article>
-      </div>
-      <div class="ws-process">
-        <div class="ws-label">WHAT EMPORION DOES</div>
-        <div class="ws-process-line"><span>Candidate intake</span><i></i><span>Research desks</span><i></i><span>Scenario analysis</span><i></i><span>Yellow Sheets</span><i></i><span>Deterministic risk gate</span><i></i><span>Human review</span></div>
-      </div>
-      <div class="ws-ror" aria-label="Coordinated agentic research architecture">
-        <div class="ws-label">COORDINATED RESEARCH SYSTEM</div>
-        <div class="ws-ror-grid">
-          <article><h2>Specialized by desk. Coordinated as one system.</h2><p>Emporion is designed for one or more specialist agents to support each research desk as always-on research analysts: gathering evidence, comparing signals, synthesizing findings, and challenging the thesis.</p></article>
-          <article><h3>Shared intelligence, not isolated bots.</h3><p>Desk agents are designed to exchange relevant findings across the platform so rates, events, fundamentals, market structure, and model research can inform one coordinated decision process.</p></article>
-          <article><h3>Automation is a path, not a claim.</h3><p>The architecture is intended to support user-controlled data, model, broker, and execution integrations over time. End-to-end automated trading is not live in the current MVP.</p></article>
-        </div>
-      </div>
-      <div class="ws-ror" data-risk-of-ruin="true" aria-label="Risk of Ruin and portfolio survival">
-        <div class="ws-label">POINT OF DIFFERENCE · RISK OF RUIN / PORTFOLIO SURVIVAL</div>
-        <div class="ws-ror-grid">
-          <article><h2>Survival before conviction. Alpha is pursued. Survival comes first.</h2><p>Emporion separates the search for opportunity from permission to take risk. The research thesis cannot override the risk gate; conviction only advances after the independent portfolio-survival state is known. That separation shapes the final decision.</p></article>
-          <article><h3>Research asks: is there an edge?</h3><p>Risk asks a different question: can the portfolio survive being wrong? Position economics, maximum loss, portfolio state, and validated risk inputs remain independent of the Yellow Sheet narrative and agent conviction.</p></article>
-          <article><h3>Risk constrains. Human review decides.</h3><p>A blocked risk or compliance state stops progression regardless of thesis strength. Human review comes after the risk state is known and cannot convert a blocked gate into approval. The reference RoR model remains unvalidated in this MVP; the public console does not calculate or validate RoR.</p></article>
-        </div>
-      </div>
-      <div class="ws-continuum" aria-label="Operating continuum">
-        <article><strong>Research only</strong><span>Inspect candidates, evidence, scenarios, notes, and risk state in a paper research workspace.</span></article>
-        <article><strong>Decision ready</strong><span>Turn a candidate into a structured packet with thesis, evidence, invalidation criteria, an independent portfolio-survival checkpoint, and human review.</span></article>
-        <article><strong>User-controlled extension</strong><span>Open-source users may connect their own data and implementation layers outside the default site.</span></article>
-      </div>
-      <div class="ws-desk-list">
-        <div class="ws-list-head"><span>Research desk</span><span>Status</span></div>
-        ${deskMethods.map(([name,,state]) => `<div class="ws-list-row"><strong>${name}</strong><span class="ws-state">${state}</span></div>`).join('')}
-      </div>
-    </section>`;
-}
-
 function desksBlock() {
   if (currentRoute() !== 'desks') return '';
   return `
@@ -147,7 +106,6 @@ function installStyle() {
     .ws-capital-head{padding:19px 21px;border-bottom:1px solid #e6eaed;display:flex;align-items:center;justify-content:space-between;gap:18px}.ws-capital-head h2{margin-top:7px}.ws-brandline{margin:6px 0 0;font:10px 'IBM Plex Mono',monospace;letter-spacing:.6px;color:#6d7a83}.ws-boundary{font:10px 'IBM Plex Mono',monospace;letter-spacing:.7px;background:#f3f5f6;border:1px solid #d8dfe3;padding:7px 9px;border-radius:3px;color:#58666f;white-space:nowrap}
     .ws-capital-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ws-capital-grid article{padding:20px 21px;border-right:1px solid #e6eaed;border-bottom:1px solid #e6eaed}.ws-capital-grid article:nth-child(2n){border-right:0}.ws-capital-grid article:nth-last-child(-n+2){border-bottom:0}.ws-capital-grid h3{font-size:14px;margin:0 0 8px}.ws-capital-grid p{font-size:12px;line-height:1.6;color:#596871;margin:0}
     .ws-inspiration-note{font-size:11px!important;color:#75818a!important}.ws-legal{margin:0;padding:14px 21px;background:#101820;color:#cbd4da;font-size:11px;line-height:1.55}
-    body[data-route='overview'] #main>.notice,body[data-route='overview'] #main>.stats,body[data-route='overview'] #main>.split,body[data-route='overview'] #main>.lower{display:none}
     body[data-route='desks'] #main>.cards{display:none}
     @media(max-width:800px){.ws-overview-grid,.ws-desk-methods,.ws-continuum,.ws-ror-grid{grid-template-columns:1fr}.ws-overview-grid article,.ws-desk-methods article,.ws-continuum article,.ws-ror-grid article{border-right:0;border-bottom:1px solid #e6eaed}.ws-overview-grid article:last-child,.ws-desk-methods article:last-child,.ws-continuum article:last-child,.ws-ror-grid article:last-child{border-bottom:0}.ws-list-head,.ws-list-row{grid-template-columns:1fr}.ws-state{margin-top:5px}.ws-process-line i{width:12px}}
     @media(max-width:650px){.ws-capital-grid{grid-template-columns:1fr}.ws-capital-grid article{border-right:0;border-bottom:1px solid #e6eaed}.ws-capital-grid article:last-child{border-bottom:0}.ws-tape{gap:9px 14px}.ws-tape a{margin-left:0;width:100%}.ws-capital-head{align-items:flex-start;flex-direction:column}}
@@ -238,7 +196,7 @@ function renderContext() {
   const head = main?.querySelector('.page-head');
   if (!main || !head) return;
   const holder = document.createElement('div');
-  holder.innerHTML = statusStrip() + overviewBlock() + desksBlock() + aboutCapitalBlock();
+  holder.innerHTML = statusStrip() + desksBlock() + aboutCapitalBlock();
   let cursor = head;
   for (const node of [...holder.children]) {
     cursor.insertAdjacentElement('afterend', node);
