@@ -42,7 +42,10 @@ CONSOLE_ASSETS = (
     "research-brief.json",
     "research-today.md",
     "options-workbench-ui.js",
-    "options-workbench.mjs",\n    "real-estate-ui.js",\n    "real-estate-model.mjs",\n    "real-estate.css",
+    "options-workbench.mjs",
+    "real-estate-ui.js",
+    "real-estate-model.mjs",
+    "real-estate.css",
     "vendor/plotly-2.35.2.min.js",
 )
 
@@ -116,7 +119,8 @@ def export_report(report, destination):
         "synthetic_data": False,
     }
     temporary = destination / "report.json.tmp"
-    temporary.write_text(json.dumps(stub, indent=2) + "\n", encoding="utf-8")
+    temporary.write_text(json.dumps(stub, indent=2) + "
+", encoding="utf-8")
     temporary.replace(destination / "report.json")
     return stub
 
