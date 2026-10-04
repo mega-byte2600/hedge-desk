@@ -46,6 +46,8 @@ CONSOLE_ASSETS = (
     "real-estate-ui.js",
     "real-estate-model.mjs",
     "real-estate.css",
+    "real-estate.html",
+    "real-estate-standalone.js",
     "vendor/plotly-2.35.2.min.js",
 )
 
