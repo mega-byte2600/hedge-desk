@@ -1,13 +1,12 @@
 import { escapeHTML as e, human, statusClass, readNotes, saveNote } from './core.mjs';
 import { assessShortPut, extractShortPutRows, mrMarketContext, readFilter, readOwnIt, saveFilter, saveOwnIt } from './graham-filter.mjs';
 import { mountWorkbench } from './options-workbench-ui.js';
-import { realEstatePage, mountRealEstate } from './real-estate-ui.js';
 const $ = s => document.querySelector(s);
 let data, report, route='overview';
 let grahamNightly=null, grahamLoading=null;
 const names={'overnight-premium-desk':'Overnight Premium','earnings-event-desk':'Earnings Event','arbitrage-observer':'Box / Parity Observer','dividend-opportunity-desk':'Dividend Opportunity','open-quant-ai-model-lab':'Quant / AI Model Lab','event-futures-desk':'Futures Event'};
 const layers={OBSERVED:'Observed data',STAT:'Statistical evidence',BIG:'Research proposal',DETERMINISTIC_RISK:'Deterministic risk',DETERMINISTIC_COMPLIANCE:'Compliance',HUMAN:'Human review'};
-const title={overview:'Overview',dashboard:'Dashboard',candidates:'Candidates',desks:'Research desks',controls:'Controls & evidence',journal:'Yellow Sheets',resources:'Research resources',guide:'Options Guide',workbench:'Options Workbench','real-estate':'Real Estate',brief:'Daily brief',about:'About'};
+const title={overview:'Overview',dashboard:'Dashboard',candidates:'Candidates',desks:'Research desks',controls:'Controls & evidence',journal:'Yellow Sheets',resources:'Research resources',guide:'Options Guide',workbench:'Options Workbench',brief:'Daily brief',about:'About'};
 const tag=s=>`<span class="tag ${statusClass(s)}">${e(human(s))}</span>`;
 const money=v=>{const n=String(v);return `${n.startsWith('-')?'−':''}$${n.replace('-','').replace(/\B(?=(\d{3})+(?!\d))/g,',')}`;};
 const date=v=>new Date(v).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'});
@@ -96,7 +95,7 @@ function fitFrame(f){try{const d=f.contentDocument;if(!d||!d.documentElement)ret
 function wireFrames(){document.querySelectorAll('#main iframe[data-autofit]').forEach(f=>{if(f.dataset.wired)return;f.dataset.wired='1';f.addEventListener('load',()=>{const sk=f.previousElementSibling;if(sk&&sk.classList.contains('skeleton'))sk.style.display='none';fitFrame(f);try{new ResizeObserver(()=>fitFrame(f)).observe(f.contentDocument.documentElement);}catch(_){}});});}
 let framesResizeArmed=false;
 function armFramesResize(){if(framesResizeArmed)return;framesResizeArmed=true;window.addEventListener('resize',()=>{document.querySelectorAll('#main iframe[data-wired]').forEach(fitFrame);});}
-function render(){route=location.hash.slice(1)||'candidates';if(!title[route])route='candidates';document.querySelectorAll('[data-nav]').forEach(a=>{a.classList.toggle('active',a.dataset.nav===route);if(a.dataset.nav===route)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});$('#breadcrumb').textContent=title[route];$('#main').innerHTML=({overview,dashboard,candidates,desks,controls,journal,resources,guide,workbench,'real-estate':realEstate,brief,about})[route]();if(route==='candidates')hydrateGraham();if(route==='brief')hydrateBrief();if(route==='workbench')hydrateWorkbench();if(route==='real-estate')hydrateRealEstate();wireFrames();}
+function render(){route=location.hash.slice(1)||'candidates';if(!title[route])route='candidates';document.querySelectorAll('[data-nav]').forEach(a=>{a.classList.toggle('active',a.dataset.nav===route);if(a.dataset.nav===route)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});$('#breadcrumb').textContent=title[route];$('#main').innerHTML=({overview,dashboard,candidates,desks,controls,journal,resources,guide,workbench,brief,about})[route]();if(route==='candidates')hydrateGraham();if(route==='brief')hydrateBrief();if(route==='workbench')hydrateWorkbench();wireFrames();}
 function download(name,content,type='application/json'){const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Download prepared');}
 function toast(message){$('#toast').textContent=message;$('#toast').style.display='block';setTimeout(()=>$('#toast').style.display='none',3500)}
 async function acceptPayload(candidate){if(candidate.schema_version!=='desk-console-1'||candidate.report?.environment!=='paper'||candidate.report.live_orders_enabled!==false||candidate.report.synthetic_data!==false||!Array.isArray(candidate.report.projects)||candidate.report.projects.length<6||!candidate.summary||!candidate.registry||candidate.candidate_feed?.schema_version!=='hedge-desk-candidates-1.0.0')throw Error('Unsupported report or paper boundary.');}
