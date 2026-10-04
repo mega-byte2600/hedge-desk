@@ -205,24 +205,42 @@ async function acctCompleteSocialIfPresent() {
 async function acctBrokerRefresh() {
   const box = document.getElementById('acct-broker');
   if (!box) return;
-  const c = ACCT.current;
-  if (!c || !c.authenticated || !(ACCT.tier && ACCT.tier.real_data)) {
-    box.style.display = 'none';
-    return;
-  }
   box.style.display = 'block';
-  let st = { configured: false, linked: false };
-  try { st = await acctFetch('/api/broker/status'); } catch (e) { /* leave defaults */ }
-  ACCT.broker = st;
+
+  const c = ACCT.current;
   const label = document.getElementById('acct-broker-label');
   const connect = document.getElementById('acct-broker-connect');
   const disconnect = document.getElementById('acct-broker-disconnect');
+
+  if (!c || !c.authenticated) {
+    ACCT.broker = { configured: false, linked: false };
+    if (label) label.textContent = 'Sign in above to connect your Schwab account (read-only).';
+    if (connect) connect.style.display = 'none';
+    if (disconnect) disconnect.style.display = 'none';
+    return;
+  }
+
+  if (!(ACCT.tier && ACCT.tier.real_data)) {
+    ACCT.broker = { configured: false, linked: false };
+    if (label) label.textContent = 'Schwab connection requires live-data member access.';
+    if (connect) connect.style.display = 'none';
+    if (disconnect) disconnect.style.display = 'none';
+    return;
+  }
+
+  let st = { configured: false, linked: false };
+  try { st = await acctFetch('/api/broker/status'); } catch (e) { /* leave defaults */ }
+  ACCT.broker = st;
+
   if (label) {
     label.textContent = !st.configured
-      ? 'Broker linking is not configured on this deployment.'
-      : (st.linked ? 'Broker connected (read-only).' : 'No broker connected yet.');
+      ? 'Schwab is not configured on this deployment.'
+      : (st.linked ? 'Schwab connected (read-only).' : 'Schwab is ready to connect.');
   }
-  if (connect) connect.style.display = st.configured && !st.linked ? 'inline-flex' : 'none';
+  if (connect) {
+    connect.textContent = 'Connect Schwab (read-only)';
+    connect.style.display = st.configured && !st.linked ? 'inline-flex' : 'none';
+  }
   if (disconnect) disconnect.style.display = st.linked ? 'inline-flex' : 'none';
 }
 
