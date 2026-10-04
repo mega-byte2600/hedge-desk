@@ -22,14 +22,18 @@ Real adapter hooks: a concrete broker (e.g. Schwab) adapter implements
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import hmac
+import json
 import os
 import secrets
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
+
+from cryptography.fernet import Fernet, InvalidToken
 
 from hedge_desk.sqlite_thread import new_lock, open_connection, thread_safe
 from hedge_desk.tier_access import can_access_real_data
@@ -66,24 +70,63 @@ def _default_http_transport(method, url, headers, body):
         return exc.code, exc.read()
 
 
+def _fernet(key: bytes) -> Fernet:
+    """Derive a stable Fernet key from the server-side BROKER_LINK_KEY."""
+    if not key:
+        raise ValueError("broker encryption key is required")
+    derived = hashlib.sha256(key).digest()
+    return Fernet(base64.urlsafe_b64encode(derived))
+
+
 def _encrypt_token(token: str, key: bytes) -> str:
-    # Envelope: random nonce + HMAC-authenticated token. Not cryptographic
-    # storage-grade on its own; it only guards an at-rest reference until a
-    # real broker adapter and key-management story land.
-    nonce = secrets.token_hex(16)
-    tag = hmac.new(key, (nonce + token).encode("utf-8"), hashlib.sha256).hexdigest()
-    return f"{nonce}:{tag}:{token}"
+    """Authenticated encryption for broker credential bundles."""
+    encrypted = _fernet(key).encrypt(token.encode("utf-8")).decode("ascii")
+    return "fernet:" + encrypted
 
 
 def _decrypt_token(blob: str, key: bytes) -> Optional[str]:
+    """Decrypt current Fernet blobs; accept legacy HMAC envelopes for migration."""
     try:
+        if blob.startswith("fernet:"):
+            return _fernet(key).decrypt(blob.split(":", 1)[1].encode("ascii")).decode("utf-8")
+        # Legacy format from the read-only scaffold. Read it only so an existing
+        # connection can be re-saved under Fernet on its next successful refresh.
         nonce, tag, token = blob.split(":", 2)
         expect = hmac.new(key, (nonce + token).encode("utf-8"), hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(tag, expect):
-            return None
-        return token
-    except Exception:
+        return token if hmac.compare_digest(tag, expect) else None
+    except (InvalidToken, ValueError, UnicodeDecodeError):
         return None
+
+
+def _bundle_json(
+    access_token: str,
+    refresh_token: str = "",
+    expires_at: str = "",
+    account_hash: str = "",
+    account_number: str = "",
+) -> str:
+    return json.dumps(
+        {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "expires_at": expires_at,
+            "account_hash": account_hash,
+            "account_number": account_number,
+        },
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+
+
+def _parse_bundle(raw: str) -> dict:
+    try:
+        data = json.loads(raw)
+        if isinstance(data, dict) and data.get("access_token"):
+            return data
+    except Exception:
+        pass
+    # Backward compatibility for a pre-bundle stored access token.
+    return {"access_token": raw, "refresh_token": "", "expires_at": "", "account_hash": "", "account_number": ""}
 
 
 @thread_safe
