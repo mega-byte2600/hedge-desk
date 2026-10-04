@@ -123,3 +123,20 @@ footer { border-top-color: var(--noir-line); color: var(--noir-faint); }
 .mr-market { background: var(--surface); border-color: var(--noir-line); }
 .mr-market strong { color: var(--brass-bright); letter-spacing: .08em; }
 .mr-market span { color: var(--noir-ink); }
+
+/* Hard lock: noir-only shell. Prevent legacy light surfaces from bleeding through. */
+body, .shell, main { background: var(--noir-bg) !important; color: var(--noir-ink) !important; }
+.sidebar, .topbar, footer { background: var(--noir-bg) !important; }
+.stat, .panel, .gate-card, .notice, .wb-card, dialog, #acct-modal {
+  background: var(--noir-surface) !important;
+  color: var(--noir-ink) !important;
+}
+th, .acct-tier, .input, .toolbar input, .toolbar select, .form-field textarea {
+  background: var(--noir-surface-2) !important;
+  color: var(--noir-ink) !important;
+}
+.brand-logo, .emporion-about-logo {
+  background: transparent !important;
+  border-radius: 0 !important;
+  filter: drop-shadow(0 2px 8px rgba(198,161,91,.22)) !important;
+}
