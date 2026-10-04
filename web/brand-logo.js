@@ -1,4 +1,4 @@
-const LOGO = './brand/emporion-logo-hermes.jpg?v=20261004';
+const LOGO = './brand/emporion-logo-noir.svg?v=20261004b';
 
 function installBrandStyle() {
   if (document.getElementById('emporion-logo-style')) return;
@@ -21,7 +21,7 @@ function applyLogo() {
   const icon = document.querySelector('link[rel="icon"]');
   if (icon) {
     icon.setAttribute('href', LOGO);
-    icon.setAttribute('type', 'image/jpeg');
+    icon.setAttribute('type', 'image/svg+xml');
   }
 
   const brand = document.querySelector('.brand');
@@ -40,7 +40,7 @@ function applyLogo() {
     if (title) {
       const lockup = document.createElement('div');
       lockup.className = 'emporion-about-lockup';
-      lockup.innerHTML = `<img class="emporion-about-logo" src="${LOGO}" alt="Emporion Institutional Seal" width="64" height="64"><div><strong>EMPORION</strong><div class="ws-label">MARKETS · INTELLIGENCE · DISCIPLINE</div></div>`;
+      lockup.innerHTML = `<img class="emporion-about-logo" src="${LOGO}" alt="Emporion Hermes compass mark" width="64" height="64"><div><strong>EMPORION</strong><div class="ws-label">MARKETS · INTELLIGENCE · DISCIPLINE</div></div>`;
       title.insertAdjacentElement('beforebegin', lockup);
       title.style.display = 'none';
       if (brandline) brandline.textContent = 'A Bolton Investment Group (BIG) Project';
