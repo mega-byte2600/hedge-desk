@@ -145,6 +145,17 @@ function acctRenderProviders() {
   const box = document.getElementById('acct-social');
   if (!box) return;
   const s = ACCT.social;
+  const magicEmail = !!(s && s.enabled);
+  const sendBtn = document.getElementById('acct-send');
+  const codeInput = document.getElementById('acct-code');
+  const verifyBtn = document.getElementById('acct-verify');
+  if (sendBtn) sendBtn.textContent = magicEmail ? 'Send sign-in email' : 'Send code';
+  if (codeInput && codeInput.closest('.form-field')) {
+    codeInput.closest('.form-field').style.display = magicEmail ? 'none' : '';
+  }
+  if (verifyBtn && verifyBtn.closest('.acct-actions')) {
+    verifyBtn.closest('.acct-actions').style.display = magicEmail ? 'none' : '';
+  }
   if (!s || !s.enabled || !s.providers || !s.providers.length) {
     box.innerHTML = '';
     box.style.display = 'none';
@@ -205,24 +216,42 @@ async function acctCompleteSocialIfPresent() {
 async function acctBrokerRefresh() {
   const box = document.getElementById('acct-broker');
   if (!box) return;
-  const c = ACCT.current;
-  if (!c || !c.authenticated || !(ACCT.tier && ACCT.tier.real_data)) {
-    box.style.display = 'none';
-    return;
-  }
   box.style.display = 'block';
-  let st = { configured: false, linked: false };
-  try { st = await acctFetch('/api/broker/status'); } catch (e) { /* leave defaults */ }
-  ACCT.broker = st;
+
+  const c = ACCT.current;
   const label = document.getElementById('acct-broker-label');
   const connect = document.getElementById('acct-broker-connect');
   const disconnect = document.getElementById('acct-broker-disconnect');
+
+  if (!c || !c.authenticated) {
+    ACCT.broker = { configured: false, linked: false };
+    if (label) label.textContent = 'Sign in above to connect your Schwab account (read-only).';
+    if (connect) connect.style.display = 'none';
+    if (disconnect) disconnect.style.display = 'none';
+    return;
+  }
+
+  if (!(ACCT.tier && ACCT.tier.real_data)) {
+    ACCT.broker = { configured: false, linked: false };
+    if (label) label.textContent = 'Schwab connection requires live-data member access.';
+    if (connect) connect.style.display = 'none';
+    if (disconnect) disconnect.style.display = 'none';
+    return;
+  }
+
+  let st = { configured: false, linked: false };
+  try { st = await acctFetch('/api/broker/status'); } catch (e) { /* leave defaults */ }
+  ACCT.broker = st;
+
   if (label) {
     label.textContent = !st.configured
-      ? 'Broker linking is not configured on this deployment.'
-      : (st.linked ? 'Broker connected (read-only).' : 'No broker connected yet.');
+      ? 'Schwab is not configured on this deployment.'
+      : (st.linked ? 'Schwab connected (read-only).' : 'Schwab is ready to connect.');
   }
-  if (connect) connect.style.display = st.configured && !st.linked ? 'inline-flex' : 'none';
+  if (connect) {
+    connect.textContent = 'Connect Schwab (read-only)';
+    connect.style.display = st.configured && !st.linked ? 'inline-flex' : 'none';
+  }
   if (disconnect) disconnect.style.display = st.linked ? 'inline-flex' : 'none';
 }
 
@@ -319,7 +348,21 @@ async function acctGpInvite(btn) {
 }
 
 async function acctSendCode(email) {
+  const s = ACCT.social;
+  if (s && s.enabled) {
+    const client = await loadSupabase(s.supabase_url, s.supabase_anon_key);
+    const { error } = await client.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.origin + window.location.pathname,
+        shouldCreateUser: true,
+      },
+    });
+    if (error) throw error;
+    return { mode: 'magic_link' };
+  }
   await acctFetch('/api/auth/request', { method: 'POST', body: JSON.stringify({ email }) });
+  return { mode: 'otp' };
 }
 
 async function acctVerify(email, code) {
@@ -354,9 +397,13 @@ function acctBind() {
     if (!email || email.indexOf('@') < 1) { setError('Enter a valid email.'); return; }
     setError(''); setStatus('Sending code…');
     try {
-      await acctSendCode(email);
-      setStatus('Code sent to ' + email + '. Check your inbox (and the console log in dev).');
-      if (codeInput) codeInput.focus();
+      const result = await acctSendCode(email);
+      if (result && result.mode === 'magic_link') {
+        setStatus('Sign-in email sent to ' + email + '. Open the secure link in that email to return to Emporion.');
+      } else {
+        setStatus('Code sent to ' + email + '. Check your inbox.');
+        if (codeInput) codeInput.focus();
+      }
     } catch (e) {
       setStatus(''); setError(e.message || 'Could not send code.');
     }

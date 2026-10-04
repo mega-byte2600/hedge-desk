@@ -17,8 +17,9 @@ SenderFn = Callable[[str, str, str], None]
 
 
 def _console_send(to: str, subject: str, body: str) -> None:
-    # Dev fallback: print the OTP so the flow is usable without SMTP config.
-    print(f"[membership-mail] TO={to} SUBJECT={subject}\n{body}", flush=True)
+    # Never emit authentication secrets into logs. Production must fail closed
+    # when no real mail transport is configured.
+    raise RuntimeError("email transport is not configured")
 
 
 class SmtpSender:
