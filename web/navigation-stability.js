@@ -3,7 +3,6 @@
     'overview',
     'candidates',
     'desks',
-    'scenarios',
     'journal',
     'resources',
     'about'
