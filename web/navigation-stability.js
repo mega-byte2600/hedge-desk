@@ -5,6 +5,7 @@
     'desks',
     'journal',
     'resources',
+    'real-estate',
     'about'
   ]);
 
