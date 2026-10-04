@@ -23,7 +23,9 @@ from __future__ import annotations
 import json
 import os
 import sys
+from datetime import datetime, timedelta, timezone
 from http.cookies import SimpleCookie
+from urllib.parse import parse_qs
 from typing import Callable, Optional
 from pathlib import Path
 
@@ -216,6 +218,141 @@ def make_auth_app(
             audit.record(event, email_addr, actor=actor, detail=detail)
         except Exception as exc:
             _warn(f"audit append failed for {event!r} ({email_addr}): {exc!r}")
+
+    def _expires_at(expires_in) -> str:
+        try:
+            seconds = max(60, int(expires_in or 1800))
+        except (TypeError, ValueError):
+            seconds = 1800
+        return (datetime.now(timezone.utc) + timedelta(seconds=seconds)).isoformat()
+
+    def _is_expiring(expires_at: str) -> bool:
+        if not expires_at:
+            return True
+        try:
+            when = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            if when.tzinfo is None:
+                when = when.replace(tzinfo=timezone.utc)
+            return when <= datetime.now(timezone.utc) + timedelta(seconds=60)
+        except (TypeError, ValueError):
+            return True
+
+    def _persist_broker_credentials(email_addr: str, role: str, tokens: dict, account: dict, account_label: str = "") -> dict:
+        broker_store.link(
+            email_addr,
+            role,
+            getattr(broker_oauth, "name", "schwab"),
+            tokens["access_token"],
+            account_label=account_label or account.get("account_number", ""),
+            refresh_token=tokens.get("refresh_token", ""),
+            expires_at=_expires_at(tokens.get("expires_in")),
+            account_hash=account.get("account_hash", ""),
+            account_number=account.get("account_number", ""),
+        )
+        return {
+            "access_token": tokens["access_token"],
+            "refresh_token": tokens.get("refresh_token", ""),
+            "expires_at": _expires_at(tokens.get("expires_in")),
+            "account_hash": account.get("account_hash", ""),
+            "account_number": account.get("account_number", ""),
+        }
+
+    def _complete_broker_link(email_addr: str, role: str, code: str, state: str, account_label: str = "") -> dict:
+        if not state or not store.verify_otp(email_addr, state, purpose="broker_state"):
+            return {"status": "error", "error": "invalid_state", "http_status": 400}
+        tokens = broker_oauth.exchange_code(code)
+        if tokens.get("status") != "ok":
+            return {
+                "status": "error",
+                "error": "token_exchange_failed",
+                "detail": tokens.get("error") or tokens.get("http_status"),
+                "http_status": 502,
+            }
+        accounts = broker_adapter.account_numbers(tokens["access_token"])
+        if accounts.get("status") != "ok" or not accounts.get("accounts"):
+            return {
+                "status": "error",
+                "error": "account_discovery_failed",
+                "detail": accounts.get("error") or accounts.get("http_status"),
+                "http_status": 502,
+            }
+        account = accounts["accounts"][0]
+        try:
+            _persist_broker_credentials(email_addr, role, tokens, account, account_label)
+        except (PermissionError, ValueError, RuntimeError) as exc:
+            return {"status": "error", "error": str(exc), "http_status": 400}
+        _audit("broker_linked", email_addr, actor=email_addr, detail=str(getattr(broker_oauth, "name", "schwab")))
+        return {
+            "status": "linked",
+            "broker": "schwab",
+            "read_only": True,
+            "account_label": account_label or account.get("account_number", ""),
+        }
+
+    def _live_broker_credentials(email_addr: str, role: str) -> dict:
+        if not broker_store or not broker_oauth or not broker_adapter:
+            return {"status": "error", "error": "broker_not_configured"}
+        creds = broker_store.credentials(email_addr)
+        if creds.get("status") != "ok":
+            return creds
+        if _is_expiring(creds.get("expires_at", "")):
+            refreshed = broker_oauth.refresh_token(creds.get("refresh_token", ""))
+            if refreshed.get("status") != "ok":
+                return {
+                    "status": "error",
+                    "error": "token_refresh_failed",
+                    "detail": refreshed.get("error") or refreshed.get("http_status"),
+                }
+            account = {
+                "account_hash": creds.get("account_hash", ""),
+                "account_number": creds.get("account_number", ""),
+            }
+            try:
+                broker_store.link(
+                    email_addr,
+                    role,
+                    creds.get("broker", "schwab"),
+                    refreshed["access_token"],
+                    account_label=creds.get("account_label", ""),
+                    refresh_token=refreshed.get("refresh_token") or creds.get("refresh_token", ""),
+                    expires_at=_expires_at(refreshed.get("expires_in")),
+                    account_hash=account["account_hash"],
+                    account_number=account["account_number"],
+                )
+            except (PermissionError, ValueError, RuntimeError) as exc:
+                return {"status": "error", "error": f"credential_persist_failed:{exc}"}
+            creds.update(
+                {
+                    "access_token": refreshed["access_token"],
+                    "refresh_token": refreshed.get("refresh_token") or creds.get("refresh_token", ""),
+                    "expires_at": _expires_at(refreshed.get("expires_in")),
+                }
+            )
+        if not creds.get("account_hash"):
+            accounts = broker_adapter.account_numbers(creds.get("access_token", ""))
+            if accounts.get("status") != "ok" or not accounts.get("accounts"):
+                return {
+                    "status": "error",
+                    "error": "account_discovery_failed",
+                    "detail": accounts.get("error") or accounts.get("http_status"),
+                }
+            account = accounts["accounts"][0]
+            try:
+                broker_store.link(
+                    email_addr,
+                    role,
+                    creds.get("broker", "schwab"),
+                    creds["access_token"],
+                    account_label=creds.get("account_label", "") or account.get("account_number", ""),
+                    refresh_token=creds.get("refresh_token", ""),
+                    expires_at=creds.get("expires_at", ""),
+                    account_hash=account.get("account_hash", ""),
+                    account_number=account.get("account_number", ""),
+                )
+            except (PermissionError, ValueError, RuntimeError) as exc:
+                return {"status": "error", "error": f"credential_persist_failed:{exc}"}
+            creds.update(account)
+        return creds
 
     def dispatch(environ, start_response):
         path = environ.get("PATH_INFO", "")
