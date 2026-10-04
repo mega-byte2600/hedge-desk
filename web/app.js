@@ -97,7 +97,7 @@ async function hydrateRealEstate(){
     if(!document.getElementById('real-estate-style')){
       const link=document.createElement('link');link.id='real-estate-style';link.rel='stylesheet';link.href='./real-estate.css?v=20261004-noir';document.head.appendChild(link);
     }
-    const mod=await import('./real-estate-ui.js?v=20261004-noir');
+    const mod=await import('./real-estate-ui.js');
     const current=document.getElementById('real-estate-host');
     if(route!=='real-estate'||!current)return;
     current.innerHTML=mod.realEstatePage();
