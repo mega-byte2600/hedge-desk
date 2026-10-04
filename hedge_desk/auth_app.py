@@ -651,10 +651,12 @@ def make_auth_app(
             state = str((query.get("state") or [""])[0]).strip()
             result = _complete_broker_link(email, role, code, state)
             if result.get("status") != "linked":
+                status_code = int(result.get("http_status", 400))
+                status_text = "Bad Gateway" if status_code == 502 else "Bad Request"
                 return _json_response(
                     start_response,
                     {k: v for k, v in result.items() if k != "http_status"},
-                    f'{result.get("http_status", 400)} Bad Request',
+                    f"{status_code} {status_text}",
                 )
             start_response(
                 "302 Found",
