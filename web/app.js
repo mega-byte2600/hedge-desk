@@ -98,9 +98,10 @@ async function hydrateRealEstate(){
       const link=document.createElement('link');link.id='real-estate-style';link.rel='stylesheet';link.href='./real-estate.css';document.head.appendChild(link);
     }
     const mod=await import('./real-estate-ui.js');
-    if(route!=='real-estate'||!document.getElementById('real-estate-host'))return;
-    host.innerHTML=mod.realEstatePage();
-    mod.mountRealEstate(host);
+    const current=document.getElementById('real-estate-host');
+    if(route!=='real-estate'||!current)return;
+    current.innerHTML=mod.realEstatePage();
+    mod.mountRealEstate(current);
   }catch(err){
     host.innerHTML=`<div class="error"><h2>Real Estate models unavailable</h2><p>${e(err.message||'The model UI could not load.')}</p><p>The rest of Emporion remains available.</p></div>`;
   }
