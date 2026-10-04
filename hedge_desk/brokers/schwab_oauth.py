@@ -137,4 +137,43 @@ class SchwabOAuth:
         }
 
 
+    def refresh_token(self, refresh_token: str) -> dict:
+        """Exchange a Schwab refresh token for a fresh access token."""
+        if not self.config.configured:
+            return {"status": "error", "error": "schwab_oauth_not_configured"}
+        if not refresh_token:
+            return {"status": "error", "error": "missing_refresh_token"}
+        body = urllib.parse.urlencode(
+            {"grant_type": "refresh_token", "refresh_token": refresh_token}
+        ).encode("utf-8")
+        basic = base64.b64encode(
+            f"{self.config.client_id}:{self.config.client_secret}".encode("utf-8")
+        ).decode("ascii")
+        headers = {
+            "Authorization": f"Basic {basic}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        try:
+            status, raw = self._transport("POST", self.config.token_url, headers, body)
+        except Exception as exc:
+            return {"status": "error", "error": f"transport:{exc}"}
+        if status >= 400:
+            return {"status": "error", "http_status": status}
+        try:
+            data = json.loads(raw or b"{}")
+        except Exception:
+            return {"status": "error", "error": "bad_json"}
+        access = data.get("access_token")
+        if not access:
+            return {"status": "error", "error": "no_access_token"}
+        return {
+            "status": "ok",
+            "access_token": access,
+            "refresh_token": data.get("refresh_token") or refresh_token,
+            "expires_in": data.get("expires_in"),
+            "token_type": data.get("token_type", "Bearer"),
+            "scope": data.get("scope", "readonly"),
+        }
+
+
 __all__ = ["SchwabOAuth", "SchwabOAuthConfig", "DEFAULT_AUTHORIZE_URL", "DEFAULT_TOKEN_URL"]
