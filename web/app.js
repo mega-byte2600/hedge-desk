@@ -1,5 +1,6 @@
 import { escapeHTML as e, human, statusClass, scenarioRows, filterRows, readNotes, saveNote } from './core.mjs';
-import { mountWorkbench } from './options-workbench-ui.js';\nimport { realEstatePage, mountRealEstate } from './real-estate-ui.js';
+import { mountWorkbench } from './options-workbench-ui.js';
+import { realEstatePage, mountRealEstate } from './real-estate-ui.js';
 const $ = s => document.querySelector(s);
 let data, report, route='overview';
 const names={'overnight-premium-desk':'Overnight Premium','earnings-event-desk':'Earnings Event','arbitrage-observer':'Box / Parity Observer','dividend-opportunity-desk':'Dividend Opportunity','open-quant-ai-model-lab':'Quant / AI Model Lab','event-futures-desk':'Futures Event'};
