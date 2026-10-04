@@ -1,5 +1,8 @@
 # Hedge Desk Agent Rules
 
+Read [SOUL.md](SOUL.md) first. It is the governing project charter and takes
+precedence over every other repository file; the GP’s orders are final authority.
+
 ## 80/20 delivery rule
 
 - Target 80% working, tested code and 20% durable decision records.

@@ -328,7 +328,7 @@ def make_auth_app(
                 available_account_hashes=json.dumps(hashes, separators=(",", ":")),
             )
         except (PermissionError, ValueError) as exc:
-            return _json_response(start_response, {"error": str(exc)}, "400 Bad Request")
+            return _json_response(start_response, {"error": "broker_link_invalid"}, "400 Bad Request")
         except Exception:
             return _json_response(start_response, {"error": "broker_link_persistence_failed"}, "503 Service Unavailable")
         _audit("broker_linked", email, actor=email, detail=str(getattr(broker_oauth, "name", "schwab")))
@@ -393,7 +393,7 @@ def make_auth_app(
             except Exception as exc:  # email is not an access control; don't fail signup
                 return _json_response(
                     start_response,
-                    {"error": "mail_unavailable", "detail": str(exc)},
+                    {"error": "mail_unavailable"},
                     "503 Service Unavailable",
                 )
             return _json_response(
@@ -496,7 +496,7 @@ def make_auth_app(
                 entries = audit.entries()
                 reasons = audit.verify()
             except Exception as exc:
-                return _json_response(start_response, {"error": f"audit_unavailable:{exc}"}, "503 Service Unavailable")
+                return _json_response(start_response, {"error": "audit_unavailable"}, "503 Service Unavailable")
             return _json_response(
                 start_response,
                 {"entries": entries, "count": len(entries), "valid": not reasons, "reasons": reasons},
@@ -511,7 +511,7 @@ def make_auth_app(
             try:
                 invite = store.issue_lp_invite(invite_email)
             except ValueError as exc:
-                return _json_response(start_response, {"error": str(exc)}, "409 Conflict")
+                return _json_response(start_response, {"error": "invite_unavailable"}, "409 Conflict")
             _audit("lp_invited", invite_email, actor=email)
             return _json_response(start_response, {"status": "invited", **invite}, "201 Created")
 

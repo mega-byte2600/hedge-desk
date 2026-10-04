@@ -47,7 +47,9 @@ class SchwabMarketDataBroker:
         if quote_cache_seconds < 0 or quote_cache_seconds > 5:
             raise ValueError("quote cache must be between zero and five seconds")
         self._transport = transport or _default_transport
-        self.base_url = base_url.rstrip("/")
+        if base_url.rstrip("/") != SCHWAB_MARKET_DATA_BASE:
+            raise ValueError("Schwab Market Data requires the official API base")
+        self.base_url = SCHWAB_MARKET_DATA_BASE
         self.quote_cache_seconds = quote_cache_seconds
         self._quote_cache: OrderedDict[tuple, tuple[float, dict]] = OrderedDict()
         self._quote_lock = threading.Lock()
@@ -131,7 +133,11 @@ class SchwabMarketDataBroker:
         if date and (len(date) != 10 or date[4] != "-" or date[7] != "-"):
             return {"status": "error", "error": "invalid_date", "read_only": True}
         params = {"date": date} if date else None
-        return self._get(f"/markets/{urllib.parse.quote(market_id, safe='')}", token, params)
+        paths = {"equity": "/markets/equity", "option": "/markets/option", "bond": "/markets/bond", "future": "/markets/future", "forex": "/markets/forex"}
+        path = paths.get(market_id.strip().lower())
+        if path is None:
+            return {"status": "error", "error": "invalid_market", "read_only": True}
+        return self._get(path, token, params)
 
 
 __all__ = ["SchwabMarketDataBroker", "SCHWAB_MARKET_DATA_BASE"]

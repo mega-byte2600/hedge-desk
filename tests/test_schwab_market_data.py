@@ -47,6 +47,36 @@ class SchwabMarketDataTests(unittest.TestCase):
         self.assertEqual(result["error"], "throttled")
         self.assertEqual(len(calls), 1)
 
+    def test_market_request_cannot_change_destination_or_path(self):
+        seen = []
+        adapter = SchwabMarketDataBroker(transport=lambda m, u, h: (seen.append(u) or 200, b"{}"))
+        for market in ("equity", "option", "bond", "future", "forex"):
+            self.assertEqual(adapter.market_hours("t", market, date="2026-10-05")["status"], "ok")
+            self.assertEqual(urlparse(seen[-1]).path, "/marketdata/v1/markets/" + market)
+        for attack in ("//evil.example", "../trader/v1/accounts", "equity?redirect=https://evil.example", "", "equity#fragment"):
+            self.assertEqual(adapter.market_hours("t", attack)["error"], "invalid_market")
+        self.assertEqual(len(seen), 5)
+        self.assertEqual(adapter.market_hours("t", "equity", date="bad")["error"], "invalid_date")
+
+    def test_provider_failures_return_stable_errors_without_payload_leaks(self):
+        for status, raw, error in ((500, b"secret", None), (200, b"invalid-json-secret", "bad_json"), (200, b"123", "unexpected_response_schema")):
+            adapter = SchwabMarketDataBroker(transport=lambda *args: (status, raw))
+            result = adapter.price_history("token", "SPY", period=1)
+            self.assertEqual(result["status"], "error")
+            self.assertNotIn("secret", str(result))
+            if error: self.assertEqual(result["error"], error)
+        def failing(*args): raise RuntimeError("private transport detail")
+        result = SchwabMarketDataBroker(transport=failing).expiration_chain("t", "SPY")
+        self.assertEqual(result["error"], "transport_failure")
+
+    def test_invalid_inputs_do_not_send_requests(self):
+        def never(*args): raise AssertionError("must not send")
+        adapter = SchwabMarketDataBroker(transport=never)
+        requests = [adapter.quotes("t", []), adapter.quotes("t", [""]), adapter.option_chain("t", ""), adapter.expiration_chain("t", ""), adapter.price_history("t", "SPY", unexpected=1), adapter.price_history("t", ""), adapter.expiration_chain("", "SPY")]
+        self.assertTrue(all(r["status"] == "error" for r in requests))
+        for seconds in (-1, 6):
+            with self.assertRaises(ValueError): SchwabMarketDataBroker(quote_cache_seconds=seconds)
+
     def test_insecure_or_unofficial_host_rejected(self):
         for url in ("http://api.schwabapi.com/marketdata/v1", "https://example.com"):
             with self.subTest(url=url), self.assertRaises(ValueError):
