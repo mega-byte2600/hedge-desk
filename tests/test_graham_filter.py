@@ -7,12 +7,15 @@ Run:  python3 tests/test_engine.py
 """
 
 import math
-from hedge_desk.graham_filter.engine import (
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from engine import (
     Assessment, Candidate, Standards, assess, assess_all, market_regime,
-    PROTOTYPE_STANDARDS,
+    PROPOSED_STANDARDS, PROVENANCE,
 )
-from hedge_desk.graham_filter.adapter import adapt, adapt_assess
-from hedge_desk.graham_filter.contract import (
+from adapter import adapt, adapt_assess
+from contract import (
     DEFAULT_FILTER, FILTER_MODES, VERDICTS,
     apply_filter, to_batch, to_dict,
 )
@@ -129,10 +132,55 @@ check_raises("market_regime without standards raises",
              lambda: market_regime(16.0))
 check_raises("assess_all without standards raises",
              lambda: assess_all([good_candidate()], 16.0, {}, None))
-check("prototype standards labeled unapproved",
-      PROTOTYPE_STANDARDS.label == "PROTOTYPE — UNAPPROVED")
-check("prototype carries invented per-symbol hurdles",
-      PROTOTYPE_STANDARDS.per_symbol_hurdles.get("TSLA") == 25)
+check("proposed standards labeled unapproved",
+      PROPOSED_STANDARDS.label == "PROPOSED — Toby, pending user approval")
+check("proposed per-symbol hurdles deliberately empty (no Graham source)",
+      PROPOSED_STANDARDS.per_symbol_hurdles == {})
+
+# --- Proposed standards carry full provenance, none marked approved --------
+# (Graham-sourced per STANDARDS.md; the user has not approved any of them.)
+
+_std_fields = {
+    "margin_strong": PROPOSED_STANDARDS.margin_strong,
+    "margin_adequate": PROPOSED_STANDARDS.margin_adequate,
+    "margin_thin": PROPOSED_STANDARDS.margin_thin,
+    "manic_vix": PROPOSED_STANDARDS.manic_vix,
+    "complacent_vix": PROPOSED_STANDARDS.complacent_vix,
+    "manic_margin_bump": PROPOSED_STANDARDS.manic_margin_bump,
+    "default_hurdle": PROPOSED_STANDARDS.default_hurdle,
+    "per_symbol_hurdles": PROPOSED_STANDARDS.per_symbol_hurdles,
+}
+check("provenance covers every standards field",
+      set(PROVENANCE.keys()) == set(_std_fields.keys()))
+for _fname, _fval in _std_fields.items():
+    _prov = PROVENANCE.get(_fname, {})
+    check(f"provenance[{_fname}] matches standards value",
+          _prov.get("value") == _fval)
+    check(f"provenance[{_fname}] has a chapter-level source",
+          isinstance(_prov.get("source"), str) and len(_prov["source"]) > 20)
+    check(f"provenance[{_fname}] marks interpreted explicitly",
+          _prov.get("interpreted") is True)
+    check(f"provenance[{_fname}] documents reasoning",
+          isinstance(_prov.get("reasoning"), str) and len(_prov["reasoning"]) > 20)
+    check(f"provenance[{_fname}] says what would change it",
+          isinstance(_prov.get("what_would_change_it"), str)
+          and len(_prov["what_would_change_it"]) > 10)
+    check(f"provenance[{_fname}] is NOT marked approved",
+          _prov.get("approved") is False)
+
+# Behavioral consequence, documented honestly: Graham's margins are large,
+# so a typical short-dated put cushion rates NONE under proposed standards.
+_typical = good_candidate()  # ~6.05% total cushion
+_typical_a = assess(_typical, vix=16.0, own_it=True, std=PROPOSED_STANDARDS,
+                    hurdle_override=1.0)
+check("typical 30-DTE cushion rates NONE under Graham-sourced bands",
+      _typical_a.margin_rating == "NONE" and _typical_a.verdict == "SPECULATION")
+
+# Contract still badges proposed standards as unapproved.
+_row = to_dict(_typical_a, PROPOSED_STANDARDS.label, False)
+check("contract badges proposed standards unapproved",
+      _row["standards"]["approved"] is False
+      and "pending user approval" in _row["standards"]["label"])
 
 # --- Mr. Market: VIX bump ----------------------------------------------------
 

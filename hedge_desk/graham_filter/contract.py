@@ -38,7 +38,7 @@ Row schema (to_dict):
         "regime": "NORMAL",                # MANIC | COMPLACENT | NORMAL | null
         "data_unavailable_fields": [],     # e.g. ["premium", "vix"]
         "standards": {
-            "label": "PROTOTYPE — UNAPPROVED",
+            "label": "PROPOSED — Toby, pending user approval",
             "approved": false,             # UI must badge unapproved standards
         },
         "assessed_at": "2026-10-04T19:00:00+00:00",
@@ -52,7 +52,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from .engine import Assessment
+from engine import Assessment
 
 VERDICTS = ("INVESTMENT", "SPECULATION", "NEEDS-YOU", "DATA-UNAVAILABLE")
 

@@ -25,8 +25,9 @@ Verdict precedence (documented, do not reorder without user approval):
 
 STANDARDS ARE NEVER DEFAULTED. Every threshold in `Standards` is a required
 field: there is no production default, because any default would be an
-invented hurdle. `PROTOTYPE_STANDARDS` carries the first prototype's values
-and is explicitly marked unapproved — pass it deliberately or not at all.
+invented hurdle. `PROPOSED_STANDARDS` carries Graham-sourced values (see
+PROVENANCE) and is explicitly marked unapproved — pass it deliberately or
+not at all.
 Calling assess()/market_regime()/assess_all() without standards raises
 ValueError: a missing configuration is a programming error, not a verdict.
 See STANDARDS.md for the full list of thresholds needing user approval.
@@ -59,23 +60,170 @@ class Standards:
     label: str = "user-approved"
 
 
-# !!! UNAPPROVED — prototype values only. Every number below was chosen for
-# !!! the first prototype and NONE of it is user-approved. Import and pass
-# !!! this deliberately, or preferably replace it with real Standards.
-# !!! It must never become an implicit default.
-PROTOTYPE_STANDARDS = Standards(
-    margin_strong=5.0,
-    margin_adequate=2.0,
-    margin_thin=0.5,
-    manic_vix=30.0,
-    complacent_vix=14.0,
-    manic_margin_bump=2.0,
-    default_hurdle=15.0,
-    per_symbol_hurdles={
-        "SPY": 15, "QQQ": 15, "AAPL": 20,
-        "TSLA": 25, "NVDA": 22, "MSFT": 18,
+# ---------------------------------------------------------------------------
+# PROPOSED standards — Graham-sourced, NOT user-approved.
+#
+# Every value below is anchored in Benjamin Graham's published criteria
+# (The Intelligent Investor / Security Analysis) with chapter-level
+# provenance. Where Graham states a principle but no number, the value is
+# marked interpreted=True and the reasoning is shown — an interpretation is
+# never presented as Graham's own words. NOTHING here is user-approved: the
+# UI must badge these as proposed, exactly as it badged the prototype.
+# Import and pass PROPOSED_STANDARDS deliberately, or preferably replace it
+# with real user-approved Standards. It must never become an implicit
+# default.
+# ---------------------------------------------------------------------------
+
+PROVENANCE = {
+    "margin_strong": {
+        "value": 33.0,
+        "source": (
+            "The Intelligent Investor, Ch. 15 — net-net rule: buy at no more "
+            "than 2/3 of net current asset value (a one-third discount), "
+            "Graham's canonical 'decisive' margin of safety."
+        ),
+        "interpreted": True,
+        "reasoning": (
+            "Graham never rated put-strike cushions; 33% maps his only hard "
+            "numerical margin-of-safety rule (the one-third NCAV discount) "
+            "onto total cushion %. A >=33% cushion is a decisive margin in "
+            "Graham's terms."
+        ),
+        "what_would_change_it": (
+            "The user defines their own cushion bands for puts, or picks a "
+            "different Graham anchor."
+        ),
+        "approved": False,
     },
-    label="PROTOTYPE — UNAPPROVED",
+    "margin_adequate": {
+        "value": 20.0,
+        "source": (
+            "The Intelligent Investor, Ch. 20 (margin-of-safety principle). "
+            "No direct Graham number exists for an 'adequate' band."
+        ),
+        "interpreted": True,
+        "reasoning": (
+            "Set between the net-net anchor (33) and the thin floor (10): a "
+            "cushion that absorbs a one-fifth adverse move before impairment "
+            "— a passing but not decisive margin."
+        ),
+        "what_would_change_it": "The user defines their own bands.",
+        "approved": False,
+    },
+    "margin_thin": {
+        "value": 10.0,
+        "source": (
+            "The Intelligent Investor, Ch. 1 (investment requires safety of "
+            "principal) and Ch. 20. No direct Graham number exists for a "
+            "'thin' band."
+        ),
+        "interpreted": True,
+        "reasoning": (
+            "Double-digit minimum: absorbs a 10% adverse move before capital "
+            "impairment. Below this there is, in Graham's terms, no safety "
+            "of principal at all — hence NONE below 10."
+        ),
+        "what_would_change_it": "The user defines their own floor.",
+        "approved": False,
+    },
+    "manic_vix": {
+        "value": 30.0,
+        "source": (
+            "The Intelligent Investor, Ch. 8 (Mr. Market: markets swing "
+            "between mania and depression). The VIX did not exist in Graham's "
+            "lifetime (created 1993); 30 is the market-convention fear "
+            "threshold, roughly 1.5x the ~19-20 long-run average."
+        ),
+        "interpreted": True,
+        "reasoning": (
+            "Ch. 8 gives the principle but no number. 30 operationalizes "
+            "'manic' with the standard practitioner fear line."
+        ),
+        "what_would_change_it": (
+            "The user picks a different fear threshold or a different fear gauge."
+        ),
+        "approved": False,
+    },
+    "complacent_vix": {
+        "value": 14.0,
+        "source": (
+            "The Intelligent Investor, Ch. 8 (Mr. Market). VIX below ~14 sits "
+            "in the index's historical low zone — the practitioner read of "
+            "complacency."
+        ),
+        "interpreted": True,
+        "reasoning": (
+            "Mirror of manic_vix: Ch. 8's depressive/complacent pole, "
+            "quantified at the VIX's historical low zone."
+        ),
+        "what_would_change_it": "The user picks a different complacency line.",
+        "approved": False,
+    },
+    "manic_margin_bump": {
+        "value": 5.0,
+        "source": (
+            "The Intelligent Investor, Ch. 20 — the margin of safety must be "
+            "larger when the future is less certain (its function is "
+            "'rendering unnecessary an accurate estimate of the future')."
+        ),
+        "interpreted": True,
+        "reasoning": (
+            "Graham demands more margin under greater uncertainty but gives "
+            "no number. 5 points = half the thin floor: a material, not "
+            "prohibitive, extra cushion when Mr. Market is manic."
+        ),
+        "what_would_change_it": (
+            "User judgment on how much extra cushion fear markets must pay."
+        ),
+        "approved": False,
+    },
+    "default_hurdle": {
+        "value": 12.0,
+        "source": (
+            "The Intelligent Investor, Ch. 11 — the valuation formula "
+            "Value = EPS x (8.5 + 2g): 8.5 is Graham's no-growth P/E, i.e. a "
+            "1/8.5 = 11.8% required earnings yield for a no-growth business."
+        ),
+        "interpreted": True,
+        "reasoning": (
+            "A cash-secured put is a no-growth income operation. Graham's "
+            "no-growth baseline demands ~12% yield; the premium hurdle is set "
+            "there (rounded). Consistent with Ch. 5's bond thinking: required "
+            "yield well above default-free rates."
+        ),
+        "what_would_change_it": (
+            "The user sets their own definition of 'adequate return'."
+        ),
+        "approved": False,
+    },
+    "per_symbol_hurdles": {
+        "value": {},
+        "source": (
+            "No Graham source exists — Graham never set per-ticker return "
+            "hurdles. Deliberately empty: every symbol falls back to "
+            "default_hurdle uniformly."
+        ),
+        "interpreted": True,
+        "reasoning": (
+            "Per-name differentiation is a user judgment call, not something "
+            "Graham published. An empty map is honest; inventing per-ticker "
+            "bars would be invention."
+        ),
+        "what_would_change_it": "The user assigns per-name hurdles.",
+        "approved": False,
+    },
+}
+
+PROPOSED_STANDARDS = Standards(
+    margin_strong=PROVENANCE["margin_strong"]["value"],
+    margin_adequate=PROVENANCE["margin_adequate"]["value"],
+    margin_thin=PROVENANCE["margin_thin"]["value"],
+    manic_vix=PROVENANCE["manic_vix"]["value"],
+    complacent_vix=PROVENANCE["complacent_vix"]["value"],
+    manic_margin_bump=PROVENANCE["manic_margin_bump"]["value"],
+    default_hurdle=PROVENANCE["default_hurdle"]["value"],
+    per_symbol_hurdles=dict(PROVENANCE["per_symbol_hurdles"]["value"]),
+    label="PROPOSED — Toby, pending user approval",
 )
 
 
@@ -83,7 +231,7 @@ def _require_standards(std: Optional[Standards]) -> Standards:
     if std is None:
         raise ValueError(
             "no standards configured: pass user-approved Standards, or "
-            "explicitly opt into PROTOTYPE_STANDARDS (unapproved)."
+            "explicitly opt into PROPOSED_STANDARDS (unapproved)."
         )
     return std
 
