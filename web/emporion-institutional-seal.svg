@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
 <title id="title">Emporion Institutional Seal</title>
-<desc id="desc">Helmeted Hermes steering a compass, in gold within a Greek-key institutional medallion.</desc>
+<desc id="desc">Winged helm of Hermes steering a compass, in gold within a Greek-key institutional medallion.</desc>
 <defs>
 <radialGradient id="bg" cx="42%" cy="35%" r="75%"><stop offset="0" stop-color="#122238"/><stop offset="1" stop-color="#07111f"/></radialGradient>
 <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f2d59a"/><stop offset=".42" stop-color="#d1a65e"/><stop offset="1" stop-color="#9b6c2e"/></linearGradient>
@@ -32,10 +32,13 @@
 <path d="M72 72l18 18M184 72l-18 18M72 184l18-18M184 184l-18-18" stroke-width="1.4"/>
 </g>
 <g fill="url(#gold)">
-<path d="M120 70C118 44 122 24 132 10c8 14 12 34 10 60z"/>
-<path d="M78 170v-30c0-44 24-74 50-74s50 30 50 74v30z"/>
-<path d="M78 170h100l10 26c-40 8-80 8-120 0z"/>
+<path d="M150 108c14-18 32-30 54-36-7 16-17 28-29 37-10 7-21 12-33 14 3-5 5-10 8-15z"/>
+<path d="M154 130c12-14 28-24 46-30-6 12-15 22-26 30-9 6-19 10-30 12 4-4 7-8 10-12z"/>
+<path d="M158 150c8-8 18-14 30-18-4 8-11 14-19 19-6 4-13 6-21 7 3-3 6-5 10-8z"/>
+<path d="M106 108c-14-18-32-30-54-36 7 16 17 28 29 37 10 7 21 12 33 14-3-5-5-10-8-15z"/>
+<path d="M102 130c-12-14-28-24-46-30 6 12 15 22 26 30 9 6 19 10 30 12-4-4-7-8-10-12z"/>
+<path d="M98 150c-8-8-18-14-30-18 4 8 11 14 19 19 6 4 13 6 21 7-3-3-6-5-10-8z"/>
+<path d="M96 156c0-34 14-58 32-58s32 24 32 58z"/>
+<ellipse cx="128" cy="158" rx="42" ry="10"/>
 </g>
-<path d="M98 170v-26c0-30 12-50 30-50s30 20 30 50v26z" fill="#0a1526"/>
-<rect x="90" y="106" width="10" height="64" fill="url(#gold)"/>
 </svg>
