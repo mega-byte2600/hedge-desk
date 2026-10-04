@@ -194,54 +194,29 @@ class DeskAccessTests(unittest.TestCase):
         self.assertIn("data-desk", src, "the wiring targets app.js's real desk buttons")
 
 
-class ScenarioClickTests(unittest.TestCase):
-    """A scenario row click must never be swallowed.
+class GrahamCandidateGuardTests(unittest.TestCase):
+    """The Graham filter must stay on Candidates and must not become an execution gate."""
 
-    scenario-lab.js registers a CAPTURE-phase listener on `button[data-scenario]`
-    and calls stopImmediatePropagation(), which disables app.js's own handler for
-    that control. It then resolved the scenario from the committed `report.json`
-    snapshot while the table is rendered from the live `/api/report`, so any id
-    present live but not in the snapshot resolved to nothing and the click died
-    silently — 4 of 78 rows. Resolve first, suppress second, and read the same
-    source the table was built from.
-    """
+    def test_scenario_route_is_removed_from_public_navigation(self):
+        index = (WEB / "index.html").read_text(encoding="utf-8")
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+        self.assertNotIn('href="#scenarios"', index)
+        self.assertNotIn('./scenario-lab.js', index)
+        self.assertNotIn("function scenarios()", app)
 
-    def _handler(self):
-        src = (WEB / "scenario-lab.js").read_text(encoding="utf-8")
-        marker = "document.addEventListener('click'"
-        self.assertIn(marker, src)
-        return src[src.index(marker):]
+    def test_graham_inputs_come_from_existing_real_nightly_artifact(self):
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+        self.assertIn("fetch('./api/am-report'", app)
+        self.assertIn("cash_secured_put_scan", app)
+        self.assertIn("vix_regime", app)
+        self.assertNotIn("Math.random", app)
 
-    def test_lookup_happens_before_the_event_is_suppressed(self):
-        handler = self._handler()
-        lookup = handler.index("getEnvelope()")
-        # Match the call, not a mention: the explanatory comment above the handler
-        # names the same API, which fooled an earlier version of this check.
-        suppress = handler.index("event.stopImmediatePropagation()")
-        self.assertLess(
-            lookup,
-            suppress,
-            "resolve the scenario before suppressing the click, or an unresolvable "
-            "row is a silent no-op with app.js's working handler already disabled",
-        )
-
-    def test_unsuppressed_click_falls_through_when_unresolvable(self):
-        handler = self._handler()
-        self.assertIn(
-            "if (!scenario) return;",
-            handler,
-            "an unresolvable click must return before suppressing, so the live "
-            "handler can still open the dialog",
-        )
-
-    def test_reads_the_same_source_as_the_table(self):
-        src = (WEB / "scenario-lab.js").read_text(encoding="utf-8")
-        self.assertIn(
-            "fetch('./api/report'",
-            src,
-            "the scenario lookup must read the live endpoint the table is built from, "
-            "with report.json only as a fallback",
-        )
+    def test_graham_does_not_touch_ror_or_authorize_trades(self):
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+        graham = (WEB / "graham-filter.mjs").read_text(encoding="utf-8")
+        self.assertIn("does not authorize trades", app)
+        self.assertNotIn("risk_of_ruin", graham.lower())
+        self.assertNotIn("trade_authorized", graham)
 
 
 if __name__ == "__main__":
