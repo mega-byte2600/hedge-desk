@@ -87,6 +87,23 @@
     return STATUS_WORD[s] ? { word: STATUS_WORD[s], cls: 'ov-' + s } : { word: 'No data', cls: 'ov-none' };
   }
 
+  function brandLockup() {
+    return '' +
+      '<section class="ov-brand" aria-label="Emporion">' +
+        '<svg class="compass" viewBox="0 0 200 200" aria-hidden="true">' +
+          '<circle cx="100" cy="100" r="82" fill="none" stroke="currentColor" stroke-width="1"/>' +
+          '<path d="M100 10 L112 88 L190 100 L112 112 L100 190 L88 112 L10 100 L88 88 Z" fill="none" stroke="currentColor" stroke-width="1"/>' +
+          '<circle cx="100" cy="100" r="10" fill="none" stroke="currentColor" stroke-width="1"/>' +
+        '</svg>' +
+        '<img class="seal" src="./emporion-institutional-seal.svg" alt="" width="148" height="148">' +
+        '<h1>EMPORION</h1>' +
+        '<div class="rule" aria-hidden="true"></div>' +
+        '<div class="tagline">MARKETS · INTELLIGENCE · DISCIPLINE</div>' +
+        '<p class="lede">Six desks. One decision.</p>' +
+        '<p class="lede-sub">Live research, evaluated around the clock.</p>' +
+      '</section>';
+  }
+
   function hero(data, report, brief) {
     var s = data.summary || {};
     var live = (report.projects || []).filter(function (p) { return p.data_status === 'live'; }).length;
@@ -171,7 +188,7 @@
   function render(data, report, brief) {
     data = data || {};
     report = report || {};
-    return '<div class="ov">' + hero(data, report, brief) + desks(data, report) + pipeline() + boundary() + '</div>';
+    return '<div class="ov">' + brandLockup() + hero(data, report, brief) + desks(data, report) + pipeline() + boundary() + '</div>';
   }
 
   root.HedgeDeskOverview = { render: render };
