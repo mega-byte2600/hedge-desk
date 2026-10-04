@@ -3,6 +3,7 @@ import { assessShortPut, extractShortPutRows, mrMarketContext, readFilter, readO
 import { mountWorkbench } from './options-workbench-ui.js';
 const $ = s => document.querySelector(s);
 let data, report, route='overview';
+let overviewBrief=null, overviewBriefLoaded=false;
 let grahamNightly=null, grahamLoading=null;
 const names={'overnight-premium-desk':'Overnight Premium','earnings-event-desk':'Earnings Event','arbitrage-observer':'Box / Parity Observer','dividend-opportunity-desk':'Dividend Opportunity','open-quant-ai-model-lab':'Quant / AI Model Lab','event-futures-desk':'Futures Event'};
 const layers={OBSERVED:'Observed data',STAT:'Statistical evidence',BIG:'Research proposal',DETERMINISTIC_RISK:'Deterministic risk',DETERMINISTIC_COMPLIANCE:'Compliance',HUMAN:'Human review'};
@@ -17,13 +18,21 @@ const gates=p=>`<div class="gate-bars" aria-label="${e(p.layers.map(l=>`${layers
 const stat=(label,value,foot)=>`<article class="stat"><div class="eyebrow">${label}</div><div class="stat-value">${value}</div><div class="stat-foot">${foot}</div></article>`;
 const panel=(t,sub,body,link='')=>`<section class="panel"><div class="panel-head"><div><h2>${t}</h2>${sub?`<p>${sub}</p>`:''}</div>${link}</div>${body}</section>`;
 function overview(){
-const s=data.summary;
-return head('Research overview','What the desk has evaluated, and what is waiting on you.',btn('export-md','↓ Morning packet')+btn('reload','↻ Reload snapshot',true))+
-`<div class="notice"><strong>Where things live</strong><span>Desk architecture and research workflow. Live market data is in Dashboard, Candidates, and Research desks tabs.</span></div>`+
-`<div class="stats">${stat('Research desks',s.desks_reporting+' / '+s.desks_total,'Live market data')}${stat('Candidates',(data.candidate_feed?.candidates||[]).length,'Nightly research feed')}${stat('Data as of',date(s.data_as_of),'Yahoo Finance')}${stat('Trade authorization','None','Paper research only')}</div>`+
-`<div class="split">${panel('Desk evaluations','Six independent research workflows',`<div class="table-scroll cards-table"><table><thead><tr><th>Research desk</th><th>Data</th><th>As of</th></tr></thead><tbody>${report.projects.map((p,i)=>`<tr><td><button class="row-button desk-title" data-desk="${p.project_id}"><span class="desk-index">0${i+1}</span>${e(shortName(p.project_id))}</button></td><td data-label="Data">${tag(p.data_status.toUpperCase())}</td><td data-label="As of">${e(date(p.data_as_of))}</td></tr>`).join('')}</tbody></table></div><div class="panel-body" style="padding-top:0"><div class="legend"><span><i></i>Pass</span><span><i class="red"></i>Blocked</span><span><i class="gray"></i>Not required</span></div></div>`,`<a class="text-link" href="#desks">View desks ↗</a>`)}</div>`+
-
-`<div class="lower">${panel('Candidate discipline','Graham filter is embedded in the candidate board',`<div class="panel-body"><p class="small">Short puts are classified by margin of safety, annualized return hurdle, and whether you would want the shares if assigned. Speculation can be hidden without changing RoR, execution, or order flow.</p></div>`,`<a class="text-link" href="#candidates">Open candidates ↗</a>`)}${panel('Operating boundary','What the current build can support',`<div class="panel-body"><div class="pipeline-line"><span>Live execution</span>${tag('DISABLED')}</div><div class="pipeline-line"><span>Real trades executed</span><strong class="mono">${report.real_trades_executed}</strong></div><div class="pipeline-line"><span>Paper reconciliation</span>${tag('NONE')}</div><div class="pipeline-line"><span>Data sources</span><strong>Live public APIs</strong></div><div class="pipeline-line"><span>Live release</span>${tag('BLOCKED')}</div></div>`)}</div>`;
+  if(!window.HedgeDeskOverview?.render){
+    return head('Research overview','Overview module unavailable.')+
+      '<div class="notice"><strong>Data unavailable</strong><span>The overview renderer did not load. Other desk routes remain available.</span></div>';
+  }
+  return window.HedgeDeskOverview.render(data,report,overviewBrief);
+}
+async function hydrateOverviewBrief(){
+  if(overviewBriefLoaded)return;
+  overviewBriefLoaded=true;
+  try{
+    const r=await fetch('./research-brief.json',{cache:'default'});
+    if(!r.ok)throw Error('brief unavailable');
+    overviewBrief=await r.json();
+    if(route==='overview')render();
+  }catch(_){overviewBrief=null;}
 }
 function brief(){return head('Daily brief','Today\u2019s research input from the six desks. Replaced every morning.',`<a class="btn" href="./research-today.md" download>↓ Full package (.md)</a>`)+
 `<section class="panel" id="research-brief" aria-live="polite"><div class="panel-body"><p class="muted">Loading today\u2019s brief\u2026</p></div></section>`;}
@@ -111,7 +120,7 @@ function fitFrame(f){try{const d=f.contentDocument;if(!d||!d.documentElement)ret
 function wireFrames(){document.querySelectorAll('#main iframe[data-autofit]').forEach(f=>{if(f.dataset.wired)return;f.dataset.wired='1';f.addEventListener('load',()=>{const sk=f.previousElementSibling;if(sk&&sk.classList.contains('skeleton'))sk.style.display='none';fitFrame(f);try{new ResizeObserver(()=>fitFrame(f)).observe(f.contentDocument.documentElement);}catch(_){}});});}
 let framesResizeArmed=false;
 function armFramesResize(){if(framesResizeArmed)return;framesResizeArmed=true;window.addEventListener('resize',()=>{document.querySelectorAll('#main iframe[data-wired]').forEach(fitFrame);});}
-function render(){route=location.hash.slice(1)||'candidates';if(!title[route])route='candidates';document.querySelectorAll('[data-nav]').forEach(a=>{a.classList.toggle('active',a.dataset.nav===route);if(a.dataset.nav===route)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});$('#breadcrumb').textContent=title[route];$('#main').innerHTML=({overview,dashboard,candidates,desks,controls,journal,resources,guide,workbench,'real-estate':realEstate,brief,about})[route]();if(route==='candidates')hydrateGraham();if(route==='brief')hydrateBrief();if(route==='workbench')hydrateWorkbench();if(route==='real-estate')hydrateRealEstate();wireFrames();}
+function render(){route=location.hash.slice(1)||'candidates';if(!title[route])route='candidates';document.querySelectorAll('[data-nav]').forEach(a=>{a.classList.toggle('active',a.dataset.nav===route);if(a.dataset.nav===route)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});$('#breadcrumb').textContent=title[route];$('#main').innerHTML=({overview,dashboard,candidates,desks,controls,journal,resources,guide,workbench,'real-estate':realEstate,brief,about})[route]();if(route==='overview')hydrateOverviewBrief();if(route==='candidates')hydrateGraham();if(route==='brief')hydrateBrief();if(route==='workbench')hydrateWorkbench();if(route==='real-estate')hydrateRealEstate();wireFrames();}
 function download(name,content,type='application/json'){const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Download prepared');}
 function toast(message){$('#toast').textContent=message;$('#toast').style.display='block';setTimeout(()=>$('#toast').style.display='none',3500)}
 async function acceptPayload(candidate){if(candidate.schema_version!=='desk-console-1'||candidate.report?.environment!=='paper'||candidate.report.live_orders_enabled!==false||candidate.report.synthetic_data!==false||!Array.isArray(candidate.report.projects)||candidate.report.projects.length<6||!candidate.summary||!candidate.registry||candidate.candidate_feed?.schema_version!=='hedge-desk-candidates-1.0.0')throw Error('Unsupported report or paper boundary.');}
