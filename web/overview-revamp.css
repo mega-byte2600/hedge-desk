@@ -1,0 +1,165 @@
+/* overview-revamp.css — Hedge Desk overview revamp.
+ * Phone-first. Light + dark via the [data-theme] hook (set data-theme="dark"
+ * on <html> or <body>). Reuses the host brand tokens (--ink, --muted, --line)
+ * where they fit; adds --ov-* tokens so the module never hard-codes a palette.
+ */
+.ov {
+  --ov-surface: #ffffff;
+  --ov-surface-2: #fafbfc;
+  --ov-faint: #eef1f3;
+  --ov-ink: var(--ink, #101820);
+  --ov-muted: var(--muted, #5b666e);
+  --ov-line: var(--line, #e1e6e9);
+  --ov-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ov-dot-live: #4e8a3c;
+  --ov-dot-batch: #b07d1e;
+  --ov-dot-none: #9aa6ad;
+  --ov-dot-fresh: #4e8a3c;
+  --ov-dot-stale: #b07d1e;
+  --ov-dot-old: #b94442;
+  color: var(--ov-ink);
+}
+[data-theme="dark"] .ov, [data-theme="dark"].ov {
+  --ov-surface: #141c22;
+  --ov-surface-2: #101820;
+  --ov-faint: #1c2530;
+  --ov-ink: #e7eef3;
+  --ov-muted: #96a3ad;
+  --ov-line: #2b3641;
+  --ov-dot-live: #7fb069;
+  --ov-dot-batch: #d9a441;
+  --ov-dot-none: #6b7883;
+  --ov-dot-fresh: #7fb069;
+  --ov-dot-stale: #d9a441;
+  --ov-dot-old: #d9827b;
+}
+
+.ov-sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  clip: rect(0 0 0 0); overflow: hidden; white-space: nowrap;
+}
+.ov-eyebrow {
+  font-family: var(--ov-mono);
+  font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--ov-muted); font-weight: 500;
+}
+.ov-muted { color: var(--ov-muted); }
+.ov .mono, .mono { font-family: var(--ov-mono); }
+
+/* (a) Hero strip — live status numbers */
+.ov-hero {
+  background: var(--ov-surface);
+  border: 1px solid var(--ov-line);
+  border-radius: 8px;
+  padding: 20px 20px 22px;
+  margin-bottom: 20px;
+}
+.ov-stats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--ov-line);
+  border: 1px solid var(--ov-line);
+  border-radius: 6px; overflow: hidden;
+  margin-top: 14px;
+}
+.ov-stat { background: var(--ov-surface); padding: 16px 18px; min-width: 0; }
+.ov-value {
+  font-size: 34px; letter-spacing: -1.2px; font-weight: 550;
+  margin: 10px 0 8px; line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.ov-value small { font-size: 17px; color: var(--ov-muted); letter-spacing: 0; }
+.ov-value-sm { font-size: 19px; letter-spacing: -0.4px; font-weight: 600; }
+.ov-foot { font-size: 12px; color: var(--ov-muted); display: flex; align-items: center; gap: 7px; }
+.ov-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--ov-dot-none); flex: none;
+}
+.ov-fresh { background: var(--ov-dot-fresh); }
+.ov-stale { background: var(--ov-dot-stale); }
+.ov-old { background: var(--ov-dot-old); }
+.ov-live .ov-dot { background: var(--ov-dot-live); }
+.ov-batch .ov-dot { background: var(--ov-dot-batch); }
+.ov-none .ov-dot { background: var(--ov-dot-none); }
+
+/* (b) Six-desk capability grid */
+.ov-desks { margin-bottom: 20px; }
+.ov-desks > .ov-eyebrow { margin: 0 2px 12px; }
+.ov-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.ov-desk {
+  background: var(--ov-surface);
+  border: 1px solid var(--ov-line);
+  border-radius: 8px;
+  padding: 16px 18px 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  min-width: 0;
+}
+.ov-desk-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.ov-status {
+  font-family: var(--ov-mono); font-size: 10px; letter-spacing: 0.6px;
+  text-transform: uppercase; color: var(--ov-muted);
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.ov-desk h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; margin: 0; }
+.ov-desk p { font-size: 13px; line-height: 1.55; color: var(--ov-muted); margin: 0; }
+.ov-desk-foot {
+  margin-top: auto; padding-top: 8px;
+  border-top: 1px solid var(--ov-faint);
+  font-size: 11px; color: var(--ov-muted);
+}
+
+/* (c) Pipeline strip — visual stepper, no paragraphs */
+.ov-pipeline {
+  background: var(--ov-surface-2);
+  border: 1px solid var(--ov-line);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+.ov-pipeline > .ov-eyebrow { margin-bottom: 12px; }
+.ov-steps {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; gap: 6px; overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.ov-steps li {
+  flex: 1 0 auto;
+  display: flex; align-items: center; gap: 9px;
+  font-family: var(--ov-mono); font-size: 11px; letter-spacing: 0.4px;
+  text-transform: uppercase; color: var(--ov-ink);
+  background: var(--ov-surface);
+  border: 1px solid var(--ov-line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+.ov-step-n { color: var(--ov-muted); font-size: 10px; }
+.ov-steps li + li { position: relative; }
+.ov-steps li + li::before {
+  content: '›'; position: absolute; left: -11px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--ov-muted); font-size: 14px;
+}
+
+/* (d) Risk boundary footer — three short lines */
+.ov-boundary {
+  border-top: 1px solid var(--ov-line);
+  padding: 16px 2px 4px;
+}
+.ov-boundary > .ov-eyebrow { margin-bottom: 10px; }
+.ov-boundary p {
+  font-size: 12.5px; line-height: 1.6; color: var(--ov-muted); margin: 0 0 6px;
+}
+.ov-boundary p:last-child { margin-bottom: 0; }
+
+/* Larger screens: stats to 4-up, desks to a 3-col grid, stepper fits */
+@media (min-width: 640px) {
+  .ov-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ov-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .ov-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ov-steps li + li::before { left: -12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ov-steps { -webkit-overflow-scrolling: auto; }
+}
