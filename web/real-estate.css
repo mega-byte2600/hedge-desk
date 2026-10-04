@@ -1,3 +1,9 @@
+
+.re-shell h1{color:#f4f1e8}
+.re-shell .subtitle{color:#a39e93}
+.re-shell .notice{background:#121215;border:1px solid #232329;color:#f4f1e8}
+.re-shell .notice strong{color:#dcb96f}
+.re-shell .notice code{color:#f4f1e8}
 .re-shell{display:grid;gap:18px;color:#f4f1e8}
 .re-tabs{display:flex;gap:8px}
 .re-tab{border:1px solid #2a2a30;background:#121215;color:#f4f1e8;border-radius:4px;padding:10px 16px;font-weight:600}
