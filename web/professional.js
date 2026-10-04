@@ -53,6 +53,7 @@ function statusStrip() {
     </section>`;
 }
 
+// CI contract-preserving Overview copy; rendered by the Noir module in app.js.
 function overviewContractCopy() {
   if (currentRoute() !== 'overview') return '';
   return `
