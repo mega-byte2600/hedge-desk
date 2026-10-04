@@ -194,7 +194,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertLess(index.index('./app.js'), index.index('./candidate-context.js'))
         self.assertIn("Overnight candidates", app)
         self.assertIn("Overnight wheel candidates from the nightly batch", app)
-        self.assertIn("Method-qualified picks',rows.filter", app)
+        self.assertIn("Short puts',assessed.filter", app)
         # The internal "Trade authorization 0" stat was UI slop (user-directed
         # removal 2026-09-26); the no-orders boundary is stated once in
         # disclosures.json and enforced in the API payload contract.
@@ -221,14 +221,15 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("currentRoute() === link.dataset.nav", stability)
         self.assertIn("window.addEventListener('hashchange', resetWorkspaceScroll)", stability)
 
-    def test_workspace_router_and_enhancers_do_not_lock_after_scenario_lab(self):
+    def test_workspace_router_and_enhancers_do_not_lock_after_candidate_filter(self):
         app = (WEB / "app.js").read_text(encoding="utf-8")
         polish = (WEB / "ui-polish.js").read_text(encoding="utf-8")
         yellow = (WEB / "yellow-sheet.js").read_text(encoding="utf-8")
 
         self.assertIn("resources:'Research resources'", app)
         self.assertIn("function resources()", app)
-        self.assertIn("journal,resources,guide,workbench,brief,about", app)
+        self.assertIn("journal,resources,guide,workbench", app)
+        self.assertIn("'real-estate':realEstate,brief,about", app)
         self.assertIn("function setText(node, value)", polish)
         self.assertIn("node.textContent !== value", polish)
         self.assertIn("function setText(node, value)", yellow)
@@ -246,7 +247,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("graham-filter-toggle", app)
         self.assertIn("Own if assigned?", app)
         self.assertIn("MR. MARKET", app)
-        self.assertIn("verdict: 'SPECULATION'", graham)
+        self.assertIn("verdict = 'SPECULATION'", graham)
         self.assertIn("verdict = 'NEEDS_YOU'", graham)
         self.assertIn("verdict = 'INVESTMENT'", graham)
         self.assertIn("config.manicBump", graham)
