@@ -103,6 +103,16 @@ class PublicWebSurfaceTests(unittest.TestCase):
                     f"{foreground} on {background} must remain WCAG AA readable",
                 )
 
+    def test_professional_desk_surface_is_noir_not_light(self):
+        professional = (WEB / "professional.js").read_text(encoding="utf-8")
+        self.assertIn("background:#121215", professional)
+        self.assertIn("color:#dcb96f", professional)
+        self.assertIn("color:#f4f1e8", professional)
+        self.assertNotIn("border:1px solid #d7dee2;background:#fff", professional)
+        self.assertNotIn(".ws-ror{border-top:1px solid #e6eaed;background:#fff", professional)
+        self.assertNotIn("background:#fafbfc", professional)
+        self.assertNotIn("background:#f7f9fa", professional)
+
     def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
         public_assets = [
             WEB / "index.html",
