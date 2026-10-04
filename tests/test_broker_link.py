@@ -35,17 +35,20 @@ class BrokerLinkStoreTests(unittest.TestCase):
 
     def test_refresh_and_account_metadata_roundtrip_encrypted(self):
         self.store.link(
-            "m@example.com", "MEMBER", "schwab", "AT", account_label="Main", key=self.key,
-            refresh_token="RT", expires_at="2026-10-04T00:00:00+00:00", account_hash="HASH", account_number="1234",
+            "m@example.com", "MEMBER", "schwab", "secret-access-token-value-2600",
+            account_label="Main", key=self.key,
+            refresh_token="secret-refresh-token-value-2600",
+            expires_at="2026-10-04T00:00:00+00:00", account_hash="HASH", account_number="1234",
         )
         creds = self.store.credentials("m@example.com", key=self.key)
-        self.assertEqual(creds["refresh_token"], "RT")
+        self.assertEqual(creds["refresh_token"], "secret-refresh-token-value-2600")
         self.assertEqual(creds["account_hash"], "HASH")
         raw = self.store._conn.execute(
             "SELECT token_enc FROM broker_links WHERE email=?", ("m@example.com",)
         ).fetchone()[0]
-        self.assertNotIn("AT", raw)
-        self.assertNotIn("RT", raw)
+        self.assertNotIn("secret-access-token-value-2600", raw)
+        self.assertNotIn("secret-refresh-token-value-2600", raw)
+        self.assertNotIn("access_token", raw)
         self.assertTrue(raw.startswith("fernet:"))
 
     def test_guest_cannot_link_broker(self):
