@@ -246,7 +246,31 @@ async function acctBrokerRefresh() {
   if (label) {
     label.textContent = !st.configured
       ? 'Schwab is not configured on this deployment.'
-      : (st.linked ? 'Schwab connected (read-only).' : 'Schwab is ready to connect.');
+      : (st.linked
+          ? (st.account_selected
+              ? 'Schwab connected. Read-only account access and production market data are active.'
+              : 'Schwab connected. Choose an account to activate account data.')
+          : 'Schwab is ready to connect.');
+  }
+  const accountWrap = document.getElementById('acct-broker-account-wrap');
+  const accountSelect = document.getElementById('acct-broker-account');
+  if (accountWrap && accountSelect) {
+    accountWrap.style.display = st.linked ? 'block' : 'none';
+    accountSelect.replaceChildren();
+    if (st.linked) {
+      try {
+        const linkedAccounts = await acctFetch('/api/broker/accounts');
+        for (const account of (linkedAccounts.accounts || [])) {
+          const option = document.createElement('option');
+          option.value = account.account_id;
+          option.textContent = account.label;
+          option.selected = Boolean(account.selected);
+          accountSelect.appendChild(option);
+        }
+      } catch (e) {
+        if (label) label.textContent = 'Schwab is linked, but account details could not be loaded.';
+      }
+    }
   }
   if (connect) {
     connect.textContent = 'Connect Schwab (read-only)';
@@ -450,6 +474,19 @@ function acctBind() {
   if (bc) bc.addEventListener('click', () => acctBrokerConnect(bc));
   const bd = root.querySelector('#acct-broker-disconnect');
   if (bd) bd.addEventListener('click', acctBrokerDisconnect);
+  const accountSelect = root.querySelector('#acct-broker-account');
+  if (accountSelect) accountSelect.addEventListener('change', async () => {
+    try {
+      await acctFetch('/api/broker/account', {
+        method: 'POST', body: JSON.stringify({ account_id: accountSelect.value }),
+      });
+      await acctBrokerRefresh();
+      acctToast('Schwab account selected.');
+    } catch (e) {
+      const err = document.getElementById('acct-error');
+      if (err) err.textContent = 'Could not select Schwab account: ' + (e.message || e);
+    }
+  });
   const gpInvite = root.querySelector('#acct-gp-invite');
   if (gpInvite) gpInvite.addEventListener('click', () => acctGpInvite(gpInvite));
 }

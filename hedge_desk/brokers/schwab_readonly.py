@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import urllib.error
+import urllib.parse
 import urllib.request
 from typing import Callable, Optional
 
@@ -44,6 +45,9 @@ class SchwabReadOnlyBroker:
     def __init__(self, transport: Optional[Transport] = None, base_url: str = SCHWAB_API_BASE):
         self._transport = transport or _default_transport
         self.base_url = base_url.rstrip("/")
+        parsed = urllib.parse.urlparse(self.base_url)
+        if parsed.scheme != "https" or parsed.hostname != "api.schwabapi.com":
+            raise ValueError("Schwab API requires the official HTTPS host")
 
     def _get(self, path: str, token: str) -> dict:
         if not token:
@@ -52,8 +56,8 @@ class SchwabReadOnlyBroker:
         headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
         try:
             status, raw = self._transport("GET", url, headers)
-        except Exception as exc:  # network / transport failure -> fail closed
-            return {"status": "error", "error": f"transport:{exc}", "read_only": True}
+        except Exception:  # network / transport failure -> fail closed without leaking details
+            return {"status": "error", "error": "transport_failure", "read_only": True}
         if status >= 400:
             return {"status": "error", "http_status": status, "read_only": True}
         try:
@@ -61,44 +65,69 @@ class SchwabReadOnlyBroker:
         except Exception:
             return {"status": "error", "error": "bad_json", "read_only": True}
 
-    def account_numbers(self, token: str) -> dict:
-        """List the account numbers the token can read (read-only)."""
+    def account_hashes(self, token: str) -> dict:
+        """Discover account hashes; plain brokerage account numbers stay private."""
         result = self._get("/trader/v1/accounts/accountNumbers", token)
         if result["status"] != "ok":
             return result
-        accounts = [
-            {"account_number": a.get("accountNumber"), "account_hash": a.get("hashValue")}
-            for a in result["data"]
-            if a.get("accountNumber") and a.get("hashValue")
-        ]
-        return {
-            "status": "ok",
-            "read_only": True,
-            "accounts": accounts,
-            "account_numbers": [a["account_number"] for a in accounts],
-        }
+        accounts = result["data"]
+        if not isinstance(accounts, list) or any(not isinstance(row, dict) for row in accounts):
+            return {"status": "error", "error": "unexpected_response_schema", "read_only": True}
+        hashes = [row.get("hashValue") for row in accounts]
+        if any(not isinstance(value, str) or not value for value in hashes):
+            return {"status": "error", "error": "unexpected_response_schema", "read_only": True}
+        return {"status": "ok", "read_only": True, "account_hashes": hashes}
+
+    def account_numbers(self, token: str) -> dict:
+        """Compatibility name; returns only Schwab account hashes, never numbers."""
+        return self.account_hashes(token)
+
+    @staticmethod
+    def _account_path(account_hash: str) -> Optional[str]:
+        if not account_hash:
+            return None
+        return urllib.parse.quote(account_hash, safe="")
 
     def positions(self, token: str, account_hash: str = "") -> dict:
         """Read positions for an account (read-only)."""
-        if not account_hash:
+        path_hash = self._account_path(account_hash)
+        if path_hash is None:
             return {"status": "error", "error": "missing_account_hash", "read_only": True}
         result = self._get(
-            f"/trader/v1/accounts/{account_hash}?fields=positions", token
+            f"/trader/v1/accounts/{path_hash}?fields=positions", token
         )
         if result["status"] != "ok":
             return result
-        return {"status": "ok", "read_only": True, "positions": result["data"]}
+        account = self._account_payload(result["data"])
+        if account is None or not isinstance(account.get("positions"), list):
+            return {"status": "error", "error": "unexpected_response_schema", "read_only": True}
+        return {"status": "ok", "read_only": True, "positions": account["positions"]}
 
     def balances(self, token: str, account_hash: str = "") -> dict:
         """Read balances for an account (read-only)."""
-        if not account_hash:
+        path_hash = self._account_path(account_hash)
+        if path_hash is None:
             return {"status": "error", "error": "missing_account_hash", "read_only": True}
         result = self._get(
-            f"/trader/v1/accounts/{account_hash}?fields=positions", token
+            f"/trader/v1/accounts/{path_hash}?fields=positions", token
         )
         if result["status"] != "ok":
             return result
-        return {"status": "ok", "read_only": True, "balances": result["data"]}
+        account = self._account_payload(result["data"])
+        if account is None or not isinstance(account.get("currentBalances"), dict):
+            return {"status": "error", "error": "unexpected_response_schema", "read_only": True}
+        return {
+            "status": "ok", "read_only": True,
+            "balances": account["currentBalances"],
+            "projected_balances": account.get("projectedBalances", {}),
+        }
+
+    @staticmethod
+    def _account_payload(data: dict) -> Optional[dict]:
+        if not isinstance(data, dict):
+            return None
+        account = data.get("securitiesAccount", data)
+        return account if isinstance(account, dict) else None
 
 
 __all__ = ["SchwabReadOnlyBroker", "SCHWAB_API_BASE"]

@@ -13,7 +13,8 @@ to me. The pattern is OAuth 2.0 authorization-code flow:
 Security posture (matches hedge_desk/brokers/schwab_oauth.py):
 - The secret is read from a file you own and is never written, logged, or returned.
 - State is generated per attempt and verified round-trip (CSRF).
-- Only the read-only scope is requested; no order is ever placed by this script.
+- The approved App/API product determines API access; no OAuth scope is guessed.
+- No order is ever placed by this script.
 - Fail closed: any error returns a structured result, never a fabricated token.
 
 This makes NO orders. It exists so the GP can prove his Schwab credentials work
@@ -82,21 +83,20 @@ def exchange_and_probe(
         return {"status": "error", "error": result.get("error", "exchange_failed")}
     token = result["access_token"]
     broker = SchwabReadOnlyBroker()
-    numbers = broker.account_numbers(token)
-    accounts = numbers.get("account_numbers", []) if numbers.get("status") == "ok" else []
+    account_result = broker.account_hashes(token)
+    accounts = account_result.get("account_hashes", []) if account_result.get("status") == "ok" else []
     summary = {
         "status": "ok",
         "token_type": result.get("token_type", "Bearer"),
-        "scope": result.get("scope", "readonly"),
+        "scope": result.get("scope", "api"),
         "account_count": len(accounts),
-        "accounts": accounts,
         "read_only": True,
         "note": "Connection validated with a single read-only call. No order placed.",
         # never return the token
     }
     if not accounts:
         summary["status"] = "ok_no_accounts"
-        summary["note"] = "Token valid but no account numbers exposed; scope/perms may need review."
+        summary["note"] = "Token valid but no account hashes exposed; scope/perms may need review."
     return summary
 
 

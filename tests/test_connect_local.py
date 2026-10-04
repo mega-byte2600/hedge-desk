@@ -25,7 +25,7 @@ class ConnectLocalTests(unittest.TestCase):
         self.assertEqual(result["status"], "ok")
         self.assertTrue(result["state"])
         self.assertIn("response_type=code", result["authorize_url"])
-        self.assertIn("scope=readonly", result["authorize_url"])
+        self.assertNotIn("scope=", result["authorize_url"])
 
     def test_state_mismatch_rejected(self):
         r = exchange_and_probe(_env(), "code", "expected", "wrong")
