@@ -120,8 +120,11 @@ class ServerTests(unittest.TestCase):
         # Two calls inside the API cache window return the same generated_at
         # (cache hit) — proves the memoization path is live, not a fresh
         # recompute per request which would break the golden render.
-        first = self.request('/api/report')[1]
-        second = self.request('/api/report')[1]
+        with patch('hedge_desk.server._api_cache', {}), patch(
+            'hedge_desk.live_desk_data.fetch_market_snapshot', self._fake_quotes
+        ):
+            first = self.request('/api/report')[1]
+            second = self.request('/api/report')[1]
         self.assertEqual(
             first['report']['generated_at'],
             second['report']['generated_at'],

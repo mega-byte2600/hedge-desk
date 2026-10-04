@@ -53,8 +53,8 @@ def _post(dispatch, path, payload, cookie=None):
     return cap["status"], json.loads(out), cap["headers"]
 
 
-def _get(dispatch, path, cookie=None):
-    environ = {"PATH_INFO": path, "REQUEST_METHOD": "GET"}
+def _get(dispatch, path, cookie=None, query=""):
+    environ = {"PATH_INFO": path, "REQUEST_METHOD": "GET", "QUERY_STRING": query}
     if cookie:
         # cookie is a bare token; the server expects the named cookie header
         environ["HTTP_COOKIE"] = f"{SESSION_COOKIE}={cookie}"
@@ -365,7 +365,6 @@ class BrokerEndpointTests(unittest.TestCase):
         from hedge_desk.auth_app import make_auth_app
         from hedge_desk.broker_link import BrokerLinkStore, BrokerAdapter
         from hedge_desk.brokers.schwab_oauth import SchwabOAuth, SchwabOAuthConfig
-        from hedge_desk.brokers.schwab_readonly import SchwabReadOnlyBroker
 
         self.tmp = tempfile.mkdtemp()
         self.store = MembershipStore(
@@ -373,31 +372,30 @@ class BrokerEndpointTests(unittest.TestCase):
         )
         self.broker_store = BrokerLinkStore(os.path.join(self.tmp, "bl.db"))
         self.key = b"broker-key"
-        os.environ["BROKER_LINK_KEY"] = "broker-key"
+        os.environ["BROKER_LINK_KEY"] = "broker-link-test-key-32-bytes-long!"
 
         self.sender = CaptureSender()
         cfg = SchwabOAuthConfig("cid", "csecret", "https://site/api/broker/callback")
-        tokens = {"access_token": "AT", "refresh_token": "RT", "expires_in": 1800, "scope": "readonly"}
-        self.oauth = SchwabOAuth(cfg, transport=lambda m, u, h, b: (200, json.dumps(tokens).encode()))
-
-        def schwab_transport(method, url, headers):
-            if url.endswith("/trader/v1/accounts/accountNumbers"):
-                return 200, json.dumps([
-                    {"accountNumber": "12345678", "hashValue": "HASH123"}
-                ]).encode()
-            if "/trader/v1/accounts/HASH123" in url:
-                return 200, json.dumps({
-                    "securitiesAccount": {
-                        "accountNumber": "12345678",
-                        "currentBalances": {"liquidationValue": 100000.0, "cashBalance": 2500.0},
-                        "positions": [
-                            {"instrument": {"symbol": "SPY", "assetType": "EQUITY"}, "longQuantity": 100}
-                        ],
-                    }
-                }).encode()
-            return 404, b"{}"
-
-        self.adapter = SchwabReadOnlyBroker(transport=schwab_transport)
+        tokens = {"access_token": "AT", "refresh_token": "RT", "expires_in": 1800, "scope": "api"}
+        self.oauth_posts = []
+        def oauth_transport(method, url, headers, body):
+            self.oauth_posts.append(body or b"")
+            return 200, json.dumps(tokens).encode()
+        self.oauth = SchwabOAuth(cfg, transport=oauth_transport)
+        self.adapter = BrokerAdapter("schwab")
+        self.adapter.account_hashes = lambda token: {
+            "status": "ok", "read_only": True, "account_hashes": ["ENCRYPTED_HASH_1"]
+        }
+        self.adapter.positions = lambda token, account_hash: {
+            "status": "ok", "read_only": True, "positions": []
+        }
+        self.adapter.balances = lambda token, account_hash: {
+            "status": "ok", "read_only": True, "balances": {"cashBalance": "100"}
+        }
+        class MarketData:
+            def quotes(inner_self, token, symbols):
+                return {"status": "ok", "read_only": True, "data": {s: {"last": "500"} for s in symbols}}
+        self.market_data = MarketData()
 
         self.dispatch = make_auth_app(
             self.store,
@@ -406,6 +404,7 @@ class BrokerEndpointTests(unittest.TestCase):
             broker_store=self.broker_store,
             broker_oauth=self.oauth,
             broker_adapter=self.adapter,
+            market_data_adapter=self.market_data,
         )
 
     def tearDown(self):
@@ -429,7 +428,7 @@ class BrokerEndpointTests(unittest.TestCase):
         self.assertEqual(status, "200 OK")
         self.assertIn("authorize_url", body)
         self.assertIn("state=", body["authorize_url"])
-        self.assertIn("scope=readonly", body["authorize_url"])
+        self.assertNotIn("scope=", body["authorize_url"])
 
     def test_link_requires_valid_state(self):
         cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
@@ -454,55 +453,45 @@ class BrokerEndpointTests(unittest.TestCase):
         conn = self.broker_store.connection("m@example.com")
         self.assertTrue(conn["linked"])
         self.assertEqual(conn["broker"], "schwab")
+        payload = self.broker_store.token_state("m@example.com")
+        self.assertEqual(payload["refresh_token"], "RT")
+        self.assertEqual(payload["scope"], "api")
+        self.assertEqual(payload["selected_account_hash"], "ENCRYPTED_HASH_1")
 
-    def test_status_reports_configured_and_linked(self):
-        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
-        self.store.set_subscribed("m@example.com")
-        status, body, _ = _get(self.dispatch, "/api/broker/status", cookie=cookie)
-        self.assertEqual(status, "200 OK")
-        self.assertTrue(body["configured"])
-        self.assertFalse(body["linked"])
-
-    def test_positions_requires_link(self):
-        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
-        self.store.set_subscribed("m@example.com")
-        status, body, _ = _get(self.dispatch, "/api/broker/positions", cookie=cookie)
-        self.assertEqual(status, "409 Conflict")
-        self.assertEqual(body["error"], "no_broker_linked")
-
-    def test_link_persists_refresh_token_and_account_hash(self):
-        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
-        self.store.set_subscribed("m@example.com")
-        _, auth_body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
-        state = auth_body["authorize_url"].split("state=")[1].split("&")[0]
-        status, body, _ = _post(
-            self.dispatch, "/api/broker/link", {"code": "C", "state": state}, cookie=cookie
-        )
-        self.assertEqual(status, "200 OK")
-        creds = self.broker_store.credentials("m@example.com", key=self.key)
-        self.assertEqual(creds["refresh_token"], "RT")
-        self.assertEqual(creds["account_hash"], "HASH123")
-        self.assertEqual(creds["account_number"], "12345678")
-
-    def test_positions_and_balances_use_real_stored_credentials(self):
+    def test_link_does_not_expose_account_hash_in_account_list(self):
         cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
         self.store.set_subscribed("m@example.com")
         _, auth_body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
         state = auth_body["authorize_url"].split("state=")[1].split("&")[0]
         _post(self.dispatch, "/api/broker/link", {"code": "C", "state": state}, cookie=cookie)
-        status, body, _ = _get(self.dispatch, "/api/broker/positions", cookie=cookie)
+        status, body, _ = _get(self.dispatch, "/api/broker/accounts", cookie=cookie)
+        self.assertEqual(status, "200 OK")
+        self.assertTrue(body["accounts"][0]["selected"])
+        self.assertNotIn("ENCRYPTED_HASH_1", json.dumps(body))
+        self.assertIn("account_id", body["accounts"][0])
+
+    def test_linked_member_uses_schwab_token_for_production_market_data_route(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        _, auth_body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
+        state = auth_body["authorize_url"].split("state=")[1].split("&")[0]
+        _post(self.dispatch, "/api/broker/link", {"code": "C", "state": state}, cookie=cookie)
+        status, body, _ = _get(self.dispatch, "/api/broker/quotes", cookie=cookie, query="symbols=SPY,QQQ")
         self.assertEqual(status, "200 OK")
         self.assertTrue(body["read_only"])
-        self.assertEqual(
-            body["positions"]["securitiesAccount"]["positions"][0]["instrument"]["symbol"],
-            "SPY",
-        )
-        status, body, _ = _get(self.dispatch, "/api/broker/balances", cookie=cookie)
-        self.assertEqual(status, "200 OK")
-        self.assertEqual(
-            body["balances"]["securitiesAccount"]["currentBalances"]["cashBalance"],
-            2500.0,
-        )
+        self.assertEqual(set(body["data"]), {"SPY", "QQQ"})
+
+    def test_positions_and_balances_use_selected_hash_server_side(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        _, auth_body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
+        state = auth_body["authorize_url"].split("state=")[1].split("&")[0]
+        _post(self.dispatch, "/api/broker/link", {"code": "C", "state": state}, cookie=cookie)
+        for path in ("/api/broker/positions", "/api/broker/balances"):
+            status, body, _ = _get(self.dispatch, path, cookie=cookie)
+            self.assertEqual(status, "200 OK")
+            self.assertTrue(body["read_only"])
+            self.assertNotIn("ENCRYPTED_HASH_1", json.dumps(body))
 
     def test_browser_callback_completes_link_and_redirects(self):
         cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
@@ -521,6 +510,59 @@ class BrokerEndpointTests(unittest.TestCase):
         self.assertEqual(out, b"")
         self.assertIn(("Location", "/?broker=linked#overview"), cap["headers"])
         self.assertTrue(self.broker_store.connection("m@example.com")["linked"])
+
+    def test_unlinked_market_data_endpoint_fails_closed(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        status, body, _ = _get(self.dispatch, "/api/broker/quotes", cookie=cookie, query="symbols=SPY")
+        self.assertEqual(status, "409 Conflict")
+
+    def test_read_only_market_data_retries_once_after_401_with_persisted_refresh(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        _, auth_body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
+        state = auth_body["authorize_url"].split("state=")[1].split("&")[0]
+        _post(self.dispatch, "/api/broker/link", {"code": "C", "state": state}, cookie=cookie)
+        calls = []
+        def quotes(token, symbols):
+            calls.append(token)
+            if len(calls) == 1:
+                return {"status": "error", "http_status": 401, "error": "unauthorized"}
+            return {"status": "ok", "read_only": True, "data": {"SPY": {"last": "500"}}}
+        self.market_data.quotes = quotes
+        status, body, _ = _get(self.dispatch, "/api/broker/quotes", cookie=cookie, query="symbols=SPY")
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(len(calls), 2)
+        self.assertTrue(any(b"grant_type=refresh_token" in value for value in self.oauth_posts))
+
+    def test_status_reports_configured_and_linked(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        status, body, _ = _get(self.dispatch, "/api/broker/status", cookie=cookie)
+        self.assertEqual(status, "200 OK")
+        self.assertTrue(body["configured"])
+        self.assertFalse(body["linked"])
+
+    def test_positions_requires_link(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        status, body, _ = _get(self.dispatch, "/api/broker/positions", cookie=cookie)
+        self.assertEqual(status, "409 Conflict")
+        self.assertEqual(body["error"], "no_broker_linked")
+
+    def test_browser_callback_rejects_replayed_state(self):
+        cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
+        self.store.set_subscribed("m@example.com")
+        _, auth_body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
+        state = auth_body["authorize_url"].split("state=")[1].split("&")[0]
+        environ = {"PATH_INFO": "/api/broker/callback", "QUERY_STRING": f"code=C&state={state}", "REQUEST_METHOD": "GET", "HTTP_COOKIE": f"{SESSION_COOKIE}={cookie}"}
+        cap, start = _capture()
+        self.dispatch(environ, start)
+        self.assertEqual(cap["status"], "302 Found")
+        cap, start = _capture()
+        result = b"".join(self.dispatch(environ, start))
+        self.assertEqual(cap["status"], "400 Bad Request")
+        self.assertEqual(json.loads(result)["error"], "invalid_state")
 
     def test_unlink(self):
         cookie = _full_signin(self.dispatch, self.sender_for_member(), "m@example.com")
