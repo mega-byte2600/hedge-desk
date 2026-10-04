@@ -212,7 +212,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("./navigation-stability.js", index)
         self.assertIn('"navigation-stability.js"', build)
         self.assertIn("const WORKSPACE_ROUTES = new Set", stability)
-        self.assertIn("'scenarios'", stability)
+        self.assertNotIn("'scenarios'", stability)
         self.assertIn("'journal'", stability)
         self.assertIn("'resources'", stability)
         self.assertIn("function resetWorkspaceScroll()", stability)
@@ -235,25 +235,28 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("node.textContent !== value", yellow)
         self.assertIn("if (secondSub) setText(secondSub", yellow)
 
-    def test_scenario_lab_contract_is_snapshot_driven_and_fail_closed(self):
+    def test_graham_filter_contract_is_embedded_and_fail_closed(self):
         app = (WEB / "app.js").read_text(encoding="utf-8")
-        core = (WEB / "core.mjs").read_text(encoding="utf-8")
+        index = (WEB / "index.html").read_text(encoding="utf-8")
+        graham = (WEB / "graham-filter.mjs").read_text(encoding="utf-8")
 
-        self.assertIn("function scenarios()", app)
-        self.assertIn("function renderScenarios()", app)
-        self.assertIn("scenarioRows(report)", app)
-        self.assertIn("filterRows(scenarioRows(report)", app)
-        # Real-data contract: scenarios come from report.scenarios (hypothetical
-        # projections from live base data), never synthetic war games.
-        self.assertIn("report.scenarios", core)
-        self.assertNotIn("report.war_games", core)
-        self.assertNotIn("report.portfolio_stress", core)
-        self.assertIn("hypothetical projection from real base data", app)
+        self.assertIn("assessShortPut", app)
+        self.assertIn("extractShortPutRows", app)
+        self.assertIn("fetch('./api/am-report'", app)
+        self.assertIn("graham-filter-toggle", app)
+        self.assertIn("Own if assigned?", app)
+        self.assertIn("MR. MARKET", app)
+        self.assertIn("verdict: 'SPECULATION'", graham)
+        self.assertIn("verdict = 'NEEDS_YOU'", graham)
+        self.assertIn("verdict = 'INVESTMENT'", graham)
+        self.assertIn("config.manicBump", graham)
+        self.assertNotIn('href="#scenarios"', index)
+        self.assertNotIn('./scenario-lab.js', index)
+        self.assertNotIn("function scenarios()", app)
+        self.assertNotIn("renderScenarios()", app)
         self.assertIn("candidate.report?.environment!=='paper'", app)
         self.assertIn("candidate.report.live_orders_enabled!==false", app)
         self.assertIn("candidate.report.synthetic_data!==false", app)
-        self.assertNotIn("runScenario", app)
-        self.assertNotIn("executeScenario", app)
 
 
 if __name__ == "__main__":
