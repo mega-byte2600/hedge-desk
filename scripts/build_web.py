@@ -52,6 +52,7 @@ CONSOLE_ASSETS = (
     "overview-revamp.js",
     "overview-revamp-noir.css",
     "brand/emporion-logo-hermes.jpg",
+    "brand/emporion-logo-hermes-512.png",
 )
 
 
