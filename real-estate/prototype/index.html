@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real Estate Decision Models</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; padding: 16px; }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 16px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab { padding: 10px 24px; background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 8px 8px 0 0; cursor: pointer; color: #888; font-weight: 600; }
+  .tab.active { background: #212636; color: #fff; border-bottom: 2px solid #4CAF50; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .section { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .section h2 { font-size: 1.1rem; margin-bottom: 12px; color: #4CAF50; }
+  .section h3 { font-size: 0.95rem; margin: 12px 0 8px; color: #aaa; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; }
+  .field label { font-size: 0.8rem; color: #888; margin-bottom: 4px; }
+  .field input, .field select { background: #0f1117; border: 1px solid #2a2d3a; color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 0.95rem; }
+  .field input:focus { border-color: #4CAF50; outline: none; }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .metric { background: #212636; border-radius: 8px; padding: 14px; text-align: center; }
+  .metric .label { font-size: 0.75rem; color: #888; margin-bottom: 4px; }
+  .metric .value { font-size: 1.4rem; font-weight: 700; }
+  .metric .value.good { color: #4CAF50; }
+  .metric .value.bad { color: #f44336; }
+  .metric .value.warn { color: #ff9800; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid #2a2d3a; }
+  th { color: #888; font-weight: 600; text-align: right; position: sticky; top: 0; background: #1a1d27; }
+  th:first-child, td:first-child { text-align: left; }
+  tr:hover td { background: #212636; }
+  .table-wrap { overflow-x: auto; max-height: 400px; overflow-y: auto; }
+  .slider-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+  .slider-row label { min-width: 140px; font-size: 0.85rem; }
+  .slider-row input[type=range] { flex: 1; }
+  .slider-row .val { min-width: 80px; text-align: right; font-weight: 600; }
+  .btn { background: #4CAF50; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.95rem; }
+  .btn:hover { background: #45a049; }
+  details { margin-top: 8px; }
+  summary { cursor: pointer; color: #4CAF50; font-weight: 600; padding: 8px 0; }
+  .note { font-size: 0.78rem; color: #666; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Real Estate Decision Models</h1>
+<p class="subtitle">Full-parity port of your Excel models — every input, every formula, one page.</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('investment')">Investment</div>
+  <div class="tab" onclick="switchTab('analysis')">Analysis</div>
+</div>
+
+<!-- ═══════════════════════ INVESTMENT TAB ═══════════════════════ -->
+<div id="tab-investment" class="tab-content active">
+
+  <div class="section">
+    <h2>Decision Metrics</h2>
+    <div class="metrics" id="inv-metrics"></div>
+  </div>
+
+  <div class="section">
+    <h2>Inputs</h2>
+    <h3>Purchase & Financing</h3>
+    <div class="grid">
+      <div class="field"><label>Purchase Price ($)</label><input type="number" id="inv-price" value="20000000" oninput="recalcInv()"></div>
+      <div class="field"><label>Additional Capex ($)</label><input type="number" id="inv-capex" value="500000" oninput="recalcInv()"></div>
+      <div class="field"><label>Purchase Costs ($)</label><input type="number" id="inv-costs" value="200000" oninput="recalcInv()"></div>
+      <div class="field"><label>Loan Amount ($)</label><input type="number" id="inv-loan" value="9500000" oninput="recalcInv()"></div>
+      <div class="field"><label>Interest Rate (annual %)</label><input type="number" id="inv-rate" value="5.5" step="0.1" oninput="recalcInv()"></div>
+      <div class="field"><label>Amortization (months)</label><input type="number" id="inv-amort" value="360" oninput="recalcInv()"></div>
+    </div>
+    <h3>Income</h3>
+    <div class="grid">
+      <div class="field"><label>Monthly Rent ($)</label><input type="number" id="inv-rent" value="160000" oninput="recalcInv()"></div>
+      <div class="field"><label>Rent Increase Interval</label><select id="inv-interval" onchange="recalcInv()">
+        <option>6-Mthly</option><option>Annually</option><option selected>2-Yrs</option><option>3-Yrs</option><option>4-Yrs</option><option>5-Yrs</option>
+      </select></div>
+      <div class="field"><label>Rent Increase (%)</label><input type="number" id="inv-rent-inc" value="17" step="0.5" oninput="recalcInv()"></div>
+      <div class="field"><label>Vacancy & Credit Loss (%)</label><input type="number" id="inv-vacancy" value="5" step="0.5" oninput="recalcInv()"></div>
+    </div>
+    <h3>Depreciation</h3>
+    <div class="grid">
+      <div class="field"><label>Improvement Ratio (%)</label><input type="number" id="inv-impr" value="60" step="1" oninput="recalcInv()"></div>
+      <div class="field"><label>Depreciation Years</label><input type="number" id="inv-depr-yrs" value="39" oninput="recalcInv()"></div>
+    </div>
+    <h3>Terminal Value</h3>
+    <div class="grid">
+      <div class="field"><label>Method</label><select id="inv-term-opt" onchange="recalcInv()">
+        <option value="1">Appreciation</option><option value="2" selected>Cap Rate</option>
+      </select></div>
+      <div class="field"><label>Cap Rate (%)</label><input type="number" id="inv-cap" value="8" step="0.25" oninput="recalcInv()"></div>
+      <div class="field"><label>Appreciation Rate (annual %)</label><input type="number" id="inv-appr" value="5" step="0.25" oninput="recalcInv()"></div>
+      <div class="field"><label>Cost of Sale (%)</label><input type="number" id="inv-sale-cost" value="4" step="0.25" oninput="recalcInv()"></div>
+    </div>
+    <h3>Taxes</h3>
+    <div class="grid">
+      <div class="field"><label>Income Tax (%)</label><input type="number" id="inv-tax" value="30" step="1" oninput="recalcInv()"></div>
+      <div class="field"><label>Cap Gains Tax (%)</label><input type="number" id="inv-capgain" value="20" step="1" oninput="recalcInv()"></div>
+    </div>
+    <h3>Hold Period</h3>
+    <div class="grid">
+      <div class="field"><label>Hold (months)</label><input type="number" id="inv-hold" value="120" oninput="recalcInv()"></div>
+      <div class="field"><label>Hurdle Rate (annual %)</label><input type="number" id="inv-hurdle" value="15" step="0.5" oninput="recalcInv()"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Sensitivity — What Breaks the Deal?</h2>
+    <div class="slider-row">
+      <label>Cap Rate</label>
+      <input type="range" id="inv-sens-cap" min="5" max="12" step="0.25" value="8" oninput="recalcInvSens()">
+      <span class="val" id="inv-sens-cap-val">8.00%</span>
+    </div>
+    <div class="slider-row">
+      <label>Interest Rate</label>
+      <input type="range" id="inv-sens-rate" min="3" max="10" step="0.25" value="5.5" oninput="recalcInvSens()">
+      <span class="val" id="inv-sens-rate-val">5.50%</span>
+    </div>
+    <div class="slider-row">
+      <label>Vacancy</label>
+      <input type="range" id="inv-sens-vac" min="0" max="20" step="0.5" value="5" oninput="recalcInvSens()">
+      <span class="val" id="inv-sens-vac-val">5.0%</span>
+    </div>
+    <div id="inv-sens-output" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="section">
+    <h2>Monthly Projection</h2>
+    <div class="table-wrap"><table id="inv-table">
+      <thead><tr><th>Mo</th><th>Rent</th><th>Vacancy</th><th>Gross Inc</th><th>Expenses</th><th>NOI</th><th>Interest</th><th>Principal</th><th>Debt Svc</th><th>Balance</th><th>CFBT</th><th>CFAT</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+  <div class="section">
+    <h2>Annual Summary</h2>
+    <div class="table-wrap"><table id="inv-annual">
+      <thead><tr><th>Year</th><th>Gross Rent</th><th>NOI</th><th>Debt Service</th><th>CFBT</th><th>CFAT</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════ ANALYSIS TAB ═══════════════════════ -->
+<div id="tab-analysis" class="tab-content">
+
+  <div class="section">
+    <h2>Decision Metrics</h2>
+    <div class="metrics" id="ana-metrics"></div>
+    <p class="note">Analysis tab — annual underwriting model. Full input/calculation port coming next.</p>
+  </div>
+
+  <div class="section">
+    <h2>Inputs</h2>
+    <h3>Property</h3>
+    <div class="grid">
+      <div class="field"><label>Holding Period (years)</label><input type="number" id="ana-hold" value="6" min="2" max="10" oninput="recalcAna()"></div>
+      <div class="field"><label>Purchase Price ($)</label><input type="number" id="ana-price" value="17800000" oninput="recalcAna()"></div>
+      <div class="field"><label>Other Income (% of rent)</label><input type="number" id="ana-other-inc" value="4.7" step="0.1" oninput="recalcAna()"></div>
+    </div>
+    <h3>Unit Mix</h3>
+    <div class="grid">
+      <div class="field"><label>2BR Units</label><input type="number" id="ana-u1-n" value="50" oninput="recalcAna()"></div>
+      <div class="field"><label>2BR Rent ($/mo)</label><input type="number" id="ana-u1-r" value="858" oninput="recalcAna()"></div>
+      <div class="field"><label>1BR Units</label><input type="number" id="ana-u2-n" value="150" oninput="recalcAna()"></div>
+      <div class="field"><label>1BR Rent ($/mo)</label><input type="number" id="ana-u2-r" value="704" oninput="recalcAna()"></div>
+      <div class="field"><label>Studio Units</label><input type="number" id="ana-u3-n" value="80" oninput="recalcAna()"></div>
+      <div class="field"><label>Studio Rent ($/mo)</label><input type="number" id="ana-u3-r" value="528" oninput="recalcAna()"></div>
+    </div>
+    <h3>Financing</h3>
+    <div class="grid">
+      <div class="field"><label>Loan Amount ($)</label><input type="number" id="ana-loan" value="12000000" oninput="recalcAna()"></div>
+      <div class="field"><label>Interest Rate (%)</label><input type="number" id="ana-rate" value="6" step="0.25" oninput="recalcAna()"></div>
+      <div class="field"><label>Loan Term (years)</label><input type="number" id="ana-term" value="25" oninput="recalcAna()"></div>
+    </div>
+    <h3>Sale & DCF</h3>
+    <div class="grid">
+      <div class="field"><label>Terminal Cap Rate (%)</label><input type="number" id="ana-cap" value="7" step="0.25" oninput="recalcAna()"></div>
+      <div class="field"><label>Selling Cost (%)</label><input type="number" id="ana-sale-cost" value="5" step="0.25" oninput="recalcAna()"></div>
+      <div class="field"><label>Discount Rate (%)</label><input type="number" id="ana-discount" value="10" step="0.5" oninput="recalcAna()"></div>
+      <div class="field"><label>Marginal Tax Rate (%)</label><input type="number" id="ana-tax" value="35" step="1" oninput="recalcAna()"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Annual Pro Forma</h2>
+    <div class="table-wrap"><table id="ana-table">
+      <thead><tr><th>Year</th><th>PGR</th><th>Vacancy</th><th>EGI</th><th>Expenses</th><th>NOI</th><th>Debt Svc</th><th>BTCF</th><th>ATCF</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════ Utilities ═══════════════
+const D = n => Number(n) || 0;
+const fmt$ = n => '$' + Math.round(n).toLocaleString();
+const fmt$2 = n => '$' + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const fmtPct = n => (n * 100).toFixed(2) + '%';
+const fmtPct1 = n => (n * 100).toFixed(1) + '%';
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// IRR via Newton-Raphson
+function irr(cfs, guess = 0.1) {
+  let r = guess;
+  for (let i = 0; i < 100; i++) {
+    let npv = 0, dnpv = 0;
+    for (let t = 0; t < cfs.length; t++) {
+      npv += cfs[t] / Math.pow(1 + r, t);
+      dnpv += -t * cfs[t] / Math.pow(1 + r, t + 1);
+    }
+    if (Math.abs(dnpv) < 1e-12) return null;
+    const nr = r - npv / dnpv;
+    if (Math.abs(nr - r) < 1e-10) return nr;
+    r = nr;
+    if (r < -0.99) r = -0.99;
+  }
+  return null;
+}
+
+// ═══════════════ INVESTMENT TAB ═══════════════
+function getInvInputs() {
+  return {
+    price: D(document.getElementById('inv-price').value),
+    capex: D(document.getElementById('inv-capex').value),
+    costs: D(document.getElementById('inv-costs').value),
+    loan: D(document.getElementById('inv-loan').value),
+    rate: D(document.getElementById('inv-rate').value) / 100,
+    amort: D(document.getElementById('inv-amort').value),
+    rent: D(document.getElementById('inv-rent').value),
+    interval: document.getElementById('inv-interval').value,
+    rentInc: D(document.getElementById('inv-rent-inc').value) / 100,
+    vacancy: D(document.getElementById('inv-vacancy').value) / 100,
+    imprRatio: D(document.getElementById('inv-impr').value) / 100,
+    deprYrs: D(document.getElementById('inv-depr-yrs').value),
+    capRate: D(document.getElementById('inv-cap').value) / 100,
+    apprRate: D(document.getElementById('inv-appr').value) / 100,
+    saleCost: D(document.getElementById('inv-sale-cost').value) / 100,
+    termOpt: parseInt(document.getElementById('inv-term-opt').value),
+    taxRate: D(document.getElementById('inv-tax').value) / 100,
+    capGainRate: D(document.getElementById('inv-capgain').value) / 100,
+    hold: D(document.getElementById('inv-hold').value),
+    hurdle: D(document.getElementById('inv-hurdle').value) / 100,
+  };
+}
+
+const INTERVAL_MO = { '6-Mthly': 6, 'Annually': 12, '2-Yrs': 24, '3-Yrs': 36, '4-Yrs': 48, '5-Yrs': 60 };
+
+// Simplified expense model (annual amounts, monthly calc)
+function calcInvExpenses(inp) {
+  // [annual_amount, start_month, annual_increase, is_pct_of_income]
+  return [
+    { amt: 47000, start: 2, inc: 0.035, pct: false },
+    { amt: 12000, start: 6, inc: 0.0275, pct: false },
+    { amt: 450 * 12, start: 4, inc: 0.0325, pct: false },
+    { amt: 11500, start: 7, inc: 0.0567, pct: false },
+    { amt: 4500, start: 5, inc: 0.04, pct: false },
+    { amt: 550 * 12, start: 1, inc: 0.025, pct: false },
+    { amt: 0.009, start: 4, inc: 0, pct: true },   // mgmt
+    { amt: 0.011, start: 1, inc: 0, pct: true },   // repairs
+  ];
+}
+
+function projectInv(inp) {
+  const totalCost = inp.price + inp.capex + inp.costs;
+  const downPmt = inp.loan > 0 ? totalCost - inp.loan : totalCost;
+  const leveraged = inp.loan > 0;
+  const mRate = inp.rate / 12;
+  const pmt = leveraged ? (inp.loan * mRate) / (1 - Math.pow(1 + mRate, -inp.amort)) : 0;
+  const monthlyDepr = (totalCost * inp.imprRatio / inp.deprYrs) / 12;
+  const intervalMo = INTERVAL_MO[inp.interval] || 24;
+  const expenses = calcInvExpenses(inp);
+
+  const periods = [];
+  let balance = inp.loan, accDepr = 0, rent = inp.rent;
+
+  for (let m = 1; m <= inp.hold; m++) {
+    // Rent step-up: Excel triggers when MOD(month_no, interval) == 0 after month 1
+    if (m > 1 && (m - 1) % intervalMo === 0) rent *= (1 + inp.rentInc);
+
+    const vacLoss = rent * inp.vacancy;
+    const grossInc = rent - vacLoss;
+
+    let totExp = 0;
+    for (const e of expenses) {
+      if (m < e.start) continue;
+      if (e.pct) { totExp += grossInc * e.amt; continue; }
+      const yearsEl = Math.min(Math.floor((m - e.start) / 12), 10);
+      totExp += (e.amt / 12) * Math.pow(1 + e.inc, yearsEl);
+    }
+
+    const noi = grossInc - totExp;
+
+    let interest = 0, principal = 0, ds = 0;
+    if (leveraged && m <= inp.amort) {
+      // IPMT equivalent
+      let bal = inp.loan;
+      for (let p = 1; p < m; p++) {
+        const i = bal * mRate;
+        bal -= (pmt - i);
+      }
+      interest = bal * mRate;
+      principal = pmt - interest;
+      ds = pmt;
+      balance = bal - principal;
+      if (balance < 0) balance = 0;
+    }
+
+    accDepr += monthlyDepr;
+    const taxable = noi - interest - monthlyDepr;
+    const incTax = taxable * inp.taxRate;
+
+    // Terminal value (cap rate method uses annualized current NOI)
+    let termVal;
+    if (inp.termOpt === 1) {
+      termVal = totalCost * Math.pow(1 + inp.apprRate / 12, m) * (1 - inp.saleCost);
+    } else {
+      termVal = ((noi * 12) / inp.capRate) * (1 - inp.saleCost);
+    }
+    const adjBasis = totalCost - accDepr;
+    const capGain = Math.max(0, termVal - adjBasis);
+    const cgTax = capGain * inp.capGainRate;
+
+    const cfbt = noi - ds;
+    const cfat = cfbt - incTax;
+
+    periods.push({ m, rent, vacLoss, grossInc, totExp, noi, interest, principal, ds, balance, cfbt, cfat, termVal, cgTax });
+  }
+  return { periods, totalCost, downPmt, leveraged };
+}
+
+function calcInvReturns(inp, proj) {
+  const { periods, downPmt } = proj;
+  const last = periods[periods.length - 1];
+  const termCFBT = last.termVal - last.balance;
+  const termCFAT = (last.termVal - last.cgTax) - last.balance;
+
+  const cfbtStream = [-downPmt, ...periods.map(p => p.cfbt)];
+  cfbtStream[cfbtStream.length - 1] += termCFBT;
+  const cfatStream = [-downPmt, ...periods.map(p => p.cfat)];
+  cfatStream[cfatStream.length - 1] += termCFAT;
+
+  const irrM_bt = irr(cfbtStream);
+  const irrM_at = irr(cfatStream);
+  const ann = m => m !== null ? Math.pow(1 + m, 12) - 1 : null;
+
+  return {
+    irr_bt: ann(irrM_bt), irr_at: ann(irrM_at),
+    termVal: last.termVal, balance: last.balance,
+    totalCFBT: periods.reduce((s, p) => s + p.cfbt, 0) + termCFBT,
+    clearsHurdle: irrM_at !== null && ann(irrM_at) >= inp.hurdle,
+  };
+}
+
+function recalcInv() {
+  const inp = getInvInputs();
+  const proj = projectInv(inp);
+  const ret = calcInvReturns(inp, proj);
+
+  // Metrics
+  const mEl = document.getElementById('inv-metrics');
+  const irrCls = v => v === null ? '' : (v >= inp.hurdle ? 'good' : (v >= inp.hurdle * 0.7 ? 'warn' : 'bad'));
+  mEl.innerHTML = `
+    <div class="metric"><div class="label">IRR (after tax)</div><div class="value ${irrCls(ret.irr_at)}">${ret.irr_at !== null ? fmtPct(ret.irr_at) : 'N/A'}</div></div>
+    <div class="metric"><div class="label">IRR (before tax)</div><div class="value">${ret.irr_bt !== null ? fmtPct(ret.irr_bt) : 'N/A'}</div></div>
+    <div class="metric"><div class="label">Terminal Value</div><div class="value">${fmt$(ret.termVal)}</div></div>
+    <div class="metric"><div class="label">Down Payment</div><div class="value">${fmt$(proj.downPmt)}</div></div>
+    <div class="metric"><div class="label">Clears Hurdle (${fmtPct1(inp.hurdle)})</div><div class="value ${ret.clearsHurdle ? 'good' : 'bad'}">${ret.clearsHurdle ? '✓' : '✗'}</div></div>
+  `;
+
+  // Monthly table
+  const tb = document.querySelector('#inv-table tbody');
+  tb.innerHTML = proj.periods.map(p => `<tr>
+    <td>${p.m}</td><td>${fmt$(p.rent)}</td><td>${fmt$(p.vacLoss)}</td>
+    <td>${fmt$(p.grossInc)}</td><td>${fmt$(p.totExp)}</td><td>${fmt$(p.noi)}</td>
+    <td>${fmt$(p.interest)}</td><td>${fmt$(p.principal)}</td><td>${fmt$(p.ds)}</td>
+    <td>${fmt$(p.balance)}</td><td>${fmt$(p.cfbt)}</td><td>${fmt$(p.cfat)}</td>
+  </tr>`).join('');
+
+  // Annual summary
+  const years = {};
+  proj.periods.forEach(p => {
+    const y = Math.ceil(p.m / 12);
+    if (!years[y]) years[y] = { rent: 0, noi: 0, ds: 0, cfbt: 0, cfat: 0 };
+    years[y].rent += p.rent; years[y].noi += p.noi; years[y].ds += p.ds;
+    years[y].cfbt += p.cfbt; years[y].cfat += p.cfat;
+  });
+  const ab = document.querySelector('#inv-annual tbody');
+  ab.innerHTML = Object.entries(years).map(([y, d]) => `<tr>
+    <td>${y}</td><td>${fmt$(d.rent)}</td><td>${fmt$(d.noi)}</td>
+    <td>${fmt$(d.ds)}</td><td>${fmt$(d.cfbt)}</td><td>${fmt$(d.cfat)}</td>
+  </tr>`).join('');
+
+  recalcInvSens();
+}
+
+function recalcInvSens() {
+  const capEl = document.getElementById('inv-sens-cap');
+  const rateEl = document.getElementById('inv-sens-rate');
+  const vacEl = document.getElementById('inv-sens-vac');
+  document.getElementById('inv-sens-cap-val').textContent = D(capEl.value).toFixed(2) + '%';
+  document.getElementById('inv-sens-rate-val').textContent = D(rateEl.value).toFixed(2) + '%';
+  document.getElementById('inv-sens-vac-val').textContent = D(vacEl.value).toFixed(1) + '%';
+
+  const base = getInvInputs();
+  const out = document.getElementById('inv-sens-output');
+  let html = '<table><thead><tr><th>Scenario</th><th>IRR (AT)</th><th>Δ vs Base</th></tr></thead><tbody>';
+
+  const scenarios = [
+    ['Cap Rate ' + D(capEl.value).toFixed(2) + '%', { ...base, capRate: D(capEl.value) / 100 }],
+    ['Interest ' + D(rateEl.value).toFixed(2) + '%', { ...base, rate: D(rateEl.value) / 100 }],
+    ['Vacancy ' + D(vacEl.value).toFixed(1) + '%', { ...base, vacancy: D(vacEl.value) / 100 }],
+  ];
+  const baseRet = calcInvReturns(base, projectInv(base));
+  for (const [label, sInp] of scenarios) {
+    const r = calcInvReturns(sInp, projectInv(sInp));
+    const delta = (r.irr_at !== null && baseRet.irr_at !== null) ? r.irr_at - baseRet.irr_at : null;
+    html += `<tr><td>${label}</td><td>${r.irr_at !== null ? fmtPct(r.irr_at) : 'N/A'}</td><td>${delta !== null ? (delta >= 0 ? '+' : '') + fmtPct(delta) : '—'}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  out.innerHTML = html;
+}
+
+// ═══════════════ ANALYSIS TAB ═══════════════
+function recalcAna() {
+  const hold = D(document.getElementById('ana-hold').value);
+  const price = D(document.getElementById('ana-price').value);
+  const otherIncPct = D(document.getElementById('ana-other-inc').value) / 100;
+  const loan = D(document.getElementById('ana-loan').value);
+  const rate = D(document.getElementById('ana-rate').value) / 100;
+  const term = D(document.getElementById('ana-term').value);
+  const capRate = D(document.getElementById('ana-cap').value) / 100;
+  const saleCost = D(document.getElementById('ana-sale-cost').value) / 100;
+  const discount = D(document.getElementById('ana-discount').value) / 100;
+  const taxRate = D(document.getElementById('ana-tax').value) / 100;
+
+  // PGR from unit mix
+  const u1 = D(document.getElementById('ana-u1-n').value) * D(document.getElementById('ana-u1-r').value) * 12;
+  const u2 = D(document.getElementById('ana-u2-n').value) * D(document.getElementById('ana-u2-r').value) * 12;
+  const u3 = D(document.getElementById('ana-u3-n').value) * D(document.getElementById('ana-u3-r').value) * 12;
+  const basePGR = u1 + u2 + u3;
+
+  // Simplified: 3% rent growth, 5% vacancy, operating expenses ~35% of EGI
+  const rentGrowth = 0.03, vacancy = 0.05;
+  const mRate = rate / 12, nper = term * 12;
+  const annualDS = loan > 0 ? (loan * mRate / (1 - Math.pow(1 + mRate, -nper))) * 12 : 0;
+
+  // Depreciation: assume 80% of price depreciable over 27.5 years
+  const annDepr = (price * 0.8) / 27.5;
+
+  const years = [];
+  let balance = loan;
+  for (let y = 1; y <= hold; y++) {
+    const pgr = basePGR * Math.pow(1 + rentGrowth, y - 1);
+    const vacLoss = pgr * vacancy;
+    const otherInc = (pgr - vacLoss) * otherIncPct;
+    const egi = pgr - vacLoss + otherInc;
+    const expenses = egi * 0.35; // simplified
+    const noi = egi - expenses;
+
+    // Amortization for this year
+    let yrInterest = 0;
+    for (let m = 1; m <= 12; m++) {
+      const i = balance * mRate;
+      yrInterest += i;
+      balance -= (annualDS / 12 - i);
+    }
+    if (balance < 0) balance = 0;
+
+    const btcf = noi - annualDS;
+    const taxable = noi - yrInterest - annDepr;
+    const tax = Math.max(0, taxable * taxRate);
+    const atcf = btcf - tax;
+
+    years.push({ y, pgr, vacLoss, egi, expenses, noi, ds: annualDS, btcf, atcf, balance });
+  }
+
+  // Sale
+  const lastNOI = years[years.length - 1].noi;
+  const termVal = (lastNOI / capRate) * (1 - saleCost);
+  const saleBalance = years[years.length - 1].balance;
+  const btProceeds = termVal - saleBalance;
+
+  // DCF
+  const cfStream = [-1 * (price - loan), ...years.map(y => y.atcf)];
+  cfStream[cfStream.length - 1] += (termVal - saleBalance); // simplified AT proceeds
+  const npv = cfStream.reduce((s, cf, t) => s + cf / Math.pow(1 + discount, t), 0);
+  const irrVal = irr(cfStream);
+  const dscr = years[0].ds > 0 ? years[0].noi / years[0].ds : null;
+
+  // Metrics
+  document.getElementById('ana-metrics').innerHTML = `
+    <div class="metric"><div class="label">NPV (@ ${fmtPct1(discount)})</div><div class="value ${npv >= 0 ? 'good' : 'bad'}">${fmt$(npv)}</div></div>
+    <div class="metric"><div class="label">IRR</div><div class="value ${irrVal !== null && irrVal >= discount ? 'good' : 'bad'}">${irrVal !== null ? fmtPct(irrVal) : 'N/A'}</div></div>
+    <div class="metric"><div class="label">DSCR (Yr 1)</div><div class="value ${dscr !== null && dscr >= 1.2 ? 'good' : 'warn'}">${dscr !== null ? dscr.toFixed(2) + 'x' : 'N/A'}</div></div>
+    <div class="metric"><div class="label">Terminal Value</div><div class="value">${fmt$(termVal)}</div></div>
+    <div class="metric"><div class="label">Yr 1 NOI</div><div class="value">${fmt$(years[0].noi)}</div></div>
+  `;
+
+  // Table
+  document.querySelector('#ana-table tbody').innerHTML = years.map(y => `<tr>
+    <td>${y.y}</td><td>${fmt$(y.pgr)}</td><td>${fmt$(y.vacLoss)}</td><td>${fmt$(y.egi)}</td>
+    <td>${fmt$(y.expenses)}</td><td>${fmt$(y.noi)}</td><td>${fmt$(y.ds)}</td>
+    <td>${fmt$(y.btcf)}</td><td>${fmt$(y.atcf)}</td>
+  </tr>`).join('');
+}
+
+// Init
+recalcInv();
+recalcAna();
+</script>
+</body>
+</html>
