@@ -18,7 +18,7 @@ const stat=(label,value,foot)=>`<article class="stat"><div class="eyebrow">${lab
 const panel=(t,sub,body,link='')=>`<section class="panel"><div class="panel-head"><div><h2>${t}</h2>${sub?`<p>${sub}</p>`:''}</div>${link}</div>${body}</section>`;
 let overviewBrief=null, overviewBriefDone=false;
 async function ensureOverviewBrief(){if(overviewBriefDone)return;overviewBriefDone=true;try{const r=await fetch('./research-brief.json',{cache:'default'});if(r.ok)overviewBrief=await r.json();}catch(_){overviewBrief=null;}}
-const OV_BRAND=`<header class="ov-brand"><img class="ov-seal" src="./emporion-institutional-seal.svg" alt="Emporion institutional seal"><div class="ov-brand-text"><h1>EMPORION</h1><div class="ov-tagline">MARKETS &middot; INTELLIGENCE &middot; DISCIPLINE</div></div></header><section class="ov-hed"><p class="ov-lede">Six desks. One decision.</p><p class="ov-lede-sub">Live research, evaluated around the clock.</p></section>`;
+const OV_BRAND=`<header class="ov-brand"><img class="ov-seal" src="./emporion-institutional-seal.svg" alt="Emporion institutional seal"><div class="ov-brand-text"><h1>EMPORION</h1><div class="ov-tagline">MARKETS &middot; INTELLIGENCE &middot; DISCIPLINE</div></div></header><section class="ov-hed"><p class="ov-lede">Seven desks. One decision.</p><p class="ov-lede-sub">Live research, evaluated around the clock.</p></section>`;
 function overview(){
 if(typeof HedgeDeskOverview==='undefined'||!HedgeDeskOverview.render){
 return OV_BRAND+'<div class="ov"><section class="ov-hero"><div class="ov-eyebrow">Overview unavailable</div><p class="ov-muted">The overview module failed to load.</p><div class="actions">'+btn('reload','Reload',true)+'</div></section></div>';
