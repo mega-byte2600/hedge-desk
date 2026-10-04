@@ -66,26 +66,35 @@ class SchwabReadOnlyBroker:
         result = self._get("/trader/v1/accounts/accountNumbers", token)
         if result["status"] != "ok":
             return result
-        numbers = [a.get("accountNumber") for a in result["data"]]
-        return {"status": "ok", "read_only": True, "account_numbers": numbers}
+        accounts = [
+            {"account_number": a.get("accountNumber"), "account_hash": a.get("hashValue")}
+            for a in result["data"]
+            if a.get("accountNumber") and a.get("hashValue")
+        ]
+        return {
+            "status": "ok",
+            "read_only": True,
+            "accounts": accounts,
+            "account_numbers": [a["account_number"] for a in accounts],
+        }
 
-    def positions(self, token: str, account_number: str = "") -> dict:
+    def positions(self, token: str, account_hash: str = "") -> dict:
         """Read positions for an account (read-only)."""
-        if not account_number:
-            return {"status": "error", "error": "missing_account_number", "read_only": True}
+        if not account_hash:
+            return {"status": "error", "error": "missing_account_hash", "read_only": True}
         result = self._get(
-            f"/trader/v1/accounts/{account_number}?fields=positions", token
+            f"/trader/v1/accounts/{account_hash}?fields=positions", token
         )
         if result["status"] != "ok":
             return result
         return {"status": "ok", "read_only": True, "positions": result["data"]}
 
-    def balances(self, token: str, account_number: str = "") -> dict:
+    def balances(self, token: str, account_hash: str = "") -> dict:
         """Read balances for an account (read-only)."""
-        if not account_number:
-            return {"status": "error", "error": "missing_account_number", "read_only": True}
+        if not account_hash:
+            return {"status": "error", "error": "missing_account_hash", "read_only": True}
         result = self._get(
-            f"/trader/v1/accounts/{account_number}?fields=positions", token
+            f"/trader/v1/accounts/{account_hash}?fields=positions", token
         )
         if result["status"] != "ok":
             return result
