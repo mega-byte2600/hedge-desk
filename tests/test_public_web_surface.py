@@ -113,6 +113,44 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertNotIn("background:#fafbfc", professional)
         self.assertNotIn("background:#f7f9fa", professional)
 
+    def test_no_gold_on_white_or_grey_on_navy_on_key_routes(self):
+        assets = [
+            WEB / "professional.js",
+            WEB / "acknowledgements.js",
+            WEB / "real-estate.css",
+            WEB / "real-estate.html",
+        ]
+        combined = "\n".join(path.read_text(encoding="utf-8") for path in assets).lower()
+
+        forbidden_light_surfaces = [
+            "background:#fff",
+            "background:white",
+            "background:#fafbfc",
+            "background:#f6f8fa",
+            "background:#f3f5f6",
+        ]
+        forbidden_navy_surfaces = [
+            "#101820",
+            "#0b1220",
+            "#0f1828",
+            "#1a2a4a",
+            "#24406e",
+            "#2a3f6a",
+        ]
+        forbidden_legacy_blue = [
+            "#b8d8ff",
+            "#6ea8ff",
+            "#3498db",
+            "#5aaef5",
+            "#2f5b9e",
+        ]
+
+        for token in forbidden_light_surfaces + forbidden_navy_surfaces + forbidden_legacy_blue:
+            self.assertNotIn(token, combined)
+
+        for required in ["#0a0a0c", "#121215", "#0e0e11", "#f4f1e8", "#dcb96f"]:
+            self.assertIn(required, combined)
+
     def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
         public_assets = [
             WEB / "index.html",
