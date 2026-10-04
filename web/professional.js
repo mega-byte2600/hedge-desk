@@ -53,6 +53,32 @@ function statusStrip() {
     </section>`;
 }
 
+function overviewContractCopy() {
+  if (currentRoute() !== 'overview') return '';
+  return `
+    <section class="ws-operational ws-overview-contract" aria-label="Research decision discipline and portfolio survival">
+      <div class="ws-overview-grid">
+        <article><div class="ws-label">PROBLEM</div><h2>Too much information, too little decision discipline.</h2><p>Emporion organizes market ideas so a user can move from curiosity to documented research without turning the site into a signal service.</p></article>
+        <article><div class="ws-label">PROMISE</div><h2>Bring your watchlist. Research it your way.</h2><p>Start from the symbols and questions you already care about, then use a repeatable process to examine evidence, scenarios, thesis quality, and portfolio survival.</p></article>
+        <article><div class="ws-label">OWNERSHIP</div><h2>Your choice. Your data. Your money.</h2><p>The default product is research oriented. Users remain responsible for their own decisions, accounts, data, and implementation choices.</p></article>
+      </div>
+      <div class="ws-process"><div class="ws-label">WHAT EMPORION DOES</div><div class="ws-process-line"><span>Candidate intake</span><i></i><span>Research desks</span><i></i><span>Scenario analysis</span><i></i><span>Yellow Sheets</span><i></i><span>Deterministic risk gate</span><i></i><span>Human review</span></div></div>
+      <div class="ws-ror" data-risk-of-ruin="true" aria-label="Risk of Ruin and portfolio survival">
+        <div class="ws-label">POINT OF DIFFERENCE · RISK OF RUIN / PORTFOLIO SURVIVAL</div>
+        <div class="ws-ror-grid">
+          <article><h2>Survival before conviction. Alpha is pursued. Survival comes first.</h2><p>Emporion separates the search for opportunity from permission to take risk. The research thesis cannot override the risk gate; conviction only advances after the independent portfolio-survival state is known. That separation shapes the final decision.</p></article>
+          <article><h3>Research asks: is there an edge?</h3><p>Risk asks a different question: can the portfolio survive being wrong? Position economics, maximum loss, portfolio state, and validated risk inputs remain independent of the Yellow Sheet narrative and agent conviction.</p></article>
+          <article><h3>Risk constrains. Human review decides.</h3><p>A blocked risk or compliance state stops progression regardless of thesis strength. Human review comes after the risk state is known and cannot convert a blocked gate into approval. The reference RoR model remains unvalidated in this MVP; the public console does not calculate or validate RoR.</p></article>
+        </div>
+      </div>
+      <div class="ws-continuum" aria-label="Operating continuum">
+        <article><strong>Research only</strong><span>Inspect candidates, evidence, scenarios, notes, and risk state in a paper research workspace.</span></article>
+        <article><strong>Decision ready</strong><span>Turn a candidate into a structured packet with thesis, evidence, invalidation criteria, an independent portfolio-survival checkpoint, and human review.</span></article>
+        <article><strong>User-controlled extension</strong><span>Open-source users may connect their own data and implementation layers outside the default site.</span></article>
+      </div>
+    </section>`;
+}
+
 function desksBlock() {
   if (currentRoute() !== 'desks') return '';
   return `
@@ -196,7 +222,7 @@ function renderContext() {
   const head = main?.querySelector('.page-head');
   if (!main || !head) return;
   const holder = document.createElement('div');
-  holder.innerHTML = statusStrip() + desksBlock() + aboutCapitalBlock();
+  holder.innerHTML = statusStrip() + overviewContractCopy() + desksBlock() + aboutCapitalBlock();
   let cursor = head;
   for (const node of [...holder.children]) {
     cursor.insertAdjacentElement('afterend', node);
