@@ -145,6 +145,17 @@ function acctRenderProviders() {
   const box = document.getElementById('acct-social');
   if (!box) return;
   const s = ACCT.social;
+  const magicEmail = !!(s && s.enabled);
+  const sendBtn = document.getElementById('acct-send');
+  const codeInput = document.getElementById('acct-code');
+  const verifyBtn = document.getElementById('acct-verify');
+  if (sendBtn) sendBtn.textContent = magicEmail ? 'Send sign-in email' : 'Send code';
+  if (codeInput && codeInput.closest('.form-field')) {
+    codeInput.closest('.form-field').style.display = magicEmail ? 'none' : '';
+  }
+  if (verifyBtn && verifyBtn.closest('.acct-actions')) {
+    verifyBtn.closest('.acct-actions').style.display = magicEmail ? 'none' : '';
+  }
   if (!s || !s.enabled || !s.providers || !s.providers.length) {
     box.innerHTML = '';
     box.style.display = 'none';
@@ -337,7 +348,21 @@ async function acctGpInvite(btn) {
 }
 
 async function acctSendCode(email) {
+  const s = ACCT.social;
+  if (s && s.enabled) {
+    const client = await loadSupabase(s.supabase_url, s.supabase_anon_key);
+    const { error } = await client.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.origin + window.location.pathname,
+        shouldCreateUser: true,
+      },
+    });
+    if (error) throw error;
+    return { mode: 'magic_link' };
+  }
   await acctFetch('/api/auth/request', { method: 'POST', body: JSON.stringify({ email }) });
+  return { mode: 'otp' };
 }
 
 async function acctVerify(email, code) {
@@ -372,9 +397,13 @@ function acctBind() {
     if (!email || email.indexOf('@') < 1) { setError('Enter a valid email.'); return; }
     setError(''); setStatus('Sending code…');
     try {
-      await acctSendCode(email);
-      setStatus('Code sent to ' + email + '. Check your inbox (and the console log in dev).');
-      if (codeInput) codeInput.focus();
+      const result = await acctSendCode(email);
+      if (result && result.mode === 'magic_link') {
+        setStatus('Sign-in email sent to ' + email + '. Open the secure link in that email to return to Emporion.');
+      } else {
+        setStatus('Code sent to ' + email + '. Check your inbox.');
+        if (codeInput) codeInput.focus();
+      }
     } catch (e) {
       setStatus(''); setError(e.message || 'Could not send code.');
     }
