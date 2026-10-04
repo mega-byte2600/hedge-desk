@@ -208,7 +208,7 @@ def history_trend_chart() -> str:
                       yaxis=dict(title="candidates", gridcolor="#232329"),
                       yaxis2=dict(title="avg RoC", overlaying="y", side="right", tickformat=".1%", showgrid=False),
                       yaxis3=dict(title="VIX", overlaying="y", side="right", position=1.0, showgrid=False),
-                      font=dict(color="#e8eef7"), paper_bgcolor="#0f1828", plot_bgcolor="#0f1828")
+                      font=dict(color="#f4f1e8"), paper_bgcolor="#121215", plot_bgcolor="#121215")
     return fig.to_html(full_html=False, include_plotlyjs=False, div_id="ch_trend")
 
 
@@ -447,7 +447,7 @@ def treasury_curve_chart(r: dict) -> str:
                       title=f"U.S. Treasury par yield curve — {latest_date}",
                       yaxis=dict(title="yield %", gridcolor="#232329"),
                       xaxis=dict(title="tenor"),
-                      font=dict(color="#e8eef7"), paper_bgcolor="#0f1828", plot_bgcolor="#0f1828")
+                      font=dict(color="#f4f1e8"), paper_bgcolor="#121215", plot_bgcolor="#121215")
     return chart(fig, "ch_treasury_curve",
                  "FRED DGS constant-maturity series (official U.S. Treasury par yields)")
 
@@ -518,7 +518,7 @@ def premium_yield_chart(csp: dict) -> str:
                       title="Options Premium — return on capital vs premium yield (real Cboe)",
                       yaxis_tickformat=".1%", yaxis_title="per 30-45d", xaxis_title="symbol",
                       xaxis_tickangle=-30, legend=dict(orientation="h", y=1.12),
-                      font=dict(color="#e8eef7"), paper_bgcolor="#0f1828", plot_bgcolor="#0f1828")
+                      font=dict(color="#f4f1e8"), paper_bgcolor="#121215", plot_bgcolor="#121215")
     return (fig.to_html(full_html=False, include_plotlyjs=False, div_id="ch_premium")
             + src_note("Cboe delayed option chains, nightly premium scan"))
 
@@ -866,7 +866,7 @@ header{{padding:16px 28px;background:#0a0a0c;border-bottom:1px solid #232329;dis
 header h1{{margin:0;font-family:'Fraunces',Georgia,serif;font-size:20px;letter-spacing:.02em;font-weight:600}} header .tag{{color:#c6a15b;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase}}
 .gbtn{{margin-left:auto;color:#f4f1e8;text-decoration:none;background:#121215;border:1px solid #8a6d3b;padding:8px 14px;border-radius:6px;font-size:13px;white-space:nowrap}}
 .gbtn:hover{{background:#17130d}}
-.ts{{padding:10px 28px;color:#93a5c4;font-size:12px}}
+.ts{{padding:10px 28px;color:#a39e93;font-size:12px}}
 .ts{{padding:10px 28px;color:{MUTED};font-size:12px}}
 .grid{{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 28px 28px}}
 .card{{background:{BG};border:1px solid #232329;border-radius:10px;padding:10px;overflow:hidden}}
