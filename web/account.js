@@ -211,7 +211,7 @@ async function acctCompleteSocialIfPresent() {
   }
 }
 
-/* ---- broker linking (read-only; members/LPs) ---------------------------- */
+/* ---- Schwab Market Data authorization (members/LPs) -------------------- */
 
 async function acctBrokerRefresh() {
   const box = document.getElementById('acct-broker');
@@ -225,7 +225,7 @@ async function acctBrokerRefresh() {
 
   if (!c || !c.authenticated) {
     ACCT.broker = { configured: false, linked: false };
-    if (label) label.textContent = 'Sign in above to connect your Schwab account (read-only).';
+    if (label) label.textContent = 'Sign in above to authorize Schwab Market Data.';
     if (connect) connect.style.display = 'none';
     if (disconnect) disconnect.style.display = 'none';
     return;
@@ -233,7 +233,7 @@ async function acctBrokerRefresh() {
 
   if (!(ACCT.tier && ACCT.tier.real_data)) {
     ACCT.broker = { configured: false, linked: false };
-    if (label) label.textContent = 'Schwab connection requires live-data member access.';
+    if (label) label.textContent = 'Schwab Market Data authorization requires live-data member access.';
     if (connect) connect.style.display = 'none';
     if (disconnect) disconnect.style.display = 'none';
     return;
@@ -245,19 +245,19 @@ async function acctBrokerRefresh() {
 
   if (label) {
     label.textContent = !st.configured
-      ? 'Schwab is not configured on this deployment.'
+      ? 'Schwab Market Data is not configured on this deployment.'
       : (st.linked
-          ? (st.account_selected
-              ? 'Schwab connected. Read-only account access and production market data are active.'
-              : 'Schwab connected. Choose an account to activate account data.')
-          : 'Schwab is ready to connect.');
+          ? 'Schwab Market Data authorized. Brokerage account data is never exposed to Emporion.'
+          : 'Schwab Market Data is ready to authorize.');
   }
-    }
   if (connect) {
-    connect.textContent = 'Connect Schwab (read-only)';
+    connect.textContent = 'Authorize Schwab Market Data';
     connect.style.display = st.configured && !st.linked ? 'inline-flex' : 'none';
   }
-  if (disconnect) disconnect.style.display = st.linked ? 'inline-flex' : 'none';
+  if (disconnect) {
+    disconnect.textContent = 'Disconnect Schwab Market Data';
+    disconnect.style.display = st.linked ? 'inline-flex' : 'none';
+  }
 }
 
 async function acctBrokerConnect(btn) {
@@ -269,17 +269,17 @@ async function acctBrokerConnect(btn) {
   } catch (e) {
     if (btn) btn.disabled = false;
     const err = document.getElementById('acct-error');
-    if (err) err.textContent = 'Could not start broker link: ' + (e.message || e);
+    if (err) err.textContent = 'Could not start Schwab Market Data authorization: ' + (e.message || e);
   }
 }
 
 async function acctBrokerDisconnect() {
   try { await acctFetch('/api/broker/unlink', { method: 'POST', body: '{}' }); } catch (e) { /* ignore */ }
   acctBrokerRefresh();
-  acctToast('Broker disconnected');
+  acctToast('Schwab Market Data disconnected');
 }
 
-/* The broker OAuth redirect returns ?code=...&state=... — finish the link. */
+/* OAuth returns ?code=...&state=...; the server stores only token state. */
 async function acctBrokerCompleteIfPresent() {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
@@ -294,12 +294,12 @@ async function acctBrokerCompleteIfPresent() {
     url.searchParams.delete('code');
     url.searchParams.delete('state');
     window.history.replaceState({}, '', url.pathname + url.search + url.hash);
-    acctToast('Broker connected (read-only)');
+    acctToast('Schwab Market Data authorized');
     acctBrokerRefresh();
     return true;
   } catch (e) {
     const err = document.getElementById('acct-error');
-    if (err) err.textContent = 'Broker link failed: ' + (e.message || e);
+    if (err) err.textContent = 'Schwab Market Data authorization failed: ' + (e.message || e);
     return false;
   }
 }
