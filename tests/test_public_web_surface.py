@@ -199,8 +199,8 @@ class PublicWebSurfaceTests(unittest.TestCase):
             self.assertNotIn(route, combined)
 
         self.assertNotIn("acct-broker-account", combined)
-        self.assertIn("Market data only", index)
-        self.assertIn("Brokerage balances, positions, account identifiers, and trading are never exposed.", index)
+        self.assertNotIn("Connect Schwab", combined)
+        self.assertNotIn("Schwab account", combined)
 
     def test_watchlist_is_the_candidates_input_contract(self):
         agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
