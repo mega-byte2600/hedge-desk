@@ -2,6 +2,7 @@
   const WORKSPACE_ROUTES = new Set([
     'overview',
     'candidates',
+    'controls',
     'desks',
     'journal',
     'resources',
