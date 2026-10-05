@@ -5,6 +5,7 @@ from urllib.parse import parse_qs, urlparse
 from unittest.mock import patch
 
 from decimal import Decimal
+import hedge_desk.data.open_market_feeds as open_market_feeds
 from hedge_desk.data.open_market_feeds import (
     bls_latest_series,
     cftc_cot,
@@ -223,6 +224,96 @@ class OpenMarketFeedTests(unittest.TestCase):
         self.assertEqual(result.row_count, 1)
         self.assertIn("/publicAPI/v1/timeseries/data/CUUR0000SA0", seen[0])
         self.assertNotIn("/publicAPI/v2/", seen[0])
+
+    def test_bls_default_transport_cache_reuses_keyless_result(self):
+        payload = {
+            "status": "REQUEST_SUCCEEDED",
+            "Results": [
+                {"series": [{"seriesID": "CUUR0000SA0", "data": [{"year": "2026", "period": "M08", "value": "325.0"}]}]}
+            ],
+        }
+        with open_market_feeds._BLS_CACHE_LOCK:
+            open_market_feeds._BLS_CACHE.clear()
+        try:
+            with patch.dict(os.environ, {}, clear=True), patch.object(
+                open_market_feeds, "_fetch_json", return_value=payload
+            ) as fetch:
+                first = bls_latest_series("CUUR0000SA0")
+                second = bls_latest_series("CUUR0000SA0")
+            self.assertEqual(first, second)
+            fetch.assert_called_once()
+        finally:
+            with open_market_feeds._BLS_CACHE_LOCK:
+                open_market_feeds._BLS_CACHE.clear()
+
+    def test_bls_default_transport_caches_keyless_failures(self):
+        with open_market_feeds._BLS_CACHE_LOCK:
+            open_market_feeds._BLS_CACHE.clear()
+        try:
+            with patch.dict(os.environ, {}, clear=True), patch.object(
+                open_market_feeds, "_fetch_json", side_effect=ValueError("upstream down")
+            ) as fetch:
+                with self.assertRaisesRegex(ValueError, "v1=upstream down"):
+                    bls_latest_series("LNS14000000")
+                with self.assertRaisesRegex(ValueError, "v1=upstream down"):
+                    bls_latest_series("LNS14000000")
+            fetch.assert_called_once()
+        finally:
+            with open_market_feeds._BLS_CACHE_LOCK:
+                open_market_feeds._BLS_CACHE.clear()
+
+    def test_bls_caches_unsuccessful_v1_response(self):
+        with open_market_feeds._BLS_CACHE_LOCK:
+            open_market_feeds._BLS_CACHE.clear()
+        try:
+            with patch.dict(os.environ, {}, clear=True), patch.object(
+                open_market_feeds, "_fetch_json", return_value={"status": "REQUEST_FAILED"}
+            ) as fetch:
+                with self.assertRaisesRegex(ValueError, "request did not succeed"):
+                    bls_latest_series("CES0000000001")
+                with self.assertRaisesRegex(ValueError, "request did not succeed"):
+                    bls_latest_series("CES0000000001")
+            fetch.assert_called_once()
+        finally:
+            with open_market_feeds._BLS_CACHE_LOCK:
+                open_market_feeds._BLS_CACHE.clear()
+
+    def test_bls_falls_back_when_registered_v2_returns_failure_payload(self):
+        seen = []
+        payload = {
+            "status": "REQUEST_SUCCEEDED",
+            "Results": [
+                {"series": [{"seriesID": "CUUR0000SA0", "data": [{"year": "2026", "period": "M08", "value": "325.0"}]}]}
+            ],
+        }
+
+        def transport(url):
+            seen.append(url)
+            if "/v2/" in url:
+                return 200, b'{"status":"REQUEST_FAILED"}'
+            return 200, json.dumps(payload).encode("utf-8")
+
+        with patch.dict(os.environ, {"BLS_API_KEY": "bls-test-registration-key"}, clear=True):
+            result = bls_latest_series("CUUR0000SA0", transport=transport)
+        self.assertEqual(result.rows[0]["value"], "325.0")
+        self.assertIn("/publicAPI/v1/", seen[-1])
+
+    def test_bls_rejects_malformed_result_shapes(self):
+        payloads = (
+            {"status": "REQUEST_SUCCEEDED", "Results": "invalid"},
+            {"status": "REQUEST_SUCCEEDED", "Results": {"series": None}},
+            {"status": "REQUEST_SUCCEEDED", "Results": {"series": [{"data": []}]}},
+            {"status": "REQUEST_SUCCEEDED", "Results": {"series": [{"data": [None]}]}},
+        )
+        for payload, message in zip(
+            payloads,
+            ("no series rows", "no series rows", "no observations", "no usable observations"),
+        ):
+            with self.subTest(message=message):
+                with self.assertRaisesRegex(ValueError, message):
+                    bls_latest_series(
+                        "CUUR0000SA0", transport=_transport(payload)
+                    )
 
     def test_ecb_fx_uses_official_eurofxref_feed(self):
         seen = []
