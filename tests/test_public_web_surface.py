@@ -202,6 +202,17 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn("Market data only", index)
         self.assertIn("Brokerage balances, positions, account identifiers, and trading are never exposed.", index)
 
+    def test_watchlist_is_the_candidates_input_contract(self):
+        agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("Their watchlist becomes the Candidates input set.", agents)
+        self.assertIn("Agent desks research and enrich those Candidates", agents)
+        for forbidden in (
+            "brokerage holdings become candidates",
+            "positions become candidates",
+            "balances become candidates",
+        ):
+            self.assertNotIn(forbidden, agents.lower())
+
     def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
         public_assets = [
             WEB / "index.html",
