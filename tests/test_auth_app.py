@@ -433,7 +433,7 @@ class BrokerEndpointTests(unittest.TestCase):
         cookie = _full_signin(self.dispatch, self.sender, "guest@example.com")
         status, body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
         self.assertEqual(status, "403 Forbidden")
-        self.assertEqual(body["error"], "broker_requires_member")
+        self.assertEqual(body["error"], "operator_only")
 
     def test_only_operator_gets_authorize_url_with_state_and_no_scope_guess(self):
         member_cookie = self._member_cookie()
