@@ -219,7 +219,6 @@ def build_live_console_payload():
     to a 503 with an explicit reason instead of serving synthetic data.
     """
     from hedge_desk.live_desk_data import build_live_console_report
-    from hedge_desk.schwab_core_data import fetch_market_snapshot as schwab_market_snapshot
     from hedge_desk.candidates import build_real_eod_candidate_feed
     from hedge_desk.data.providers import provider_console_rows
     from hedge_desk.projects import DESK_ARCHITECTURE
@@ -228,7 +227,7 @@ def build_live_console_payload():
     import os
 
     code_commit = os.environ.get("HEDGE_DESK_CODE_COMMIT", "LOCAL_UNSPECIFIED")
-    report = build_live_console_report(code_commit, fetcher=schwab_market_snapshot)
+    report = build_live_console_report(code_commit)
     candidate_feed = build_real_eod_candidate_feed()
     scenarios = report["scenarios"]
     return {
