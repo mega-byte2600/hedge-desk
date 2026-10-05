@@ -88,7 +88,7 @@ const host=$('#market-context-host');if(!host)return;
 try{
 const response=await fetch('./api/market-context',{cache:'no-store'});
 if(!response.ok)throw Error('Public data status unavailable ('+response.status+').');
-const snapshot=await response.json();const sources=Object.values(snapshot.sources||{});
+const snapshot=await response.json();if(snapshot.status==='LOADING'){host.innerHTML='<p class="muted" role="status">Refreshing public providers in the background. This does not block the research workspace.</p>';setTimeout(hydrateMarketContext,5000);return;}const sources=Object.values(snapshot.sources||{});
 const rows=sources.map(s=>{
 const detail=JSON.stringify(s.observations||[],null,2);
 return '<tr><td><strong>'+e(s.provider_id||'')+'</strong><small>'+e(s.dataset||'')+'</small></td><td>'+tag(s.status||'UNKNOWN')+'</td><td>'+e(s.observation_count||0)+'</td><td><details><summary>Observations</summary><pre>'+e(detail.length>3000?detail.slice(0,3000)+'…':detail)+'</pre></details></td></tr>';
