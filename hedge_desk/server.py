@@ -30,7 +30,6 @@ WEB = DEPLOY_ROOT / "web" if (DEPLOY_ROOT / "web").is_dir() else PACKAGE_ROOT / 
 # live) over the installed-package dir, so Render serves the real report.
 ARTIFACTS = (DEPLOY_ROOT / "artifacts") if (DEPLOY_ROOT / "artifacts").is_dir() else PACKAGE_ROOT / "artifacts"
 API_CACHE_SECONDS = max(0.0, float(os.getenv("EMPORION_API_CACHE_SECONDS", "15")))
-MARKET_CONTEXT_CACHE_SECONDS = max(60.0, float(os.getenv("EMPORION_MARKET_CONTEXT_CACHE_SECONDS", "900")))
 
 # Lazy singleton for the membership/auth app. The store is only opened on the
 # first auth request so that a plain report server never pays the SQLite cost.
@@ -254,16 +253,10 @@ def build_live_console_payload():
 
 
 def build_market_context_payload():
-    """Fetch and persist the latest read-only public multi-asset data snapshot."""
-    from datetime import datetime, timezone
-    from hedge_desk.market_context import build_market_context
-    from hedge_desk.market_context_storage import persist_latest_market_context
+    """Return latest public context quickly; provider refresh runs in background."""
+    from hedge_desk.market_context_service import get_market_context_snapshot
 
-    payload = build_market_context()
-    payload["generated_at"] = datetime.now(timezone.utc).isoformat()
-    payload["trade_authorized"] = False
-    payload["storage"] = persist_latest_market_context(payload)
-    return payload
+    return get_market_context_snapshot()
 
 
 NIGHTLY_OUTCOMES_SCHEMA = "hedge-desk-nightly-outcomes-1.0.0"
@@ -384,30 +377,7 @@ def _dispatch(environ, start_response):
     if path == "/api/about":
         return _json(start_response, {"display_name": "mbolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
     if path == "/api/market-context":
-        try:
-            return _json(
-                start_response,
-                _cached(
-                    "market-context",
-                    build_market_context_payload,
-                    ttl_seconds=MARKET_CONTEXT_CACHE_SECONDS,
-                ),
-            )
-        except Exception:
-            # Market context is independent of the console report; an upstream
-            # failure cannot affect the paper-only report route.
-            return _json(
-                start_response,
-                {
-                    "schema_version": "hedge-desk-market-context-1.0.0",
-                    "status": "BLOCKED",
-                    "reason_code": "MARKET_CONTEXT_UNAVAILABLE",
-                    "trade_authorized": False,
-                    "sources": {},
-                    "storage": {"status": "UNAVAILABLE"},
-                },
-                "503 Service Unavailable",
-            )
+        return _json(start_response, build_market_context_payload())
     if path == "/api/report":
         try:
             return _json(start_response, _cached("console-report", build_live_console_payload))
