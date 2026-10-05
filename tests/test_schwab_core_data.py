@@ -112,6 +112,68 @@ class SchwabCoreDataTests(unittest.TestCase):
         self.assertTrue(status["ready"])
         self.assertNotIn("account_selected", status)
 
+    @patch("hedge_desk.schwab_core_data._access_token", return_value="TOKEN")
+    @patch("hedge_desk.schwab_core_data.SchwabMarketDataBroker")
+    @patch("hedge_desk.live_desk_data._fetch_yahoo")
+    def test_material_delta_promotes_corroborative_source(
+        self, yahoo, broker_cls, _token
+    ):
+        broker_cls.return_value.quotes.return_value = {
+            "status": "ok",
+            "data": {
+                "SPY": {
+                    "quote": {"lastPrice": 500.0, "closePrice": 499.0},
+                    "reference": {"description": "SPY"},
+                }
+            },
+        }
+        yahoo.return_value = {
+            "symbol": "SPY",
+            "name": "SPY",
+            "last": 510.0,
+            "prev_close": 509.0,
+            "change_pct": 0.2,
+            "source": "Yahoo Finance",
+        }
+        with patch.dict("os.environ", {"EMPORION_MARKET_DATA_DELTA_BPS": "50"}, clear=False):
+            data, unavailable = core.fetch_market_snapshot(["SPY"])
+
+        self.assertEqual(unavailable, [])
+        self.assertEqual(data["SPY"]["source_role"], "primary_on_delta")
+        self.assertEqual(data["SPY"]["displaced_primary_source"], core.SOURCE_NAME)
+        self.assertGreater(data["SPY"]["corroboration_delta_bps"], 50)
+
+    @patch("hedge_desk.schwab_core_data._access_token", return_value="TOKEN")
+    @patch("hedge_desk.schwab_core_data.SchwabMarketDataBroker")
+    @patch("hedge_desk.live_desk_data._fetch_yahoo")
+    def test_small_delta_keeps_schwab_primary(
+        self, yahoo, broker_cls, _token
+    ):
+        broker_cls.return_value.quotes.return_value = {
+            "status": "ok",
+            "data": {
+                "SPY": {
+                    "quote": {"lastPrice": 500.0, "closePrice": 499.0},
+                    "reference": {"description": "SPY"},
+                }
+            },
+        }
+        yahoo.return_value = {
+            "symbol": "SPY",
+            "name": "SPY",
+            "last": 500.1,
+            "prev_close": 499.0,
+            "change_pct": 0.2,
+            "source": "Yahoo Finance",
+        }
+        with patch.dict("os.environ", {"EMPORION_MARKET_DATA_DELTA_BPS": "50"}, clear=False):
+            data, unavailable = core.fetch_market_snapshot(["SPY"])
+
+        self.assertEqual(unavailable, [])
+        self.assertEqual(data["SPY"]["source_role"], "primary")
+        self.assertEqual(data["SPY"]["primary_source"], core.SOURCE_NAME)
+        self.assertLess(data["SPY"]["corroboration_delta_bps"], 50)
+
 
 if __name__ == "__main__":
     unittest.main()
