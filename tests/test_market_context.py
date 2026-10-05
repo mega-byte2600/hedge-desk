@@ -29,6 +29,17 @@ def _common_fakes():
         "bls_fetch": lambda series: _result(
             "bls", series, [{"seriesID": series, "year": "2026", "period": "M08", "value": "325.0"}]
         ),
+        "sec_fetch": lambda cik: {
+            "cik": str(cik),
+            "name": "Example Issuer",
+            "filings": {"recent": {
+                "form": ["8-K"],
+                "accessionNumber": ["0000000000-26-000001"],
+                "filingDate": ["2026-09-28"],
+                "reportDate": ["2026-09-28"],
+                "primaryDocument": ["example.htm"],
+            }},
+        },
         "ecb_fetch": lambda currencies: _result(
             "ecb-fx", "eurofxref-daily", [{"currency": "USD", "base": "EUR", "date": "2026-09-25", "rate": "1.17"}]
         ),
@@ -163,8 +174,10 @@ class MarketContextTests(unittest.TestCase):
 
         self.assertEqual(context["schema_version"], MARKET_CONTEXT_SCHEMA)
         self.assertEqual(context["status"], "LIVE")
-        self.assertEqual(context["live_sources"], 25)
+        self.assertEqual(context["live_sources"], 26)
         self.assertEqual(context["sources"]["nws"]["status"], "LIVE")
+        self.assertEqual(context["sources"]["sec-edgar"]["status"], "LIVE")
+        self.assertGreater(context["sources"]["sec-edgar"]["observation_count"], 0)
         self.assertEqual(context["sources"]["bea"]["status"], "LIVE")
         self.assertEqual(context["sources"]["usda-nass"]["status"], "LIVE")
         self.assertEqual(context["sources"]["bis"]["status"], "LIVE")
