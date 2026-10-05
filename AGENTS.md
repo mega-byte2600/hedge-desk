@@ -108,3 +108,11 @@ and the rule that prevents each. Two of them have already cost real time more th
   files. Never push over in-flight work.
 - The Monday build-cadence check reports every branch ahead of main awaiting
   review, so nothing sits silent.
+
+### Execution boundary: Emporion is the compass, not the broker
+
+- Emporion is research, market-data ingestion, corroboration, risk framing, and decision support.
+- Schwab integration is market-data-only. OAuth/token state is server-side credential plumbing for Market Data Production.
+- Never expose brokerage balances, positions, account numbers, encrypted account hashes, account-selection metadata, or order state to the browser/public API.
+- Do not add order placement, cancel/replace, or execution workflows to Emporion without a separately authorized release.
+- Trading/execution occurs outside Emporion (for example, in TOS). Emporion provides compass direction; it does not steer the broker.
