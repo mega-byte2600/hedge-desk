@@ -94,3 +94,17 @@ and the rule that prevents each. Two of them have already cost real time more th
 - This project is intended to be public open source. Treat every issue, pull
   request, commit, artifact, and log as public; never upload restricted source
   material unless its license permits public redistribution.
+
+### Toby ↔ Sol handoff convention
+
+- Toby builds on dedicated branches (`toby/<slug>`) and never merges; Sol (or the
+  user's other model) owns PR → independent review → merge.
+- Every Toby branch carries a `HANDOFF.md` at its root: what changed (files),
+  what was verified, and what the reviewer must check before merge. The reviewer
+  reads it first. A `PR_BODY.md` on the branch gives the ready-to-paste PR title
+  and body (Toby's token cannot open PRs).
+- Before starting work, Toby checks recent main commits for in-flight work on the
+  same files; if Sol is mid-flight on a file, Toby waits or picks non-overlapping
+  files. Never push over in-flight work.
+- The Monday build-cadence check reports every branch ahead of main awaiting
+  review, so nothing sits silent.
