@@ -39,20 +39,6 @@ function applyBrand() {
   if (topStatus) topStatus.textContent = 'Independent research platform';
 }
 
-function statusStrip() {
-  return `
-    <section id="wall-street-context" class="ws-status" aria-label="Research platform status">
-      <div class="ws-tape">
-        <span><b>EMPORION</b></span>
-        <span>Independent research</span>
-        <span><b>6</b> desks + 1 coming soon</span>
-        <span>Human review</span>
-        <span>No orders placed</span>
-        <a href="./README_PUBLIC.md" download>README ↓</a>
-      </div>
-    </section>`;
-}
-
 function overviewBlock() {
   if (currentRoute() !== 'overview') return '';
   return `
@@ -238,7 +224,7 @@ function renderContext() {
   const head = main?.querySelector('.page-head');
   if (!main || !head) return;
   const holder = document.createElement('div');
-  holder.innerHTML = statusStrip() + overviewBlock() + desksBlock() + aboutCapitalBlock();
+  holder.innerHTML = overviewBlock() + desksBlock() + aboutCapitalBlock();
   let cursor = head;
   for (const node of [...holder.children]) {
     cursor.insertAdjacentElement('afterend', node);
@@ -258,7 +244,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // scope would make it the third instance of this codebase's freeze bug.
     const observer = new MutationObserver(() => requestAnimationFrame(() => {
       applyBrand();
-      if (!document.getElementById('wall-street-context')) renderContext();
+      renderContext();
     }));
     observer.observe(main, {childList:true});
   }
