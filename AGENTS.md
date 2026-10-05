@@ -119,8 +119,8 @@ and the rule that prevents each. Two of them have already cost real time more th
 
 ### Research input boundary: watchlist only
 
-- The only user-supplied research input Emporion accepts is a watchlist of symbols/instruments.
-- Agent desks may enrich that watchlist with approved market, macro, filings, event, and risk data.
+- The only user-supplied research input Emporion accepts is their watchlist of symbols/instruments. Their watchlist becomes the Candidates input set.
+- Agent desks research and enrich those Candidates with approved market, macro, filings, event, and risk data.
 - Do not ingest brokerage balances, positions, holdings, account numbers, encrypted account hashes, account-selection metadata, order history, or trade state.
 - Schwab OAuth/token state is server-side credential plumbing only for Market Data Production and is never a research input.
 - TOS or another external broker/execution venue remains the place where the user trades. Emporion is the research and decision-support compass.
