@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import json
 import hashlib
+import os
 import threading
 import time
+from collections import deque
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -19,6 +21,36 @@ from typing import Callable, Optional
 
 SCHWAB_MARKET_DATA_BASE = "https://api.schwabapi.com/marketdata/v1"
 Transport = Callable[[str, str, dict], tuple[int, bytes]]
+
+# Schwab does not expose a public contractual market-data RPM limit page.
+# Emporion therefore paces below the widely observed ~120 req/min ceiling.
+_DEFAULT_RPM = 90
+_MAX_RPM = 120
+_QUOTE_BATCH_SIZE = 50
+_RATE_LOCK = threading.Lock()
+_RATE_WINDOW = deque()
+
+
+def _configured_rpm() -> int:
+    try:
+        rpm = int(os.getenv("SCHWAB_MARKET_DATA_RPM", str(_DEFAULT_RPM)))
+    except (TypeError, ValueError):
+        return _DEFAULT_RPM
+    return max(1, min(rpm, _MAX_RPM))
+
+
+def _pace() -> None:
+    rpm = _configured_rpm()
+    while True:
+        with _RATE_LOCK:
+            now = time.monotonic()
+            while _RATE_WINDOW and now - _RATE_WINDOW[0] >= 60.0:
+                _RATE_WINDOW.popleft()
+            if len(_RATE_WINDOW) < rpm:
+                _RATE_WINDOW.append(now)
+                return
+            wait = max(0.01, 60.0 - (now - _RATE_WINDOW[0]))
+        time.sleep(wait)
 
 
 def _default_transport(method: str, url: str, headers: dict) -> tuple[int, bytes]:
@@ -60,6 +92,7 @@ class SchwabMarketDataBroker:
         query = urllib.parse.urlencode(params or {}, doseq=True)
         url = self.base_url + path + ("?" + query if query else "")
         headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+        _pace()
         try:
             status, raw = self._transport("GET", url, headers)
         except Exception:
@@ -89,11 +122,22 @@ class SchwabMarketDataBroker:
                 return cached[1]
             if cached:
                 del self._quote_cache[key]
-        result = self._get(
-            "/quotes", token,
-            {"symbols": ",".join(normalized), "indicative": str(indicative).lower()},
-        )
-        if self.quote_cache_seconds and result.get("status") == "ok":
+        merged = {}
+        for start in range(0, len(normalized), _QUOTE_BATCH_SIZE):
+            batch = normalized[start:start + _QUOTE_BATCH_SIZE]
+            result = self._get(
+                "/quotes", token,
+                {"symbols": ",".join(batch), "indicative": str(indicative).lower()},
+            )
+            if result.get("status") != "ok":
+                return result
+            payload = result.get("data")
+            if not isinstance(payload, dict):
+                return {"status": "error", "error": "unexpected_response_schema", "read_only": True}
+            merged.update(payload)
+
+        result = {"status": "ok", "read_only": True, "data": merged}
+        if self.quote_cache_seconds:
             with self._quote_lock:
                 self._quote_cache[key] = (now + self.quote_cache_seconds, result)
                 self._quote_cache.move_to_end(key)
