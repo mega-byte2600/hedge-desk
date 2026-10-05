@@ -164,6 +164,35 @@ class OpenMarketFeedTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsupported BLS"):
             bls_latest_series("BAD", transport=_transport(payload))
 
+    def test_bls_falls_back_to_official_v1_route(self):
+        seen = []
+        payload = {
+            "status": "REQUEST_SUCCEEDED",
+            "Results": {
+                "series": [
+                    {
+                        "seriesID": "CUUR0000SA0",
+                        "data": [
+                            {"year": "2026", "period": "M08", "periodName": "August", "value": "325.0"},
+                            {"year": "2026", "period": "M07", "periodName": "July", "value": "324.0"},
+                        ],
+                    }
+                ]
+            },
+        }
+
+        def transport(url):
+            seen.append(url)
+            if "/v2/" in url:
+                return 429, b'{"status":"REQUEST_FAILED"}'
+            return 200, json.dumps(payload).encode("utf-8")
+
+        result = bls_latest_series("CUUR0000SA0", transport=transport)
+        self.assertEqual(result.provider_id, "bls")
+        self.assertEqual(result.row_count, 1)
+        self.assertEqual(result.rows[0]["value"], "325.0")
+        self.assertTrue(any("/publicAPI/v1/timeseries/data/CUUR0000SA0" in url for url in seen))
+
     def test_ecb_fx_uses_official_eurofxref_feed(self):
         seen = []
         xml = (
