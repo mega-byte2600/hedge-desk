@@ -357,7 +357,6 @@ function acctBind() {
   const closeBtn = root.querySelector('#acct-close');
   if (closeBtn) closeBtn.addEventListener('click', acctClose);
 
-    });
   const gpInvite = root.querySelector('#acct-gp-invite');
   if (gpInvite) gpInvite.addEventListener('click', () => acctGpInvite(gpInvite));
 }
