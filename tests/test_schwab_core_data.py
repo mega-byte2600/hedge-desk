@@ -69,6 +69,49 @@ class SchwabCoreDataTests(unittest.TestCase):
         self.assertEqual(data["SPY"]["source"], core.FALLBACK_SOURCE_NAME)
         self.assertEqual(unavailable, [])
 
+    @patch("hedge_desk.schwab_core_data.default_broker_store")
+    @patch("hedge_desk.schwab_core_data.SchwabOAuthConfig.from_environment")
+    @patch("hedge_desk.schwab_core_data.SchwabOAuth")
+    @patch("hedge_desk.schwab_core_data.SchwabTokenManager")
+    def test_market_data_token_does_not_require_account_selection(
+        self, manager_cls, oauth_cls, config_from_env, store_factory
+    ):
+        with patch.dict("os.environ", {"SCHWAB_DATA_EMAIL": "data@example.com"}, clear=False):
+            config_from_env.return_value.configured = True
+            store = store_factory.return_value
+            store.token_state.return_value = {
+                "access_token": "access",
+                "refresh_token": "refresh",
+                "access_expires_at": "2026-10-05T12:00:00+00:00",
+                "refresh_token_issued_at": "2026-10-01T12:00:00+00:00",
+                "scope": "api",
+                "updated_at": "2026-10-05T11:00:00+00:00",
+                "selected_account_hash": "",
+            }
+            manager_cls.return_value.access_token.return_value = "usable"
+            token = core._access_token()
+
+        self.assertEqual(token, "usable")
+        self.assertEqual(
+            manager_cls.call_args.kwargs["refresh_token_max_age"].days,
+            7,
+        )
+        state = manager_cls.return_value.access_token.call_args.args[0]
+        self.assertEqual(state.selected_account_hash, "")
+
+    @patch("hedge_desk.schwab_core_data.default_broker_store")
+    @patch("hedge_desk.schwab_core_data.SchwabOAuthConfig.from_environment")
+    def test_status_ready_requires_oauth_and_link_not_selected_account(
+        self, config_from_env, store_factory
+    ):
+        with patch.dict("os.environ", {"SCHWAB_DATA_EMAIL": "data@example.com"}, clear=False):
+            config_from_env.return_value.configured = True
+            store_factory.return_value.connection.return_value = {"linked": True}
+            status = core.status()
+
+        self.assertTrue(status["ready"])
+        self.assertNotIn("account_selected", status)
+
 
 if __name__ == "__main__":
     unittest.main()
