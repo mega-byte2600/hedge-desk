@@ -29,16 +29,21 @@ class AccountSurfaceTests(unittest.TestCase):
         self.assertNotIn("supabase-js@2'", acct)
         self.assertRegex(acct, r"@supabase/supabase-js@\d+\.\d+\.\d+")
 
-    def test_broker_ui_is_present_and_read_only(self):
+    def test_schwab_is_not_a_public_account_ui(self):
         index = (WEB / "index.html").read_text(encoding="utf-8")
         acct = (WEB / "account.js").read_text(encoding="utf-8")
-        self.assertIn('id="acct-broker"', index)
-        self.assertIn('id="acct-broker-connect"', index)
-        self.assertIn("/api/broker/status", acct)
-        self.assertIn("/api/broker/authorize", acct)
-        self.assertIn("/api/broker/link", acct)
-        # the UI must describe the connection as read-only, never order-capable
-        self.assertIn("read-only", (index + acct).lower())
+        for forbidden in (
+            'id="acct-broker"',
+            'id="acct-broker-connect"',
+            'id="acct-broker-account"',
+            "/api/broker/accounts",
+            "/api/broker/account",
+            "/api/broker/positions",
+            "/api/broker/balances",
+            "/api/broker/authorize",
+            "/api/broker/link",
+        ):
+            self.assertNotIn(forbidden, index + "\n" + acct)
         for forbidden in ("placeOrder", "submitOrder", "place_order", "submit_order"):
             self.assertNotIn(forbidden, acct)
 
