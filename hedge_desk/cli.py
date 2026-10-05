@@ -179,7 +179,7 @@ def main() -> None:
     parser.add_argument(
         "--data-provider",
         metavar="PROVIDER",
-        help="fetch a live series via open_market_feeds (fred|sec-edgar|cftc-cot|eia-open-data|treasury|bls|ecb-fx|fdic|world-bank|nyfed); pass a series via --provider-series",
+        help="fetch a live series via open_market_feeds (fred|sec-edgar|cftc-cot|eia-open-data|treasury|bls|bea|ecb-fx|fdic|world-bank|nyfed); pass a series via --provider-series",
     )
     parser.add_argument(
         "--provider-series",
@@ -640,6 +640,7 @@ def main() -> None:
             "treasury-fiscaldata": ("treasury_latest_auctions", ()),
             "treasury-yield-curve": ("treasury_yield_curve", ()),
             "bls": ("bls_latest_series", ("series",)),
+            "bea": ("bea_nipa", ()),
             "ecb-fx": ("ecb_exchange_rates", ()),
             "fdic": ("fdic_failures", ()),
             "world-bank": ("world_bank_indicator", ("indicator",)),
