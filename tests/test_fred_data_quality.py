@@ -70,6 +70,12 @@ class FredQualityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'incomplete'):
             rates._parse_fred_json(b'{"count":2,"observations":[{"date":"2026-09-01","value":"4"}]}')
 
+    def test_invalid_cli_observations_fall_back_to_validated_csv(self):
+        with patch.dict('os.environ', {'HEDGE_DESK_CACHE_DIR': 'off'}, clear=True), patch.object(rates, '_skill_cli_path', return_value=Path('fixture-cli')), patch.object(rates, '_fred_via_skill_cli', return_value=(('2026-09-17x', Decimal('4')),)), patch.object(rates, '_default_transport', return_value=(200, b'observation_date,DGS10\n2026-09-30,5\n')) as transport:
+            result = rates.fred_series_rows('DGS10', date(2026,9,1), date(2026,9,30), transport=transport, retries=0)
+        self.assertEqual(result, (('2026-09-30', Decimal('5')),))
+        transport.assert_called_once()
+
     def test_window_filters_and_keyed_errors_are_secret_free(self):
         with patch.dict('os.environ', {'FRED_API_KEY': 'never-disclose', 'HEDGE_DESK_CACHE_DIR': 'off'}):
             def broken(url):

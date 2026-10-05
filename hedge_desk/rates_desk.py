@@ -299,7 +299,7 @@ def fred_series_rows(
         and _skill_cli_path() is not None
     ):
         try:
-            rows = _fred_via_skill_cli(series, start, end)
+            rows = _validated_rows(_fred_via_skill_cli(series, start, end), start, end)
         except ValueError:
             rows = ()
     if not rows:
