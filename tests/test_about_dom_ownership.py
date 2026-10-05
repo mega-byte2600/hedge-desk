@@ -112,6 +112,22 @@ class AboutDomOwnershipTests(unittest.TestCase):
             "the self-mutation filter from #150 is gone.",
         )
 
+    def test_sidebar_remains_scrollable(self):
+        """The fixed sidebar must stay vertically scrollable.
+
+        2026-10-04 (#152): the About nav link was clipped below the viewport
+        on shorter screens because .sidebar had no overflow-y. If the
+        overflow-y is removed, nav items clip again -- fail the build.
+        """
+        css = read(WEB_DIR / "noir-shell.css")
+        blocks = re.findall(r"\.sidebar\s*\{[^}]*\}", css)
+        self.assertTrue(blocks, ".sidebar rule not found in noir-shell.css")
+        self.assertTrue(
+            any("overflow-y" in b for b in blocks),
+            ".sidebar lost its overflow-y -- nav items will clip below the "
+            "viewport again (see #152).",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
