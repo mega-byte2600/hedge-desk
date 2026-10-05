@@ -127,6 +127,36 @@ class SchwabMarketDataBroker:
             return {"status": "error", "error": "invalid_history_request", "read_only": True}
         return self._get(f"/pricehistory", token, {"symbol": symbol.strip(), **params})
 
+    def movers(self, token: str, symbol_id: str, **params) -> dict:
+        if not isinstance(symbol_id, str) or not symbol_id.strip():
+            return {"status": "error", "error": "invalid_symbol", "read_only": True}
+        allowed = {"sort", "frequency"}
+        if set(params) - allowed:
+            return {"status": "error", "error": "invalid_movers_request", "read_only": True}
+        return self._get(f"/movers/{urllib.parse.quote(symbol_id.strip(), safe='')}", token, params)
+
+    def instruments(self, token: str, symbols: str, projection: str) -> dict:
+        if not isinstance(symbols, str) or not symbols.strip():
+            return {"status": "error", "error": "invalid_symbols", "read_only": True}
+        if not isinstance(projection, str) or not projection.strip():
+            return {"status": "error", "error": "invalid_projection", "read_only": True}
+        return self._get("/instruments", token, {"symbol": symbols.strip(), "projection": projection.strip()})
+
+    def instrument_by_cusip(self, token: str, cusip_id: str) -> dict:
+        if not isinstance(cusip_id, str) or not cusip_id.strip():
+            return {"status": "error", "error": "invalid_cusip", "read_only": True}
+        return self._get(f"/instruments/{urllib.parse.quote(cusip_id.strip(), safe='')}", token)
+
+    def market_hours_all(self, token: str, markets: str = "", *, date: str = "") -> dict:
+        params = {}
+        if markets:
+            params["markets"] = markets
+        if date:
+            if len(date) != 10 or date[4] != "-" or date[7] != "-":
+                return {"status": "error", "error": "invalid_date", "read_only": True}
+            params["date"] = date
+        return self._get("/markets", token, params or None)
+
     def market_hours(self, token: str, market_id: str, *, date: str = "") -> dict:
         if not isinstance(market_id, str) or not market_id.strip():
             return {"status": "error", "error": "invalid_market", "read_only": True}
