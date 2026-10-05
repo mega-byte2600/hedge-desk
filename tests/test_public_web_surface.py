@@ -213,6 +213,20 @@ class PublicWebSurfaceTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, agents.lower())
 
+    def test_internal_status_strip_and_model_port_notes_are_not_public(self):
+        professional = (WEB / "professional.js").read_text(encoding="utf-8")
+        real_estate = (WEB / "real-estate-ui.js").read_text(encoding="utf-8")
+
+        for forbidden in (
+            "6</b> desks + 1 coming soon",
+            "No orders placed",
+            "wall-street-context",
+            "Corrected model port",
+            "Known spreadsheet defects are corrected here",
+            "year-8 <code>&gt;77</code> expense guards",
+        ):
+            self.assertNotIn(forbidden, professional + real_estate)
+
     def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
         public_assets = [
             WEB / "index.html",
