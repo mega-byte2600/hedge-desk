@@ -244,10 +244,20 @@ window.addEventListener('DOMContentLoaded', () => {
     // footer, sidebar and sidebar copy. That is safe today only because those
     // nodes are siblings of main rather than descendants; observing a broader
     // scope would make it the third instance of this codebase's freeze bug.
-    const observer = new MutationObserver(() => requestAnimationFrame(() => {
-      applyBrand();
-      renderContext();
-    }));
+    const isContextNode = (node) =>
+      node?.nodeType === Node.ELEMENT_NODE &&
+      (node.classList.contains('ws-operational') || node.classList.contains('ws-capital'));
+    const observer = new MutationObserver((mutations) => {
+      const externalChange = mutations.some((mutation) => {
+        const changed = [...mutation.addedNodes, ...mutation.removedNodes];
+        return changed.some((node) => !isContextNode(node));
+      });
+      if (!externalChange) return;
+      requestAnimationFrame(() => {
+        applyBrand();
+        renderContext();
+      });
+    });
     observer.observe(main, {childList:true});
   }
   renderContext();
