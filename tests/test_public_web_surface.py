@@ -235,7 +235,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         professional = (WEB / "professional.js").read_text(encoding="utf-8")
         build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
 
-        self.assertIn('Research desks <b>6+1</b>', index)
+        self.assertIn('7 - Research Desks', index)
         self.assertIn('./desk-architecture.js', index)
         self.assertIn('"desk-architecture.js"', build)
         self.assertIn('Bonds &amp; Rates', architecture)
