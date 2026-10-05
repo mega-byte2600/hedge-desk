@@ -55,6 +55,25 @@ class MarketContextStorageTests(unittest.TestCase):
         self.assertFalse(captured["body"]["payload"]["trade_authorized"])
         self.assertNotIn("test-secret", json.dumps(result))
 
+    def test_legacy_server_service_key_is_supported_without_public_fallback(self):
+        captured = {}
+
+        def transport(request):
+            captured["apikey"] = request.get_header("Apikey")
+            return 204
+
+        result = persist_latest_market_context(
+            self.snapshot,
+            env={
+                "SUPABASE_URL": "https://project.supabase.co",
+                "SUPABASE_SERVICE_KEY": "server-only-key",
+                "SUPABASE_PUBLISHABLE_KEY": "public-key-must-not-be-used",
+            },
+            transport=transport,
+        )
+        self.assertEqual(result["status"], "PERSISTED")
+        self.assertEqual(captured["apikey"], "server-only-key")
+
     def test_load_accepts_only_a_single_object_payload(self):
         payload = {"status": "DEGRADED", "trade_authorized": False}
 
