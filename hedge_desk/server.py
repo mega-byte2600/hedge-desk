@@ -377,7 +377,21 @@ def _dispatch(environ, start_response):
     if path == "/api/about":
         return _json(start_response, {"display_name": "mbolton", "linkedin_url": "https://www.linkedin.com/in/bolton-2600/"})
     if path == "/api/market-context":
-        return _json(start_response, build_market_context_payload())
+        try:
+            return _json(start_response, build_market_context_payload())
+        except Exception:
+            return _json(
+                start_response,
+                {
+                    "schema_version": "hedge-desk-market-context-1.0.0",
+                    "status": "BLOCKED",
+                    "reason_code": "MARKET_CONTEXT_UNAVAILABLE",
+                    "trade_authorized": False,
+                    "sources": {},
+                    "storage": {"status": "UNAVAILABLE"},
+                },
+                "503 Service Unavailable",
+            )
     if path == "/api/report":
         try:
             return _json(start_response, _cached("console-report", build_live_console_payload))
