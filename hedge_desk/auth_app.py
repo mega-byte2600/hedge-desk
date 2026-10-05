@@ -298,6 +298,7 @@ def make_auth_app(
         return _json_response(start_response, {
             "status": "linked",
             "broker": "schwab",
+            "read_only": True,
             "market_data_only": True,
             "account_data_exposed": False,
             "live_orders_enabled": False,
