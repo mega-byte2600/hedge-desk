@@ -19,6 +19,7 @@ def _credentials(env=None):
     url = str(source.get("SUPABASE_URL", "")).strip().rstrip("/")
     key = (
         str(source.get("SUPABASE_SECRET_KEY", "")).strip()
+        or str(source.get("SUPABASE_SERVICE_KEY", "")).strip()
         or str(source.get("SUPABASE_SERVICE_ROLE_KEY", "")).strip()
     )
     if not url or not key:
