@@ -37,21 +37,33 @@ class SchwabCoreDataTests(unittest.TestCase):
                 }
             },
         }
-        yahoo.return_value = {
-            "symbol": "QQQ",
-            "name": "QQQ",
-            "last": 450.0,
-            "prev_close": 449.0,
-            "change_pct": 0.22,
-            "source": "Yahoo Finance",
-        }
+        def corroborative(symbol, timeout=8):
+            if symbol == "SPY":
+                return {
+                    "symbol": "SPY",
+                    "name": "SPY",
+                    "last": 500.1,
+                    "prev_close": 495.0,
+                    "change_pct": 1.03,
+                    "source": "Yahoo Finance",
+                }
+            return {
+                "symbol": "QQQ",
+                "name": "QQQ",
+                "last": 450.0,
+                "prev_close": 449.0,
+                "change_pct": 0.22,
+                "source": "Yahoo Finance",
+            }
+        yahoo.side_effect = corroborative
 
         data, unavailable = core.fetch_market_snapshot(["SPY", "QQQ"])
 
         self.assertEqual(data["SPY"]["source"], core.SOURCE_NAME)
+        self.assertEqual(data["SPY"]["source_role"], "primary")
         self.assertEqual(data["QQQ"]["source"], core.FALLBACK_SOURCE_NAME)
-        self.assertEqual(yahoo.call_count, 1)
-        self.assertEqual(yahoo.call_args.args[0], "QQQ")
+        self.assertEqual(data["QQQ"]["source_role"], "primary_no_schwab_coverage")
+        self.assertEqual(yahoo.call_count, 2)
         self.assertEqual(unavailable, [])
 
     @patch("hedge_desk.schwab_core_data._access_token", side_effect=RuntimeError("not_ready"))
