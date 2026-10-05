@@ -23,6 +23,8 @@ import ssl
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Callable, Mapping, Sequence, Tuple
+from threading import Lock
+from time import monotonic
 
 
 Transport = Callable[[str], Tuple[int, bytes]]
@@ -45,6 +47,12 @@ SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 BLS_LATEST_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/{series}?latest=true"
 BLS_V1_SERIES_URL = "https://api.bls.gov/publicAPI/v1/timeseries/data/{series}"
+
+_BLS_CACHE: dict[tuple[str, str], tuple[float, OpenFeedResult | str]] = {}
+_BLS_CACHE_LOCK = Lock()
+_BLS_REGISTERED_CACHE_SECONDS = 15 * 60
+_BLS_KEYLESS_CACHE_SECONDS = 23 * 60 * 60
+_BLS_ERROR_CACHE_SECONDS = 15 * 60
 BEA_DATA_URL = "https://apps.bea.gov/api/data/"
 # ECB euro reference rates: the SDMX Data Portal endpoint intermittently closes
 # connections, so use the classic daily eurofxref feed (same official data).
@@ -381,26 +389,42 @@ def bls_latest_series(
 ) -> OpenFeedResult:
     """Fetch the latest observation for a vetted BLS macro series.
 
-    Prefer the BLS v2 latest-series route. If that route is unavailable or
-    rejects an unregistered request, fall back to the official keyless v1
-    single-series route and keep only its newest observation.
+    Use registered v2 when a key is configured, with keyless v1 fallback.
+    Without a key, call v1 directly and cache it to respect the daily quota.
     """
     normalized = series.strip().upper()
     if normalized not in BLS_MACRO_SERIES:
         raise ValueError(f"unsupported BLS macro series: {series}")
 
-    payload = None
+    registration_key = (
+        os.environ.get("BLS_API_KEY", "").strip()
+        or os.environ.get("BLS_REGISTRATION_KEY", "").strip()
+    )
+    cache_key = (normalized, registration_key)
+    cache_enabled = transport is _default_transport
+    now = monotonic()
+    if cache_enabled:
+        with _BLS_CACHE_LOCK:
+            cached = _BLS_CACHE.get(cache_key)
+            if cached and cached[0] > now:
+                if isinstance(cached[1], str):
+                    raise ValueError(cached[1])
+                return cached[1]
+            _BLS_CACHE.pop(cache_key, None)
+
     v2_error = None
-    try:
-        candidate = _fetch_json(
-            BLS_LATEST_URL.format(series=normalized), "bls-v2", transport
-        )
-        if isinstance(candidate, dict) and candidate.get("status") == "REQUEST_SUCCEEDED":
-            payload = candidate
-        else:
-            v2_error = "v2 request did not succeed"
-    except ValueError as exc:
-        v2_error = str(exc)
+    payload = None
+    if registration_key:
+        query = urllib.parse.urlencode({"latest": "true", "registrationkey": registration_key})
+        v2_url = BLS_LATEST_URL.format(series=normalized).split("?", 1)[0] + "?" + query
+        try:
+            candidate = _fetch_json(v2_url, "bls-v2", transport)
+            if isinstance(candidate, dict) and candidate.get("status") == "REQUEST_SUCCEEDED":
+                payload = candidate
+            else:
+                v2_error = "v2 request did not succeed"
+        except ValueError as exc:
+            v2_error = str(exc)
 
     if payload is None:
         try:
@@ -408,17 +432,26 @@ def bls_latest_series(
                 BLS_V1_SERIES_URL.format(series=normalized), "bls-v1", transport
             )
         except ValueError as exc:
-            raise ValueError(
-                f"bls fetch failed on v2 and v1; v2={v2_error}; v1={exc}"
-            ) from exc
+            message = f"bls fetch failed; v2={v2_error or 'not configured'}; v1={exc}"
+            if cache_enabled:
+                with _BLS_CACHE_LOCK:
+                    _BLS_CACHE[cache_key] = (monotonic() + _BLS_ERROR_CACHE_SECONDS, message)
+            raise ValueError(message) from exc
         if not isinstance(candidate, dict) or candidate.get("status") != "REQUEST_SUCCEEDED":
-            raise ValueError(
-                f"bls fetch failed on v2 and v1; v2={v2_error}; v1=request did not succeed"
-            )
+            message = f"bls fetch failed; v2={v2_error or 'not configured'}; v1=request did not succeed"
+            if cache_enabled:
+                with _BLS_CACHE_LOCK:
+                    _BLS_CACHE[cache_key] = (monotonic() + _BLS_ERROR_CACHE_SECONDS, message)
+            raise ValueError(message)
         payload = candidate
 
     results = payload.get("Results")
-    series_rows = results.get("series") if isinstance(results, dict) else None
+    if isinstance(results, dict):
+        series_rows = results.get("series")
+    elif isinstance(results, list) and results and isinstance(results[0], dict):
+        series_rows = results[0].get("series")
+    else:
+        series_rows = None
     if not isinstance(series_rows, list) or not series_rows:
         raise ValueError("bls payload has no series rows")
     data = series_rows[0].get("data") if isinstance(series_rows[0], dict) else None
@@ -433,8 +466,12 @@ def bls_latest_series(
             rows.append(item)
     if not rows:
         raise ValueError("bls payload has no usable observations")
-    return OpenFeedResult(provider_id="bls", dataset=normalized, rows=tuple(rows))
-
+    result = OpenFeedResult(provider_id="bls", dataset=normalized, rows=tuple(rows))
+    if cache_enabled:
+        ttl = _BLS_REGISTERED_CACHE_SECONDS if registration_key else _BLS_KEYLESS_CACHE_SECONDS
+        with _BLS_CACHE_LOCK:
+            _BLS_CACHE[cache_key] = (monotonic() + ttl, result)
+    return result
 
 def bea_nipa(
     table: str = "T10101",
