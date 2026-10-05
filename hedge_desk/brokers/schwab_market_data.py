@@ -79,6 +79,7 @@ class SchwabMarketDataBroker:
         if quote_cache_seconds < 0 or quote_cache_seconds > 5:
             raise ValueError("quote cache must be between zero and five seconds")
         self._transport = transport or _default_transport
+        self._pace_requests = transport is None
         if base_url.rstrip("/") != SCHWAB_MARKET_DATA_BASE:
             raise ValueError("Schwab Market Data requires the official API base")
         self.base_url = SCHWAB_MARKET_DATA_BASE
@@ -92,7 +93,8 @@ class SchwabMarketDataBroker:
         query = urllib.parse.urlencode(params or {}, doseq=True)
         url = self.base_url + path + ("?" + query if query else "")
         headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
-        _pace()
+        if self._pace_requests:
+            _pace()
         try:
             status, raw = self._transport("GET", url, headers)
         except Exception:
