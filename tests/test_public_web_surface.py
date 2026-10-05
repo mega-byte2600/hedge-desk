@@ -227,6 +227,11 @@ class PublicWebSurfaceTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, professional + real_estate)
 
+    def test_root_route_defaults_to_overview(self):
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+        self.assertIn("location.hash.slice(1)||'overview'", app)
+        self.assertIn("if(!title[route])route='overview'", app)
+
     def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
         public_assets = [
             WEB / "index.html",
