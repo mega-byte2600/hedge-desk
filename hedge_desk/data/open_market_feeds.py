@@ -44,6 +44,7 @@ NYFED_RATE_HISTORY_URL = "https://markets.newyorkfed.org/api/rates/{segment}/{ra
 SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 BLS_LATEST_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/{series}?latest=true"
+BEA_DATA_URL = "https://apps.bea.gov/api/data/"
 # ECB euro reference rates: the SDMX Data Portal endpoint intermittently closes
 # connections, so use the classic daily eurofxref feed (same official data).
 ECB_EUROFXREF_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
@@ -397,6 +398,58 @@ def bls_latest_series(
             item["seriesID"] = normalized
             rows.append(item)
     return OpenFeedResult(provider_id="bls", dataset=normalized, rows=tuple(rows))
+
+
+def bea_nipa(
+    table: str = "T10101",
+    frequency: str = "Q",
+    year: str = "X",
+    transport: Transport = _default_transport,
+    api_key: str | None = None,
+) -> OpenFeedResult:
+    """Fetch a bounded BEA NIPA table using the official Data API.
+
+    BEA API keys are free but required. The key is read server-side from
+    BEA_API_KEY unless explicitly injected for deterministic tests.
+    """
+    key = (api_key if api_key is not None else os.environ.get("BEA_API_KEY", "")).strip()
+    if not key:
+        raise ValueError("BEA_API_KEY is required for BEA Data API")
+    table_name = str(table).strip().upper()
+    if not table_name or not table_name.isalnum() or len(table_name) > 16:
+        raise ValueError("invalid BEA NIPA table name")
+    freq = str(frequency).strip().upper()
+    if freq not in {"A", "Q"}:
+        raise ValueError("BEA NIPA frequency must be A or Q")
+    yr = str(year).strip().upper()
+    if yr != "X":
+        parts = [p.strip() for p in yr.split(",") if p.strip()]
+        if not parts or any(not p.isdigit() or len(p) != 4 for p in parts):
+            raise ValueError("invalid BEA NIPA year")
+        yr = ",".join(parts)
+    query = urllib.parse.urlencode({
+        "UserID": key,
+        "method": "GetData",
+        "datasetname": "NIPA",
+        "TableName": table_name,
+        "Frequency": freq,
+        "Year": yr,
+        "ResultFormat": "JSON",
+    })
+    payload = _fetch_json(f"{BEA_DATA_URL}?{query}", "bea", transport)
+    if not isinstance(payload, dict):
+        raise ValueError("bea payload is not an object")
+    bea_api = payload.get("BEAAPI")
+    results = bea_api.get("Results") if isinstance(bea_api, dict) else None
+    if isinstance(results, dict) and results.get("Error"):
+        raise ValueError("bea request returned an API error")
+    data = results.get("Data") if isinstance(results, dict) else None
+    if not isinstance(data, list) or not data:
+        raise ValueError("bea payload has no Results.Data rows")
+    rows = tuple(row for row in data if isinstance(row, dict))
+    if not rows:
+        raise ValueError("bea payload has no usable data rows")
+    return OpenFeedResult("bea", f"NIPA-{table_name}-{freq}", rows)
 
 
 def ecb_exchange_rates(
@@ -1088,6 +1141,7 @@ __all__ = [
     "NASDAQ_ETF_SYMBOLS",
     "TREASURY_DGS_TENORS",
     "bls_latest_series",
+    "bea_nipa",
     "cftc_cot",
     "ecb_exchange_rates",
     "eia_v2",
