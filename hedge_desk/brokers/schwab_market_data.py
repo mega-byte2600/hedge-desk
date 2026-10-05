@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import json
 import hashlib
+import os
 import threading
 import time
+from collections import deque
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -19,6 +21,36 @@ from typing import Callable, Optional
 
 SCHWAB_MARKET_DATA_BASE = "https://api.schwabapi.com/marketdata/v1"
 Transport = Callable[[str, str, dict], tuple[int, bytes]]
+
+# Schwab does not expose a public contractual market-data RPM limit page.
+# Emporion therefore paces below the widely observed ~120 req/min ceiling.
+_DEFAULT_RPM = 90
+_MAX_RPM = 120
+_QUOTE_BATCH_SIZE = 50
+_RATE_LOCK = threading.Lock()
+_RATE_WINDOW = deque()
+
+
+def _configured_rpm() -> int:
+    try:
+        rpm = int(os.getenv("SCHWAB_MARKET_DATA_RPM", str(_DEFAULT_RPM)))
+    except (TypeError, ValueError):
+        return _DEFAULT_RPM
+    return max(1, min(rpm, _MAX_RPM))
+
+
+def _pace() -> None:
+    rpm = _configured_rpm()
+    while True:
+        with _RATE_LOCK:
+            now = time.monotonic()
+            while _RATE_WINDOW and now - _RATE_WINDOW[0] >= 60.0:
+                _RATE_WINDOW.popleft()
+            if len(_RATE_WINDOW) < rpm:
+                _RATE_WINDOW.append(now)
+                return
+            wait = max(0.01, 60.0 - (now - _RATE_WINDOW[0]))
+        time.sleep(wait)
 
 
 def _default_transport(method: str, url: str, headers: dict) -> tuple[int, bytes]:
@@ -47,6 +79,7 @@ class SchwabMarketDataBroker:
         if quote_cache_seconds < 0 or quote_cache_seconds > 5:
             raise ValueError("quote cache must be between zero and five seconds")
         self._transport = transport or _default_transport
+        self._pace_requests = transport is None
         if base_url.rstrip("/") != SCHWAB_MARKET_DATA_BASE:
             raise ValueError("Schwab Market Data requires the official API base")
         self.base_url = SCHWAB_MARKET_DATA_BASE
@@ -60,6 +93,8 @@ class SchwabMarketDataBroker:
         query = urllib.parse.urlencode(params or {}, doseq=True)
         url = self.base_url + path + ("?" + query if query else "")
         headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+        if self._pace_requests:
+            _pace()
         try:
             status, raw = self._transport("GET", url, headers)
         except Exception:
@@ -89,11 +124,22 @@ class SchwabMarketDataBroker:
                 return cached[1]
             if cached:
                 del self._quote_cache[key]
-        result = self._get(
-            "/quotes", token,
-            {"symbols": ",".join(normalized), "indicative": str(indicative).lower()},
-        )
-        if self.quote_cache_seconds and result.get("status") == "ok":
+        merged = {}
+        for start in range(0, len(normalized), _QUOTE_BATCH_SIZE):
+            batch = normalized[start:start + _QUOTE_BATCH_SIZE]
+            result = self._get(
+                "/quotes", token,
+                {"symbols": ",".join(batch), "indicative": str(indicative).lower()},
+            )
+            if result.get("status") != "ok":
+                return result
+            payload = result.get("data")
+            if not isinstance(payload, dict):
+                return {"status": "error", "error": "unexpected_response_schema", "read_only": True}
+            merged.update(payload)
+
+        result = {"status": "ok", "read_only": True, "data": merged}
+        if self.quote_cache_seconds:
             with self._quote_lock:
                 self._quote_cache[key] = (now + self.quote_cache_seconds, result)
                 self._quote_cache.move_to_end(key)
@@ -126,6 +172,36 @@ class SchwabMarketDataBroker:
         if not isinstance(symbol, str) or not symbol.strip() or set(params) - allowed:
             return {"status": "error", "error": "invalid_history_request", "read_only": True}
         return self._get(f"/pricehistory", token, {"symbol": symbol.strip(), **params})
+
+    def movers(self, token: str, symbol_id: str, **params) -> dict:
+        if not isinstance(symbol_id, str) or not symbol_id.strip():
+            return {"status": "error", "error": "invalid_symbol", "read_only": True}
+        allowed = {"sort", "frequency"}
+        if set(params) - allowed:
+            return {"status": "error", "error": "invalid_movers_request", "read_only": True}
+        return self._get(f"/movers/{urllib.parse.quote(symbol_id.strip(), safe='')}", token, params)
+
+    def instruments(self, token: str, symbols: str, projection: str) -> dict:
+        if not isinstance(symbols, str) or not symbols.strip():
+            return {"status": "error", "error": "invalid_symbols", "read_only": True}
+        if not isinstance(projection, str) or not projection.strip():
+            return {"status": "error", "error": "invalid_projection", "read_only": True}
+        return self._get("/instruments", token, {"symbol": symbols.strip(), "projection": projection.strip()})
+
+    def instrument_by_cusip(self, token: str, cusip_id: str) -> dict:
+        if not isinstance(cusip_id, str) or not cusip_id.strip():
+            return {"status": "error", "error": "invalid_cusip", "read_only": True}
+        return self._get(f"/instruments/{urllib.parse.quote(cusip_id.strip(), safe='')}", token)
+
+    def market_hours_all(self, token: str, markets: str = "", *, date: str = "") -> dict:
+        params = {}
+        if markets:
+            params["markets"] = markets
+        if date:
+            if len(date) != 10 or date[4] != "-" or date[7] != "-":
+                return {"status": "error", "error": "invalid_date", "read_only": True}
+            params["date"] = date
+        return self._get("/markets", token, params or None)
 
     def market_hours(self, token: str, market_id: str, *, date: str = "") -> dict:
         if not isinstance(market_id, str) or not market_id.strip():

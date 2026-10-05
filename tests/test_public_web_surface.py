@@ -56,8 +56,8 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn('Independent research platform', combined)
         self.assertIn('RESEARCH PLATFORM', combined)
         self.assertIn('Seven research desks.<br>Six evaluated workflows.', combined)
-        self.assertIn('<b>6</b> desks + 1 coming soon', combined)
-        self.assertIn('No orders placed', combined)
+        self.assertNotIn('<b>6</b> desks + 1 coming soon', combined)
+        self.assertNotIn('No orders placed', combined)
         self.assertNotIn('AI-native', combined)
         self.assertNotIn('brandmark', combined)
         self.assertNotIn('Controls & evidence', combined)
@@ -185,6 +185,53 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertNotIn("border-top:1px solid #e1e6e9", disclosures)
         self.assertIn("./disclosures.js?v=20261004-whitebody", index)
 
+    def test_schwab_surface_is_market_data_only_and_exposes_no_account_data(self):
+        index = (WEB / "index.html").read_text(encoding="utf-8")
+        account = (WEB / "account.js").read_text(encoding="utf-8")
+        combined = index + "\n" + account
+
+        for route in (
+            "/api/broker/accounts",
+            "/api/broker/account",
+            "/api/broker/positions",
+            "/api/broker/balances",
+        ):
+            self.assertNotIn(route, combined)
+
+        self.assertNotIn("acct-broker-account", combined)
+        self.assertNotIn("Connect Schwab", combined)
+        self.assertNotIn("Schwab account", combined)
+
+    def test_watchlist_is_the_candidates_input_contract(self):
+        agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIn("Their watchlist becomes the Candidates input set.", agents)
+        self.assertIn("Agent desks research and enrich those Candidates", agents)
+        for forbidden in (
+            "brokerage holdings become candidates",
+            "positions become candidates",
+            "balances become candidates",
+        ):
+            self.assertNotIn(forbidden, agents.lower())
+
+    def test_internal_status_strip_and_model_port_notes_are_not_public(self):
+        professional = (WEB / "professional.js").read_text(encoding="utf-8")
+        real_estate = (WEB / "real-estate-ui.js").read_text(encoding="utf-8")
+
+        for forbidden in (
+            "6</b> desks + 1 coming soon",
+            "No orders placed",
+            "wall-street-context",
+            "Corrected model port",
+            "Known spreadsheet defects are corrected here",
+            "year-8 <code>&gt;77</code> expense guards",
+        ):
+            self.assertNotIn(forbidden, professional + real_estate)
+
+    def test_root_route_defaults_to_overview(self):
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+        self.assertIn("location.hash.slice(1)||'overview'", app)
+        self.assertIn("if(!title[route])route='overview'", app)
+
     def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
         public_assets = [
             WEB / "index.html",
@@ -235,7 +282,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         professional = (WEB / "professional.js").read_text(encoding="utf-8")
         build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
 
-        self.assertIn('Research desks <b>6+1</b>', index)
+        self.assertIn('7 - Research Desks', index)
         self.assertIn('./desk-architecture.js', index)
         self.assertIn('"desk-architecture.js"', build)
         self.assertIn('Bonds &amp; Rates', architecture)
@@ -244,7 +291,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn('Research for this desk is still in progress.', architecture)
         self.assertIn("['Bonds & Rates'", professional)
         self.assertIn('Seven research desks.<br>Six evaluated workflows.', professional)
-        self.assertIn('<b>6</b> desks + 1 coming soon', professional)
+        self.assertNotIn('<b>6</b> desks + 1 coming soon', professional)
         self.assertNotIn('Six research workflows.<br>Structured decision support.', professional)
         self.assertNotIn('<b>WORKFLOWS</b> SIX DESKS', professional)
 

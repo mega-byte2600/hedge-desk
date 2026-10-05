@@ -160,3 +160,11 @@ summary{padding:12px 0;margin:-12px 0}
 .graham-own .input{min-width:112px;padding:5px 7px}
 .graham-cell small{display:block;margin-top:6px;line-height:1.35}
 @media(max-width:760px){.mr-market,.graham-toolbar{align-items:flex-start;flex-direction:column}.graham-cell{min-width:0}}
+
+.data-reconnecting{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #232329;background:#121215;color:#f4f1e8;border-radius:10px}
+.data-dots{display:inline-flex;align-items:center;gap:5px}
+.data-dots i{display:block;width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.35;animation:data-dot-pulse 1.25s infinite ease-in-out}
+.data-dots i:nth-child(2){animation-delay:.15s}
+.data-dots i:nth-child(3){animation-delay:.30s}
+@keyframes data-dot-pulse{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-2px)}}
+@media (prefers-reduced-motion:reduce){.data-dots i{animation:none;opacity:.65}}

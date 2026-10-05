@@ -16,9 +16,10 @@ test('Real Estate page exposes both workbook-parity tabs and no execution contro
   assert.doesNotMatch(html,/order|trade_authorized|execute trade/i);
 });
 
-test('Real Estate page documents corrected workbook defects', () => {
+test('Real Estate page does not expose internal workbook defect commentary', () => {
   const html=realEstatePage();
-  assert.match(html,/year-8/);
-  assert.match(html,/NOI sensitivity/);
-  assert.match(html,/selling cost/);
+  assert.doesNotMatch(html,/Corrected model port/i);
+  assert.doesNotMatch(html,/Known spreadsheet defects/i);
+  assert.doesNotMatch(html,/year-8/i);
+  assert.doesNotMatch(html,/NOI sensitivity sale-price leakage/i);
 });

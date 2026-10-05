@@ -1,6 +1,6 @@
 """Live market data for the desk console. No synthetic fixtures, ever.
 
-This module fetches real market data from free public APIs and assembles it
+This module fetches real market data from Schwab Market Data Production, with Yahoo failover, and assembles it
 into per-desk payloads for the web console. It is fail-closed: when real data
 cannot be obtained, the desk reports ``data_unavailable`` with an explicit
 reason. Synthetic, fixture, reference, or invented data is never returned.
@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 import json
 import urllib.request
 
-# Free public endpoints. No keys required.
+# Yahoo is retained only as a real-data failover path.
 YAHOO_CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d&range=5d"
 FRED_SERIES = "https://api.stlouisfed.org/fred/series/observations"
 
@@ -76,16 +76,9 @@ def _fetch_yahoo(symbol, timeout=8):
 
 
 def fetch_market_snapshot(symbols, timeout=8):
-    """Fetch live quotes for symbols. Returns (data_dict, unavailable_list)."""
-    data = {}
-    unavailable = []
-    for symbol in symbols:
-        quote = _fetch_yahoo(symbol, timeout=timeout)
-        if quote is None:
-            unavailable.append({"symbol": symbol, "reason": "quote unavailable from Yahoo Finance"})
-        else:
-            data[symbol] = quote
-    return data, unavailable
+    """Fetch production quotes with Schwab primary and Yahoo per-symbol failover."""
+    from hedge_desk.schwab_core_data import fetch_market_snapshot as schwab_primary
+    return schwab_primary(symbols, timeout=timeout)
 
 
 def build_desk_projects(fetcher=None):
@@ -128,7 +121,7 @@ def build_desk_projects(fetcher=None):
             "evaluated_at": now,
             "data_status": status,
             "data_as_of": now,
-            "data_source": "Yahoo Finance (free public API)",
+            "data_source": ", ".join(sorted({q.get("source", "unknown") for q in live_data.values()})) if live_data else "data unavailable",
             "reason": reason,
             "live_data": live_data,
             "unavailable": missing,
@@ -136,14 +129,14 @@ def build_desk_projects(fetcher=None):
     return projects
 
 
-def build_live_console_report(code_commit):
+def build_live_console_report(code_commit, fetcher=None):
     """Build the console report payload from real data only.
 
     Raises RuntimeError (fail-closed) if no live data could be obtained at
     all; the route layer maps this to a 503 with an explicit reason.
     """
     now = datetime.now(timezone.utc)
-    projects = build_desk_projects()
+    projects = build_desk_projects(fetcher=fetcher)
     live_count = sum(1 for p in projects if p["data_status"] == STATUS_LIVE)
     if live_count == 0:
         raise RuntimeError("data unavailable: no live market quotes could be fetched")
@@ -162,12 +155,12 @@ def build_live_console_report(code_commit):
             "desks_total": len(projects),
         },
         "limitations": [
-            "Live market data from free public APIs (Yahoo Finance).",
+            "Primary market data: Schwab Trader API / Market Data; Yahoo Finance is failover only.",
             "Paper research context only; no trade authorization.",
             "Data may be delayed; verify before any decision.",
         ],
         "projects": projects,
-        "scenarios": build_real_scenarios(),
+        "scenarios": build_real_scenarios(fetcher=fetcher),
         "synthetic_data": False,
     }
 

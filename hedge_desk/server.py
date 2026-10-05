@@ -344,7 +344,16 @@ def _dispatch(environ, start_response):
     ):
         return _auth_app()(environ, start_response)
     if path == "/api/health":
-        return _json(start_response, {"service": "hedge-desk-web", "status": "ok", "mode": "paper", "live_orders_enabled": False, "supabase": _cached("supabase-status", _supabase_status), "deploy_sha": os.environ.get("RENDER_GIT_COMMIT", "unknown")[:8]})
+        from hedge_desk.schwab_core_data import status as schwab_core_status
+        return _json(start_response, {
+            "service": "hedge-desk-web",
+            "status": "ok",
+            "mode": "paper",
+            "live_orders_enabled": False,
+            "supabase": _cached("supabase-status", _supabase_status),
+            "schwab_core": _cached("schwab-core-status", schwab_core_status),
+            "deploy_sha": os.environ.get("RENDER_GIT_COMMIT", "unknown")[:8],
+        })
     if path == "/api/candidates":
         return _json(start_response, _cached("candidates", build_candidate_feed))
     if path == "/api/eod-candidates":
@@ -447,6 +456,8 @@ def application(environ, start_response):
 
 
 def main():
+    from hedge_desk.schwab_core_data import status as schwab_core_status
+    print("SCHWAB_CORE_STATUS " + json.dumps(schwab_core_status(), sort_keys=True), flush=True)
     port = int(os.getenv("PORT", "8765"))
     with make_server("0.0.0.0", port, application, server_class=ThreadingWSGIServer) as server:
         server.serve_forever()
