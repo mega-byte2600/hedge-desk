@@ -128,7 +128,7 @@ def build_desk_projects(fetcher=None):
             "evaluated_at": now,
             "data_status": status,
             "data_as_of": now,
-            "data_source": "Yahoo Finance (free public API)",
+            "data_source": ", ".join(sorted({q.get("source", "unknown") for q in live_data.values()})) if live_data else "data unavailable",
             "reason": reason,
             "live_data": live_data,
             "unavailable": missing,
@@ -136,14 +136,14 @@ def build_desk_projects(fetcher=None):
     return projects
 
 
-def build_live_console_report(code_commit):
+def build_live_console_report(code_commit, fetcher=None):
     """Build the console report payload from real data only.
 
     Raises RuntimeError (fail-closed) if no live data could be obtained at
     all; the route layer maps this to a 503 with an explicit reason.
     """
     now = datetime.now(timezone.utc)
-    projects = build_desk_projects()
+    projects = build_desk_projects(fetcher=fetcher)
     live_count = sum(1 for p in projects if p["data_status"] == STATUS_LIVE)
     if live_count == 0:
         raise RuntimeError("data unavailable: no live market quotes could be fetched")
@@ -162,12 +162,12 @@ def build_live_console_report(code_commit):
             "desks_total": len(projects),
         },
         "limitations": [
-            "Live market data from free public APIs (Yahoo Finance).",
+            "Primary market data: Schwab Trader API / Market Data; Yahoo Finance is failover only.",
             "Paper research context only; no trade authorization.",
             "Data may be delayed; verify before any decision.",
         ],
         "projects": projects,
-        "scenarios": build_real_scenarios(),
+        "scenarios": build_real_scenarios(fetcher=fetcher),
         "synthetic_data": False,
     }
 
