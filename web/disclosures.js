@@ -19,9 +19,9 @@ async function loadDisclosures() {
 
 function disclosureMarkup(payload) {
   const items = payload.disclosures
-    .map((d) => `<article class="disclosure-item" style="padding:14px 0;border-top:1px solid #e1e6e9">
-        <h3 style="margin:0 0 6px;font-size:13px">${escapeText(d.title)}</h3>
-        <p style="margin:0;font-size:12px;line-height:1.6;color:#596871">${escapeText(d.text)}</p>
+    .map((d) => `<article class="disclosure-item" style="padding:14px 0;border-top:1px solid #232329">
+        <h3 style="margin:0 0 6px;font-size:13px;color:#f4f1e8">${escapeText(d.title)}</h3>
+        <p style="margin:0;font-size:12px;line-height:1.6;color:#f4f1e8">${escapeText(d.text)}</p>
       </article>`)
     .join('');
   return `<section id="${MOUNT_ID}" class="panel" style="margin-top:18px" aria-labelledby="disclosures-title">
