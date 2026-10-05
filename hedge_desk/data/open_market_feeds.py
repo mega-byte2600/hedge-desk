@@ -44,6 +44,7 @@ NYFED_RATE_HISTORY_URL = "https://markets.newyorkfed.org/api/rates/{segment}/{ra
 SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 BLS_LATEST_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/{series}?latest=true"
+BLS_V1_SERIES_URL = "https://api.bls.gov/publicAPI/v1/timeseries/data/{series}"
 BEA_DATA_URL = "https://apps.bea.gov/api/data/"
 # ECB euro reference rates: the SDMX Data Portal endpoint intermittently closes
 # connections, so use the classic daily eurofxref feed (same official data).
@@ -377,13 +378,44 @@ def bls_latest_series(
     series: str,
     transport: Transport = _default_transport,
 ) -> OpenFeedResult:
-    """Fetch the latest observation for a vetted BLS macro series (no key required)."""
+    """Fetch the latest observation for a vetted BLS macro series.
+
+    Prefer the BLS v2 latest-series route. If that route is unavailable or
+    rejects an unregistered request, fall back to the official keyless v1
+    single-series route and keep only its newest observation.
+    """
     normalized = series.strip().upper()
     if normalized not in BLS_MACRO_SERIES:
         raise ValueError(f"unsupported BLS macro series: {series}")
-    payload = _fetch_json(BLS_LATEST_URL.format(series=normalized), "bls", transport)
-    if not isinstance(payload, dict) or payload.get("status") != "REQUEST_SUCCEEDED":
-        raise ValueError("bls request did not succeed")
+
+    payload = None
+    v2_error = None
+    try:
+        candidate = _fetch_json(
+            BLS_LATEST_URL.format(series=normalized), "bls-v2", transport
+        )
+        if isinstance(candidate, dict) and candidate.get("status") == "REQUEST_SUCCEEDED":
+            payload = candidate
+        else:
+            v2_error = "v2 request did not succeed"
+    except ValueError as exc:
+        v2_error = str(exc)
+
+    if payload is None:
+        try:
+            candidate = _fetch_json(
+                BLS_V1_SERIES_URL.format(series=normalized), "bls-v1", transport
+            )
+        except ValueError as exc:
+            raise ValueError(
+                f"bls fetch failed on v2 and v1; v2={v2_error}; v1={exc}"
+            ) from exc
+        if not isinstance(candidate, dict) or candidate.get("status") != "REQUEST_SUCCEEDED":
+            raise ValueError(
+                f"bls fetch failed on v2 and v1; v2={v2_error}; v1=request did not succeed"
+            )
+        payload = candidate
+
     results = payload.get("Results")
     series_rows = results.get("series") if isinstance(results, dict) else None
     if not isinstance(series_rows, list) or not series_rows:
@@ -391,12 +423,15 @@ def bls_latest_series(
     data = series_rows[0].get("data") if isinstance(series_rows[0], dict) else None
     if not isinstance(data, list) or not data:
         raise ValueError("bls payload has no observations")
+
     rows = []
-    for row in data:
+    for row in data[:1]:
         if isinstance(row, dict):
             item = dict(row)
             item["seriesID"] = normalized
             rows.append(item)
+    if not rows:
+        raise ValueError("bls payload has no usable observations")
     return OpenFeedResult(provider_id="bls", dataset=normalized, rows=tuple(rows))
 
 
