@@ -116,3 +116,11 @@ and the rule that prevents each. Two of them have already cost real time more th
 - Never expose brokerage balances, positions, account numbers, encrypted account hashes, account-selection metadata, or order state to the browser/public API.
 - Do not add order placement, cancel/replace, or execution workflows to Emporion without a separately authorized release.
 - Trading/execution occurs outside Emporion (for example, in TOS). Emporion provides compass direction; it does not steer the broker.
+
+### Research input boundary: watchlist only
+
+- The only user-supplied research input Emporion accepts is a watchlist of symbols/instruments.
+- Agent desks may enrich that watchlist with approved market, macro, filings, event, and risk data.
+- Do not ingest brokerage balances, positions, holdings, account numbers, encrypted account hashes, account-selection metadata, order history, or trade state.
+- Schwab OAuth/token state is server-side credential plumbing only for Market Data Production and is never a research input.
+- TOS or another external broker/execution venue remains the place where the user trades. Emporion is the research and decision-support compass.
