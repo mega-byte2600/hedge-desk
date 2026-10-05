@@ -175,6 +175,16 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn(".ws-capital-grid p{font-size:12px;line-height:1.6;color:#f4f1e8", professional)
         self.assertIn(".resource-open{font:10px 'IBM Plex Mono',monospace;letter-spacing:.45px;color:#dcb96f", resources)
 
+    def test_disclosure_body_is_white_on_noir(self):
+        disclosures = (WEB / "disclosures.js").read_text(encoding="utf-8")
+        index = (WEB / "index.html").read_text(encoding="utf-8")
+
+        self.assertIn("border-top:1px solid #232329", disclosures)
+        self.assertIn("color:#f4f1e8", disclosures)
+        self.assertNotIn("color:#596871", disclosures)
+        self.assertNotIn("border-top:1px solid #e1e6e9", disclosures)
+        self.assertIn("./disclosures.js?v=20261004-whitebody", index)
+
     def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
         public_assets = [
             WEB / "index.html",
