@@ -32,7 +32,9 @@ TREASURY_5Y = "DGS5"  # 5-year treasury constant maturity, % (daily)
 TREASURY_30Y = "DGS30"  # 30-year treasury constant maturity, % (daily)
 
 # CPI YoY needs ~13 months of index history.
-CPI_LOOKBACK_DAYS = 400
+# Include the prior-year monthly period even when the latest CPI release lags
+# the as-of date by several weeks. Observation-window validation enforces this.
+CPI_LOOKBACK_DAYS = 450
 
 
 def _fetch(series: str, start: _dt.date, end: _dt.date, transport) -> Sequence[Tuple[str, Decimal]] | None:

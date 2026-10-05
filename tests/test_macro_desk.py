@@ -13,6 +13,11 @@ class _FakeTransport:
 
     def __call__(self, url):
         series = url.split("id=")[1].split("&")[0]
+        if series == "CPIAUCSL":
+            from urllib.parse import parse_qs, urlparse
+            start = parse_qs(urlparse(url).query)["cosd"][0]
+            if start > "2025-08-01":
+                raise AssertionError("CPI request excludes its prior-year baseline")
         csv = self.data.get(series, "observation_date,VALUE\n")
         return 200, csv.encode("utf-8")
 
