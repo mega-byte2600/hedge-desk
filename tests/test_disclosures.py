@@ -66,8 +66,8 @@ class DisclosuresPayloadTests(unittest.TestCase):
 class DisclosuresWiringTests(unittest.TestCase):
     def test_index_html_loads_the_disclosures_module(self):
         html = (WEB / "index.html").read_text(encoding="utf-8")
-        self.assertIn('src="./disclosures.js"', html)
-        self.assertIn('type="module"', html.split('src="./disclosures.js"')[0][-40:])
+        self.assertIn('src="./disclosures.js', html)
+        self.assertIn('type="module"', html.split('src="./disclosures.js')[0][-40:])
 
     def test_renderer_follows_the_hardened_enhancement_conventions(self):
         src = (WEB / "disclosures.js").read_text(encoding="utf-8")

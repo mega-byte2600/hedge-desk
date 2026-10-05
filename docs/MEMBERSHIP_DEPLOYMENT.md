@@ -8,6 +8,7 @@ ephemeral).
 
 In your Supabase project: SQL editor → run `supabase/schema.sql`.
 It creates `members`, `otps`, `sessions`, `broker_links` and enables RLS.
+No additional Schwab schema migration is required for this read-only release.
 
 ## 2. Set environment variables on the Render service
 
@@ -19,8 +20,8 @@ It creates `members`, `otps`, `sessions`, `broker_links` and enables RLS.
 | `SUPABASE_JWT_SECRET` | Project JWT secret (Settings → API → JWT Settings) — server verifies social-login tokens with it | for social login |
 | `SOCIAL_PROVIDERS` | Comma list of enabled IdPs, e.g. `google,github,azure,apple` (default `google,github`) | optional |
 | `SCHWAB_CLIENT_ID` / `SCHWAB_CLIENT_SECRET` | Schwab app credentials (server-side only) | for broker linking |
-| `SCHWAB_REDIRECT_URI` | Must match the Schwab app callback exactly. Point it at the site root so the console finishes the link | for broker linking |
-| `BROKER_LINK_KEY` | Long random value; encrypts broker token references at rest | for broker linking |
+| `SCHWAB_REDIRECT_URI` | Must exactly match the callback registered on the Schwab App | for broker linking |
+| `BROKER_LINK_KEY` | Random secret of at least 32 bytes; AES-GCM encrypts broker tokens, expiry/scope metadata, and account hashes at rest | for broker linking |
 | `MEMBERSHIP_SECRET` | HMAC secret for OTP/session hashing. Set a long random value. | yes |
 | `GP_EMAIL` | The GP's email — the only account allowed to issue LP invites / view the cap. | yes |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` / `SMTP_FROM_NAME` | OTP email delivery. Without these, codes print to the server log (dev fallback). | for real sign-in emails |
@@ -60,8 +61,19 @@ and email-OTP still works.
 - **Sign in** (top-right) — social (Google/GitHub/…) when configured, else the
   email one-time code.
 - **Broker connection** appears for members/LPs once `SCHWAB_*` is set. It is
-  **read-only**: the desk can read positions and balances and cannot place
-  orders.
+  **read-only**: the desk can read positions/balances and access Schwab market
+  quotes, options chains, expirations, market hours, and price history. Live
+  orders are not available in this deployment.
+- After linking, the service discovers account hashes privately. The account
+  selector sends an opaque handle; account numbers and hashes stay server-side.
+- Read-only API paths: `GET /api/broker/accounts`,
+  `GET /api/broker/positions`, `GET /api/broker/balances`,
+  `GET /api/broker/quotes?symbols=SPY,QQQ`,
+  `GET /api/broker/options/chain?symbol=SPY`,
+  `GET /api/broker/options/expirations?symbol=SPY`,
+  `GET /api/broker/market/hours?market=OPTION`, and
+  `GET /api/broker/market/history?symbol=SPY&...`. These require an authenticated
+  MEMBER, LP, or GP session and a linked Schwab account.
 - **GP console** appears only for `GP_EMAIL`. It shows LP seats used/cap, total
   members, role counts, and lets the GP issue an LP invite by email. The seat
   cap is enforced server-side, so the UI cannot exceed it.
@@ -89,8 +101,12 @@ minutes. That removes cold starts regardless of your own machine.
   browser or commit it. RLS is on for all tables.
 - `MEMBERSHIP_SECRET` and `BROKER_LINK_KEY` must be long random values and must
   not be rotated casually (rotating invalidates existing sessions / broker links).
-- Real-money execution is **not** enabled. Broker access is read-only; order
-  placement is absent and gated behind the deterministic risk engine plus
-  legal/fund-structure review.
+  Existing broker records in the legacy plaintext-token envelope are re-encrypted
+  on first server-side read only when the key is at least 32 bytes; otherwise the
+  link fails closed and requires reauthentication.
+- Real-money execution is **not** enabled. No order route is constructed by the
+  server. The existing deterministic
+  risk/compliance/back-office/human/kill-switch and live-release gates must
+  produce an approved authorization before a separate release can introduce live order routing.
 - LPs are investors in the LLC, not payers. Fee schedules are set by the GP in
   the operating agreement. Obtain securities counsel before any live LP capital.

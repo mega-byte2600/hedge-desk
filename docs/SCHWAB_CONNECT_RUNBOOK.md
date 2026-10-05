@@ -4,77 +4,90 @@ Goal: prove the real Schwab API link works end-to-end, then stage it toward a
 gated test contract. Lean: each step has a measurable outcome; nothing here can
 transmit your secret to git, logs, or the chat.
 
-Status of what already exists (verified 2026-09-19):
-- `hedge_desk/brokers/schwab_oauth.py` — OAuth auth-code flow, read-only scope.
-- `hedge_desk/brokers/schwab_readonly.py` — read-only balances/positions.
-- `hedge_desk/connect_local.py` — local runner: --auth then exchange+probe.
-  CSRF state saved/verified/consumed (0600); secrets dir 0700; no secret in output.
-- `hedge_desk/schwab_setup.py` — one-command prompt for keys (getpass), 0600 env.
-- 697 unit tests green.
+Current branch status (2026-10-03):
+- `hedge_desk/brokers/schwab_oauth.py` — documented App authorization-code
+  flow; the URL does not guess an OAuth scope.
+- `hedge_desk/brokers/schwab_readonly.py` — account discovery and read-only
+  balances/positions using Schwab encrypted account hashes.
+- `hedge_desk/brokers/schwab_market_data.py` — production REST quotes, option
+  chains, expiration chains, market hours, and price history.
+- `hedge_desk/brokers/schwab_tokens.py` and `broker_link.py` — encrypted token
+  metadata and seven-day refresh-token lifecycle.
+- The server exposes authenticated, read-only market-data routes. Account
+  hashes remain private; the browser selects an account using an opaque handle.
+- `hedge_desk/connect_local.py` — optional local read-only diagnostic runner.
+- Automated repository test status is recorded below; the test suite does not
+  use a real Schwab account.
 
 Safety rails (do not skip):
-- Secrets live ONLY in `~/.schwab/env.env` (0600). Never in git, chat, logs.
-- Every step below is READ-ONLY until explicitly flagged. Placement is a separate,
-  release-gated step and is NOT enabled here.
+- Production credentials live only in Render's server-side environment. Never
+  put them in git, browser/frontend settings, logs, or chat.
+- Every deployed step below is READ-ONLY. The separate live-release gate is
+  still blocked, so this branch does not place, cancel, or replace a live order.
 
 ---------------------------------------------------------------
 PHASE 1 — PORTAL APP (you, in the browser; ~10 min)
 ---------------------------------------------------------------
-[ ] 1. developer.schwab.com > My Apps > Create App.
-[ ] 2. Name it anything; request OAuth scopes. Minimal is read-only; if your app
-      is "Trader API - Individual" that is fine.
-[ ] 3. Locate the App Key (your SCHWAB_CLIENT_ID) and App Secret (SCHWAB_CLIENT_SECRET).
-      The secret is visible only after the app is approved/generated. If it is
-      still pending, finish approval now — this is the single go/no-go item.
-[ ] 4. Set Callbacks / redirect_uri to exactly:  https://127.0.0.1
-      (Schwab rejects mismatches; must match SCHWAB_REDIRECT_URI exactly.)
-LEARN: you have an approved app with a visible App Secret + a callback URL.
-       If either is missing, stop here — nothing downstream works without it.
+[ ] 1. In developer.schwab.com > My Apps, open the approved production App.
+[ ] 2. Confirm both the approved Trader API product and Market Data Production
+      access are assigned to that App/client ID.
+[ ] 3. Set the callback to exactly the deployed Hedge Desk URL:
+      https://hedge-desk.onrender.com (no trailing slash). This exact value must
+      also be `SCHWAB_REDIRECT_URI` in Render.
+[ ] 4. Locate the App Key and App Secret in the portal. Do not paste either into
+      chat, source control, browser code, or logs.
+LEARN: the production App has both required product entitlements and its
+       callback exactly matches the Render setting.
 
 ---------------------------------------------------------------
-PHASE 2 — TURNKEY LOCAL SETUP (you, in the repo terminal; ~3 min)
+PHASE 2 — PERSISTENCE + SERVER CONFIG (you, Render/Supabase; ~10 min)
 ---------------------------------------------------------------
-[ ] 5. cd ~/workspace/projects/hedge-desk
-[ ] 6. python3 -m hedge_desk.schwab_setup
-        -> prompts: App Key, App Secret (hidden as you type), Redirect URI (https://127.0.0.1)
-        -> writes ~/.schwab/env.env mode 0600; prints a Schwab login URL.
-[ ] 7. Confirm the file landed and is private:
-        ls -l ~/.schwab/env.env        # should show -rw-------
-MEASURE: an authorize URL prints and the env file is 0600. If the file is
-         missing or group-readable, restart using schwab_setup (it enforces perms).
+[ ] 5. In Supabase SQL Editor, run `supabase/schema.sql` once if it has not
+      already been applied. It creates `broker_links` with RLS enabled.
+[ ] 6. In Render > Hedge Desk service > Environment, add/update these server-only
+      variables: `SCHWAB_CLIENT_ID`, `SCHWAB_CLIENT_SECRET`,
+      `SCHWAB_REDIRECT_URI=https://hedge-desk.onrender.com`, and
+      `BROKER_LINK_KEY` (random, at least 32 bytes).
+[ ] 7. Ensure `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` are already configured
+      on that same service. They must remain server-side. The service key lets
+      Hedge Desk persist encrypted OAuth state in Supabase; it does not belong
+      in frontend settings.
+[ ] 8. Save the Render environment changes and redeploy the reviewed build.
+MEASURE: service health is up and broker status no longer reports
+         `broker_not_configured`. This release needs no new schema migration.
 
 ---------------------------------------------------------------
-PHASE 3 — AUTHORIZE & EXCHANGE (you, browser + terminal; ~3 min)
+PHASE 3 — AUTHORIZE & VERIFY (you, Hedge Desk + browser; ~3 min)
 ---------------------------------------------------------------
-[ ] 8. Open the printed URL in your browser; log in to Schwab.
-        You will be redirected to https://127.0.0.1 with a query string:
-          ?code=XXXX...&state=YYYY...
-[ ] 9. Copy BOTH code and state from the address bar.
-[ ] 10. Exchange + probe (the token + read-only call happen on YOUR machine):
-        python3 -m hedge_desk.connect_local --env ~/.schwab/env.env --code <code> --state <state>
-        -> prints account_count and accounts, or an error like no_saved_state /
-           state_mismatch / exchange_failed.
-MEASURE: account_count >= 1 (read-only). That is the real data point that
-         proves the broker link works. If state_mismatch, you pasted the wrong
-         state (rerun --auth to generate a fresh one and retry).
+[ ] 9. Sign in to Hedge Desk with an entitled MEMBER, LP, or GP account and
+      open Account > Connect broker.
+[ ] 10. Choose Schwab and complete its sign-in/consent screen. Schwab redirects
+       to Hedge Desk; never copy the authorization code into chat.
+[ ] 11. Select the intended account from the account selector. Account numbers
+       and Schwab account hashes remain private to the server.
+[ ] 12. Confirm balances and positions load, then use the read-only market-data
+       endpoints listed in `docs/MEMBERSHIP_DEPLOYMENT.md` to verify quotes,
+       options chains, expirations, market hours, and history.
+MEASURE: broker status is linked, account selector shows an available account,
+         and a quote/chain response succeeds for an authenticated user. This
+         proves the read-only connection; it does not prove live trading.
 
 ---------------------------------------------------------------
-PHASE 4 — STAGE TOWARD A TEST CONTRACT (build-only; NOT live)
+PHASE 4 — TRADING STATUS (no operator action for this connection)
 ---------------------------------------------------------------
-[ ] 11. (Later, gated) An order adapter is the NEXT build slice. It is held behind
-        the existing release gate (release.py: 9 evidence items; kill-switch DR;
-        broker adapter certified). Do NOT place an order until that gate passes.
-        This runbook does not enable placement.
-
-LEARN: the decision to build the placement slice is based on the Phase 3
-       account_count outcome — the measured connection works. If it does not,
-       stop and diagnose (app approval? redirect mismatch? scope?).
+Trader API approval does not by itself connect live order placement. This branch
+does not expose an order endpoint. Any future live-trading release needs its own
+review and the existing risk, compliance, back-office, human approval, and
+kill-switch evidence.
 
 ---------------------------------------------------------------
 V&V / HONESTY LABELS
 ---------------------------------------------------------------
-- VERIFIED: 697 tests green; --auth saves 0600 state, exchange refuses without a
-  saved state and consumes it (single-use); no secret in output (all measured).
-- VALIDATED: matches the GP's goal — set up the infra to connect, prove it with a
-  real read-only call, then decide the placement slice on that measured result.
-- NOT YET: any order placement; that requires the release gate evidence.
+- VERIFIED on this branch: Focused automated connection tests pass; OAuth state is checked
+  single-use; mocked token/account/market-data flows pass. No real account was
+  used by tests.
+- VALIDATED: account linking and market-data routes have deterministic mocked
+  tests; live credentials are not used by tests.
+- NOT YET: this branch has not been deployed or exercised with the approved App
+  credentials. Live order placement remains unavailable in the app; Trader API
+  approval alone does not authorize Hedge Desk to submit trades.

@@ -25,7 +25,7 @@
   <script type="module" src="./resources.js?v=20261004-sitewide"></script>
   <script type="module" src="./desk-architecture.js"></script>
   <script src="./navigation-stability.js"></script>
-  <script type="module" src="./disclosures.js"></script>
+  <script type="module" src="./disclosures.js?v=20261004-whitebody"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to workspace</a>
@@ -38,7 +38,6 @@
     <a href="#desks" data-nav="desks"><span>▤</span> Research desks <b>6+1</b></a>
     <a href="#journal" data-nav="journal"><span>▧</span> Yellow Sheets</a>
     <a href="#resources" data-nav="resources"><span>↗</span> Research resources</a>
-    <a href="#guide" data-nav="guide"><span>📘</span> Options Guide</a>
     <a href="#workbench" data-nav="workbench"><span>◆</span> Options Workbench</a>
     <a href="#real-estate" data-nav="real-estate"><span>⌂</span> Real Estate</a>
     <a href="#brief" data-nav="brief"><span>☀</span> Daily brief</a>
@@ -72,6 +71,9 @@
       <div id="acct-broker" class="acct-broker" style="display:none">
         <h3>Schwab connection</h3>
         <p id="acct-broker-label" class="small-note">Sign in above to connect your Schwab account (read-only).</p>
+        <label id="acct-broker-account-wrap" class="form-field" style="display:none">Schwab account
+          <select id="acct-broker-account" class="input"></select>
+        </label>
         <div class="acct-actions">
           <button id="acct-broker-connect" class="btn primary" type="button" style="display:none">Connect Schwab (read-only)</button>
           <button id="acct-broker-disconnect" class="btn" type="button" style="display:none">Disconnect</button>
