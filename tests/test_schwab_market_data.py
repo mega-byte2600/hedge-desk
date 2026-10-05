@@ -114,6 +114,33 @@ class SchwabMarketDataTests(unittest.TestCase):
         self.assertEqual(adapter.instruments("t", "AAPL", "")["status"], "error")
         self.assertEqual(adapter.instrument_by_cusip("t", "")["status"], "error")
 
+    def test_quote_batching_caps_requests_at_fifty_symbols(self):
+        seen = []
+        def transport(method, url, headers):
+            seen.append(parse_qs(urlparse(url).query)["symbols"][0].split(","))
+            payload = {symbol: {"quote": {"lastPrice": 1}} for symbol in seen[-1]}
+            import json
+            return 200, json.dumps(payload).encode()
+
+        symbols = [f"S{i}" for i in range(101)]
+        adapter = SchwabMarketDataBroker(transport=transport, quote_cache_seconds=0)
+        result = adapter.quotes("token", symbols)
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual([len(batch) for batch in seen], [50, 50, 1])
+        self.assertEqual(len(result["data"]), 101)
+
+    def test_configured_rpm_is_conservatively_capped(self):
+        from unittest.mock import patch
+        from hedge_desk.brokers import schwab_market_data as md
+
+        with patch.dict("os.environ", {"SCHWAB_MARKET_DATA_RPM": "999"}, clear=False):
+            self.assertEqual(md._configured_rpm(), 120)
+        with patch.dict("os.environ", {"SCHWAB_MARKET_DATA_RPM": "90"}, clear=False):
+            self.assertEqual(md._configured_rpm(), 90)
+        with patch.dict("os.environ", {"SCHWAB_MARKET_DATA_RPM": "bad"}, clear=False):
+            self.assertEqual(md._configured_rpm(), 90)
+
 
 if __name__ == "__main__":
     unittest.main()
