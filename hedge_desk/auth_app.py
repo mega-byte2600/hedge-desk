@@ -286,46 +286,20 @@ def make_auth_app(
                 {"error": "incomplete_token_response"},
                 "502 Bad Gateway",
             )
-        if broker_adapter is None or not callable(getattr(broker_adapter, "account_hashes", None)):
-            return _json_response(
-                start_response, {"error": "schwab_account_discovery_unavailable"},
-                "503 Service Unavailable",
-            )
-        try:
-            discovered = broker_adapter.account_hashes(tokens["access_token"])
-        except Exception:
-            return _json_response(
-                start_response, {"error": "schwab_account_discovery_failed"},
-                "502 Bad Gateway",
-            )
-        hashes = discovered.get("account_hashes") if isinstance(discovered, dict) else None
-        if (
-            not isinstance(discovered, dict)
-            or discovered.get("status") != "ok"
-            or not isinstance(hashes, list)
-            or not hashes
-            or any(not isinstance(value, str) or not value for value in hashes)
-            or len(set(hashes)) != len(hashes)
-        ):
-            return _json_response(
-                start_response, {"error": "schwab_account_discovery_failed"},
-                "502 Bad Gateway",
-            )
+        # Hard privacy boundary: Schwab is linked only as the server-side OAuth
+        # credential vehicle for Market Data Production. Do not discover,
+        # persist, select, or expose brokerage accounts, balances, or positions.
         instant = datetime.now(timezone.utc)
-        selected_hash = hashes[0] if len(hashes) == 1 else ""
         try:
             broker_store.link(
                 email,
                 _role_for(email, decision),
                 getattr(broker_oauth, "name", "schwab"),
                 tokens["access_token"],
-                account_label=str(data.get("account_label", ""))[:64],
                 refresh_token=tokens["refresh_token"],
                 access_expires_at=(instant + timedelta(seconds=float(tokens["expires_in"]))).isoformat(),
                 refresh_token_issued_at=instant.isoformat(),
                 scope=tokens.get("scope", "api"),
-                selected_account_hash=selected_hash,
-                available_account_hashes=json.dumps(hashes, separators=(",", ":")),
             )
         except (PermissionError, ValueError) as exc:
             return _json_response(start_response, {"error": "broker_link_invalid"}, "400 Bad Request")
@@ -590,12 +564,9 @@ def make_auth_app(
             role = _role_for(email, decision)
             configured = bool(broker_oauth and getattr(broker_oauth.config, "configured", False))
             linked = False
-            account_selected = False
             if broker_store and decision.allowed and can_access_real_data(role or ""):
                 try:
                     linked = bool(broker_store.connection(email).get("linked"))
-                    if linked:
-                        account_selected = bool(broker_store.token_state(email).get("selected_account_hash"))
                 except Exception:
                     linked = False
             return _json_response(
@@ -606,7 +577,7 @@ def make_auth_app(
                     "role": role,
                     "allowed": decision.allowed and can_access_real_data(role or ""),
                     "market_data_enabled": bool(configured and linked and market_data_adapter),
-                    "account_selected": account_selected,
+                    "market_data_only": True,
                     "live_orders_enabled": False,
                 },
             )
@@ -664,127 +635,8 @@ def make_auth_app(
                 broker_store.unlink(email)
             return _json_response(start_response, {"status": "unlinked"})
 
-        # ---- broker: account list (opaque IDs only) -------------------------
-        if path == "/api/broker/accounts" and method == "GET":
-            if not email:
-                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
-            decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
-                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
-            if not broker_store or not broker_adapter:
-                return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
-            try:
-                if not broker_store.connection(email).get("linked"):
-                    return _json_response(start_response, {"error": "no_broker_linked"}, "409 Conflict")
-                payload, token = schwab_access(email)
-                hashes = json.loads(payload.get("available_account_hashes", "[]"))
-            except Exception:
-                return _json_response(start_response, {"error": "schwab_reauthentication_required"}, "401 Unauthorized")
-            if not isinstance(hashes, list):
-                return _json_response(start_response, {"error": "schwab_account_state_invalid"}, "502 Bad Gateway")
-            accounts = [
-                {
-                    "account_id": account_handle(email, value),
-                    "label": f"Schwab account {index + 1}",
-                    "selected": hmac.compare_digest(value, payload.get("selected_account_hash", "")),
-                }
-                for index, value in enumerate(hashes)
-            ]
-            return _json_response(start_response, {"broker": "schwab", "accounts": accounts})
-
-        # ---- broker: select linked account by opaque account ID -------------
-        if path == "/api/broker/account" and method == "POST":
-            if not email:
-                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
-            decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
-                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
-            if not broker_store:
-                return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
-            data = _read_json(environ)
-            handle = str(data.get("account_id", ""))
-            try:
-                payload = broker_store.token_state(email)
-                hashes = json.loads(payload.get("available_account_hashes", "[]"))
-                matches = [value for value in hashes if isinstance(value, str) and hmac.compare_digest(account_handle(email, value), handle)]
-                if len(matches) != 1:
-                    raise PermissionError("invalid_account_id")
-                broker_store.select_schwab_account(email, matches[0])
-            except PermissionError:
-                return _json_response(start_response, {"error": "invalid_account_id"}, "400 Bad Request")
-            except Exception:
-                return _json_response(start_response, {"error": "broker_account_selection_failed"}, "503 Service Unavailable")
-            return _json_response(start_response, {"status": "selected"})
-
-        # ---- broker: read-only positions (member/LP + linked) ----------------
-        if path == "/api/broker/positions" and method == "GET":
-            if not email:
-                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
-            decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
-                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
-            if not broker_store or not broker_adapter:
-                return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
-            conn = broker_store.connection(email)
-            if not conn.get("linked"):
-                return _json_response(start_response, {"error": "no_broker_linked"}, "409 Conflict")
-            try:
-                payload, token = schwab_access(email)
-            except Exception:
-                return _json_response(start_response, {"error": "schwab_reauthentication_required"}, "401 Unauthorized")
-            account_hash = payload.get("selected_account_hash", "")
-            if not account_hash:
-                return _json_response(start_response, {"error": "schwab_account_selection_required"}, "409 Conflict")
-            # Read-only: the adapter never places orders.
-            positions = broker_adapter.positions(token, account_hash)
-            if isinstance(positions, dict) and positions.get("http_status") == 401:
-                try:
-                    payload, token = schwab_access(email, force_refresh=True)
-                    positions = broker_adapter.positions(token, payload.get("selected_account_hash", ""))
-                except Exception:
-                    return _json_response(start_response, {"error": "schwab_reauthentication_required"}, "401 Unauthorized")
-            if not isinstance(positions, dict) or positions.get("status") != "ok":
-                http_status = positions.get("http_status") if isinstance(positions, dict) else None
-                status = "401 Unauthorized" if http_status == 401 else "502 Bad Gateway"
-                return _json_response(start_response, {"error": "schwab_positions_unavailable", "read_only": True}, status)
-            return _json_response(
-                start_response,
-                {"broker": conn.get("broker"), "read_only": True, "positions": positions},
-            )
-
-        if path == "/api/broker/balances" and method == "GET":
-            if not email:
-                return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
-            decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
-                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
-            if not broker_store or not broker_adapter:
-                return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
-            conn = broker_store.connection(email)
-            if not conn.get("linked"):
-                return _json_response(start_response, {"error": "no_broker_linked"}, "409 Conflict")
-            try:
-                payload, token = schwab_access(email)
-            except Exception:
-                return _json_response(start_response, {"error": "schwab_reauthentication_required"}, "401 Unauthorized")
-            account_hash = payload.get("selected_account_hash", "")
-            if not account_hash:
-                return _json_response(start_response, {"error": "schwab_account_selection_required"}, "409 Conflict")
-            balances = broker_adapter.balances(token, account_hash)
-            if isinstance(balances, dict) and balances.get("http_status") == 401:
-                try:
-                    payload, token = schwab_access(email, force_refresh=True)
-                    balances = broker_adapter.balances(token, payload.get("selected_account_hash", ""))
-                except Exception:
-                    return _json_response(start_response, {"error": "schwab_reauthentication_required"}, "401 Unauthorized")
-            if not isinstance(balances, dict) or balances.get("status") != "ok":
-                http_status = balances.get("http_status") if isinstance(balances, dict) else None
-                status = "401 Unauthorized" if http_status == 401 else "502 Bad Gateway"
-                return _json_response(start_response, {"error": "schwab_balances_unavailable", "read_only": True}, status)
-            return _json_response(
-                start_response,
-                {"broker": conn.get("broker"), "read_only": True, "balances": balances},
-            )
+        # Hard privacy rule: no account-list, account-selection, position, or
+        # balance endpoints are exposed. Schwab is market-data-only in Emporion.
 
         # ---- broker: Schwab production market data (read-only) --------------
         market_routes = {
