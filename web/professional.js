@@ -218,7 +218,6 @@ function renderContext() {
   installStyle();
   applyBrand();
   document.body.dataset.route = currentRoute();
-  document.getElementById('wall-street-context')?.remove();
   document.querySelectorAll('.ws-operational,.ws-capital').forEach(node => node.remove());
   const main = document.querySelector('main');
   const head = main?.querySelector('.page-head');
