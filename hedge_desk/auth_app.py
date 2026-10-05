@@ -793,6 +793,10 @@ def make_auth_app(
             "/api/broker/options/expirations",
             "/api/broker/market/hours",
             "/api/broker/market/history",
+            "/api/broker/market/movers",
+            "/api/broker/market/hours/all",
+            "/api/broker/instruments",
+            "/api/broker/instruments/cusip",
         }
         if path in market_routes and method == "GET":
             if not email:
@@ -828,6 +832,15 @@ def make_auth_app(
                 result = market_data_adapter.expiration_chain(token, one("symbol").upper())
             elif path == "/api/broker/market/hours":
                 result = market_data_adapter.market_hours(token, one("market"), date=one("date"))
+            elif path == "/api/broker/market/hours/all":
+                result = market_data_adapter.market_hours_all(token, one("markets"), date=one("date"))
+            elif path == "/api/broker/market/movers":
+                params = {name: one(name) for name in ("sort", "frequency") if one(name)}
+                result = market_data_adapter.movers(token, one("index"), **params)
+            elif path == "/api/broker/instruments":
+                result = market_data_adapter.instruments(token, one("symbols"), one("projection"))
+            elif path == "/api/broker/instruments/cusip":
+                result = market_data_adapter.instrument_by_cusip(token, one("cusip"))
             else:
                 params = {name: one(name) for name in (
                     "periodType", "period", "frequencyType", "frequency", "startDate",
@@ -845,6 +858,14 @@ def make_auth_app(
                         result = market_data_adapter.expiration_chain(token, one("symbol").upper())
                     elif path == "/api/broker/market/hours":
                         result = market_data_adapter.market_hours(token, one("market"), date=one("date"))
+                    elif path == "/api/broker/market/hours/all":
+                        result = market_data_adapter.market_hours_all(token, one("markets"), date=one("date"))
+                    elif path == "/api/broker/market/movers":
+                        result = market_data_adapter.movers(token, one("index"), **params)
+                    elif path == "/api/broker/instruments":
+                        result = market_data_adapter.instruments(token, one("symbols"), one("projection"))
+                    elif path == "/api/broker/instruments/cusip":
+                        result = market_data_adapter.instrument_by_cusip(token, one("cusip"))
                     else:
                         result = market_data_adapter.price_history(token, one("symbol").upper(), **params)
                 except Exception:
