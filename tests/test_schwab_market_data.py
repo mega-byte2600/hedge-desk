@@ -82,6 +82,38 @@ class SchwabMarketDataTests(unittest.TestCase):
             with self.subTest(url=url), self.assertRaises(ValueError):
                 SchwabMarketDataBroker(base_url=url)
 
+    def test_full_market_data_surface_routes_to_official_paths(self):
+        seen = []
+
+        def transport(method, url, headers):
+            seen.append((method, url, headers))
+            return 200, b'{}'
+
+        adapter = SchwabMarketDataBroker(transport=transport)
+        self.assertEqual(adapter.movers("t", "$SPX", sort="VOLUME", frequency=5)["status"], "ok")
+        self.assertEqual(urlparse(seen[-1][1]).path, "/marketdata/v1/movers/%24SPX")
+
+        self.assertEqual(adapter.market_hours_all("t", "equity,option", date="2026-10-05")["status"], "ok")
+        self.assertEqual(urlparse(seen[-1][1]).path, "/marketdata/v1/markets")
+
+        self.assertEqual(adapter.instruments("t", "AAPL", "fundamental")["status"], "ok")
+        self.assertEqual(urlparse(seen[-1][1]).path, "/marketdata/v1/instruments")
+
+        self.assertEqual(adapter.instrument_by_cusip("t", "037833100")["status"], "ok")
+        self.assertEqual(urlparse(seen[-1][1]).path, "/marketdata/v1/instruments/037833100")
+
+    def test_full_market_data_surface_rejects_invalid_inputs_without_network(self):
+        def never(*args):
+            raise AssertionError("must not send")
+
+        adapter = SchwabMarketDataBroker(transport=never)
+        self.assertEqual(adapter.movers("t", "", sort="VOLUME")["status"], "error")
+        self.assertEqual(adapter.movers("t", "$SPX", nope=1)["status"], "error")
+        self.assertEqual(adapter.market_hours_all("t", "equity", date="bad")["status"], "error")
+        self.assertEqual(adapter.instruments("t", "", "fundamental")["status"], "error")
+        self.assertEqual(adapter.instruments("t", "AAPL", "")["status"], "error")
+        self.assertEqual(adapter.instrument_by_cusip("t", "")["status"], "error")
+
 
 if __name__ == "__main__":
     unittest.main()
