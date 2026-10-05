@@ -133,3 +133,27 @@ means at hand, say which capability is missing rather than gesturing at uncertai
 
 Also: never claim a fix is live until the deployed artefact has been re-measured. Merged is
 not deployed, and deployed is not correct.
+
+## 10. One DOM node, one owner: overlapping module ownership breaks pages silently
+
+**What happened.** The About page broke on prod twice in one day from the same
+structural defect. First, two JS modules owned the same About branding:
+professional.js rendered the About header (with the logo), and brand-logo.js
+watched the DOM and injected a second Emporion lockup into it -- duplicate
+logos on prod (PRs #146/#149). Second, professional.js watched `#main` with a
+MutationObserver whose zero-arg callback re-ran `renderContext()` on *every*
+childList mutation, including the ones `renderContext()` itself makes by
+setting `holder.innerHTML` -- a self-triggering loop that made the About page
+disappear/flicker on prod (PR #150). CI, CodeQL, and the secret scan were all
+green both times: they validate code, not the rendered page, and no test
+asserted anything about DOM ownership.
+
+**Rule.** Every DOM node has exactly one owning module. A second module that
+writes to, injects into, or observes-and-rewrites the same node is a defect
+even when both writers are individually idempotent -- idempotency hides the
+overlap until the day it doesn't. Ownership is enforced statically:
+`tests/test_about_dom_ownership.py` asserts single-ownership invariants over
+`web/*.js` (one creator per brand selector; observers must inspect their
+mutation records and skip self-mutations). A MutationObserver callback that
+takes no arguments and re-renders unconditionally is the loop pattern --
+it must never merge.
