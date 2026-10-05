@@ -99,7 +99,10 @@ function aboutCapitalBlock() {
   return `
     <section class="ws-capital" aria-label="Emporion project overview">
       <div class="ws-capital-head">
-        <div><div class="ws-label">EMPORION</div><h2>Markets · Intelligence · Discipline</h2><p class="ws-brandline">A Bolton Investment Group (BIG) Project</p></div>
+        <div class="ws-about-brand">
+          <img class="emporion-about-logo" src="./brand/emporion-logo-hermes-transparent.png?v=20261004-power" alt="Emporion compass mark" width="112" height="112">
+          <div><div class="ws-label">EMPORION</div><h2>Markets · Intelligence · Discipline</h2><p class="ws-brandline">A Bolton Investment Group (BIG) Project</p></div>
+        </div>
         <span class="ws-boundary">RESEARCH PLATFORM</span>
       </div>
       <div class="ws-capital-grid">
@@ -130,13 +133,13 @@ function installStyle() {
     .ws-list-row-action{cursor:pointer}.ws-list-row-action:hover{background:#17171b}.ws-list-row-action:focus-visible{outline:2px solid #c6a15b;outline-offset:-2px}
     .ws-desk-openable{cursor:pointer}.ws-desk-openable:hover{background:#17171b}.ws-desk-openable:focus-visible{outline:2px solid #c6a15b;outline-offset:-2px}
     .ws-desk-methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ws-desk-methods article{padding:22px;border-right:1px solid #232329;border-bottom:1px solid #232329}.ws-desk-methods article:nth-child(2n){border-right:0}.ws-desk-methods article:nth-last-child(-n+2){border-bottom:0}.ws-desk-methods h2{font-size:16px;margin:8px 0;color:#dcb96f;font-family:'Fraunces',Georgia,serif}.ws-desk-methods p{font-size:12px;line-height:1.6;color:#f4f1e8;min-height:38px}
-    .ws-capital-head{padding:19px 21px;border-bottom:1px solid #232329;display:flex;align-items:center;justify-content:space-between;gap:18px}.ws-capital-head h2{margin-top:7px}.ws-brandline{margin:6px 0 0;font:10px 'IBM Plex Mono',monospace;letter-spacing:.6px;color:#a39e93}.ws-boundary{font:10px 'IBM Plex Mono',monospace;letter-spacing:.7px;background:#17130d;border:1px solid #8a6d3b;padding:7px 9px;border-radius:3px;color:#dcb96f;white-space:nowrap}
+    .ws-capital-head{padding:19px 21px;border-bottom:1px solid #232329;display:flex;align-items:center;justify-content:space-between;gap:18px}.ws-about-brand{display:flex;align-items:center;gap:18px;min-width:0}.emporion-about-logo{width:112px;height:112px;object-fit:contain;flex:0 0 112px}.ws-capital-head h2{margin-top:7px}.ws-brandline{margin:6px 0 0;font:10px 'IBM Plex Mono',monospace;letter-spacing:.6px;color:#a39e93}.ws-boundary{font:10px 'IBM Plex Mono',monospace;letter-spacing:.7px;background:#17130d;border:1px solid #8a6d3b;padding:7px 9px;border-radius:3px;color:#dcb96f;white-space:nowrap}
     .ws-capital-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.ws-capital-grid article{padding:20px 21px;border-right:1px solid #232329;border-bottom:1px solid #232329}.ws-capital-grid article:nth-child(2n){border-right:0}.ws-capital-grid article:nth-last-child(-n+2){border-bottom:0}.ws-capital-grid h3{font-size:14px;margin:0 0 8px;color:#dcb96f;font-family:'Fraunces',Georgia,serif}.ws-capital-grid p{font-size:12px;line-height:1.6;color:#f4f1e8;margin:0}
     .ws-inspiration-note{font-size:11px!important;color:#a39e93!important}.ws-legal{margin:0;padding:14px 21px;background:#0a0a0c;color:#f4f1e8;font-size:11px;line-height:1.55}
     body[data-route='overview'] #main>.notice,body[data-route='overview'] #main>.stats,body[data-route='overview'] #main>.split,body[data-route='overview'] #main>.lower{display:none}
     body[data-route='desks'] #main>.cards{display:none}
     @media(max-width:800px){.ws-overview-grid,.ws-desk-methods,.ws-continuum,.ws-ror-grid{grid-template-columns:1fr}.ws-overview-grid article,.ws-desk-methods article,.ws-continuum article,.ws-ror-grid article{border-right:0;border-bottom:1px solid #232329}.ws-overview-grid article:last-child,.ws-desk-methods article:last-child,.ws-continuum article:last-child,.ws-ror-grid article:last-child{border-bottom:0}.ws-list-head,.ws-list-row{grid-template-columns:1fr}.ws-state{margin-top:5px}.ws-process-line i{width:12px}}
-    @media(max-width:650px){.ws-capital-grid{grid-template-columns:1fr}.ws-capital-grid article{border-right:0;border-bottom:1px solid #232329}.ws-capital-grid article:last-child{border-bottom:0}.ws-tape{gap:9px 14px}.ws-tape a{margin-left:0;width:100%}.ws-capital-head{align-items:flex-start;flex-direction:column}}
+    @media(max-width:650px){.ws-capital-grid{grid-template-columns:1fr}.ws-capital-grid article{border-right:0;border-bottom:1px solid #232329}.ws-capital-grid article:last-child{border-bottom:0}.ws-tape{gap:9px 14px}.ws-tape a{margin-left:0;width:100%}.ws-capital-head{align-items:flex-start;flex-direction:column}.ws-about-brand{align-items:flex-start}.emporion-about-logo{width:96px;height:96px;flex-basis:96px}}
   `;
   document.head.appendChild(style);
 }
