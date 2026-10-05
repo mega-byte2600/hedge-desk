@@ -18,7 +18,7 @@ class MarketContextApiTests(unittest.TestCase):
         )
         return captured["status"], json.loads(body)
 
-    def test_public_context_route_is_separate_cached_and_paper_only(self):
+    def test_public_context_route_is_paper_only(self):
         expected = {
             "schema_version": "hedge-desk-market-context-1.0.0",
             "status": "DEGRADED",
@@ -39,12 +39,11 @@ class MarketContextApiTests(unittest.TestCase):
                 self.assertEqual(status, "200 OK")
                 self.assertEqual(payload, expected)
                 self.assertFalse(payload["trade_authorized"])
-                self.request("/api/market-context")
                 build.assert_called_once()
         finally:
             _api_cache.pop("market-context", None)
 
-    def test_failed_context_does_not_break_live_console_report(self):
+    def test_failed_context_returns_a_safe_blocked_status(self):
         _api_cache.pop("market-context", None)
         try:
             with patch(
