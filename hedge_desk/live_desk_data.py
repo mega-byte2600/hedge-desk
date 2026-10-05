@@ -76,16 +76,9 @@ def _fetch_yahoo(symbol, timeout=8):
 
 
 def fetch_market_snapshot(symbols, timeout=8):
-    """Fetch live quotes for symbols. Returns (data_dict, unavailable_list)."""
-    data = {}
-    unavailable = []
-    for symbol in symbols:
-        quote = _fetch_yahoo(symbol, timeout=timeout)
-        if quote is None:
-            unavailable.append({"symbol": symbol, "reason": "quote unavailable from Yahoo Finance"})
-        else:
-            data[symbol] = quote
-    return data, unavailable
+    """Fetch production quotes with Schwab primary and Yahoo per-symbol failover."""
+    from hedge_desk.schwab_core_data import fetch_market_snapshot as schwab_primary
+    return schwab_primary(symbols, timeout=timeout)
 
 
 def build_desk_projects(fetcher=None):
