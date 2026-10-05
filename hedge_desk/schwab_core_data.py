@@ -18,6 +18,24 @@ from hedge_desk.brokers.schwab_tokens import SchwabTokenManager, SchwabTokenStat
 
 SOURCE_NAME = "Schwab Trader API / Market Data"
 FALLBACK_SOURCE_NAME = "Yahoo Finance fallback"
+CORROBORATIVE_SOURCE_NAME = "Yahoo Finance corroborative"
+DEFAULT_DELTA_BPS = 50.0
+
+
+def _delta_threshold_bps() -> float:
+    try:
+        value = float(os.getenv("EMPORION_MARKET_DATA_DELTA_BPS", str(DEFAULT_DELTA_BPS)))
+    except (TypeError, ValueError):
+        return DEFAULT_DELTA_BPS
+    return value if value > 0 else DEFAULT_DELTA_BPS
+
+
+def _delta_bps(primary: dict, secondary: dict) -> float | None:
+    p = _as_number(primary.get("last"))
+    s = _as_number(secondary.get("last"))
+    if p in (None, 0) or s is None:
+        return None
+    return abs(s - p) / abs(p) * 10000.0
 
 
 def _data_email() -> str:
@@ -122,11 +140,17 @@ def _parse_quote(symbol: str, item: dict) -> dict | None:
 
 
 def fetch_market_snapshot(symbols, timeout=8):
-    """Fetch Schwab first; use Yahoo only for symbols Schwab cannot return."""
-    # Local import avoids coupling the fallback into the broker package.
+    """Use Schwab where it has quote coverage; corroborate overlapping quotes.
+
+    Schwab is primary only for the market-data capability it actually supplies.
+    Yahoo is secondary/corroborative for overlapping quotes, but is promoted for
+    a datum when the observed price delta breaches the configured tolerance.
+    If Schwab has no datum, Yahoo becomes primary for that datum.
+    """
     from hedge_desk.live_desk_data import _fetch_yahoo
 
     normalized = [str(s).strip().upper() for s in symbols if str(s).strip()]
+    schwab = {}
     data = {}
     unavailable = []
     schwab_error = ""
@@ -140,27 +164,53 @@ def fetch_market_snapshot(symbols, timeout=8):
             payload = result.get("data")
             if isinstance(payload, dict):
                 for symbol in normalized:
-                    item = payload.get(symbol)
-                    parsed = _parse_quote(symbol, item)
+                    parsed = _parse_quote(symbol, payload.get(symbol))
                     if parsed:
-                        data[symbol] = parsed
+                        schwab[symbol] = parsed
     except Exception as exc:
         schwab_error = str(exc) or exc.__class__.__name__
 
+    threshold = _delta_threshold_bps()
     for symbol in normalized:
-        if symbol in data:
+        primary = schwab.get(symbol)
+        secondary = _fetch_yahoo(symbol, timeout=timeout)
+
+        if primary is None:
+            if secondary is not None:
+                secondary["source"] = FALLBACK_SOURCE_NAME
+                secondary["source_role"] = "primary_no_schwab_coverage"
+                data[symbol] = secondary
+            else:
+                reason = "quote unavailable from Schwab and secondary source"
+                if schwab_error:
+                    reason += f" ({schwab_error})"
+                unavailable.append({"symbol": symbol, "reason": reason})
             continue
-        fallback = _fetch_yahoo(symbol, timeout=timeout)
-        if fallback is not None:
-            fallback["source"] = FALLBACK_SOURCE_NAME
-            data[symbol] = fallback
+
+        primary["source_role"] = "primary"
+        primary["primary_source"] = SOURCE_NAME
+
+        if secondary is None:
+            data[symbol] = primary
+            continue
+
+        delta = _delta_bps(primary, secondary)
+        if delta is not None:
+            primary["corroborated_by"] = CORROBORATIVE_SOURCE_NAME
+            primary["corroboration_delta_bps"] = round(delta, 2)
+            primary["delta_threshold_bps"] = threshold
+
+        if delta is not None and delta > threshold:
+            secondary["source"] = CORROBORATIVE_SOURCE_NAME
+            secondary["source_role"] = "primary_on_delta"
+            secondary["displaced_primary_source"] = SOURCE_NAME
+            secondary["corroboration_delta_bps"] = round(delta, 2)
+            secondary["delta_threshold_bps"] = threshold
+            data[symbol] = secondary
         else:
-            reason = "quote unavailable from Schwab and Yahoo fallback"
-            if schwab_error:
-                reason += f" ({schwab_error})"
-            unavailable.append({"symbol": symbol, "reason": reason})
+            data[symbol] = primary
 
     return data, unavailable
 
 
-__all__ = ["fetch_market_snapshot", "status", "SOURCE_NAME", "FALLBACK_SOURCE_NAME"]
+__all__ = ["fetch_market_snapshot", "status", "SOURCE_NAME", "FALLBACK_SOURCE_NAME", "CORROBORATIVE_SOURCE_NAME"]
