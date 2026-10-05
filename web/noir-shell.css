@@ -30,7 +30,7 @@ h1, h2, h3, .brand { font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
 .metrics strong, .hash, .reason, .desk-index, .mode { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 
 /* Sidebar */
-.sidebar { background: #0a0a0c; color: var(--noir-ink); border-right: 1px solid var(--noir-line); }
+.sidebar { background: #0a0a0c; color: var(--noir-ink); border-right: 1px solid var(--noir-line); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
 .brand small { color: var(--noir-faint); }
 .brandmark { background: var(--brass); color: #0a0a0c; }
 .workspace-label { color: var(--noir-faint); }
@@ -39,6 +39,12 @@ h1, h2, h3, .brand { font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
 .sidebar nav a:hover { background: #141419; }
 .sidebar nav a.active { color: var(--brass-bright); background: rgba(198,161,91,.12); }
 .sidebar nav a.active > span { color: var(--brass-bright); }
+@media (max-height: 900px) and (min-width: 951px) {
+  .sidebar { padding-top: 22px; padding-bottom: 22px; }
+  .sidebar nav { gap: 4px; }
+  .sidebar nav a { padding-top: 9px; padding-bottom: 9px; }
+  .sidebar-bottom { padding-top: 18px; }
+}
 .sidebar nav b { color: var(--noir-faint); }
 .sidebar-bottom p, .sidebar-bottom > a { color: var(--noir-muted); }
 .mode { color: var(--brass); border-color: var(--brass-deep); }
