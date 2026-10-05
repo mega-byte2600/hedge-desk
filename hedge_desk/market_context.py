@@ -478,29 +478,34 @@ def build_market_context(
 
     sec_rows = []
     sec_failures = []
-    for symbol in watchlist:
-        cik = SEC_WATCHLIST_CIKS.get(str(symbol).upper())
-        if not cik:
-            continue
-        try:
-            payload = sec_fetch(cik)
-            sec_rows.extend(_sec_filings_summary(payload, str(symbol).upper()))
-        except Exception as exc:
-            sec_failures.append(f"{symbol}: {exc}")
-    if sec_rows:
-        sources["sec-edgar"] = {
-            "provider_id": "sec-edgar",
-            "dataset": "watchlist-recent-filings",
-            "status": "LIVE",
-            "observation_count": len(sec_rows),
-            "observations": sec_rows[:20],
-        }
-        if sec_failures:
-            sources["sec-edgar"]["partial_failure_count"] = len(sec_failures)
-    elif any(str(symbol).upper() in SEC_WATCHLIST_CIKS for symbol in watchlist):
-        sources["sec-edgar"] = _blocked(
-            "sec-edgar", "UPSTREAM_OR_PARSE_FAILURE", "; ".join(sec_failures)
-        )
+    sec_contact = os.environ.get("SEC_CONTACT_EMAIL", "").strip()
+    sec_user_agent = os.environ.get("SEC_USER_AGENT", "").strip()
+    if sec_fetch is sec_submissions and not (sec_contact or "@" in sec_user_agent):
+        sources["sec-edgar"] = _unconfigured("sec-edgar")
+    else:
+        for symbol in watchlist:
+            cik = SEC_WATCHLIST_CIKS.get(str(symbol).upper())
+            if not cik:
+                continue
+            try:
+                payload = sec_fetch(cik)
+                sec_rows.extend(_sec_filings_summary(payload, str(symbol).upper()))
+            except Exception as exc:
+                sec_failures.append(f"{symbol}: {exc}")
+        if sec_rows:
+            sources["sec-edgar"] = {
+                "provider_id": "sec-edgar",
+                "dataset": "watchlist-recent-filings",
+                "status": "LIVE",
+                "observation_count": len(sec_rows),
+                "observations": sec_rows[:20],
+            }
+            if sec_failures:
+                sources["sec-edgar"]["partial_failure_count"] = len(sec_failures)
+        elif any(str(symbol).upper() in SEC_WATCHLIST_CIKS for symbol in watchlist):
+            sources["sec-edgar"] = _blocked(
+                "sec-edgar", "UPSTREAM_OR_PARSE_FAILURE", "; ".join(sec_failures)
+            )
 
     try:
         result = ecb_fetch(("USD", "JPY", "GBP", "CHF"))

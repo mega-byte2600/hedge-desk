@@ -209,19 +209,22 @@ class MarketContextTests(unittest.TestCase):
         self.assertTrue(any(item[0] == "usda" and item[1] == "CORN" for item in calls))
 
     def test_keyed_sources_are_explicitly_unconfigured(self):
+        fakes = _common_fakes()
+        fakes.pop("sec_fetch")
         with patch.dict(os.environ, {}, clear=True):
             context = build_market_context(
                 fred_fetch=lambda series, start, end: (("2026-09-25", "3.88"),),
                 nyfed_fetch=lambda: _result("nyfed-markets", "all-latest", [{"type": "SOFR"}]),
                 treasury_fetch=lambda limit: _result("treasury-fiscaldata", "x", [{}]),
                 cftc_fetch=lambda report, limit: _result("cftc-cot", report, [{}]),
-                **_common_fakes(),
+                **fakes,
             )
         self.assertEqual(context["sources"]["eia-open-data"]["status"], "UNCONFIGURED")
         self.assertEqual(context["sources"]["finra"]["status"], "UNCONFIGURED")
         self.assertEqual(context["sources"]["bea"]["status"], "UNCONFIGURED")
         self.assertEqual(context["sources"]["usda-nass"]["status"], "UNCONFIGURED")
-        self.assertEqual(context["unconfigured_sources"], 4)
+        self.assertEqual(context["sources"]["sec-edgar"]["status"], "UNCONFIGURED")
+        self.assertEqual(context["unconfigured_sources"], 5)
 
     def test_provider_failure_degrades_but_does_not_fabricate(self):
         def broken(*args, **kwargs):

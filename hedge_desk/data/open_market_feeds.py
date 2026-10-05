@@ -178,12 +178,13 @@ def _sec_transport(url: str) -> Tuple[int, bytes]:
     """SEC transport with a declared bot identity per EDGAR fair-access guidance."""
     contact = os.environ.get("SEC_CONTACT_EMAIL", "").strip()
     user_agent = os.environ.get("SEC_USER_AGENT", "").strip()
-    if not user_agent:
-        user_agent = (
-            f"hedge-desk/1.0 {contact}"
-            if contact
-            else "hedge-desk/1.0 research https://github.com/mega-byte2600/hedge-desk"
-        )
+    if not contact and "@" not in user_agent:
+        raise ValueError("SEC_CONTACT_EMAIL is required for compliant EDGAR access")
+    if contact:
+        if not user_agent:
+            user_agent = f"hedge-desk/1.0 {contact}"
+        elif contact not in user_agent:
+            user_agent = f"{user_agent} {contact}"
     req = urllib.request.Request(
         url,
         headers={"Accept": "application/json", "User-Agent": user_agent},

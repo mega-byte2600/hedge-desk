@@ -151,9 +151,10 @@ class OpenMarketFeedTests(unittest.TestCase):
                 ]
             },
         }
-        result = bls_latest_series(
-            "CUUR0000SA0", transport=_transport(payload, seen=seen)
-        )
+        with patch.dict("os.environ", {"BLS_API_KEY": "bls-test-registration-key"}, clear=True):
+            result = bls_latest_series(
+                "CUUR0000SA0", transport=_transport(payload, seen=seen)
+            )
         self.assertEqual(result.provider_id, "bls")
         self.assertEqual(result.dataset, "CUUR0000SA0")
         self.assertEqual(result.row_count, 1)
@@ -161,24 +162,28 @@ class OpenMarketFeedTests(unittest.TestCase):
         self.assertEqual(parsed.hostname, "api.bls.gov")
         self.assertIn("/publicAPI/v2/timeseries/data/CUUR0000SA0", parsed.path)
         self.assertEqual(parse_qs(parsed.query).get("latest"), ["true"])
+        self.assertEqual(parse_qs(parsed.query).get("registrationkey"), ["bls-test-registration-key"])
+        self.assertNotIn("bls-test-registration-key", repr(result))
         with self.assertRaisesRegex(ValueError, "unsupported BLS"):
             bls_latest_series("BAD", transport=_transport(payload))
 
-    def test_bls_falls_back_to_official_v1_route(self):
+    def test_bls_falls_back_to_official_v1_route_and_unwraps_list_results(self):
         seen = []
         payload = {
             "status": "REQUEST_SUCCEEDED",
-            "Results": {
-                "series": [
-                    {
-                        "seriesID": "CUUR0000SA0",
-                        "data": [
-                            {"year": "2026", "period": "M08", "periodName": "August", "value": "325.0"},
-                            {"year": "2026", "period": "M07", "periodName": "July", "value": "324.0"},
-                        ],
-                    }
-                ]
-            },
+            "Results": [
+                {
+                    "series": [
+                        {
+                            "seriesID": "CUUR0000SA0",
+                            "data": [
+                                {"year": "2026", "period": "M08", "periodName": "August", "value": "325.0"},
+                                {"year": "2026", "period": "M07", "periodName": "July", "value": "324.0"},
+                            ],
+                        }
+                    ]
+                }
+            ],
         }
 
         def transport(url):
@@ -187,11 +192,37 @@ class OpenMarketFeedTests(unittest.TestCase):
                 return 429, b'{"status":"REQUEST_FAILED"}'
             return 200, json.dumps(payload).encode("utf-8")
 
-        result = bls_latest_series("CUUR0000SA0", transport=transport)
+        with patch.dict("os.environ", {"BLS_API_KEY": "bls-test-registration-key"}, clear=True):
+            result = bls_latest_series("CUUR0000SA0", transport=transport)
         self.assertEqual(result.provider_id, "bls")
         self.assertEqual(result.row_count, 1)
         self.assertEqual(result.rows[0]["value"], "325.0")
         self.assertTrue(any("/publicAPI/v1/timeseries/data/CUUR0000SA0" in url for url in seen))
+
+    def test_bls_uses_keyless_v1_when_unregistered(self):
+        seen = []
+        payload = {
+            "status": "REQUEST_SUCCEEDED",
+            "Results": [
+                {
+                    "series": [
+                        {
+                            "seriesID": "CUUR0000SA0",
+                            "data": [
+                                {"year": "2026", "period": "M08", "value": "325.0"}
+                            ],
+                        }
+                    ]
+                }
+            ],
+        }
+        result = bls_latest_series(
+            "CUUR0000SA0",
+            transport=_transport(payload, seen=seen),
+        )
+        self.assertEqual(result.row_count, 1)
+        self.assertIn("/publicAPI/v1/timeseries/data/CUUR0000SA0", seen[0])
+        self.assertNotIn("/publicAPI/v2/", seen[0])
 
     def test_ecb_fx_uses_official_eurofxref_feed(self):
         seen = []
