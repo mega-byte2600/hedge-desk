@@ -119,7 +119,6 @@ async function acctRefresh() {
     ACCT.tier = null;
   }
   acctRender();
-  acctBrokerRefresh();
   acctGpRefresh();
 }
 
@@ -207,33 +206,6 @@ async function acctCompleteSocialIfPresent() {
     acctToast('Signed in as ' + (ACCT.current && ACCT.current.email ? ACCT.current.email : ''));
     return true;
   } catch (e) {
-    return false;
-  }
-}
-
-/* ---- Schwab Market Data authorization (members/LPs) -------------------- */
-
-/* OAuth returns ?code=...&state=...; the server stores only token state. */
-async function acctBrokerCompleteIfPresent() {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  const state = params.get('state');
-  if (!code || !state) return false;
-  try {
-    await acctFetch('/api/broker/link', {
-      method: 'POST',
-      body: JSON.stringify({ code, state }),
-    });
-    const url = new URL(window.location.href);
-    url.searchParams.delete('code');
-    url.searchParams.delete('state');
-    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
-    acctToast('Schwab Market Data authorized');
-    acctBrokerRefresh();
-    return true;
-  } catch (e) {
-    const err = document.getElementById('acct-error');
-    if (err) err.textContent = 'Schwab Market Data authorization failed: ' + (e.message || e);
     return false;
   }
 }
@@ -405,7 +377,6 @@ function acctInit() {
   ACCT.modal = modal;
   acctBind();
   acctLoadProviders().then(() => acctCompleteSocialIfPresent());
-  acctBrokerCompleteIfPresent();
   acctRefresh();
 }
 
