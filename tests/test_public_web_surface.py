@@ -185,6 +185,23 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertNotIn("border-top:1px solid #e1e6e9", disclosures)
         self.assertIn("./disclosures.js?v=20261004-whitebody", index)
 
+    def test_schwab_surface_is_market_data_only_and_exposes_no_account_data(self):
+        index = (WEB / "index.html").read_text(encoding="utf-8")
+        account = (WEB / "account.js").read_text(encoding="utf-8")
+        combined = index + "\n" + account
+
+        for route in (
+            "/api/broker/accounts",
+            "/api/broker/account",
+            "/api/broker/positions",
+            "/api/broker/balances",
+        ):
+            self.assertNotIn(route, combined)
+
+        self.assertNotIn("acct-broker-account", combined)
+        self.assertIn("Market data only", index)
+        self.assertIn("Brokerage balances, positions, account identifiers, and trading are never exposed.", index)
+
     def test_public_copy_does_not_claim_advice_management_or_live_orders(self):
         public_assets = [
             WEB / "index.html",
