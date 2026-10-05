@@ -580,8 +580,8 @@ def make_auth_app(
             if not email:
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
-                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
+            if not gp_addr or email.lower() != gp_addr:
+                return _json_response(start_response, {"error": "operator_only"}, "403 Forbidden")
             if not broker_oauth or not getattr(broker_oauth.config, "configured", False):
                 return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
             # Reuse the OTP primitive for a single-use, expiring CSRF state.
@@ -593,8 +593,8 @@ def make_auth_app(
             if not email:
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
-                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
+            if not gp_addr or email.lower() != gp_addr:
+                return _json_response(start_response, {"error": "operator_only"}, "403 Forbidden")
             if not (broker_oauth and broker_store):
                 return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
             query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
@@ -614,8 +614,8 @@ def make_auth_app(
             if not email:
                 return _json_response(start_response, {"error": "unauthorized"}, "403 Forbidden")
             decision = store.access_for(email)
-            if not decision.allowed or not can_access_real_data(_role_for(email, decision) or ""):
-                return _json_response(start_response, {"error": "broker_requires_member"}, "403 Forbidden")
+            if not gp_addr or email.lower() != gp_addr:
+                return _json_response(start_response, {"error": "operator_only"}, "403 Forbidden")
             if not (broker_oauth and broker_store):
                 return _json_response(start_response, {"error": "broker_not_configured"}, "503 Service Unavailable")
             return complete_broker_link(email, decision, _read_json(environ), start_response)
