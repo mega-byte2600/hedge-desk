@@ -414,7 +414,7 @@ class BrokerEndpointTests(unittest.TestCase):
         return cookie
 
     def _linked_member(self):
-        cookie = self._member_cookie()
+        cookie = self._member_cookie("gp@x.com")
         _, auth_body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
         state = auth_body["authorize_url"].split("state=")[1].split("&")[0]
         status, body, _ = _post(
@@ -435,9 +435,14 @@ class BrokerEndpointTests(unittest.TestCase):
         self.assertEqual(status, "403 Forbidden")
         self.assertEqual(body["error"], "broker_requires_member")
 
-    def test_member_gets_authorize_url_with_state_and_no_scope_guess(self):
-        cookie = self._member_cookie()
-        status, body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
+    def test_only_operator_gets_authorize_url_with_state_and_no_scope_guess(self):
+        member_cookie = self._member_cookie()
+        status, body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=member_cookie)
+        self.assertEqual(status, "403 Forbidden")
+        self.assertEqual(body["error"], "operator_only")
+
+        operator_cookie = self._member_cookie("gp@x.com")
+        status, body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=operator_cookie)
         self.assertEqual(status, "200 OK")
         self.assertIn("authorize_url", body)
         self.assertIn("state=", body["authorize_url"])
@@ -445,7 +450,7 @@ class BrokerEndpointTests(unittest.TestCase):
 
     def test_link_stores_token_state_only_no_account_metadata(self):
         cookie = self._linked_member()
-        payload = self.broker_store.token_state("m@example.com")
+        payload = self.broker_store.token_state("gp@x.com")
         self.assertEqual(payload["refresh_token"], "RT")
         self.assertEqual(payload["scope"], "api")
         self.assertEqual(payload.get("selected_account_hash", ""), "")
@@ -483,7 +488,7 @@ class BrokerEndpointTests(unittest.TestCase):
         self.assertEqual(body["error"], "not_found")
 
     def test_browser_callback_links_market_data_without_account_discovery(self):
-        cookie = self._member_cookie()
+        cookie = self._member_cookie("gp@x.com")
         _, auth_body, _ = _get(self.dispatch, "/api/broker/authorize", cookie=cookie)
         state = auth_body["authorize_url"].split("state=")[1].split("&")[0]
         environ = {
@@ -496,8 +501,8 @@ class BrokerEndpointTests(unittest.TestCase):
         out = b"".join(self.dispatch(environ, start_response))
         self.assertEqual(cap["status"], "302 Found")
         self.assertEqual(out, b"")
-        self.assertTrue(self.broker_store.connection("m@example.com")["linked"])
-        payload = self.broker_store.token_state("m@example.com")
+        self.assertTrue(self.broker_store.connection("gp@x.com")["linked"])
+        payload = self.broker_store.token_state("gp@x.com")
         self.assertEqual(payload.get("selected_account_hash", ""), "")
         self.assertEqual(payload.get("available_account_hashes", ""), "")
 
@@ -532,7 +537,7 @@ class BrokerEndpointTests(unittest.TestCase):
         status, body, _ = _post(self.dispatch, "/api/broker/unlink", {}, cookie=cookie)
         self.assertEqual(status, "200 OK")
         self.assertEqual(body["status"], "unlinked")
-        self.assertFalse(self.broker_store.connection("m@example.com")["linked"])
+        self.assertFalse(self.broker_store.connection("gp@x.com")["linked"])
 
     def test_broker_status_requires_auth(self):
         status, body, _ = _get(self.dispatch, "/api/broker/status")
