@@ -24,3 +24,10 @@
 ## What this does NOT do
 - No frontend changes. No visual assertions (browser-level visual check remains your lane).
 - Does not touch brand-logo.js's sidebar observer or the professional.js/brand-logo.js `.brand` overlap (both idempotent today; noted as latent, not incident-class).
+
+## Update 2026-10-04 ~21:15 — sidebar scrollability guard added
+- 5th test: `test_sidebar_remains_scrollable` — asserts `.sidebar` keeps
+  `overflow-y` in noir-shell.css (guards the #152 clipping class).
+- Cherry-picked #152's noir-shell.css change onto this branch so the test
+  runs green here. When #152 merges, the content is identical — merge should
+  be clean. If #152's CSS changes before merge, this branch needs the update.
