@@ -1,6 +1,6 @@
 """Live market data for the desk console. No synthetic fixtures, ever.
 
-This module fetches real market data from free public APIs and assembles it
+This module fetches real market data from Schwab Market Data Production, with Yahoo failover, and assembles it
 into per-desk payloads for the web console. It is fail-closed: when real data
 cannot be obtained, the desk reports ``data_unavailable`` with an explicit
 reason. Synthetic, fixture, reference, or invented data is never returned.
@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 import json
 import urllib.request
 
-# Free public endpoints. No keys required.
+# Yahoo is retained only as a real-data failover path.
 YAHOO_CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d&range=5d"
 FRED_SERIES = "https://api.stlouisfed.org/fred/series/observations"
 
