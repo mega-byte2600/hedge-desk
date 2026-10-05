@@ -91,16 +91,73 @@ function renderTable(container, headers, rows, seed, scenarioActive, extra) {
  * loading -> batch | stale -> seed facts + modeled panels
  *         -> missing (data unavailable — seed endpoint unreachable)
  */
+/** Guide tab panel: the consolidated Options Guide (was a standalone page). */
+function guidePanel() {
+  const box = $('div', 'wb-card');
+  box.appendChild($('h3', '', 'Selling options premium — visual guide'));
+  const dl = document.createElement('a');
+  dl.href = '/guide/selling-options-premium';
+  dl.download = 'selling-options-premium-guide.html';
+  dl.className = 'wb-download';
+  dl.textContent = 'Download guide';
+  box.appendChild(dl);
+  const shell = $('div', 'frame-shell');
+  const skel = $('div', 'skeleton');
+  skel.setAttribute('aria-hidden', 'true');
+  shell.appendChild(skel);
+  const frame = document.createElement('iframe');
+  frame.className = 'autofit-frame guide-frame';
+  frame.setAttribute('data-autofit', '');
+  frame.src = '/guide/selling-options-premium';
+  frame.title = 'Selling options premium guide';
+  shell.appendChild(frame);
+  box.appendChild(shell);
+  return box;
+}
+
 export function mountWorkbench(host) {
   host.innerHTML = '';
   const root = $('section', 'wb');
   root.appendChild($('h2', 'wb-title', 'Options Workbench'));
+
+  // Top-level tabs: Workbench | Guide. The standalone Options Guide page
+  // was consolidated here (less is more): same content, one fewer page.
+  const tabBar = $('div', 'wb-tabs wb-toptabs');
+  const btnWb = $('button', 'wb-tab active', 'Workbench');
+  const btnGuide = $('button', 'wb-tab', 'Guide');
+  btnWb.type = 'button';
+  btnGuide.type = 'button';
+  btnWb.setAttribute('aria-pressed', 'true');
+  btnGuide.setAttribute('aria-pressed', 'false');
+  tabBar.appendChild(btnWb);
+  tabBar.appendChild(btnGuide);
+  root.appendChild(tabBar);
+
+  const wbWrap = $('div', 'wb-workbench-panel');
+  const guideWrap = $('div', 'wb-guide-panel');
+  guideWrap.hidden = true;
+  guideWrap.appendChild(guidePanel());
+  root.appendChild(wbWrap);
+  root.appendChild(guideWrap);
+  host.appendChild(root);
+
+  const selectTab = (which) => {
+    const wb = which === 'wb';
+    btnWb.classList.toggle('active', wb);
+    btnGuide.classList.toggle('active', !wb);
+    btnWb.setAttribute('aria-pressed', wb ? 'true' : 'false');
+    btnGuide.setAttribute('aria-pressed', wb ? 'false' : 'true');
+    wbWrap.hidden = !wb;
+    guideWrap.hidden = wb;
+  };
+  btnWb.addEventListener('click', () => selectTab('wb'));
+  btnGuide.addEventListener('click', () => selectTab('guide'));
+
   const stateLine = $('div', 'wb-state');
   stateLine.appendChild(chip('loading…', 'loading'));
-  root.appendChild(stateLine);
+  wbWrap.appendChild(stateLine);
   const body = $('div', 'wb-body');
-  root.appendChild(body);
-  host.appendChild(root);
+  wbWrap.appendChild(body);
 
   fetch('./api/options-seed', { headers: { accept: 'application/json' } })
     .then(async (res) => {
