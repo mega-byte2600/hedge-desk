@@ -213,72 +213,6 @@ async function acctCompleteSocialIfPresent() {
 
 /* ---- Schwab Market Data authorization (members/LPs) -------------------- */
 
-async function acctBrokerRefresh() {
-  const box = document.getElementById('acct-broker');
-  if (!box) return;
-  box.style.display = 'block';
-
-  const c = ACCT.current;
-  const label = document.getElementById('acct-broker-label');
-  const connect = document.getElementById('acct-broker-connect');
-  const disconnect = document.getElementById('acct-broker-disconnect');
-
-  if (!c || !c.authenticated) {
-    ACCT.broker = { configured: false, linked: false };
-    if (label) label.textContent = 'Sign in above to authorize Schwab Market Data.';
-    if (connect) connect.style.display = 'none';
-    if (disconnect) disconnect.style.display = 'none';
-    return;
-  }
-
-  if (!(ACCT.tier && ACCT.tier.real_data)) {
-    ACCT.broker = { configured: false, linked: false };
-    if (label) label.textContent = 'Schwab Market Data authorization requires live-data member access.';
-    if (connect) connect.style.display = 'none';
-    if (disconnect) disconnect.style.display = 'none';
-    return;
-  }
-
-  let st = { configured: false, linked: false };
-  try { st = await acctFetch('/api/broker/status'); } catch (e) { /* leave defaults */ }
-  ACCT.broker = st;
-
-  if (label) {
-    label.textContent = !st.configured
-      ? 'Schwab Market Data is not configured on this deployment.'
-      : (st.linked
-          ? 'Schwab Market Data authorized. Brokerage account data is never exposed to Emporion.'
-          : 'Schwab Market Data is ready to authorize.');
-  }
-  if (connect) {
-    connect.textContent = 'Authorize Schwab Market Data';
-    connect.style.display = st.configured && !st.linked ? 'inline-flex' : 'none';
-  }
-  if (disconnect) {
-    disconnect.textContent = 'Disconnect Schwab Market Data';
-    disconnect.style.display = st.linked ? 'inline-flex' : 'none';
-  }
-}
-
-async function acctBrokerConnect(btn) {
-  if (btn) btn.disabled = true;
-  try {
-    const res = await acctFetch('/api/broker/authorize');
-    if (res && res.authorize_url) { window.location.href = res.authorize_url; return; }
-    throw new Error('no authorize url');
-  } catch (e) {
-    if (btn) btn.disabled = false;
-    const err = document.getElementById('acct-error');
-    if (err) err.textContent = 'Could not start Schwab Market Data authorization: ' + (e.message || e);
-  }
-}
-
-async function acctBrokerDisconnect() {
-  try { await acctFetch('/api/broker/unlink', { method: 'POST', body: '{}' }); } catch (e) { /* ignore */ }
-  acctBrokerRefresh();
-  acctToast('Schwab Market Data disconnected');
-}
-
 /* OAuth returns ?code=...&state=...; the server stores only token state. */
 async function acctBrokerCompleteIfPresent() {
   const params = new URLSearchParams(window.location.search);
@@ -451,10 +385,6 @@ function acctBind() {
   const closeBtn = root.querySelector('#acct-close');
   if (closeBtn) closeBtn.addEventListener('click', acctClose);
 
-  const bc = root.querySelector('#acct-broker-connect');
-  if (bc) bc.addEventListener('click', () => acctBrokerConnect(bc));
-  const bd = root.querySelector('#acct-broker-disconnect');
-  if (bd) bd.addEventListener('click', acctBrokerDisconnect);
     });
   const gpInvite = root.querySelector('#acct-gp-invite');
   if (gpInvite) gpInvite.addEventListener('click', () => acctGpInvite(gpInvite));
