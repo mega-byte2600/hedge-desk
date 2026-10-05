@@ -21,8 +21,6 @@ becomes the GP's opt-in marketing list.
 from __future__ import annotations
 
 import json
-import hashlib
-import hmac
 import os
 import sys
 from datetime import datetime, timedelta, timezone
@@ -217,15 +215,6 @@ def make_auth_app(
         current = broker_store.token_state(email_addr, key)
         return current, token
 
-    def account_handle(email_addr: str, account_hash: str) -> str:
-        from hedge_desk.broker_link import _resolved_key
-
-        key = _resolved_key(None)
-        digest = hmac.new(
-            key, (email_addr.lower() + ":" + account_hash).encode("utf-8"), hashlib.sha256
-        ).hexdigest()
-        return digest[:32]
-
     gp_addr = (gp_email or "").strip().lower()
     # The GP is configured by GP_EMAIL, not by a stored invite. Make sure the
     # store actually records that identity: the row is otherwise created as a
@@ -307,8 +296,11 @@ def make_auth_app(
             return _json_response(start_response, {"error": "broker_link_persistence_failed"}, "503 Service Unavailable")
         _audit("broker_linked", email, actor=email, detail=str(getattr(broker_oauth, "name", "schwab")))
         return _json_response(start_response, {
-            "status": "linked", "broker": "schwab", "read_only": True,
-            "accounts_available": len(hashes), "account_selected": len(hashes) == 1,
+            "status": "linked",
+            "broker": "schwab",
+            "market_data_only": True,
+            "account_data_exposed": False,
+            "live_orders_enabled": False,
         })
 
 
