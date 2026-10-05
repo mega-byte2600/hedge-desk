@@ -1,8 +1,9 @@
-"""Schwab OAuth (read-only) for linking a member's brokerage account.
+"""Schwab OAuth for linking a member's brokerage account.
 
-Implements the authorization-code flow against Schwab's Trader API so a
-MEMBER/LP can link their own account. Scopes are read-only; no order scope is
-requested and no order endpoint is called anywhere in this module.
+Implements Schwab's documented authorization-code flow. Production OAuth
+authorization is tied to the approved App/API product; the authorization URL
+does not request a ``scope`` query parameter and token responses report
+``scope=api``. Live order use remains independently disabled by default.
 
 Config comes from the environment (server-side only):
   SCHWAB_CLIENT_ID, SCHWAB_CLIENT_SECRET, SCHWAB_REDIRECT_URI
@@ -26,7 +27,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 DEFAULT_AUTHORIZE_URL = "https://api.schwabapi.com/v1/oauth/authorize"
 DEFAULT_TOKEN_URL = "https://api.schwabapi.com/v1/oauth/token"
@@ -65,11 +66,28 @@ class SchwabOAuthConfig:
 
     @property
     def configured(self) -> bool:
-        return bool(self.client_id and self.client_secret and self.redirect_uri)
+        if not (self.client_id and self.client_secret and self.redirect_uri):
+            return False
+        redirect = urllib.parse.urlparse(self.redirect_uri)
+        authorize = urllib.parse.urlparse(self.authorize_url)
+        token = urllib.parse.urlparse(self.token_url)
+        return (
+            redirect.scheme == "https"
+            and bool(redirect.hostname)
+            and not redirect.fragment
+            and authorize.scheme == "https"
+            and authorize.hostname == "api.schwabapi.com"
+            and authorize.path == "/v1/oauth/authorize"
+            and not authorize.fragment
+            and token.scheme == "https"
+            and token.hostname == "api.schwabapi.com"
+            and token.path == "/v1/oauth/token"
+            and not token.fragment
+        )
 
 
 class SchwabOAuth:
-    """Read-only Schwab OAuth: build the authorize URL, exchange the code."""
+    """Schwab OAuth: build the documented authorize URL and exchange tokens."""
 
     name = "schwab"
 
@@ -82,14 +100,15 @@ class SchwabOAuth:
         return secrets.token_urlsafe(24)
 
     def authorize_url(self, state: str) -> str:
-        """Build the provider authorize URL (read-only scope)."""
+        """Build Schwab's documented authorization URL."""
         if not self.config.configured:
             raise ValueError("Schwab OAuth is not configured")
+        if not state or not state.strip():
+            raise ValueError("OAuth state is required")
         params = {
             "client_id": self.config.client_id,
             "redirect_uri": self.config.redirect_uri,
             "response_type": "code",
-            "scope": "readonly",
             "state": state,
         }
         return f"{self.config.authorize_url}?{urllib.parse.urlencode(params)}"
@@ -116,29 +135,14 @@ class SchwabOAuth:
         }
         try:
             status, raw = self._transport("POST", self.config.token_url, headers, body)
-        except Exception as exc:
-            return {"status": "error", "error": f"transport:{exc}"}
+        except Exception:
+            return {"status": "error", "error": "transport_failure"}
         if status >= 400:
             return {"status": "error", "http_status": status}
-        try:
-            data = json.loads(raw or b"{}")
-        except Exception:
-            return {"status": "error", "error": "bad_json"}
-        access = data.get("access_token")
-        if not access:
-            return {"status": "error", "error": "no_access_token"}
-        return {
-            "status": "ok",
-            "access_token": access,
-            "refresh_token": data.get("refresh_token", ""),
-            "expires_in": data.get("expires_in"),
-            "token_type": data.get("token_type", "Bearer"),
-            "scope": data.get("scope", "readonly"),
-        }
+        return self._parse_token_response(raw)
 
-
-    def refresh_token(self, refresh_token: str) -> dict:
-        """Exchange a Schwab refresh token for a fresh access token."""
+    def refresh_access_token(self, refresh_token: str) -> dict:
+        """Refresh an access token; caller must persist the result before API use."""
         if not self.config.configured:
             return {"status": "error", "error": "schwab_oauth_not_configured"}
         if not refresh_token:
@@ -155,25 +159,48 @@ class SchwabOAuth:
         }
         try:
             status, raw = self._transport("POST", self.config.token_url, headers, body)
-        except Exception as exc:
-            return {"status": "error", "error": f"transport:{exc}"}
+        except Exception:
+            return {"status": "error", "error": "transport_failure"}
+        if status in (400, 401):
+            return {"status": "error", "error": "reauthentication_required", "http_status": status}
+        if status == 429:
+            return {"status": "error", "error": "throttled", "http_status": status}
         if status >= 400:
             return {"status": "error", "http_status": status}
+        return self._parse_token_response(raw)
+
+    @staticmethod
+    def _parse_token_response(raw: bytes) -> dict:
         try:
-            data = json.loads(raw or b"{}")
-        except Exception:
+            data: Any = json.loads(raw or b"{}")
+        except (TypeError, ValueError, UnicodeDecodeError):
             return {"status": "error", "error": "bad_json"}
+        if not isinstance(data, dict):
+            return {"status": "error", "error": "unexpected_response_schema"}
         access = data.get("access_token")
-        if not access:
+        expires_in = data.get("expires_in")
+        if not isinstance(access, str) or not access:
             return {"status": "error", "error": "no_access_token"}
+        if isinstance(expires_in, bool) or not isinstance(expires_in, (int, float)) or expires_in <= 0:
+            return {"status": "error", "error": "invalid_expiry"}
+        refresh = data.get("refresh_token", "")
+        scope = data.get("scope", "api")
+        token_type = data.get("token_type", "Bearer")
+        if not isinstance(refresh, str) or not isinstance(scope, str) or not isinstance(token_type, str):
+            return {"status": "error", "error": "unexpected_response_schema"}
         return {
             "status": "ok",
             "access_token": access,
-            "refresh_token": data.get("refresh_token") or refresh_token,
-            "expires_in": data.get("expires_in"),
-            "token_type": data.get("token_type", "Bearer"),
-            "scope": data.get("scope", "readonly"),
+            "refresh_token": refresh,
+            "expires_in": expires_in,
+            "token_type": token_type,
+            "scope": scope,
         }
 
 
-__all__ = ["SchwabOAuth", "SchwabOAuthConfig", "DEFAULT_AUTHORIZE_URL", "DEFAULT_TOKEN_URL"]
+__all__ = [
+    "SchwabOAuth",
+    "SchwabOAuthConfig",
+    "DEFAULT_AUTHORIZE_URL",
+    "DEFAULT_TOKEN_URL",
+]
