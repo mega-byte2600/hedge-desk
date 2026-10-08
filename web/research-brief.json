@@ -1,33 +1,33 @@
 {
-    "date": "2026-10-07",
-    "headline": "Daily research brief — Wednesday, October 7",
+    "date": "2026-10-08",
+    "headline": "Daily research brief \u2014 Thursday, October 8",
     "items": [
         {
-            "title": "TSLA's Oct 21 earnings is the week's watchlist binary; options do not look cheap into it",
-            "detail": "Confirmed on the live Nasdaq calendar today - this corrects the Oct 28 date in the 10/05-10/06 files. Options imply +/-8.2% via the Oct-23 ATM straddle vs a 6.0% mean-absolute reaction over the last four prints, and the July print's -14.5% reaction shows the tail skew. The term structure shows the classic hump: 30DTE IV 43.6% vs front weekly 30.9%. Selling premium into the hump is short gamma into a scheduled binary - off-limits."
+            "title": "TSLA's Oct 21 earnings is the only binary on the board; options price it above the median past reaction",
+            "detail": "Options imply +/-7.9% via the Oct-23 ATM straddle vs a 5.95% mean-absolute reaction over the last four prints and a 3.51% median (the mean is skewed by July's -14.5% reaction, whose cause is unverified). The chain shows the classic event hump: 15-day IV 49.1% vs 8-day 38.9%. Selling premium into the Oct 23 expiry is short gamma into a scheduled binary - avoid."
         },
         {
-            "title": "The distillate deficit is the real energy tight spot",
-            "detail": "EIA's weekly released on schedule today at 10:30 AM ET: crude drew 3.2M bbl to 424.1M (1% above the 5-yr avg), but distillates are unchanged at 12% below the 5-yr average into heating season, and diesel is near record highs. The direct offset is the G7's 100M-bbl emergency release, which includes diesel. The call changes on a distillate build next week or confirmed G7 diesel hitting the market."
+            "title": "The IV-vs-realized screen is compromised by the tape itself; no clean cheap or rich call",
+            "detail": "QQQ, AAPL and MSFT are window-contingent - a single September day drives 32-40% of each 20-day realized window - with NVDA borderline. Implied vols of 11-36% (1-day ATM) look optically cheap against 45-130% trailing realized, but the desk issued no clean verdict: the spike days must roll off over the next 1-3 weeks first. No elevated-IV (premium-rich) signal anywhere today."
         },
         {
-            "title": "10Y at 5.27%, up 55bp in two months; duration exposure keeps long-dated growth premium expensive",
-            "detail": "The whole-curve move is a parallel bear repricing - 2s10s is flat at 48bp, and SOFR-EFFR at 2bp shows funding is calm. QQQ, NVDA, TSLA, MSFT and AAPL carry the most duration exposure, so long-dated growth-call premium should be treated as expensive until the 10Y confirms a top back under ~5.00%. A +-15bp weekly move in the 2s10s slope would signal a regime shift to price into vol structure."
+            "title": "10Y at 5.28%, up 56bp in two months; discount rates keep pressing growth multiples",
+            "detail": "2s10s at 51bp steepened 3bp on the day (10Y +1bp, 2Y -2bp); SOFR-EFFR flat at 0bp, no funding stress. The 2Y sits 89bp above the 3.88% fed funds rate - the front end prices easier policy ahead, which would reverse the headwind if it materializes. Until then, selling premium into NVDA/TSLA/MSFT means being paid for duration-driven multiple-compression risk."
         },
         {
-            "title": "Brent-WTI at $11.95 is historically wide; the geopolitical premium is all in seaborne Brent",
-            "detail": "WTI at $89.14 in ~1%/mo backwardation while ME exports exceeded pre-war levels on 4 of the last 7 Sept days and Aramco cut Asia OSPs by $3 - the physical market is less tight than Brent's $100+ handle implies. WTI spec length is washed out near the 10th percentile on COT, so a genuine bullish catalyst could re-leverage fast. VIX 15.08: premium is siloed in energy with no equity-vol spillover."
+            "title": "Energy and grains stack catalysts into Friday",
+            "detail": "EIA printed a fifth surprise crude draw (-3.186M bbl vs an expected build) and the curves stay backwardated; Tropical Storm Isaias threatens Gulf infrastructure with hurricane landfall expected late Friday - the freshest marginal catalyst on crude. The Oct WASDE lands tomorrow 12:00 ET with a corn yield cut as the tail risk against priced-in adequate supply (grains in contango). Black Sea vessel attacks are repricing war risk in European wheat basis, not yet in CBOT."
         }
     ],
     "desks": {
-        "Dividends": "Zero watchlist ex-dividend dates in the Oct 7-Nov 4 window (verified on the Nasdaq calendar). AAPL's November declaration is expected ~late Oct with ex-date ~Nov 7-10 - just outside the window. MSFT's raised $0.98 goes ex-div Nov 19.",
-        "Earnings": "TSLA Oct 21 AMC (Nasdaq-confirmed; 10/28 corrected) is the only watchlist report in window; implied +/-8.2% vs 6.0% mean-absolute past reaction. AAPL 10/29, MSFT 11/4, NVDA 11/18 all re-confirmed live by the premium desk.",
-        "Futures": "EIA released on schedule: crude -3.2M bbl to 424.1M; distillates flat at 12% below the 5-yr avg into heating season; Brent-WTI $11.95 wide. Nat gas storage Thu 10:30 AM ET (+79 Bcf expected, 8th straight surplus-shrink if met); WASDE Fri 12:00 PM ET pricing a record soy crop.",
-        "Parity": "Quiet - no put-call/box-parity violations or index-methodology changes material to the watchlist since the 10/06 run; the closest reference shows VIX-futures put-call parity holding within ~0.16.",
-        "Premium": "Nothing above 55%ile IV-rank. NVDA's 0%ile is the cheapest in ~2.4 years but offers no seller's edge (modestly rich vs realized, clean window). MSFT's 55%ile board-high rank is event-driven (11/4 earnings in window), not a sell signal. QQQ/AAPL/MSFT/TSLA verdicts are window-contingent - avoid selling the humps.",
-        "Quant lab": "34 candidates; added #30-34: ArturSepp/VanillaOptionPricers (77, TEST) for numba IV-inversion benchmarks; yassineerraji SVI arb engine (70, TEST) blocked on missing LICENSE; #4 M2VN rescored 62->59, stays WATCH after peer review confirmation."
+        "Dividends": "No watchlist ex-div inside the Oct 8-Nov 5 window (verified on the Nasdaq calendar). Forward flag: if AAPL declares its November dividend with Q4 earnings (late Oct, per its pattern), the ex-date could land within a day of the Nov 6 monthly expiry - an early-assignment trigger for deep-ITM short calls. MSFT's raised $0.98 goes ex-div Nov 19.",
+        "Earnings": "TSLA Oct 21 AMC (Nasdaq-confirmed) is the only watchlist report in window; implied +/-7.9% vs 5.95% mean-absolute past reaction. AAPL 10/29, MSFT 11/4, NVDA 11/18 all outside the window.",
+        "Futures": "EIA on schedule: fifth surprise crude draw (-3.186M bbl), curves backwardated; Tropical Storm Isaias threatens Gulf output with hurricane landfall expected late Friday. Nat gas storage +85 Bcf vs 79 expected (8th straight below-average build). WASDE Fri 12:00 ET; Black Sea vessel attacks repricing war risk in Matif wheat, not CBOT.",
+        "Parity": "Quiet - no new index-methodology changes or parity-violation analysis material to the watchlist in the last two weeks.",
+        "Premium": "No elevated-IV signal. IV rank unverified from free sources; sourcing degraded this run (nightly inputs empty, Yahoo 401-gated) so CBOE delayed quotes were used as the labeled fallback. QQQ/AAPL/MSFT verdicts window-contingent, NVDA borderline; TSLA's Oct-23 hump is event premium to avoid.",
+        "Quant lab": "38 candidates; added #35-38, all WATCH: VolPaint IV-surface reconstruction (59), American-options RBSDE method (48), holdout backtest-overfitting toolkit (64), implied-volatility-conditioning-lab (58). Cross-desk: Cboe and Robinhood announced planned KPI binary contracts for October launch (23 companies, SEC-regulated, subject to approval)."
     },
     "full_report": "./research-today.md",
-    "generated_at": "2026-10-07T13:57:05-07:00",
-    "note": "Research input only. Paper context — no trade authorization."
+    "generated_at": "2026-10-08T13:58:35-07:00",
+    "note": "Research input only. Paper context \u2014 no trade authorization."
 }
