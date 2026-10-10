@@ -1,16 +1,16 @@
-# Hedge-desk daily research package — Fri 2026-10-09 (~1:30pm PDT)
+# Hedge-desk daily research package — Sat 2026-10-10 (~1:30pm PDT)
 
-Research and input only — paper-only context. All desks covered in full. Labels: **FACT** = verified this run; **INFERENCE** = reasoned from facts; **SPECULATION** = ungrounded extrapolation; **UNVERIFIED** = could not verify, failed closed.
+Research and input only — paper-only context. Saturday run: markets closed; all market data is Friday 10-09 close (or FRED 10-08), labeled explicitly throughout. Nothing below is presented as Saturday data. Labels: **FACT** = verified this run; **INFERENCE** = reasoned from facts; **SPECULATION** = ungrounded extrapolation; **UNVERIFIED** = could not verify, failed closed.
 
 ---
 
 ## SYNTHESIS — the 5 most decision-relevant items
 
-1. **Earnings-date corrections beat the nightly inputs: TSLA Oct 21 (after hours), MSFT Oct 28 (after hours), AAPL Nov 2 (announced).** Last night's iv-inputs had MSFT ~Nov 4 and AAPL ~Oct 29 — both stale. (FACT, Nasdaq calendar + Apple IR) INFERENCE: all three names now carry earnings *inside* the 28D (Nov 6) option window. TSLA's Oct-23 straddle prices ±7.5%, almost exactly its 8-quarter average absolute reaction (7.8%, fat tails: two >14%) — no edge on pricing alone, and premium-into-a-binary = avoid on all three. (INFERENCE; what would change it: straddle repricing into Oct 21 on fresh news.)
-2. **Only one clean IV-vs-realized read on the watchlist: NVDA (unremarkable).** 28D IV 29.8% vs realized 24.5% (+22%), non-contingent window; the 28D→42D slope (29.8%→35.0%) is the Nov-18 earnings premium sitting on the back expiry — calendar, not fear. QQQ's apparent richness is WINDOW-CONTINGENT (38.5% of 20-day variance is one verified AI-rally day); SPY is clean but modestly priced (28D 12.2% vs realized 9.9%). AAPL/MSFT/TSLA verdicts withheld/avoid per the binary-event rule. (FACT numbers; INFERENCE verdicts)
-3. **Rates regime is the dominant backdrop: 10Y 5.22%, 2Y 4.75%, 2s10s +47bp (flattened 4bp d/d), EFFR 3.88%, SOFR–EFFR −1bp (no funding stress).** 60-day parallel +50bp shift on both ends; no inversion anywhere in the window. (FACT, FRED via rates_desk module) INFERENCE: elevated absolute yields keep equity risk premia thin — the margin-of-safety bar for new long-duration exposure (NVDA/TSLA/MSFT) stays high. Nothing in rates argues for widening liquidity-risk discounts.
-4. **Commodities day: WASDE corn bearish surprise + energy risk elevated into the weekend.** USDA raised corn yield to 181.2 bu/ac vs 177.7 est, ending stocks 1.849B vs 1.67B expected — all three grains >1% lower today. (FACT) Hormuz tanker attacks hit their highest weekly rate since the war began, strait transits at a 2-month low (crude −27% w/w), and Hurricane Isaias makes landfall tonight with ~11.2M bbl of Gulf production at risk. (FACT) INFERENCE: Brent–WTI steep backwardation + this weekend's stack keeps prompt energy risk premium bid — relevant to inflation/margin tail reads, not directly to the watchlist.
-5. **Nothing ex-dividend inside the 4-week window; parity desk quiet.** 28-day Nasdaq dividend-calendar sweep (Oct 10–Nov 6): zero watchlist hits. (FACT) Nearest: AAPL ~Nov 10 (undeclared, pattern), MSFT Nov 19 ($0.98 declared, ex just outside window). NVDA's $1.00 annualized raise stands as the dividend catalyst. SPY Oct-16 put-call parity holds within bid/ask (the 0.14 deviation was a 13-minute quote-timing offset, not a break). (FACT)
+1. **TSLA Oct 21 AMC is the lone earnings event in the window — priced slightly rich on its own base rate, and it's a binary event to avoid.** Oct-23 straddle prices ±7.5% vs. ±6.0% average absolute next-session move over the last 4 quarters; the Jul 2026 −14.5% print dominates the trailing window (window-contingent caveat). Earnings premium isolated in quadrature terms at roughly ±6.2% (pre-earnings Oct-16 straddle only ±4.1%). (FACT: date confirmed by 3 sources — TipRanks "After Close (Confirmed)", signalysis, Capket; Nasdaq sweep of all 11 days in window found no other watchlist hits.) Consensus to use: **$0.45** (TipRanks, 27 analysts) — Nasdaq's $0.23 is stale. Q3 deliveries (486,532) are public; the trade is the guide + AI/robotaxi/Optimus commentary, not the print. (INFERENCE; what would change it: straddle repricing into Oct 21, or a guide that resets the narrative.)
+2. **Rates regime: EFFR 3.88% (+25bp over 60 days), 10Y 5.22%, 2Y 4.75%, 2s10s +47bp, SOFR−EFFR −1bp (no funding stress).** Both ends eased off peaks (10Y 5.31 on 10-05 → 5.22) but the 60-day trend is a sustained bear-steepening from 4.7% 10Y in mid-August. (FACT, FRED via rates_desk module, series through 2026-10-08.) INFERENCE: rates are priced higher-for-longer, not a cut cycle — the margin-of-safety bar for long-duration exposure (NVDA/TSLA/QQQ) stays high; overnight markets show no disorderly-liquidity signal into next week.
+3. **CPI Wed Oct 14 (8:30am ET) is the named macro catalyst, with headline risk skewed up and core as the policy line.** Futures desk: Brent ~$103, backwardated, with 71.5% of Gulf oil production shut in by Hurricane Isaias (~1.46M bpd) against 100M bbl of strategic releases + a US–Russia diesel waiver — a two-sided energy binary into the print. WASDE (Oct 9) was a bearish grain surprise (corn yield 181.2 bpa, ending stocks 1,849M bu, near limit-down) — food-at-home disinflation for the headline, but policy trades core. Dec-hike pricing repriced 68%→~80% on oil escalation (per the cpi-conditional addendum; the FedWatch re-baseline guard band — 82.3% Oct hold / 81.3% Dec hike — stays staged until the user's manual CME cross-check). Core MoM ≤0.2% unwinds the hawkish repricing; ≥0.3% hard-confirms it.
+4. **No actionable IV-vs-realized signal this run.** Five of six 20-day realized windows are WINDOW-CONTINGENT (SPY 32.5%, QQQ 41.9%, AAPL 37.9%, MSFT 36.2%, TSLA 31.0% max-day variance share — all above the 30% line), so no clean cheap/rich verdicts. The only clean window is NVDA (23.8%): 6-DTE IV 29.1% vs 20d realized 25.8% — mild premium, not a mispricing. (FACT values; INFERENCE verdict.) IV rank is UNVERIFIED for all six — no free IV-history source; never guessed. Data provenance: iv-inputs file as_of 2026-10-09T13:59 PT (~23.5h old, outside the 18h guard but the latest market-day pull — labeled Friday-close); Friday's 0DTE chain is purged so exact re-verification was impossible — the proxy term-structure check (smoothly rising curves on the 10-12 and 10-16 expiries) passed.
+5. **Quant lab's strongest find: options-lab (#50, 61 WATCH) — an MIT repo running arb audits of SVI vs SSVI/eSSVI on a live SPX chain plus a 1990–present variance-sold-at-VIX history (Sharpe 1.19, skew −6.17).** Direct feed for the premium desk's IV-regime screens; sandbox before Monday's run. Also: Subrahmanyam's PEAD design critique is now a real SSRN paper (drift t=2.18 all-stocks → 1.43 ex-microcaps) — the Earnings desk should treat residual post-earnings drift expectations for large-cap watchlist names with high skepticism. (INFERENCE; full paper not read, per UCLA Anderson Review summary.) No dividend or parity events: MSFT's $0.98 Nov-19 ex-div is confirmed but lands OUTSIDE the 4-week window (correction to the desk's "in window" label — see §2).
 
 ---
 
@@ -20,187 +20,134 @@ One watchlist name reports inside the 2-week window (through Fri Oct 23).
 
 | Name | Report date | Timing | Implied move | Historical avg earnings-day move | Source |
 |---|---|---|---|---|---|
-| TSLA | **Wed 2026-10-21** | After hours (Nasdaq `time-after-hours`) | **≈ ±7.5%** — ATM straddle on Oct-23 expiry: ($14.825 call mid + $13.975 put mid) / $382.70 spot = 7.53% | **7.8% absolute avg** last 8 quarters (signed mean +0.3%; range +21.9% to −14.5%) | Nasdaq calendar; CBOE delayed quotes (bid/ask mids) — **labeled fallback** (Yahoo v7 options returned 401 "Invalid Crumb" in this environment) |
-| AAPL | **Mon 2026-11-02** (announced Oct 6) | After hours — release 1:30pm PT, call 2:00pm PT | Outside window — not computed | — | Apple IR via MacRumors |
-| MSFT | **Wed 2026-10-28** | After hours (Nasdaq) | Outside 2-wk window — not computed | — | Nasdaq calendar API (fiscal qtr ending Sep/2026; EPS fcst $4.71, 13 ests) |
-| NVDA | **2026-11-18** | Timing not supplied by Nasdaq | Outside window — not computed | — | Nasdaq calendar API |
-| SPY / QQQ | — | ETFs, no earnings | — | — | definitional (FACT) |
+| TSLA | **Wed 2026-10-21** | After hours (confirmed: TipRanks, signalysis, Capket) | **≈ ±7.5%** — Oct-23 expiry ATM straddle mid $28.80 (call $14.83 + put $13.98) ÷ $382.70 spot | **−4.8% signed / ±6.0% absolute** next-session close-to-close over last 4 quarters | Nasdaq earnings calendar API (all 11 days swept); Nasdaq options chain; Yahoo chart (spot/history). as_of Fri 2026-10-09 close |
+| AAPL | Nov 2 (announced) | AMC | Outside window — not computed | — | Apple IR / prior packages |
+| MSFT | Oct 28 | AMC | Outside window — not computed | — | Nasdaq calendar API |
+| NVDA | Nov 18 | — | Outside window — not computed | — | Nasdaq calendar API |
+| SPY / QQQ | — | — | — | ETFs — no earnings (FACT) | definitional |
 
-**Corrections vs last night's iv-inputs (decision-relevant, FACT):** MSFT is Oct 28, not ~Nov 4; AAPL is Nov 2 (announced), not ~Oct 29. INFERENCE: premium desk should use the corrected windows — MSFT's Oct-28 date pulls its event inside the 28D window; AAPL Nov 2 sits inside both 28D and 42D windows. All three verdicts below stand as stated (they assumed ~Nov-4/~Oct-29; the corrected dates are still in-window).
-**No watchlist name reported this week (Oct 7–9) — no release to read today.** (FACT)
-TSLA detail: quarter ending Sep/2026, consensus EPS $0.23, 11 estimates. Quotes ~15-min delayed; spot $382.70 = Yahoo regular-market price ~1:30pm PDT today. (FACT) The ±7.5% implied move prices almost exactly the 8-quarter average absolute reaction — symmetric, no directional skew embedded. (INFERENCE) What would change it: straddle repricing the morning of Oct 21.
+**TSLA history (last 4, next-session):** Oct 22 2025 +2.3% ($0.50 vs $0.56 miss); Jan 28 2026 −3.5% ($0.50 vs $0.46 beat); Apr 22 2026 −3.6% ($0.41 vs $0.35 beat); Jul 22 2026 −14.5% ($0.33 vs $0.53 miss). (FACT: Yahoo chart closes; beat/miss vs TipRanks consensus history.) The Jul −14.5% print is window-contingent on a miss, not a clean quarter — the verdict that ±7.5% is rich-vs-base-rate changes if that outlier is judged unrepresentative.
 
-Sources: Nasdaq earnings calendar API (`https://api.nasdaq.com/api/calendar/earnings?date=YYYY-MM-DD`, checked Oct 7–23 plus Oct 28/29/30, Nov 4/5/18); CBOE delayed quotes `https://cdn.cboe.com/api/global/delayed_quotes/options/TSLA.json` (fetched 2026-10-09 ~1:35pm PDT); Yahoo chart API for TSLA daily bars/spot; https://www.macrumors.com/2026/10/06/apple-q4-2026-earnings-nov-2/
+**Consensus correction:** use **$0.45** (TipRanks, 27 analysts, updated ~Oct 10; fiscal.ai agrees), not Nasdaq's stale $0.23. Q3 deliveries 486,532 units are public (Oct 2 operating update — FACT). No release to read yet; when it prints, read in order: guidance vs consensus → GAAP net income vs headline adjusted → cash flow (OCF vs net income) → automotive gross margin ex-regulatory-credits → energy revenue vs 13.7 GWh deployments → balance-sheet deltas.
+
+**Premium-desk note:** Oct-16 (pre-earnings weekly) straddle implies ±4.1% — no binary-event premium in the front week; the jump to ±7.5% on Oct 23 isolates the earnings premium at roughly ±6.2% in quadrature.
 
 ---
 
 ## 2. Dividend Opportunity desk
 
-**Headline: no watchlist name has an ex-dividend date inside the 4-week window (Oct 10 – Nov 6, 2026).** (FACT — 28-date Nasdaq dividends-calendar sweep, zero hits.) No increases, cuts, or specials announced in the past 2 weeks (Sep 25 – Oct 9) for any watchlist name. (FACT, news/issuer search)
+**Headline: no watchlist name has an ex-dividend date inside the 4-week window (Oct 10 – Nov 7, 2026).** (FACT — 28-date Nasdaq dividends-calendar sweep, zero hits.) **Correction to the desk's draft:** the desk labeled MSFT's Nov 19 ex-div "(in window)" — Nov 19 is 12 days past the window edge. Confirmed facts stand; only the window label is corrected here. No increases, cuts, or specials announced this week on any watchlist name.
 
-| Symbol | Next ex-date | Amount | Payment date | Increase/cut/special | Consecutive-increase count |
-|---|---|---|---|---|---|
-| AAPL | ~Nov 10, 2026 (pattern; not yet declared — UNVERIFIED) | Expected $0.27 — UNVERIFIED until board declaration | ~Nov 13 (est.) — UNVERIFIED | None since Apr 30, 2026 raise to $0.27 (+3.85%) — FACT (Yahoo actions) | 15 consecutive years — INFERENCE (issuer IR not re-pulled this run; known gap) |
-| MSFT | **Nov 19, 2026** — FACT (declared Sep 15, 2026) | **$0.98** — FACT (+$0.07/+8% over $0.91) | **Dec 10, 2026** — FACT | INCREASE Sep 15, 2026 board raise $0.91 → $0.98 (+8%) — FACT | **24 consecutive annual increases** — FACT per `dividend-count-standard.md`; do not drift (some screeners show 23 — they undercount per the standard) |
-| NVDA | ~early Dec 2026 (pattern; not yet declared) — INFERENCE | Last **$0.25**, paid Oct 1, 2026 (ex Sep 10) — FACT | Next payable ~Dec 31 — INFERENCE | INCREASE: $0.01 → $0.25 (+2,400%), announced with fiscal Q1 FY2027 results — FACT | 1 (2026 raise is the only announced increase in the run) — INFERENCE, issuer IR not verified |
-| TSLA | None — no dividend paid or declared — FACT (Yahoo actions, 1y: zero dividend events) | — | — | None | n/a |
-| SPY | Dec 2026 (~Dec 18, pattern; not yet declared) — INFERENCE | Last **$1.889**, ex Sep 18, 2026 — FACT | Pay date of Sep distribution UNVERIFIED | No November distribution: quarterly Dec/Mar/Jun/Sep cycle — FACT (1y events: 12/19/25, 3/20/26, 6/18/26, 9/18/26) | n/a (ETF distribution) |
-| QQQ | Dec 2026 (~Dec 21, pattern; not yet declared) — INFERENCE | Last **$0.7514**, ex Sep 21, 2026, paid Oct 8 — FACT | Oct 8, 2026 — FACT | Same quarterly cycle — FACT (1y: 12/22/25, 3/23/26, 6/22/26, 9/21/26). Down QoQ ($0.8135 → $0.7514) — FACT, but pass-through constituent variation, not a company "cut" — INFERENCE | n/a (ETF distribution) |
+| Symbol | Next ex-date | Amount | Payment | Change | Consecutive-increase count | Source + as_of |
+|---|---|---|---|---|---|---|
+| MSFT | **Thu Nov 19, 2026** (declared Sep 15, 2026) | **$0.98** (+7.7% over $0.91) | Dec 10, 2026 | First payment at raised level | **24 consecutive annual increases** (per dividend-count-standard.md; do not drift to 23) | Nasdaq dividends API, fetched 2026-10-10; as_of Fri 10-09 |
+| AAPL | Not yet declared (Nov ex-div expected ~2nd week, with late-Oct earnings declaration) | Last $0.27 (ex 08-10-26) | — | None since Apr 30, 2026 raise to $0.27 | UNVERIFIED (issuer IR not re-pulled; not claimed) | Nasdaq + Zacks; as_of 10-09 |
+| SPY | Nothing in window; next ~Dec 2026 (quarterly) | Last $1.889 (ex 09-18-26) | — | None | n/a (ETF) | Yahoo actions (UA header); as_of 10-09 |
+| QQQ | Nothing in window; next ~Dec 2026 | Last $0.75143 (ex 09-21-26, paid 10-08) | 10-08-26 | None | n/a (ETF) | Nasdaq dividends API; as_of 10-09 |
+| NVDA | Nothing in window; next ~Dec 2026 | Last $0.25 (ex 09-10-26) | — | $0.01 → $0.25 raise stands as standing catalyst (FACT per Nasdaq) | n/a for decision purposes | Nasdaq dividends API; as_of 10-09 |
+| TSLA | None — pays no dividend (FACT) | — | — | None | n/a | Nasdaq dividends API |
 
-**Decision-relevant:** (1) no dividend-capture or assignment-risk events to plan around through Nov 6; (2) NVDA's 2,400% raise to $1.00 annualized (≈$24–25B/year, one of the largest US payouts; "second only to Microsoft by some estimates" is the sources' phrasing) is the standing dividend catalyst — SPECULATION: continued payout growth is not guaranteed; next declaration expected with late-Nov earnings; (3) AAPL (~Nov 10) and MSFT (Nov 19) ex-dates land just past the window — flag for the next run.
-
-Sources: Nasdaq dividends calendar API (28 dates swept); Yahoo Finance actions `chart/{sym}?interval=1d&range=1y&events=div,split` (UA `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)`); MSFT raise: ad-hoc-news, tipranks; NVDA raise: fool.com 2026-09-25, global.morningstar.com; AAPL pattern: dividendhistory.org, dividend.com, stockevents.app; QQQ/NVDA declared: marketbeat.com; count standard: `~/workspace/hedge-desk-research/dividend-count-standard.md`.
+**Premium-desk flag (INFERENCE):** MSFT's Nov 19 ex-div falls one day before Nov-20 monthly expiry — standard dividend-capture / early-exercise timing risk for ITM Nov calls. AAPL's November ex-div is UNVERIFIED timing — declaration comes with earnings (~late Oct).
 
 ---
 
 ## 3. Overnight Premium (IV) desk
 
-**Data provenance (explicit).** Today's IV is a **live Yahoo v7 options-chain pull** (cookie+crumb), ~1:33–1:40pm PDT Fri Oct 9, post-session close. Realized-window stats, variance shares, and window-contingent flags are **carried from 2026-10-08-iv-inputs.json** (as_of 2026-10-08T21:54 PDT, ~15.5h old — WITHIN the 18h freshness guard). Last night's `atm_iv` fields were all None (failed closed on degenerate bid/ask=0/0 quotes) and were **not used as today's IV**. ATM IV computed by Black-Scholes Newton solve on non-degenerate mids, call/put averaged; cross-checked against Yahoo's published per-contract IV (within 1–2pp) and the Brenner-Subrahmanyam straddle approximation (matches). Funding rate assumed r = 4% (INFERENCE-level input, stated). IV-rank history unavailable from free sources → "elevated IV rank" claims are vs the 20-day realized base only, labeled UNVERIFIED vs history.
+**Data provenance (explicit).** iv-inputs file as_of 2026-10-09T13:59 PT (~23.5h old) — OUTSIDE the 18h freshness guard, but the latest market-day pull (markets closed Saturday), so it stands as **Friday-close data**, labeled as such in every row. Spot-verification: Friday's 0DTE (10-09) chain is purged post-expiry, so exact re-verification of the file's 0DTE IVs is impossible. Proxy check via live Yahoo options pull (crumb flow + UA header): the 10-12 (2 DTE) and 10-16 (6 DTE) expiries show smoothly rising term structure in every name, with the file's 0DTE readings sitting plausibly at the 0-DTE end of each curve → **PROXY-CONSISTENT, not exact-match verified**. IV rank: **UNVERIFIED** for all six — no free IV-history source; never guessed.
 
-### IV / realized snapshot (live IV vs carried realized base)
+### Snapshot (all Friday-close; as_of 2026-10-09T13:59 PT)
 
-| Symbol | Spot (Oct 9 close) | 7D IV (10/16 exp) | **28D IV (11/6 exp)** | 42D IV (11/20 exp) | Realized 20d* | 28D IV vs realized | Term-structure shape |
-|---|---|---|---|---|---|---|---|
-| SPY | 778.57 | 9.5% | **12.2%** | 12.9% | 9.9% | +2.3pp (~+23%) | gentle contango |
-| QQQ | 751.27 | 14.8% | **18.1%** | 18.7% | 15.1% | +3.0pp (~+20%), WINDOW-CONTINGENT | contango |
-| AAPL | 336.64 | 22.2% | **26.8%** | 25.6% | 16.4% | +10.4pp (~+64%), WINDOW-CONTINGENT | hump at 28D, inverted 28D→42D |
-| MSFT | 535.07 | 23.0% | **32.0%** | 30.5% | 20.8% | +11.2pp (~+54%), WINDOW-CONTINGENT | spike 7D→28D, slight inversion after |
-| NVDA | 229.28 | 28.9% | **29.8%** | 35.0% | 24.5% | +5.3pp (~+22%), clean window | steep contango 28D→42D |
-| TSLA | 382.70 | 37.5% | **43.1%** | 41.4% | 29.0% | +14.1pp (~+49%), WINDOW-CONTINGENT | inversion peak at 28D |
+| Symbol | Front ATM IV (0DTE, file) | 20d realized | Window-contingent? | IV-vs-realized verdict + label | Earnings inside window? |
+|---|---|---|---|---|---|
+| SPY | 1.04% | 10.02% | YES (32.5%) | No clean verdict — WINDOW-CONTINGENT; 0DTE-vs-20d is a DTE artifact | None |
+| QQQ | 1.50% | 15.96% | YES (41.9%) | No clean verdict — WINDOW-CONTINGENT; 0DTE artifact | None |
+| AAPL | 6.51% | 16.24% | YES (37.9%) | No clean verdict — WINDOW-CONTINGENT | Nov 2 (inside ≥11-02 expiries, not front week) |
+| MSFT | 3.49% | 21.91% | YES (36.2%) | No clean verdict — WINDOW-CONTINGENT | Oct 28 (inside ≥10-28 expiries) |
+| NVDA | 2.15% | 25.80% | NO (23.8% — clean) | Mild premium: 6-DTE live IV 29.1% vs 20d 25.8% — INFERENCE, not a mispricing | Nov 18 (back-month; no front-week hump) |
+| TSLA | 3.36% | 30.50% | YES (31.0% — just over the line) | No clean verdict — WINDOW-CONTINGENT; 0DTE artifact | **Oct 21 — inside any expiry ≥ 10-21. Premium into this binary = avoid** |
 
-\* Realized = ann. 20d log-return std × √252, window 2026-09-11 → 2026-10-08 (carried, desk-recomputed within ~1pp).
+### Live Friday-quote term-structure anchors (Yahoo, UA header, served Saturday)
 
-### Stale-jump screen (standing rule 2026-09-28)
-- **SPY — NOT contingent (0.296).** Driver: 2026-09-21 +1.54% (29.6% of window variance) — verified cause: broad AI/chip rally (Brent −3.1% ahead of Pezeshkian UNGA, 10Y −2bp, Meta +11.4% on Muse AI-agent demand, Trump–Xi summit set for Sep 24). (FACT)
-- **QQQ — WINDOW-CONTINGENT (0.385).** Driver: 2026-09-21 **+2.74%** (38.5%) — same verified AI rally. Second: 9/17 +1.72%; third: 10/08 −1.35%.
-- **AAPL — WINDOW-CONTINGENT (0.328).** Driver: 2026-09-29 **−2.70%** (32.8%) — verified Apple-specific: new CEO John Ternus (succeeded Tim Cook 9/1) weighing cuts to middle management/engineering program-manager roles and scrapping the fixed spring/fall launch calendar; BofA flagged Meta's Muse AI shopping agent as an e-commerce threat; 37.8× trailing vs 5y median 31×. (FACT)
-- **MSFT — WINDOW-CONTINGENT (0.358).** Driver: 2026-09-25 **+3.60%** (35.8%) — verified: Copilot revamp announcement + Stifel upgrade to Buy, $575 target. (FACT)
-- **NVDA — NOT contingent (0.238).** Drivers diffuse: 9/14 −3.42% (23.8%), 10/08 −2.99% (18.2%), 9/17 +2.51% (12.8%) — no single day dominates.
-- **TSLA — WINDOW-CONTINGENT (0.309).** Driver: 2026-10-02 **+4.55%** (30.9%) — verified: Q3 deliveries 486,532 vs ~461k consensus (+5.5%). Second: 9/28 −4.02% (24.1%) — cause UNVERIFIED.
+| Symbol | 10-12 (2 DTE) ATM IV | 10-16 (6 DTE) ATM IV | Underlying (Fri close) |
+|---|---|---|---|
+| SPY | 5.70% | 9.71% | 778.57 |
+| QQQ | 8.73% | 14.77% | 751.27 |
+| AAPL | 16.16% | 22.83% | 336.64 |
+| MSFT | 18.62% | 23.77% | 535.07 |
+| NVDA | 19.31% | 29.08% | 229.28 |
+| TSLA | 23.48% | 37.73% | 382.70 |
 
-### Earnings-in-window flags (premium into a binary event = avoid)
-- **TSLA — Oct 21 after close**, inside the 28D window. 28D IV 43.1% = event pricing (FACT of term shape + calendar). Note: earnings-date source triangulation — Nasdaq calendar says Oct 21; one secondary source said Oct 20; Earnings desk verified Oct 21 after hours (Nasdaq). 
-- **AAPL — Nov 2**, inside both 28D and 42D windows. 28D IV 26.8% vs 42D 25.6% hump = earnings priced in the 11/6 expiry (FACT).
-- **MSFT — Oct 28 after close** (corrected today), inside the 28D window (11/6 expiry). The 7D→28D IV jump (23.0%→32.0%) is largely this event premium (INFERENCE from term shape + calendar).
-- **NVDA — Nov 18**, inside the 42D window (11/20 expiry) but OUTSIDE the 28D window — the 28D→42D slope (29.8%→35.0%) is the earnings premium on the back expiry (FACT).
-- **SPY, QQQ — no earnings.**
-
-### Desk verdicts (each states what would change it)
-1. **NVDA — the only clean IV-vs-realized read, and it's unremarkable.** 28D 29.8% vs realized 24.5%; premium mechanically explained by Nov-18 earnings on the back expiry. No mispricing signal. **What would change it:** realized running above ~30% would validate the premium as cheap; an IV spike without catalyst would flag fear pricing.
-2. **SPY — modest premium, clean window.** 28D 12.2% vs realized 9.9%; front 7D at 9.5% sits *below* realized — normal contango, no elevation worth chasing. **What would change it:** front-end IV collapsing through 8% on no news, or realized breaking above 12%.
-3. **QQQ — WINDOW-CONTINGENT; verdict withheld.** Ex-the-9/21-jump, realized is ~11.8% (computed, FACT math) — so the apparent "+20%" IV premium is likely materially understated; IV looks genuinely rich ex-jump (INFERENCE). Per the standing rule, no clean verdict. **What would change it:** a refreshed 20-day window excluding 9/21, or front-month IV compressing toward 15%.
-4. **AAPL, MSFT, TSLA — AVOID per the binary-event rule (three for three).** All three carry in-window earnings; all three are WINDOW-CONTINGENT with verified single-name causes; their elevated 28D IVs (26.8% / 32.0% / 43.1%) are event premium + jump-contaminated realized bases — not a mispricing. **What would change it:** earnings pass-through with IV crush, then re-screen on a clean window.
-5. **Elevated-IV flags (vs realized base only; IV history UNVERIFIED):** MSFT 28D 32.0% and TSLA 28D 43.1% are the most elevated reads, but both sit on in-window earnings — elevation expected, not an edge. AAPL's 28D→42D inversion (26.8%→25.6%) and TSLA's (43.1%→41.4%) confirm event concentration on the front expiry (FACT); NVDA's steep 28D→42D rise confirms the market paying for earnings further out (FACT).
-
-Working detail: /tmp/iv_snapshot.json (ephemeral; full per-expiry BS solves). Sources: Yahoo Finance v7 options chains (cookie+crumb, UA header), carried 2026-10-08 iv-inputs; cause-verification links in desk working notes.
+All six curves rise with DTE (FACT) — normal term structure, no inversion; TSLA's elevated front IV is consistent with Oct-21 earnings proximity, not "richness" (INFERENCE). What would change the verdicts: a Monday pull with a live non-zero-DTE front expiry, re-screened 20d windows, and Earnings-desk confirmation (cross-checked: TSLA Oct 21 confirmed — see §1).
 
 ---
 
 ## 4. Open Quant/AI Model Lab
 
-**Sweep scope:** arXiv q-fin.PR/CP/ST/RM + keyword sweeps (implied volatility, options microstructure, vol forecasting, PEAD, dividend forecasting) since 2026-10-02, plus GitHub/PyPI/awesome-quant API leg. All candidates scored with the repo's `assess_source`; all score inputs recomputed per candidate. Nothing INTEGRATE-ready (max score 66). Evidence labels: FACT = verified this run (arXiv API, abs page, GitHub API, PyPI API); INFERENCE = reasoning from verified facts; source-reported claims = UNVERIFIED unless independently checked. All candidates appended to `quant-lab-ledger.md` (#39–#48; ledger now at 48 rows); five existing-row dispositions updated; Jidoka + Kaizen entries recorded (Jidoka: no INTEGRATE-ready candidates, TEST advance on verified evidence only, no moves on unlicensed code; Kaizen: PyPI name-collision poka-yoke — PyPI `holdout` v0.3.0 is a different package, name collision — plus arXiv API `sortBy=submittedDate` fix).
+Scored with the repo's own `assess_source`; band discipline held (nothing inflated into TEST on interest alone).
 
-| # | Candidate | Score | Disposition | Reason |
+### New candidates (ledger rows #49–53 appended to ~/workspace/hedge-desk-research/quant-lab-ledger.md — verified on disk)
+
+| # | Candidate | Score | Disp. | Why |
 |---|---|---|---|---|
-| 39 | QuantOracle (github.com/QuantOracledev/quantoracle) — free quant API, 63 deterministic endpoints, options pricing + Greeks, no key, MIT, updated 2026-10-03 | 61 | WATCH | FACT: MIT, updated 10-03 (12 stars). Deterministic calculators = potential premium-desk parity/reference tools. Endpoint/Greeks/no-key claims UNVERIFIED (README not read this run). Follow-up: sandbox fail-closed + determinism vs desk solver |
-| 40 | SOTA: Stock Options Trading Agents Guided by Option-Implied Return Distributions (arXiv 2610.10407, 7 Oct) | 42 | ARCHIVE | LLM trading-agent framing = paper-only boundary mismatch; no code on abs page |
-| 41 | HAN-Mamba: Hierarchical Selective State Space Networks for Multi-Scale Financial Volatility Forecasting (arXiv 2610.10323, 7 Oct) | 45 | WATCH | Multi-scale RV forecasting; Optiver benchmark claim UNVERIFIED; no code |
-| 42 | Scale or speed? When do path signatures improve volatility-regime forecasts? (arXiv 2610.06690, 5 Oct) | 51 | WATCH | +2.7pp balanced accuracy on US next-month vol terciles after multiple-testing correction (source-reported, UNVERIFIED); honest null outside US; replicable from free Yahoo daily data. Sandbox candidate: HAR + signature features on SPY 20-day RV |
-| 43 | Beneath the VIX: Probability, Severity, and Uncertainty Shocks (arXiv 2610.03849, 2 Oct) | 45 | WATCH | Downside Protection Premium tracks VIX; strike slope separates shortfall probability vs severity (UNVERIFIED). Vol-regime context, not tradable input |
-| 44 | Shapley-based Structural Analysis of Neural Calibration for SV Models (arXiv 2610.03076, 2 Oct) | 42 | ARCHIVE | Calibration intuition only (preprint, no code; source-reported) |
-| 45 | josephouyang/machine_learning_for_implied_volatility_forecasting — CMU replication of Jiang/Lazar/Marra (2026) JFM peer-reviewed "Improving IV Forecasts for American Options Using Neural Networks"; MIT, updated 2026-08-19 | 63 | WATCH | FACT: MIT; FACT: JFM 46:1137–1153 peer-reviewed. Gap-NN (market-IV − model-IV) idea directly applicable to American-exercise watchlist options. Data proprietary (OptionMetrics/WRDS) → replicate on Yahoo chain instead |
-| 46 | danielevansmith/options-dataset-hist — historic options dataset SPY/IWM/QQQ Jan 2008–Dec 2025 (IV, Greeks, volume, OI); MIT, updated 2026-06-29 | 61 | WATCH | FACT: MIT, description.pdf summary stats read. Fills premium desk's free IV-history gap IF provenance checks out — currently UNVERIFIED. Follow-up: verify provenance + format, cross-check vs Yahoo chain |
-| 47 | Latent Continuum of Regimes in Limit Order Book Dynamics (arXiv 2610.05740, 5 Oct) | 42 | ARCHIVE | EURO STOXX futures LOB; zero watchlist options transfer; no code |
-| 48 | Event History Over Scale: MBOFormer LOB forecasting (arXiv 2610.02917, 2 Oct) | 42 | ARCHIVE | Level-3 message data not desk-accessible; UNVERIFIED; no code |
+| 49 | Schneider/Looser/Garin/Liu/Kuhn — WRAP: adversarial training for deep hedging in nonstationary markets (DRO), arXiv:2610.07162v1 | 36 | ARCHIVE | Preprint; no author code link on arXiv abs page (verified at source); hedging-policy learning — marginal desk fit |
+| 50 | emiliensabathier/options-lab — arb-free SVI/SSVI/eSSVI fitted to a real SPX chain (2026-10-05, 7,425 OTM quotes, grid arb audit) + variance risk premium history since 1990, GitHub, MIT | 61 | WATCH | README verified at source: eSSVI zero-arb on 238 archived sessions (source-reported); VRP: selling 30d variance at VIX since 1990, Sharpe 1.19, skew −6.17, COVID worst window ≈ 3 years of avg gains (source-reported, UNVERIFIED — read, not run). Sandbox next |
+| 51 | FaiyazEnayet/deep-hedging-lab — from-scratch deep hedging (Buehler et al. 2019): NN hedgers under transaction costs/stoch vol/jumps, GitHub, MIT | 52 | WATCH | README verified at source (GBM/Heston/Merton simulators, CVaR/entropic objectives — source-reported, UNVERIFIED). Sandbox: run test suite, hedge-error vs BS delta |
+| 52 | blaquebaux/bight — 25-delta risk-reversal skew mean-reversion stub | 22 | ARCHIVE | STUB/DATA-BLOCKED — no code, no backtest; honest null stated. Reopen if built |
+| 53 | blaquebaux/broaching — post-event vol-bleed stub (short-dated straddles after earnings/FDA) | 22 | ARCHIVE | Same stub state. Reopen if built |
 
-**Disposition changes on existing rows:** #25 Han et al (diffusion IV surface) **WATCH→TEST** — code verified (yinbinhan/volatility-surface-simulation, MIT, updated 2026-10-02, 26 files incl. sanity_check.py); rescored 48→**66** TEST; sandbox: run sanity_check, verify arb-violation claim on SPY chain. #20 Yang et al stays WATCH — code link found but **no LICENSE → all-rights-reserved, unusable until licensed**. #37 DaniyalMlk/holdout stays WATCH — PyPI `holdout` is a different package (name collision). #9 Buchegger & Gonon stays WATCH/BLOCKED — no author code. #34 stays WATCH — no code link.
+Triage exclusions (no ledger rows; recorded in the Jidoka log): 8 GitHub repos rejected on NOLICENSE/crypto/IBKR-dependency/bot-framing grounds; arXiv 2610.11691 (market impact, no options relevance); 2610.09613 (residual asset pricing, no vol/options relevance).
 
-**Null results (explicit, not dropped):** earnings-drift lane — no new PEAD papers in-window; dividend-forecasting lane — nothing new (#12 Dong unchanged); purged walk-forward lane — no new candidates (#22 purgedcv, #37, #1 unchanged); 8 new preprints — zero author code links (reproducibility not established for any).
-
-Ledger: `~/workspace/hedge-desk-research/quant-lab-ledger.md` (48 rows, ~30.6KB).
+### Re-check outcomes (remaining items without 10-10 notes)
+- **#10 Subrahmanyam (PEAD design critique):** full paper located — SSRN 5930255. Per UCLA Anderson Review summary: PEAD t=2.18 all-stocks vs 1.43 excluding microcaps (INFERENCE from secondary summary — full paper not read). Working paper, not peer-reviewed. Stays WATCH.
+- **#12 Dong (dividend-growth state-space):** full paper located — Hang Dong (UGA), FMA Taipei 2026 program paper 206; Kalman extraction of dividend-growth expectations from dividend futures (source-reported, UNVERIFIED). Requires proprietary OTC dividend futures — not replicable on desk data. Stays WATCH.
+- **#37 DaniyalMlk/holdout:** PyPI `holdout` still v0.3.0 with the same collision summary ("Preserve the dissenting reasoning behind contested decisions") — not the author's release; repo unchanged (pushed 2026-10-05). Stays WATCH.
+- **#39 QuantOracle:** repo README read in full at source — MIT confirmed; 63 deterministic calculators + 10 composites, zero market-data dependencies (math-only); free tier 1,000 calls/IP/day no-key confirmed. Rescored 63→WATCH (band unchanged). **Decision-relevant correction:** it is a pure-math calculator API, not a data API — useful as a parity/Greeks reference calculator only; it does NOT fill the IV-rank data gap.
 
 ---
 
-## 5. Weather/War/Logistics Futures Event desk
+## 5. Futures Event desk (catalysts)
 
-### EIA Weekly Petroleum Status (released Wed Oct 7, 10:30 ET; week ended Oct 2) — FACT
-- **Crude: −3.2M bbl to 424.1M** vs Reuters poll expecting a +1.7M build — bullish surprise. Still 1% above the 5-yr seasonal average. Cushing +444K bbl.
-- **Gasoline: +0.4M bbl to 204.7M** vs −1.7M draw expected — bearish surprise vs expectations.
-- **Distillates: ~105.1M** vs −2.1M draw expected — but still **12% below the 5-yr average**, the tight leg.
-- Refinery runs +223K bpd; utilization 92.7% (+0.2pp). US crude production hit a **record 13.979M bpd**. Net crude imports −53K bpd.
-- Products supplied (4-wk avg): 21.1M bpd, +0.7% YoY; gasoline 8.8M bpd; distillates 3.8M bpd (−1.6% YoY).
-- Price reaction Wed morning: Brent +1.2% to ~$101.79, WTI +0.54% to ~$89.92 — crude drew, but product builds capped the bid.
-- Sources: Reuters Oct 7; OilPrice Oct 7.
+### WASDE Oct 9, 2026 (released 12:00 ET, confirmed on usda.gov release page)
+FACT (figures via five-source post-release consensus — DTN, HAAWKS structured feed, ADMIS, Brownfield, Teucrium; raw USDA PDF fetch failed, not line-verified):
+- **Corn — bearish surprise.** Yield 181.2 bpa (+2.7 vs Sep; trade expected a cut), 2nd highest ever. Production 16,034M bu (+234M; ~315M above survey avg). 2026/27 ending stocks **1,849M bu** (+282M vs Sep; +172M above survey avg). Avg farm price cut $0.10 → $4.70. Corn traded near its $0.30 daily limit on release. INFERENCE (ADMIS): "prices must fall to stimulate demand in a hurry."
+- **Soybeans — neutral.** Yield 53.1 bpa (record, +0.3). Ending stocks 315M bu (+5M). Farm price $12.00, unchanged. Exports raised 10M on Chinese buying.
+- **Wheat — neutral-to-bearish.** Ending stocks 740M bu (+23M); exports cut 25M. Farm price $6.30 (−$0.10). Global: corn 280.4 mmt (+8.3), soy 124.3 mmt (+0.3), wheat 276.0 mmt (−0.3). Next WASDE: Nov 10.
 
-### USDA October WASDE (released today, 12:00 ET) — FACT unless noted
-- **Corn (bearish surprise):** yield raised to **181.2 bu/ac** vs 178.5 prior and 177.7 average trade estimate — reversed two months of cuts. Production ≈16.034B bu (+234M m/m). Ending stocks **1.849B bu vs 1.67B avg trade**. Futures traded lower post-report.
-- **Soybeans (near expectations):** yield 53.1 vs 52.8 prior, slightly above avg trade. Ending stocks **315M bu** vs 305M avg, +5M vs Sep. Futures modestly lower.
-- **Wheat:** October headline specifics UNVERIFIED in this sweep (pre-report: US ending stocks 717M bu est. per DTN analyst poll). Reported post-report: wheat, corn, soybean futures all **>1% lower today** on fund/technical selling after the report. Dec wheat had already fallen 2.6% Wed ($6.86) on a strong-dollar record-yield trade.
-- Pre-report positioning (Oct 7–8): Dec corn $5.02 (2-sided), Nov beans ~$12.94-1/2; export sales (wk ended Oct 1) low-end of forecasts for corn (769.5K MT) and soy (549.4K MT), high-end for wheat (451.6K MT).
-- INFERENCE: the corn yield surprise removes rationing urgency and likely caps December corn's upside until South American weather risk re-enters; part of the move was front-run by Thursday's risk-off selloff.
-- Sources: RFD-TV WASDE recap; DTN pre-report estimates; XTB post-report price action.
+### Curve read (as_of Sat Oct 10; futures closed, quotes = Friday Oct 9 closes unless noted)
+- **Crude:** WTI Nov ~$90–93, Brent Dec ~$103–105 as_of Oct 10 (tape conflicts across sources — precise level UNVERIFIED). Term structure backwardated (Brent Dec ~$102.8 vs Jan-27 ~$98.25, Oct 8 — INFERENCE: prompt tightness still priced). **EIA weekly (Oct 7 report, week ending Oct 2):** commercial crude −3.2M to 424.1M bbl (1% above 5-yr avg); Cushing +444k to 24.7M; gasoline +400k; distillates ~flat, 12% below 5-yr avg; refinery util 92.7%; US production ~14M bpd. Pre-hurricane data — next two prints will be Isaias-distorted.
+- **Nat gas:** November ~$3.20 (+3% on Gulf shut-ins, Oct 8). INFERENCE: psychology/timing, not structural — Gulf gas is a small slice of Lower-48 supply.
+- **Metals:** Gold spot ~$4,182 (late Fri NY); Dec COMEX $4,212.20 — ~$30 spot-to-Dec carry = normal contango at 4% policy rates. Gold ETFs at record 4,256t after 67t Sept inflows; China central bank +740k oz Sept (largest in 3 yrs). ~25% below the January $5,595 record, inside a $159 band since Sept 28 — a bounce inside a downtrend, bought by ETFs/official sector (INFERENCE). Silver ~$60.13 (Oct 7, Kitco — stale).
 
-### Hurricane Isaias — Gulf energy/logistics disruption this weekend — FACT
-- Now **Category 2**; NHC briefly forecast Cat 3 early Friday before shear weakens it ahead of landfall **late tonight/early Saturday** along a 130-mile stretch from Gautier, MS to Miramar Beach, FL. Tropical-storm winds reach the coast by midday Friday; dangerous surge; 10" isolated rainfall; tracks inland to TN/KY as post-tropical depression Sunday.
-- **~11.2M bbl of Gulf oil production at risk** through the storm (Earth Science Associates model via Reuters) — up from 7.1M for July's Tropical Storm Bertha. Track crosses significant offshore production and onshore refining corridors.
-- INFERENCE: short-lived but real prompt-weekend premium for Gulf crude and products; damage updates Saturday–Monday move RBOB/distillates first, not just crude. Watch distillate cracks, already elevated.
-- Sources: USA Today live updates; Reuters Oct 7.
+### Weekend geopolitical triage (verified only — FACT, multi-sourced or primary-attributed)
+Hurricane Isaias has shut **71.51% of US Gulf of Mexico oil production (~1.46M bpd)** (Marine Minerals Administration, Sat Oct 10). IEA/G7: 100M bbl strategic release over 4 months (G7 agreement Oct 2; US 40M bbl SPR exchanges Sept 29) — part of the earlier 400M bbl IEA program, not new commitments. Trump announced Oct 9 a US–Russia diesel deal with Treasury waiver through Apr 7, 2027 (Reuters via Atlas News); Zelenskyy criticized. Houthis claimed strikes on Riyadh's King Khalid airport (smoke reported on a stationary aircraft); earlier Riyadh/Abha attacks killed 3 (Oct 8). UKMTO: tanker struck by projectiles north of Qatar mid-week. Ukraine hit a fourth Russian refinery this week. Iran FM Araghchi: talks ongoing via mediators, response in days; Trump ruled out Iran strikes before Nov 3 midterms; blockade + fresh tanker sanctions stay. OPEC+ core: November output held. Aramco CEO Nasser: stockpiles "scarily thin," ~3bn bbl regional supply lost, >1bn bbl drawn from reserves.
 
-### Strait of Hormuz / US–Iran war — FRESH (last 48h) — FACT
-- Tanker attacks at the highest weekly rate since the war began Feb 28: ≥12 attacks/attempts Sep 28–Oct 5 (IMO collated 9). IRGC drone overflights/VHF hails persist.
-- Hormuz transits at lowest since July 23: 7 commodity vessels Tuesday Oct 6; crude through the strait **−27% w/w to ~10.1M bpd (74% of pre-war)**. Offset: Gulf of Oman/Red Sea exports rose 2x pre-war, keeping total Middle East exports near pre-war.
-- Today: Trump said the US would not attack Iran before November midterms citing "productive discussions"; the US naval blockade of Iranian ports stays; NYT reports Pentagon drew up 3-day strike plans. Iran's Fars claimed mine strikes on tankers late Thursday (UNVERIFIED/unconfirmed); Iran claims control of the strait, Sec. Rubio disputes.
-- Market reaction: Brent shed ~1% to ~$103.25 after Thursday's 4%+ surge. Freight/insurance rates remain elevated. OPEC+ kept November quotas unchanged (Sunday Oct 4). China's refined-product export suspension for October reported to continue. IEA (Sep 11): high prices + restricted supply → biggest demand drop since Covid, but 2026 global deficit estimate raised to 1.7M bpd; return of surplus pushed to 2027.
-- Sources: Reuters tanker-attacks Oct 7; Reuters Hormuz-transits Oct 8; Moneyweb/Bloomberg Oct 9.
+INFERENCE: near-term energy is a two-sided binary — physical tightness (Isaias, Hormuz risk, thin distillates) vs policy barrels (IEA/G7, Russian diesel, SPR exchanges). SPECULATION: whether Isaias-driven Gulf tightness persists into the next EIA print; whether the diesel waiver loosens US distillate spreads before winter.
 
-### Futures-curve read — FACT + INFERENCE
-- Both benchmarks in **steep backwardation**: WTI Nov 26 front ~$89–91, Brent Dec 26 ~$101–103; Brent–WTI front spread ~$10–11. Prompt barrels commanding the premium.
-- Trump's remarks today trimmed the geopolitical premium (Brent −1%), but backwardation persisting through the war escalation says near-term physical tightness is real, not just paper fear.
-- Distillates are the tight leg (12% below 5-yr avg; diesel cracks outpacing crude). INFERENCE: if Isaias shutters Gulf refining or damages offshore supply, the crack complex reprices first.
+**No federal-data blackout:** USDA/EIA releases on schedule (WASDE Oct 9, EIA Oct 7 both landed). Retail-gas/diesel figures cited by one low-quality source — UNVERIFIED, not leaned on.
 
-### Government-data status — FACT
-No shutdown; EIA weekly and October WASDE both released on schedule. No correction needed. (User-verified: CR passed 2026-09-01, signed 2026-09-02, funding through Dec 11.) Brief-correction-2026-10-05.md NOT applied per standing rule.
+**CPI conditional (Wed Oct 14, 8:30am ET):** Dec-hike odds repriced 68% → ~80% on oil escalation alone (cpi-conditional addendum); the FedWatch re-baseline guard band (82.3% Oct hold / 81.3% Dec hike) stays staged until the user's manual CME cross-check. Asymmetry: core MoM ≤0.2% unwinds two days of hawkish repricing (10Y backs off, vol stays crushed); core ≥0.3% hard-confirms the hot branch.
 
 ---
 
 ## 6. Box/Parity Observer
 
-**Desk verdict: quiet. No parity violations; no methodology changes; OCC memos all single-name, none touching the watchlist.**
+No index-methodology changes and no new parity-violation analysis this week (CBOE/CFE notices + VIX-methodology news, Oct 5–10 sweep — FACT). The "VIX Weeklys inclusion" story in search results is a recycled old announcement; Cboe's new Futures-Options Order Type for VIX options/futures (effective Dec 14, 2026) is execution infrastructure, not a methodology change.
 
-- **Index methodology scan (last ~7 days):** No new published put-call/box-parity violation studies found. One search hit (Hedgeweek, "CBOE to enhance VIX index methodology by including SPX Weeklys … From 6 October") is a **stale recrawl** of a 2014-era article (quotes ex-CEO Edward Tilly) — flagged so it isn't misread as fresh. Cboe's 25-year exclusive SPX licensing extension through 2051 (reported Oct 8; Goldman Sell→Neutral $300, TD Cowen upgrade to Buy $334) is index-*franchise* news, not a methodology change — no parity implication. Cboe exploring perpetual futures on VIX (Bloomberg via CoinDesk, Oct 2) is early exploration only — no specs, no filing, VIX index methodology unchanged. (FACT; article-age call is INFERENCE from CEO attribution)
-- **OCC corporate-action memos Oct 7–9 (#59920–#59932):** all single-name (ACVA tender, MSGK1 distribution, RGEN1/ETHA1/FMX4/FMX5 cash-in-lieu, NXH1 warrants, QNCX1→IRLA1 rename) — none affect SPY/QQQ/AAPL/MSFT/NVDA/TSLA. (FACT, theocc.com)
-- **SPY put-call parity spot-check (live Yahoo quotes ~1:33pm PDT Oct 9, UA header):** expiry Oct 16, 2026 (weekly), T = 7/365 = 0.01918 yr; rate proxy ^IRX 13W T-bill 4.057% (Oct 9 close — labeled 13W, not 2Y); S = 778.57 (4:00pm ET close print). K=779: C mid 4.12, P mid 4.085 → observed C−P = 0.035 vs theoretical 0.176 (deviation −0.141). K=778: C mid 4.69, P mid 3.64 → observed C−P = 1.050 vs theoretical 1.175 (deviation −0.125). Both strikes imply the same spot — 778.43 and 778.44, agreeing to 0.016, ~0.13 below the 4:00pm ET stock print. (FACT) Option quotes timestamped 4:13pm ET vs stock 4:00pm ET — the deviation is fully explained by the ~13-minute quote-timing mismatch, not a parity break. (INFERENCE) Combined leg spreads 0.02 wide; cross-strike consistency inside 0.02 — **parity holds within bid/ask; no violation flagged.** (INFERENCE from FACT arithmetic) Quotes liquid, non-degenerate (no 0/0 bids/asks; OI in the thousands). Dividend assumption: no SPY ex-div between Oct 9 and Oct 16 (next ~mid-Dec), so no dividend term needed. (INFERENCE)
-- **Carry-forward:** the Yahoo v7 options endpoint now requires the crumb flow ("Invalid Crumb" on bare calls) — working sequence: fc.yahoo.com → cookie → v1/test/getcrumb → ?crumb= on every API call.
+**One box-spread-relevant item (FACT, verified across KPMG Tax News Flash, Debevoise alert, JD Supra):** IRS Notice 2026-62 (late Sept 2026) with Rev. Rul. 2026-20 names "box-spread funds" among strategies the Treasury/IRS says may be inconsistent with the purpose of §852(b)(6). Targeted mechanism: ETFs (e.g., Alpha Architect's BOXX, ~$14.5B, now holding almost entirely long SPY boxes) that generate a Treasury-like return via non-§1256 box spreads and distribute appreciated option legs in-kind before expiry, asserting fund-level nonrecognition. The notice requests comments and signals possible further guidance (regulations, transaction-of-interest/listed-transaction designation, possibly retroactive); it expressly does not address other box-spread transactions (direct borrowing via boxes, holding boxes outright). INFERENCE: if regulatory action dents demand for box-spread ETFs, it alters the flow structure around SPY box spreads — worth the Premium desk's awareness when interpreting implied rates from box quotes, not a pricing dislocation itself. Watch for BOXX outflows or structure changes in coming weeks.
 
 ---
 
 ## 7. Bonds & Rates desk
 
-**Desk status: OPERATIONAL — `rates_desk.rates_environment()` ran clean** (`REAL_FRED_RATES` mode, HTTP 200 from FRED public CSV, observations dated 2026-10-08; FRED daily series publish T+1 business day, so 10-08 is latest available — FACT). No substitutions made; no numbers from memory.
+**Status: OK** — module ran via real FRED; all numbers from module output, none from memory.
 
-| Metric | Value | Date |
-|---|---|---|
-| Fed funds effective rate (DFF/EFFR) | 3.88% | 2026-10-08 |
-| Fed funds change over 60-day window | +0.25% (+25bp) | module-computed |
-| Treasury 2Y (DGS2) | 4.75% | 2026-10-08 |
-| Treasury 10Y (DGS10) | 5.22% | 2026-10-08 |
-| 2s10s spread | +47bp | computed |
-| Curve shape | UPWARD_SLOPING | module-computed |
-| SOFR | 3.87% | 2026-10-08 |
-| OBFR | 3.88% | 2026-10-08 |
+**Module output (verbatim, REAL_FRED_RATES, as_of 2026-10-10, underlying series through 2026-10-08):**
+```json
+{"schema_version": "hedge-desk-rates-desk-1.0.0", "mode": "REAL_FRED_RATES", "as_of": "2026-10-10", "fed_funds_effective_rate": "3.88", "fed_funds_latest_date": "2026-10-08", "fed_funds_change_over_window": "0.25", "treasury_2y": "4.75", "treasury_2y_date": "2026-10-08", "treasury_10y": "5.22", "treasury_10y_date": "2026-10-08", "spread_10y_2y_points": "47.00", "curve_slope": "0.058750", "curve_shape": "UPWARD_SLOPING", "lookback_days": 60, "sofr": "3.87", "sofr_date": "2026-10-08", "effr": "3.88", "effr_date": "2026-10-08", "obfr": "3.88", "obfr_date": "2026-10-08", "data_source": "fred-public-csv-http-200", "trade_authorized": false}
+```
 
-**Curve read (FACT, from 60-day histories):** on 10-07, 2Y 4.77% / 10Y 5.28% → spread 51bp. On 10-08, 2Y fell 2bp (→4.75%) and 10Y fell 6bp (→5.22%) → spread 47bp. Long end led the decline; **mild flattening day-over-day** (spread −4bp), curve still positively sloped. 60-day: 2Y 4.25%→4.75% (+50bp), 10Y 4.72%→5.22% (+50bp) — roughly parallel; spread identical at both ends (47bp). Peak 10Y in window: 5.31% on 10-05. 2s10s touched 32bp on 9-28, back to 47bp now.
-**Rate-level context (INFERENCE):** 5.22% 10Y / 4.75% 2Y are historically elevated; curve positive but not steep. EFFR at 3.88% sits ~87bp below the 2Y, consistent with the market pricing the policy path near its resting level rather than expecting aggressive cuts — a forward-rate implication, not a forecast.
-**Funding stress (FACT→INFERENCE):** SOFR 3.87% vs EFFR 3.88% = −1bp; OBFR 3.88% — all three overnight measures within 1bp. **No funding stress** (stress would show as tens-of-bp SOFR–EFFR widening). No inversion anywhere in the observed window — **no recession-flag signal from 2s10s.** (FACT)
-**Directional read for premium pricing (INFERENCE):** higher long rates = higher discount rates = pressure on long-duration growth multiples (NVDA, TSLA, MSFT carry the most duration risk) — standard present-value mechanics. Elevated yields raise the carry component in options via put-call parity (higher forward → richer calls, cheaper puts, all else equal) — small vs vol, but systematically biases premium capture toward covered-call writing in this regime. The mild long-end-led decline eases discount-rate pressure marginally vs yesterday (6bp is noise-level but directionally favorable). What would change the posture: a sustained 10Y break below ~5.00% in the module's prints.
+**Read:** fed funds effective 3.88%, up 25bp over the 60-day window; 2Y 4.75%; 10Y 5.22%; 2s10s +47bp, UPWARD_SLOPING. SOFR 3.87 vs EFFR 3.88 — spread −1bp, no funding stress. (FACT, FRED series through 2026-10-08.) Both ends eased off late-Sept/early-Oct peaks (2Y 4.92 on 9-28 → 4.75; 10Y 5.31 on 10-05 → 5.22), but the 60-day trend is a sustained bear-steepening from 4.7% 10Y in mid-August. INFERENCE: 5.2%+ 10Y keeps discount rates elevated — a structural headwind for long-duration growth multiples (NVDA/TSLA/QQQ); the −9bp pullback off the peak is relief, not a turn — the verdict changes if 10Y breaks and holds below ~5.0%. Nothing in overnight markets argues for disorderly liquidity heading into next week. Value lens: favor names whose cash flows hold up at 5%+ discount rates (MSFT, AAPL) over duration-long stories.
 
 ---
 
-## Cross-desk consistency notes
-
-- **Earnings dates now corrected (Earnings desk verified live today):** TSLA Oct 21 (after hours), MSFT Oct 28 (after hours), AAPL Nov 2 (announced). The Premium desk's section was built on the nightly job's ~Oct 21/~Nov 4/~Oct 29 estimates; the corrected dates keep all three names in-window — verdicts stand, but MSFT's window is now *shorter* (19 days, inside the 28D expiry) and the desk's "MSFT earnings inside 28D window" read is confirmed rather than calendar-inferred. No contradictions remain unresolved.
-- **Dividend MSFT ex-date (Nov 19) sits inside the MSFT Oct-28 earnings → Nov-19 ex-div sequence:** no assignment-risk event inside this run's window, but the next run should check that Nov-19 ex-div against short-call positioning. (INFERENCE from two desks' FACT dates)
-- **No government-data contradictions:** EIA and USDA released on schedule; the no-shutdown standing rule held again.
-- All source URLs are in per-desk sections above. Every material number is labeled. No desk failed; no desk was silently dropped.
-
-*Run metadata: 7/7 desks reported. Market-data rule followed (Yahoo UA header; Yahoo v7 options crumb flow working — Premium desk; CBOE fallback labeled on Earnings desk). IV-inputs freshness guard: file present, as_of 2026-10-08T21:54 PDT, ~15.5h old at run start — within 18h guard; ATM IVs failed closed last night and were NOT used as today's IV.*
+*No desk dropped. All seven sections delivered with sources and as_of labels. Paper-only; no Risk of Ruin generated or touched.*
