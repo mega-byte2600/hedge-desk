@@ -1,5 +1,6 @@
 import json
 import unittest
+from contextlib import ExitStack
 from dataclasses import dataclass
 from unittest.mock import patch
 
@@ -34,6 +35,11 @@ class DataSourceStatusTests(unittest.TestCase):
             patch.object(web_app, "treasury_yield_curve", return_value=_Rows()),
             patch.object(web_app, "fdic_failures", return_value=_Rows()),
             patch.object(web_app, "world_bank_indicator", return_value=_Rows()),
+            patch.object(web_app, "imf_gdp_growth", return_value=_Rows()),
+            patch.object(web_app, "oecd_composite_leading_indicator", return_value=_Rows()),
+            patch.object(web_app, "eurostat_quarterly_gdp", return_value=_Rows()),
+            patch.object(web_app, "usgs_earthquakes", return_value=_Rows()),
+            patch.object(web_app, "nasa_eonet_events", return_value=_Rows()),
             patch.object(web_app, "bls_latest_series", return_value=_Rows()),
             patch.object(web_app, "ecb_exchange_rates", return_value=_Rows()),
             patch.object(web_app, "nyfed_reference_rates", return_value=_Rows()),
@@ -51,7 +57,10 @@ class DataSourceStatusTests(unittest.TestCase):
             # FINRA intentionally absent: its free Public Credential still
             # requires user-provisioned OAuth client credentials.
         }
-        with patch.dict("os.environ", env, clear=True), patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6], patches[7], patches[8], patches[9], patches[10]:
+        with ExitStack() as stack:
+            stack.enter_context(patch.dict("os.environ", env, clear=True))
+            for source_patch in patches:
+                stack.enter_context(source_patch)
             status, headers, payload = self._request("/api/data-sources")
 
         self.assertEqual(status, "200 OK")
@@ -59,9 +68,11 @@ class DataSourceStatusTests(unittest.TestCase):
         self.assertEqual(payload["mode"], "PAPER_RESEARCH_ONLY")
         self.assertFalse(payload["trade_authorized"])
         self.assertFalse(payload["live_orders_enabled"])
-        self.assertEqual(payload["source_count"], 12)
+        self.assertEqual(payload["source_count"], 17)
         self.assertEqual(payload["sources"]["eia-open-data"]["status"], "LIVE")
         self.assertEqual(payload["sources"]["finra"]["status"], "UNCONFIGURED")
+        for provider in ("imf", "oecd", "eurostat", "usgs", "nasa-eonet"):
+            self.assertEqual(payload["sources"][provider]["status"], "LIVE")
         serialized = json.dumps(payload)
         self.assertNotIn("eia-test-secret", serialized)
         self.assertNotIn("320193", serialized)
@@ -73,7 +84,10 @@ class DataSourceStatusTests(unittest.TestCase):
             "FINRA_CLIENT_ID": "finra-client",
             "FINRA_CLIENT_SECRET": "finra-test-secret",
         }
-        with patch.dict("os.environ", env, clear=True), patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6], patches[7], patches[8], patches[9], patches[10]:
+        with ExitStack() as stack:
+            stack.enter_context(patch.dict("os.environ", env, clear=True))
+            for source_patch in patches:
+                stack.enter_context(source_patch)
             payload = web_app.build_data_source_status()
 
         self.assertEqual(payload["sources"]["finra"]["status"], "LIVE")
@@ -84,9 +98,15 @@ class DataSourceStatusTests(unittest.TestCase):
     def test_upstream_exception_text_is_suppressed(self):
         patches = self._patch_public_sources()
         leaking_error = "upstream failed api_key=must-never-escape"
-        with patch.dict("os.environ", {"EIA_API_KEY": "configured"}, clear=True), patches[0], patches[1], patches[2], patches[3], patches[4], patch.object(
-            web_app, "nyfed_reference_rates", side_effect=ValueError(leaking_error)
-        ), patches[6], patches[7], patches[8], patches[9], patches[10]:
+        with ExitStack() as stack:
+            stack.enter_context(patch.dict("os.environ", {"EIA_API_KEY": "configured"}, clear=True))
+            for index, source_patch in enumerate(patches):
+                if index == 10:
+                    continue
+                stack.enter_context(source_patch)
+            stack.enter_context(
+                patch.object(web_app, "nyfed_reference_rates", side_effect=ValueError(leaking_error))
+            )
             payload = web_app.build_data_source_status()
 
         nyfed = payload["sources"]["nyfed-markets"]
