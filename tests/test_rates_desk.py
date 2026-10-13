@@ -42,7 +42,7 @@ class RatesDeskTests(unittest.TestCase):
 
     def test_rates_environment_reports_curve_and_change(self):
         data = {
-            "DFF": "observation_date,DFF\n2026-07-01,3.63\n2026-09-17,3.88\n",
+            "DFF": "observation_date,DFF\n2026-07-20,3.63\n2026-09-17,3.88\n",
             "DGS2": "observation_date,DGS2\n2026-09-17,4.67\n",
             "DGS10": "observation_date,DGS10\n2026-09-17,4.94\n",
         }
@@ -58,7 +58,7 @@ class RatesDeskTests(unittest.TestCase):
 
     def test_rates_environment_inverted_curve(self):
         data = {
-            "DFF": "observation_date,DFF\n2026-07-01,3.63\n2026-09-17,3.88\n",
+            "DFF": "observation_date,DFF\n2026-07-20,3.63\n2026-09-17,3.88\n",
             "DGS2": "observation_date,DGS2\n2026-09-17,5.10\n",
             "DGS10": "observation_date,DGS10\n2026-09-17,4.80\n",
         }
