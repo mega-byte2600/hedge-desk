@@ -48,6 +48,7 @@ class DataSourceStatusTests(unittest.TestCase):
         patches = self._patch_public_sources()
         env = {
             "EIA_API_KEY": "eia-test-secret",
+            "SEC_CONTACT_EMAIL": "research@example.test",
             # FINRA intentionally absent: its free Public Credential still
             # requires user-provisioned OAuth client credentials.
         }
@@ -61,10 +62,21 @@ class DataSourceStatusTests(unittest.TestCase):
         self.assertFalse(payload["live_orders_enabled"])
         self.assertEqual(payload["source_count"], 12)
         self.assertEqual(payload["sources"]["eia-open-data"]["status"], "LIVE")
+        self.assertEqual(payload["sources"]["sec-edgar"]["status"], "LIVE")
         self.assertEqual(payload["sources"]["finra"]["status"], "UNCONFIGURED")
         serialized = json.dumps(payload)
         self.assertNotIn("eia-test-secret", serialized)
         self.assertNotIn("320193", serialized)
+        self.assertNotIn("research@example.test", serialized)
+
+    def test_sec_is_unconfigured_without_compliant_contact_identity(self):
+        patches = self._patch_public_sources()
+        with patch.dict("os.environ", {"EIA_API_KEY": "configured"}, clear=True), patches[0], patches[1], patches[2], patches[3], patches[4], patches[5], patches[6], patches[7], patches[8], patches[9], patches[10]:
+            payload = web_app.build_data_source_status()
+
+        sec = payload["sources"]["sec-edgar"]
+        self.assertEqual(sec["status"], "UNCONFIGURED")
+        self.assertEqual(sec["reason_code"], "CREDENTIALS_NOT_CONFIGURED")
 
     def test_finra_reports_live_only_when_server_credentials_exist_and_probe_passes(self):
         patches = self._patch_public_sources()
