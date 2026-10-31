@@ -1,19 +1,23 @@
-# Desk 5 SEC/Burry research and Desk 6 Carpe DATA coverage
+[polish] Daily brief copy: seven desks, afternoon refresh (fresh base)
 
-## What changed
+Saturday good/better/best — no new features.
 
-- Connect Desk 5 to the official SEC EDGAR submissions API for the approved watchlist and link the most recent relevant primary filings.
-- Add an exact-input, `Decimal` based one-cohort depreciation sensitivity grounded in a specific SEC filing, with transparent tax/EPS/constant-multiple assumptions and no invented Burry score.
-- Keep the 48-hour Desk 5 research workflow anchored to Burry's official publication; treat Reddit as an unverified lead source.
-- Connect paced GDELT headlines to Desk 6 Carpe DATA as uncorroborated conflict/shipping leads, alongside official event and commodity feeds.
-- Show Desk 6's missing contract curves, basis, roll, costs, and specs as explicit gates; no futures candidate is ranked without them.
-- Correct mobile desk copy/routes and remove stale generic status claims. Flag Desk 7's dated snapshot as stale when older than two days.
-- Add seven-desk coverage audit and regression coverage; package the new stylesheet.
+The Daily brief page told readers its research input came from "the six
+desks" and was "Replaced every morning". Both were false: the daily pipeline
+runs seven desks and publishes from the afternoon (13:30 PT) run. This fixes
+the subtitle and the unpublished-brief fallback, bumps the app.js cache-bust
+so the fix is actually served, and adds `tests/test_brief_copy.py` so the
+drift cannot silently return.
 
-## Validation
+Supersedes `toby/sat-polish-2026-10-24` (same fix, stale local-only base,
+never merged).
 
-Targeted SEC, depreciation, market-context, GDELT, public-signal, Desk 7, public-surface, copy-quality, iPhone-preview, and page-guard checks pass. JavaScript syntax, Python compilation, and whitespace checks pass. Full legacy test discovery remains blocked by the missing `plotly` dependency in `tests/test_dashboard_build.py`.
+Verified: app.js syntax via the `.mjs` check from ENGINEERING_LESSONS;
+pytest brief-copy + copy-quality 3 passed; `scripts/lint_copy.py` passed;
+node test set 33 passed, 0 failed. Deliberately untouched: README_PUBLIC
+"Six desks" (public console's six evaluated workflows — a different count)
+and the Bonds & Rates "Coming soon" desk card (public-page state, not the
+research pipeline).
 
-## Review focus
-
-See `HANDOFF.md` for independent review details, particularly SEC contact/production feed status, financial-sensitivity math, GDELT corroboration labels, narrow-screen review, and Desk 6 futures readiness gates.
+Reviewer check: confirm the deployed brief subtitle reads "seven desks /
+every afternoon".

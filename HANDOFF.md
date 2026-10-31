@@ -1,37 +1,63 @@
-# Toby handoff — Desk coverage, SEC, Carpe DATA
+# HANDOFF — Saturday polish 2026-10-31 (toby/sat-polish-2026-10-31)
 
-Branch: `toby/desk6-all-desk-coverage`
+Base: origin/main `d8a987f` (Daily research brief — 2026-10-30).
+Supersedes: `toby/sat-polish-2026-10-24` (commit `366246a`, same fix, built on
+a local-only base and never pushed/merged — main still carried the stale copy).
+Push this branch; the Oct 24 branch can be dropped by the push lane once this
+one is up. No PR opened from this environment (no push path here).
 
-## Changes
+## What changed (no new features)
 
-- Desk 5 now has a read-only, cached SEC EDGAR submissions path for approved watchlist issuers, issuer filing links, honest loading/blocked/unmapped states, and a filing-backed one-cohort depreciation sensitivity using `Decimal`.
-- The scenario records the exact SEC filing URL and note, distinguishes reported useful-life from a user-entered shorter-life sensitivity, and explicitly avoids claiming an accounting error, a universal Burry formula, cumulative cohorts, replacement capex, DCF, or a short signal.
-- The existing 48-hour Desk 5 task now prioritizes Burry's official Cassandra Unchained posts. Reddit is a lead channel only; claims require authentication and primary-source corroboration.
-- Desk 6 Carpe DATA now includes paced GDELT conflict/shipping media leads, labeled uncorroborated, alongside the existing official weather, hazard, commodity, and positioning feeds. Its board shows live provider states and blocks futures rankings until curve, basis, roll, fees, and contract-spec inputs exist.
-- The mobile Research Desk view now names and routes Desks 5–7 accurately. Removed false generic “Active” and stale “Coming soon” claims. Desk 7 identifies a dated indicator snapshot and warns after two days that it may be stale.
-- Added a seven-desk coverage audit, route/copy/freshness regression checks, and included the new CSS file in the deployment asset allowlist.
+- `web/app.js` — Daily brief subtitle: "research input from the six desks.
+  Replaced every morning." → "from the seven desks. Replaced every
+  afternoon." Fallback copy: "after the morning research run" → "after the
+  afternoon research run." Reason: the daily pipeline runs seven desks and
+  publishes from the 13:30 PT run, not the morning. Corroborated on main by
+  `web/professional.js` ("seven-desk research architecture… Six evaluated
+  workflows").
+- `web/index.html` — app.js cache-bust `?v=20261004-sitewide` →
+  `?v=20261031-brief-copy`, so the corrected copy is actually served.
+- `tests/test_brief_copy.py` (new) — pins the corrected copy and fails on
+  any return of "six desks", "every morning", or "morning research run" in
+  `web/app.js`.
 
-## Verification performed
+## What was verified
 
-- Passed: `test_burry_sensitivity.py` (3), `test_short_research_board.py` (6), `test_market_context.py` (3), `test_public_signal_feeds.py` (7), `test_data_integrations.py` (103), `test_desk_coverage_copy.py` (3), `test_desk7_indicators.py` (9), `test_copy_quality.py` (1), `test_public_web_surface.py` (24), `test_web_page_guards.py` (24), and `test_iphone_preview_surface.py` (1).
-- Passed: browser JavaScript syntax check (`node --check` on an `.mjs` copy), Python compile check, `git diff --check`.
-- The complete legacy suite cannot be imported in this environment because `plotly` is not installed (`tests/test_dashboard_build.py`). Do not represent the whole suite as passing.
-- SEC handling is implemented and unit-tested, but a live watchlist fetch and the production `/api/short-research` response have not been verified from this branch. The prior Desk 5 handoff recorded a direct EDGAR timeout from this workspace. After merge/deploy, confirm that the per-symbol statuses move from `LOADING` to `LIVE` in Render logs/board; until then, do not tell the GP that production SEC is fixed.
-- No live browser visual inspection was completed in this environment. `test_iphone_preview_surface.py` checks the packaged mobile preview contract; the narrow-screen visual check remains for the independent reviewer.
+- Syntax: `cp web/app.js /tmp/syntax-check.mjs && node --check` — OK
+  (the `.mjs` method from `docs/ENGINEERING_LESSONS.md` rule 2; plain
+  `node --check` silently passes ESM files).
+- `pytest tests/test_brief_copy.py tests/test_copy_quality.py` — 3 passed.
+- `python3 scripts/lint_copy.py` — copy-quality gate passed.
+- `node --test web/*.test.mjs` — 33 passed, 0 failed.
+- Dead-code re-check: every `web/*.js` file is referenced by `index.html`,
+  `real-estate.html`, `iphone-preview.html`, or imported by a referenced
+  module — nothing to remove.
+- AI-slop scan of `web/*.js` + `web/*.html`: no hits.
+- In-flight check: last main change to `web/app.js` / `web/index.html` was
+  2026-10-05 (merged); recent main commits are brief-only. No collision.
 
-## Independent review checks before merge
+## Deliberately NOT changed
 
-1. Confirm current production environment provides `MARKET_DATA_USER_AGENT` with an identifiable contact as expected by SEC access policy; check Render logs and actual SEC per-symbol status after deployment.
-2. Review SEC response latency, CIK mapping, and whether all configured symbols receive filings; unsupported mappings must remain explicit.
-3. Review the depreciation formula, assumptions, and UI language independently. It is a sensitivity, not Burry's private model and not accounting advice.
-4. Verify GDELT pacing and fail-closed behavior under 429s; headlines must remain uncorroborated leads.
-5. Inspect Desk 5/6 responsive layouts and the Desk 7 stale snapshot warning on a narrow iPhone viewport.
-6. Confirm Desk 6 remains blocked from candidate ranking until all matched futures and cost inputs are supplied.
+- `README_PUBLIC.md` "Six desks" — the public console's desk list (six
+  evaluated workflows); a different, defensible count. Same for the
+  Candidates page "six desk methods" copy.
+- `web/professional.js` / `web/desk-architecture.js` "Coming soon" for Bonds
+  & Rates — that tag describes the public desk card, which still says
+  research is in progress; the research pipeline's seventh desk is a separate
+  surface. Changing it would assert a product state not verified here.
+- No browser render verification: no live `/api/report` backend exists in
+  this environment (same limitation as 2026-10-24). Copy verified at source
+  level plus the regression test; visible on next deploy.
 
-No production deployment or merge is performed from this branch.
+## Reviewer must check before merge
+
+- The brief subtitle reads "seven desks / every afternoon" on the deployed
+  page (cache-bust bump is what makes this visible).
+- Confirm no other branch in flight re-introduces the old subtitle.
 
 ---
-## Batch refresh: commit the Paper Outcome Ledger (2026-11-20)
+## Carried forward from main (2026-11-20)
+
 From PR #178 on, the nightly writes `artifacts/premium-ledger.jsonl`, the
 append-only paper track record of the premium score. It is **not** ignored by
 git. `scripts/run_nightly_batch.sh` stages it after each run.
