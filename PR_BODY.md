@@ -12,12 +12,12 @@ drift cannot silently return.
 Supersedes `toby/sat-polish-2026-10-24` (same fix, stale local-only base,
 never merged).
 
-Verified: app.js syntax via the `.mjs` check from ENGINEERING_LESSONS;
-pytest brief-copy + copy-quality 3 passed; `scripts/lint_copy.py` passed;
-node test set 33 passed, 0 failed. Deliberately untouched: README_PUBLIC
-"Six desks" (public console's six evaluated workflows — a different count)
-and the Bonds & Rates "Coming soon" desk card (public-page state, not the
-research pipeline).
+Verified (2026-11-07, after rebase onto main 442e1a0): app.js syntax via the
+`.mjs` check from ENGINEERING_LESSONS; pytest brief-copy + copy-quality
+3 passed; `scripts/lint_copy.py` passed; node test set 33 passed, 0 failed.
+Deliberately untouched: README_PUBLIC "Six desks" (public console's six
+evaluated workflows — a different count) and the Bonds & Rates "Coming soon"
+desk card (public-page state, not the research pipeline).
 
 Reviewer check: confirm the deployed brief subtitle reads "seven desks /
 every afternoon".

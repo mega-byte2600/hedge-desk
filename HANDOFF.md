@@ -1,6 +1,8 @@
-# HANDOFF — Saturday polish 2026-10-31 (toby/sat-polish-2026-10-31)
+# HANDOFF — Saturday polish 2026-10-31, rebased 2026-11-07 (toby/sat-polish-2026-10-31)
 
-Base: origin/main `d8a987f` (Daily research brief — 2026-10-30).
+Base: origin/main `442e1a0` (Batch refresh — 2026-11-07), rebased 2026-11-07
+from `d8a987f`. Rebase was clean: no main commit since Oct 30 touched
+`web/app.js` or `web/index.html` (brief + batch commits only).
 Supersedes: `toby/sat-polish-2026-10-24` (commit `366246a`, same fix, built on
 a local-only base and never pushed/merged — main still carried the stale copy).
 Push this branch; the Oct 24 branch can be dropped by the push lane once this
@@ -16,12 +18,13 @@ one is up. No PR opened from this environment (no push path here).
   `web/professional.js` ("seven-desk research architecture… Six evaluated
   workflows").
 - `web/index.html` — app.js cache-bust `?v=20261004-sitewide` →
-  `?v=20261031-brief-copy`, so the corrected copy is actually served.
+  `?v=20261107-brief-copy`, so the corrected copy is actually served.
+  (Re-dated from `20261031` on the 2026-11-07 rebase; the fix ships today.)
 - `tests/test_brief_copy.py` (new) — pins the corrected copy and fails on
   any return of "six desks", "every morning", or "morning research run" in
   `web/app.js`.
 
-## What was verified
+## What was verified (2026-11-07, after rebase onto 442e1a0)
 
 - Syntax: `cp web/app.js /tmp/syntax-check.mjs && node --check` — OK
   (the `.mjs` method from `docs/ENGINEERING_LESSONS.md` rule 2; plain
@@ -29,12 +32,19 @@ one is up. No PR opened from this environment (no push path here).
 - `pytest tests/test_brief_copy.py tests/test_copy_quality.py` — 3 passed.
 - `python3 scripts/lint_copy.py` — copy-quality gate passed.
 - `node --test web/*.test.mjs` — 33 passed, 0 failed.
-- Dead-code re-check: every `web/*.js` file is referenced by `index.html`,
-  `real-estate.html`, `iphone-preview.html`, or imported by a referenced
-  module — nothing to remove.
-- AI-slop scan of `web/*.js` + `web/*.html`: no hits.
-- In-flight check: last main change to `web/app.js` / `web/index.html` was
-  2026-10-05 (merged); recent main commits are brief-only. No collision.
+- Dead-code re-check: every `web/*.js` / `web/*.mjs` first-party file is
+  referenced by `index.html`, `real-estate.html`, `iphone-preview.html`,
+  or imported by a referenced module — nothing to remove. No TODO / FIXME /
+  XXX / HACK in first-party web files.
+- AI-slop scan of `web/*.js` + `web/*.html`: no hits (`lint_copy.py` passed).
+- In-flight check: no main commit since Oct 30 touched `web/app.js` /
+  `web/index.html`; recent main commits are brief-only plus the Nov 7 batch
+  refresh. No collision.
+- Served-state check (2026-11-07): the landed batch commit `442e1a0`
+  carries `data_freshness` `as_of` 2026-11-06, `is_current: true`, all
+  sources OK, 0 alerts — the dashboard data is current through the Nov 6
+  close. The live site still serves the stale brief subtitle until this
+  branch lands (main's app.js is unchanged).
 
 ## Deliberately NOT changed
 
@@ -45,9 +55,16 @@ one is up. No PR opened from this environment (no push path here).
   & Rates — that tag describes the public desk card, which still says
   research is in progress; the research pipeline's seventh desk is a separate
   surface. Changing it would assert a product state not verified here.
-- No browser render verification: no live `/api/report` backend exists in
-  this environment (same limitation as 2026-10-24). Copy verified at source
-  level plus the regression test; visible on next deploy.
+  Re-checked 2026-11-07: the Nov 6 daily package runs Bonds & Rates as
+  desk 7 with real content, but the public console's "six evaluated
+  workflows" framing (professional.js, desk-architecture.js subtitle,
+  ui-polish.js:29, app.js:63, README_PUBLIC "Six desks") is internally
+  consistent and was deliberately left alone for the third week.
+- No browser render verification of the copy fix: no live `/api/report`
+  backend exists in this environment (same limitation as 2026-10-24).
+  Copy verified at source level plus the regression test; visible on next
+  deploy. Served-state spot check (Render shell responds; SPA renders
+  client-side) could not read the subtitle from fetched text.
 
 ## Reviewer must check before merge
 
