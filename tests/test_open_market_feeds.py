@@ -26,6 +26,7 @@ from hedge_desk.data.open_market_feeds import (
     sec_submissions,
     treasury_latest_auctions,
 )
+from hedge_desk.data import open_market_feeds as open_feeds
 
 
 def _transport(payload, status=200, seen=None):
@@ -559,6 +560,18 @@ class OpenMarketFeedTests(unittest.TestCase):
         result = sec_submissions(320193, transport=_transport(payload, seen=seen))
         self.assertEqual(result["cik"], "320193")
         self.assertTrue(seen[0].endswith("CIK0000320193.json"))
+
+    def test_sec_transport_uses_declared_environment_identity(self):
+        with patch.dict(
+            os.environ,
+            {"SEC_USER_AGENT": "Emporion Test/1.0 test@example.com"},
+            clear=True,
+        ), patch.object(open_feeds, "_default_request_transport", return_value=(200, b"{}")) as opened:
+            self.assertEqual(open_feeds._sec_transport("https://data.sec.gov/test"), (200, b"{}"))
+        request = opened.call_args.args[0]
+        self.assertEqual(
+            request.get_header("User-agent"), "Emporion Test/1.0 test@example.com"
+        )
 
     def test_sec_companyfacts_requires_facts(self):
         seen = []
