@@ -32,9 +32,6 @@ while true; do
     cd "$REPO" || exit 1
     # start detached so it outlives this watchdog's shell
     nohup env PORT=$PORT \
-      MEMBERSHIP_DB=/tmp/hd-demo-live.db \
-      GP_EMAIL=boltonmd13@gmail.com \
-      MEMBERSHIP_SECRET=synthetic-local-secret \
       bash scripts/demo.sh >> "$SERVER_LOG" 2>&1 &
     sleep 25
     code2=$(curl -sS -m 12 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$PORT/api/health" 2>/dev/null)
