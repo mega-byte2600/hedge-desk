@@ -286,6 +286,8 @@ def _dispatch(environ, start_response):
     # Retired sign-in, membership, tier, and brokerage surfaces. Return an
     # explicit API response so stale clients cannot fall through to the SPA.
     if path.startswith(("/api/auth/", "/api/broker/")) or path in (
+        "/api/auth",
+        "/api/broker",
         "/api/tier",
         "/api/data/real",
     ):
