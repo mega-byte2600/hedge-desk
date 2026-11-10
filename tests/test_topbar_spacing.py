@@ -1,15 +1,4 @@
-"""The topbar must keep the breadcrumb and the status text visually separated.
-
-Regression guard for a defect that shipped: the topbar is `display:flex` with
-`justify-content:space-between`, but `.top-account` carries `margin-left:auto`. That auto
-margin absorbs all the free space, so space-between has nothing to distribute and the
-status text was pinned flush against the breadcrumb. Read on screen as one word:
-
-    Workspace / AboutIndependent research platform
-
-A human caught it; these checks keep it caught. They assert the *mechanism* (an explicit
-gap on the status) rather than pixel values, so they stay meaningful if the design changes.
-"""
+"""The public topbar must keep its breadcrumb and status text visually separated."""
 
 import re
 import unittest
@@ -37,19 +26,14 @@ class TopbarSpacingTests(unittest.TestCase):
         self.assertRegex(
             body,
             r"margin-left\s*:\s*\d+(\.\d+)?(px|rem|em)",
-            "the status text needs a left margin: with .top-account{margin-left:auto} "
-            "absorbing the free space, space-between cannot separate it from the breadcrumb",
+            "the status text needs a left margin so it stays distinct from the breadcrumb",
         )
 
-    def test_account_block_still_pinned_right(self):
-        # The reason the bug existed. If this changes, the margin fix may no longer be needed
-        # but the layout logic must be revisited deliberately rather than silently.
+    def test_account_control_is_removed(self):
         css = STYLES.read_text(encoding="utf-8")
-        self.assertRegex(
-            css,
-            r"\.top-account\s*\{[^}]*margin-left\s*:\s*auto",
-            ".top-account is expected to remain right-pinned via margin-left:auto",
-        )
+        html = INDEX.read_text(encoding="utf-8")
+        self.assertNotIn(".top-account", css)
+        self.assertNotIn("acct-btn", html)
 
     def test_breadcrumb_and_status_are_separate_elements(self):
         html = INDEX.read_text(encoding="utf-8")
