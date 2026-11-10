@@ -60,6 +60,7 @@ class DisclosuresPayloadTests(unittest.TestCase):
         self.assertRegex(by_id["not-advice"]["text"], r"(?i)(not|nothing)[^.]{0,60}investment advice")
         self.assertRegex(by_id["not-an-offering"]["text"], r"(?i)(not an offer|not an offer to sell)")
         self.assertIn("tamper-evident", by_id["reproducibility"]["text"])
+        self.assertNotIn("membership", by_id["reproducibility"]["text"].lower())
         self.assertRegex(by_id["paper-only"]["text"], r"(?i)does not (place|route|execute)")
 
 
