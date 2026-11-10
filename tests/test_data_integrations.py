@@ -327,7 +327,20 @@ class FeedBaseTests(unittest.TestCase):
             if k not in ("SEC_USER_AGENT", "SEC_CONTACT_EMAIL")
         }
         with mock.patch.dict(os.environ, env, clear=True):
-            self.assertEqual(feed_base._sec_user_agent(), feed_base._DEFAULT_UA)
+            self.assertEqual(
+                feed_base._sec_user_agent(),
+                "Emporion Hedge Desk/1.0 michael.bolton.ph@dartmouth.edu",
+            )
+
+    def test_sec_transport_uses_current_declared_identity(self):
+        with mock.patch.dict(
+            os.environ, {"SEC_USER_AGENT": "Emporion Test/1.0 test@example.com"}, clear=True
+        ), mock.patch.object(feed_base, "_urlopen", return_value=(200, b"{}")) as opened:
+            self.assertEqual(feed_base._sec_transport("https://data.sec.gov/test"), (200, b"{}"))
+        request = opened.call_args.args[0]
+        self.assertEqual(
+            request.get_header("User-agent"), "Emporion Test/1.0 test@example.com"
+        )
 
     def test_default_transports_are_callable(self):
         for t in (
