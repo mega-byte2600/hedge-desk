@@ -53,9 +53,6 @@ h1, h2, h3, .brand { font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
 .topbar { background: var(--noir-surface-2); border-bottom: 1px solid var(--noir-line); color: var(--noir-ink); }
 .top-status, .topbar .muted { color: var(--noir-muted); }
 .separator { color: var(--noir-faint); }
-.top-account .acct-btn { background: var(--noir-surface); border-color: #2a2a30; color: var(--noir-ink); }
-.top-account .acct-btn:hover { background: #1a1a1f; }
-.acct-caret { color: var(--noir-faint); }
 
 /* Content surfaces */
 .stat, .panel, .gate-card { background: var(--noir-surface); border-color: var(--noir-line); }
@@ -99,16 +96,10 @@ textarea:focus-visible, summary:focus-visible { outline-color: var(--brass); }
 .input, .toolbar input, .toolbar select, .form-field textarea {
   background: var(--noir-surface-2); border-color: #2a2a30; color: var(--noir-ink);
 }
-dialog, #acct-modal { background: var(--noir-surface); color: var(--noir-ink); border-color: var(--noir-line); }
-.dialog-head, .acct-head { background: var(--noir-surface); border-bottom-color: var(--noir-line); }
-.dialog-head .subtitle, .acct-head .subtitle { color: var(--noir-muted); }
-.close, .acct-modal .close { background: var(--noir-surface); border-color: #2a2a30; color: var(--noir-ink); }
-.acct-error { color: #e08a7a; }
-.acct-tier { background: var(--noir-surface-2); border-color: var(--noir-line); color: var(--noir-muted); }
-.acct-divider { color: var(--noir-faint); }
-.acct-divider::before, .acct-divider::after { background: var(--noir-line); }
-.acct-status { color: var(--live); }
-.acct-broker, .acct-gp, .acct-manage { border-top-color: var(--noir-line); }
+dialog { background: var(--noir-surface); color: var(--noir-ink); border-color: var(--noir-line); }
+.dialog-head { background: var(--noir-surface); border-bottom-color: var(--noir-line); }
+.dialog-head .subtitle { color: var(--noir-muted); }
+.close { background: var(--noir-surface); border-color: #2a2a30; color: var(--noir-ink); }
 .code-details pre { background: var(--noir-surface-2); color: var(--noir-ink); }
 .error { background: #1a1214; border-color: #5a2a24; }
 #toast { background: #1a1a1f; color: var(--noir-ink); }
