@@ -125,6 +125,8 @@ class ServerTests(unittest.TestCase):
         import json as _json
 
         for path, method in (
+            ('/api/auth', 'GET'),
+            ('/api/broker', 'GET'),
             ('/api/tier', 'GET'),
             ('/api/broker/status', 'GET'),
             ('/api/data/real', 'GET'),
