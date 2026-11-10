@@ -19,6 +19,11 @@ series and retains no redistributed payload.
 
 from __future__ import annotations
 
+import csv
+import io
+import re
+import tempfile
+import time
 import datetime as _dt
 import json
 import os
@@ -46,6 +51,7 @@ FRED_API_URL = (
     "&file_type=json&api_key={key}"
 )
 Transport = Callable[[str], Tuple[int, bytes]]
+FRED_CACHE_TTL_SECONDS = 60 * 60
 
 # Official FRED series ids.
 FED_FUNDS = "DFF"          # effective federal funds rate, %
@@ -93,32 +99,46 @@ def _num(value: str) -> Decimal | None:
 
 def _parse_fred_csv(raw: bytes) -> Tuple[Tuple[str, Decimal], ...]:
     """Parse a FRED CSV (two columns: observation_date, <series>)."""
-    rows = []
-    for line in raw.decode("utf-8").strip().splitlines():
-        if line.startswith("observation_date"):
+    reader = csv.reader(io.StringIO(raw.decode("utf-8-sig")))
+    header = next(reader, [])
+    if len(header) != 2 or header[0] not in ("observation_date", "DATE"):
+        raise ValueError("invalid FRED CSV header")
+    records = [row for row in reader if row]
+    if any(len(row) != 2 for row in records):
+        raise ValueError("invalid FRED CSV observation")
+    return _validated_rows(tuple((row[0], row[1]) for row in records))
+
+
+def _validated_rows(rows, start=None, end=None):
+    """Validate dates/numbers, sort observations, reject conflicting duplicates."""
+    values = {}
+    for day, value in rows:
+        try:
+            parsed_day = _dt.date.fromisoformat(str(day))
+        except (ValueError, TypeError):
+            raise ValueError("invalid FRED observation date") from None
+        if str(day) != parsed_day.isoformat():
+            raise ValueError("invalid FRED observation date")
+        number = _num(str(value))
+        if number is None:
+            continue  # FRED uses '.' for missing observations.
+        if (start and parsed_day < start) or (end and parsed_day > end):
             continue
-        if not line.strip():
-            continue
-        parts = line.split(",")
-        if len(parts) < 2:
-            continue
-        value = _num(parts[1])
-        if value is None:
-            continue
-        rows.append((parts[0], value))
-    return tuple(rows)
+        if day in values and values[day] != number:
+            raise ValueError("conflicting FRED observations")
+        values[day] = number
+    return tuple(sorted(values.items()))
 
 
 def _parse_fred_json(raw: bytes) -> Tuple[Tuple[str, Decimal], ...]:
-    """Parse the official FRED API JSON (observations: [{date, value}, ...])."""
-    rows = []
+    """Parse the official FRED API JSON, rejecting truncated pages."""
     payload = json.loads(raw.decode("utf-8"))
-    for obs in payload.get("observations", []):
-        value = _num(str(obs.get("value", "")))
-        if value is None:
-            continue
-        rows.append((str(obs.get("date", "")), value))
-    return tuple(rows)
+    observations = payload.get("observations") if isinstance(payload, dict) else None
+    if not isinstance(observations, list) or any(not isinstance(o, dict) for o in observations):
+        raise ValueError("invalid FRED observations payload")
+    if "count" in payload and int(payload["count"]) > len(observations):
+        raise ValueError("incomplete FRED observation page")
+    return _validated_rows(tuple((o.get("date", ""), o.get("value", "")) for o in observations))
 
 
 def _fred_url(series: str, start: _dt.date, end: _dt.date) -> Tuple[str, bool]:
@@ -236,12 +256,14 @@ def fred_series_rows(
     FRED daily series move slowly; the after-close batch re-runs (idempotent)
     and the dashboard rebuild should not re-hit FRED every time. The cache is
     keyed by (series, start, end) so different lookback windows never collide.
-    A cache hit returns the stored observations; a miss fetches, parses, and
-    stores them atomically (tmp + rename). Transient transport failures are
+    A cache hit younger than one hour returns validated stored observations.
+    A miss fetches, parses, and stores them atomically (tmp + rename). Transient transport failures are
     retried ``retries`` times with a short backoff; a persistent failure
     raises ValueError (fail closed) — a stale or missing cache is never
     silently served as fresh data.
     """
+    if not re.fullmatch(r"[A-Za-z0-9_]+", series) or start > end:
+        raise ValueError("invalid FRED series or observation window")
     cdir = _cache_dir() if cache_dir is None else cache_dir
     cache_file = (
         cdir / "fred" / series / f"{start.isoformat()}_{end.isoformat()}.json"
@@ -255,11 +277,12 @@ def fred_series_rows(
                 payload.get("series") == series
                 and payload.get("start") == start.isoformat()
                 and payload.get("end") == end.isoformat()
+                and 0 <= time.time() - float(payload.get("fetched_at", 0)) < FRED_CACHE_TTL_SECONDS
             ):
-                return tuple(
-                    (d, Decimal(v)) for d, v in payload.get("rows", [])
-                )
-        except (ValueError, KeyError, TypeError, ArithmeticError):
+                cached_rows = _validated_rows(payload.get("rows", []), start, end)
+                if cached_rows:
+                    return cached_rows
+        except (ValueError, KeyError, TypeError, ArithmeticError, AttributeError):
             pass  # corrupt cache entry -> fall through to a fresh fetch
     url, is_keyed = _fred_url(series, start, end)
     parse = _parse_fred_json if is_keyed else _parse_fred_csv
@@ -276,22 +299,18 @@ def fred_series_rows(
         and _skill_cli_path() is not None
     ):
         try:
-            rows = _fred_via_skill_cli(series, start, end)
+            rows = _validated_rows(_fred_via_skill_cli(series, start, end), start, end)
         except ValueError:
             rows = ()
     if not rows:
-        last_exc: str | None = None
         for attempt in range(retries + 1):
             try:
                 status, raw = transport(url)
-                if status == 0 and raw:
-                    last_exc = raw[:150].decode("utf-8", errors="replace")
-            except Exception as exc:
+            except Exception:
                 status, raw = 0, b""
-                last_exc = f"{type(exc).__name__}: {str(exc)[:150]}"
             last_status = status
             if status == 200 and raw:
-                rows = parse(raw)
+                rows = _validated_rows(parse(raw), start, end)
                 if rows:
                     break
                 raise ValueError(f"fred series {series} has no observations")
@@ -299,18 +318,19 @@ def fred_series_rows(
                 import time as _time
                 _time.sleep(0.5 * (attempt + 1))
     if not rows:
-        detail = f" (status {last_status})"
-        if last_exc:
-            detail += f" {last_exc}"
-        raise ValueError(f"fred fetch failed for {series}{detail}")
+        # Transport errors may contain the keyed request URL. Never disclose them.
+        raise ValueError(f"fred fetch failed for {series} (status {last_status})")
     if cache_file is not None:
+        tmp = None
         try:
             cache_file.parent.mkdir(parents=True, exist_ok=True)
-            tmp = cache_file.with_suffix(".tmp")
+            with tempfile.NamedTemporaryFile(dir=cache_file.parent, delete=False) as handle:
+                tmp = Path(handle.name)
             tmp.write_text(
                 json.dumps(
                     {
                         "series": series,
+                        "fetched_at": time.time(),
                         "start": start.isoformat(),
                         "end": end.isoformat(),
                         "rows": [[d, str(v)] for d, v in rows],
@@ -321,6 +341,12 @@ def fred_series_rows(
             os.replace(tmp, cache_file)
         except OSError:
             pass  # cache write failure must never fail the batch
+        finally:
+            if tmp is not None:
+                try:
+                    tmp.unlink(missing_ok=True)
+                except OSError:
+                    pass
     return rows
 
 

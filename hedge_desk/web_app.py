@@ -30,7 +30,7 @@ from hedge_desk.data.open_market_feeds import (
     treasury_latest_auctions,
 )
 from hedge_desk.market_context import build_market_context
-from hedge_desk.rates_desk import fred_series_rows
+from hedge_desk.rates_desk import FRED_CACHE_TTL_SECONDS, fred_series_rows
 from datetime import date, timedelta
 
 
@@ -64,6 +64,9 @@ _DASHBOARD_API_LAYER = r"""
       if (code === 'UPSTREAM_OR_AUTH_FAILURE') return "Couldn't reach the source just now";
       if (code === 'PROBE_FAILURE') return "Couldn't reach the source just now";
       return 'Not available right now';
+    }
+    if (provider === 'fred') {
+      return `${probe.dataset || 'CPIAUCSL'} · ${probe.observation_count} observations in probe window · latest ${probe.latest_observation_date || 'unknown'} · freshness and coverage not assessed`;
     }
     const obs = contextSource && contextSource.observations;
     if (provider === 'nyfed-markets' && obs) {
@@ -103,19 +106,6 @@ _DASHBOARD_API_LAYER = r"""
       oldHealth.textContent = 'Last night\u2019s data — what went into this report';
     }
 
-    const fred = (status.sources || {}).fred;
-    if (fred && fred.status === 'LIVE') {
-      grid.querySelectorAll('tr').forEach(tr => {
-        if (!tr.textContent.includes('Rates (FRED)')) return;
-        const cells = tr.querySelectorAll('td');
-        if (cells.length >= 3) {
-          cells[1].textContent = 'Live';
-          cells[1].className = 'ok';
-          cells[2].textContent = 'Working now; last night\u2019s report was made before the fix.';
-        }
-      });
-    }
-
     const card = document.createElement('div');
     card.className = 'card wide';
     card.id = 'authoritative-api-card';
@@ -131,7 +121,7 @@ _DASHBOARD_API_LAYER = r"""
     const blocked = status.blocked_count || 0;
     summary.textContent = `${live} of ${total} sources connected` +
       (blocked ? ` · ${blocked} unavailable` : '') +
-      '. Checked just now.';
+      '. Availability probes may use cached observations; freshness and coverage are separate.';
     card.appendChild(summary);
 
     const table = document.createElement('table');
@@ -208,6 +198,24 @@ def _observation_count(value: object) -> int:
     return 0
 
 
+def _probe_fred():
+    end = date.today()
+    start = end - timedelta(days=120)
+    rows = fred_series_rows("CPIAUCSL", start, end, retries=0)
+    return {
+        "observation_count": len(rows),
+        "dataset": "CPIAUCSL",
+        "measurement_scope": "single-series availability probe",
+        "requested_start": start.isoformat(),
+        "requested_end": end.isoformat(),
+        "latest_observation_date": rows[-1][0] if rows else None,
+        "observation_age_days": (end - date.fromisoformat(rows[-1][0])).days if rows else None,
+        "freshness_status": "NOT_ASSESSED",
+        "coverage_status": "NOT_ASSESSED",
+        "cache_max_age_seconds": FRED_CACHE_TTL_SECONDS,
+    }
+
+
 def _probe_source(
     provider_id: str,
     configured: bool,
@@ -225,7 +233,8 @@ def _probe_source(
         }
     try:
         result = fetcher()
-        count = _observation_count(result)
+        fred_metadata = result if provider_id == "fred" and isinstance(result, Mapping) else {}
+        count = fred_metadata.get("observation_count", _observation_count(result))
         if count < 1:
             return {
                 "provider_id": provider_id,
@@ -234,6 +243,7 @@ def _probe_source(
                 "credential_required": credential_required,
                 "observation_count": 0,
                 "reason_code": "EMPTY_OR_INVALID_RESPONSE",
+                **fred_metadata,
             }
         return {
             "provider_id": provider_id,
@@ -242,6 +252,7 @@ def _probe_source(
             "credential_required": credential_required,
             "observation_count": count,
             "reason_code": None,
+            **fred_metadata,
         }
     except Exception as exc:
         detail = str(exc)[:200]
@@ -277,14 +288,7 @@ def build_data_source_status() -> Dict[str, object]:
         "fred": (
             True,
             False,
-            lambda: {
-                "latest": fred_series_rows(
-                    "CPIAUCSL",
-                    date.today() - timedelta(days=60),
-                    date.today(),
-                    retries=0,
-                )[-1]
-            },
+            _probe_fred,
         ),
         "nyfed-markets": (True, False, lambda: nyfed_reference_rates()),
         "treasury-fiscaldata": (True, False, lambda: treasury_latest_auctions(limit=1)),
