@@ -32,6 +32,7 @@ from hedge_desk.data.open_market_feeds import (
     eia_v2,
     finra_fixed_income,
     nyfed_reference_rates,
+    sec_submissions,
     treasury_latest_auctions,
 )
 from hedge_desk.data.institutional_feeds import (
@@ -47,6 +48,13 @@ from hedge_desk.data.public_signal_feeds import (
 from hedge_desk.rates_desk import fred_series_rows
 
 MARKET_CONTEXT_SCHEMA = "hedge-desk-market-context-1.0.0"
+
+SEC_WATCHLIST_CIKS = {
+    "AAPL": "320193",
+    "MSFT": "789019",
+    "NVDA": "1045810",
+    "TSLA": "1318605",
+}
 
 
 def _pick(row: Mapping[str, object], keys: Sequence[str]) -> Dict[str, object]:
@@ -194,6 +202,32 @@ def _cftc_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
         "lev_money_positions_short",
     )
     return [_pick(row, keys) for row in result.rows[:10]]
+
+
+def _sec_filings_summary(payload: Mapping[str, object], symbol: str) -> list[Dict[str, object]]:
+    filings = payload.get("filings") if isinstance(payload, dict) else None
+    recent = filings.get("recent") if isinstance(filings, dict) else None
+    if not isinstance(recent, dict):
+        return []
+    forms = recent.get("form") or []
+    accessions = recent.get("accessionNumber") or []
+    filed = recent.get("filingDate") or []
+    reports = recent.get("reportDate") or []
+    docs = recent.get("primaryDocument") or []
+    count = min(len(forms), len(accessions), len(filed), 5)
+    rows = []
+    for index in range(count):
+        rows.append({
+            "symbol": symbol,
+            "cik": str(payload.get("cik", "")),
+            "entity": str(payload.get("name", "")),
+            "form": forms[index],
+            "filing_date": filed[index],
+            "report_date": reports[index] if index < len(reports) else "",
+            "accession_number": accessions[index],
+            "primary_document": docs[index] if index < len(docs) else "",
+        })
+    return rows
 
 
 def _bls_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
@@ -346,6 +380,7 @@ def build_market_context(
     treasury_fetch: Callable[..., OpenFeedResult] = treasury_latest_auctions,
     cftc_fetch: Callable[..., OpenFeedResult] = cftc_cot,
     bls_fetch: Callable[..., OpenFeedResult] = bls_latest_series,
+    sec_fetch: Callable[..., Mapping[str, object]] = sec_submissions,
     treasury_curve_fetch: Callable[..., OpenFeedResult] = treasury_yield_curve,
     fdic_fetch: Callable[..., OpenFeedResult] = fdic_failures,
     world_bank_fetch: Callable[..., OpenFeedResult] = world_bank_indicator,
@@ -440,6 +475,37 @@ def build_market_context(
         sources["bls"] = _live(result, _bls_summary(result))
     except Exception as exc:
         sources["bls"] = _blocked("bls", "UPSTREAM_OR_PARSE_FAILURE", str(exc))
+
+    sec_rows = []
+    sec_failures = []
+    sec_contact = os.environ.get("SEC_CONTACT_EMAIL", "").strip()
+    sec_user_agent = os.environ.get("SEC_USER_AGENT", "").strip()
+    if sec_fetch is sec_submissions and not (sec_contact or "@" in sec_user_agent):
+        sources["sec-edgar"] = _unconfigured("sec-edgar")
+    else:
+        for symbol in watchlist:
+            cik = SEC_WATCHLIST_CIKS.get(str(symbol).upper())
+            if not cik:
+                continue
+            try:
+                payload = sec_fetch(cik)
+                sec_rows.extend(_sec_filings_summary(payload, str(symbol).upper()))
+            except Exception as exc:
+                sec_failures.append(f"{symbol}: {exc}")
+        if sec_rows:
+            sources["sec-edgar"] = {
+                "provider_id": "sec-edgar",
+                "dataset": "watchlist-recent-filings",
+                "status": "LIVE",
+                "observation_count": len(sec_rows),
+                "observations": sec_rows[:20],
+            }
+            if sec_failures:
+                sources["sec-edgar"]["partial_failure_count"] = len(sec_failures)
+        elif any(str(symbol).upper() in SEC_WATCHLIST_CIKS for symbol in watchlist):
+            sources["sec-edgar"] = _blocked(
+                "sec-edgar", "UPSTREAM_OR_PARSE_FAILURE", "; ".join(sec_failures)
+            )
 
     try:
         result = ecb_fetch(("USD", "JPY", "GBP", "CHF"))

@@ -247,7 +247,7 @@ def _probe_source(
         detail = str(exc)[:200]
         # Redact credentials from error messages
         import re
-        detail = re.sub(r"(api_key|apikey|token)=[^&\s]+", r"\1=[REDACTED]", detail, flags=re.IGNORECASE)
+        detail = re.sub(r"(registrationkey|api_key|apikey|token)=[^&\s]+", r"\1=[REDACTED]", detail, flags=re.IGNORECASE)
         return {
             "provider_id": provider_id,
             "status": "BLOCKED",
@@ -266,6 +266,9 @@ def build_data_source_status() -> Dict[str, object]:
         os.environ.get("FINRA_CLIENT_ID", "").strip()
         and os.environ.get("FINRA_CLIENT_SECRET", "").strip()
     )
+    sec_contact = os.environ.get("SEC_CONTACT_EMAIL", "").strip()
+    sec_user_agent = os.environ.get("SEC_USER_AGENT", "").strip()
+    sec_configured = bool(sec_contact or "@" in sec_user_agent)
 
     def probe_sec():
         try:
@@ -294,7 +297,7 @@ def build_data_source_status() -> Dict[str, object]:
         "bls": (True, False, lambda: bls_latest_series("CUUR0000SA0")),
         "ecb-fx": (True, False, lambda: ecb_exchange_rates(("USD",))),
         "cftc-cot": (True, False, lambda: cftc_cot(limit=1)),
-        "sec-edgar": (True, False, probe_sec),
+        "sec-edgar": (sec_configured, False, probe_sec),
         "eia-open-data": (
             eia_configured,
             True,
