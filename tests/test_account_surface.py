@@ -7,69 +7,27 @@ WEB = ROOT / "web"
 
 
 class AccountSurfaceTests(unittest.TestCase):
-    def test_sign_in_control_is_present_and_not_hidden(self):
-        index = (WEB / "index.html").read_text(encoding="utf-8")
-        acct = (WEB / "account.js").read_text(encoding="utf-8")
-
-        self.assertIn('id="acct-btn"', index)
-        self.assertIn('id="acct-label"', index)
-        self.assertIn('id="acct-modal"', index)
-        self.assertIn('id="acct-tier"', index)
-        self.assertIn('id="acct-social"', index)
-        self.assertIn("account.js", index)
-        self.assertIn("/api/auth/me", acct)
-        self.assertIn("/api/auth/request", acct)
-        self.assertIn("/api/auth/verify", acct)
-        self.assertIn("/api/tier", acct)
-        # social login (Supabase Auth) wiring
-        self.assertIn("/api/auth/providers", acct)
-        self.assertIn("/api/auth/social", acct)
-        self.assertIn("signInWithOAuth", acct)
-        # supply-chain: the CDN import must be pinned to an exact version
-        self.assertNotIn("supabase-js@2'", acct)
-        self.assertRegex(acct, r"@supabase/supabase-js@\d+\.\d+\.\d+")
-
-    def test_schwab_is_not_a_public_account_ui(self):
-        index = (WEB / "index.html").read_text(encoding="utf-8")
-        acct = (WEB / "account.js").read_text(encoding="utf-8")
-        for forbidden in (
-            'id="acct-broker"',
-            'id="acct-broker-connect"',
-            'id="acct-broker-account"',
-            "/api/broker/accounts",
-            "/api/broker/account",
-            "/api/broker/positions",
-            "/api/broker/balances",
-            "/api/broker/authorize",
-            "/api/broker/link",
-        ):
-            self.assertNotIn(forbidden, index + "\n" + acct)
-        for forbidden in ("placeOrder", "submitOrder", "place_order", "submit_order"):
-            self.assertNotIn(forbidden, acct)
-
-    def test_gp_console_is_present_and_gated(self):
-        index = (WEB / "index.html").read_text(encoding="utf-8")
-        acct = (WEB / "account.js").read_text(encoding="utf-8")
-        self.assertIn('id="acct-gp"', index)
-        self.assertIn('id="acct-gp-invite"', index)
-        self.assertIn("/api/auth/members", acct)
-        self.assertIn("/api/auth/invite", acct)
-        # the console must only render for the GP role
-        self.assertIn("c.role !== 'GP'", acct)
-
-    def test_guest_tier_stays_open_not_walled(self):
-        # The research console must remain publicly reachable; sign-in is an
-        # opt-in membership layer, not a gate on the whole site.
+    def test_sign_in_and_membership_surface_is_removed(self):
         index = (WEB / "index.html").read_text(encoding="utf-8")
         app = (WEB / "app.js").read_text(encoding="utf-8")
-        self.assertNotIn("require login", index.lower())
-        # the console renders from a public report fetch (report.json and/or /api/report)
-        has_public_fetch = ("./report.json" in app) or ("/api/report" in app)
-        self.assertTrue(has_public_fetch, "console must load a public report")
+        for retired in ("acct-btn", "acct-modal", "acct-email", "Sign in", "account.js"):
+            self.assertNotIn(retired, index)
+        for retired in ("Access & membership", "open-account", "Sign in"):
+            self.assertNotIn(retired, app)
+        self.assertFalse((WEB / "account.js").exists())
 
-    def test_account_ui_ships_in_deploy_bundle(self):
+    def test_account_ui_is_not_packaged_for_deploy(self):
         build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
-        self.assertIn('"account.js"', build)
+        self.assertNotIn('"account.js"', build)
+
+    def test_account_styles_are_removed(self):
+        styles = (WEB / "styles.css").read_text(encoding="utf-8")
+        self.assertNotIn("acct-", styles)
+        self.assertNotIn("top-account", styles)
+
+    def test_public_research_report_remains_available(self):
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+        self.assertIn("./api/report", app)
 
 
 if __name__ == "__main__":
