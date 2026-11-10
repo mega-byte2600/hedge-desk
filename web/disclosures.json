@@ -52,7 +52,7 @@
     {
       "id": "reproducibility",
       "title": "Decisions retain their inputs.",
-      "text": "Engine decisions carry reason codes and the inputs needed to reproduce them, and membership and approval events are appended to a tamper-evident, hash-chained trail. Records are kept so a decision can be explained after the fact."
+      "text": "Engine decisions carry reason codes and reproducible inputs. Records are retained so a decision can be explained after the fact."
     }
   ]
 }
