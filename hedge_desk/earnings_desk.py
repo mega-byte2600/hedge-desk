@@ -20,12 +20,11 @@ License: SEC EDGAR data is public; this is reference use of official filings.
 from __future__ import annotations
 
 import json
-import os
-import urllib.error
-import urllib.request
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Callable, Dict, Tuple
+
+from hedge_desk.data.feed_base import _sec_transport
 
 EDGAR_URL = (
     "https://data.sec.gov/api/xbrl/companyconcept/"
@@ -35,24 +34,8 @@ Transport = Callable[[str], Tuple[int, bytes]]
 
 
 def _default_transport(url: str) -> Tuple[int, bytes]:
-    # SEC fair-access policy asks for a User-Agent with a real contact.
-    # Set SEC_CONTACT_EMAIL in the environment; fallback keeps the
-    # previous placeholder format so existing deployments keep working.
-    contact = os.environ.get("SEC_CONTACT_EMAIL", "name@example.com").strip()
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": f"HedgeDesk Research {contact}",
-            "Accept-Encoding": "identity",
-        },
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            return resp.status, resp.read()
-    except urllib.error.HTTPError as exc:
-        return exc.code, exc.read()
-    except Exception as exc:
-        return 0, str(exc).encode("utf-8")
+    """Use the shared SEC transport and its declared application identity."""
+    return _sec_transport(url)
 
 
 def _cik(symbol_or_cik) -> str:
