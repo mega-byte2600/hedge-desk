@@ -66,6 +66,16 @@ class DataSourceStatusTests(unittest.TestCase):
         self.assertNotIn("eia-test-secret", serialized)
         self.assertNotIn("320193", serialized)
 
+    def test_sec_probe_sanitizes_html_error_body(self):
+        def blocked():
+            raise ValueError("sec-edgar fetch failed (status 403) body=<html>private edge response</html>")
+
+        result = web_app._probe_source("sec-edgar", True, False, blocked)
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertIn("HTTP 403", result["detail"])
+        self.assertNotIn("<html>", result["detail"])
+        self.assertNotIn("private edge response", result["detail"])
+
     def test_finra_reports_live_only_when_server_credentials_exist_and_probe_passes(self):
         patches = self._patch_public_sources()
         env = {
