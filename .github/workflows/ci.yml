@@ -16,7 +16,8 @@ concurrency:
 jobs:
   test:
     name: Python ${{ matrix.python-version }} white-box
-    runs-on: ubuntu-latest
+    # Pin the runner image so EOL Python 3.9 remains installable as ubuntu-latest advances.
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -79,7 +80,7 @@ jobs:
 
   mvp-quality-gate:
     name: Golden Master regression + black-box + capacity
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: test
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -154,3 +155,4 @@ jobs:
       - name: Stop test server
         if: always()
         run: kill "$(cat /tmp/hedge-desk-web.pid)" 2>/dev/null || true
+

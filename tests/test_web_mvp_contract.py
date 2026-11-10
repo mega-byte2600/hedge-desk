@@ -45,8 +45,7 @@ class WebMvpContractTests(unittest.TestCase):
         self.assertEqual(payload["status"], "ok")
         self.assertEqual(payload["mode"], "paper")
         self.assertIs(payload["live_orders_enabled"], False)
-        self.assertIn("supabase", payload)
-        self.assertEqual(set(payload["supabase"]), {"configured", "reachable"})
+        self.assertNotIn("supabase", payload)
 
     def test_about_contract(self):
         status, _, body = self._call("/api/about")

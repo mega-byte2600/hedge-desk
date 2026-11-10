@@ -90,8 +90,8 @@ order to a broker.
 ### Web console (Emporion)
 
 The console is a single-page app served by `hedge_desk.server`, which also owns the
-JSON API. Do **not** serve `web/` with a plain static server: the membership, tier
-and report routes live in the server, and the page will load without them.
+JSON API. Do **not** serve `web/` with a plain static server: the report and research
+data routes live in the server, and the page will load without them.
 
 ```bash
 python scripts/build_web.py                 # bundle web/ -> dist/
@@ -99,8 +99,8 @@ bash scripts/demo.sh                        # serve on :8765 (PORT=… to change
 # or: PORT=8765 python -m hedge_desk.server
 ```
 
-Open `http://localhost:8765`. Sign-in codes print to the terminal (dev mail
-fallback) until `SMTP_*` is configured.
+Open `http://localhost:8765`. The research workspace is public and does not require
+an account.
 
 Deployed: <https://hedge-desk.onrender.com> (Render free tier; it sleeps when idle).
 
@@ -108,18 +108,9 @@ Deployed: <https://hedge-desk.onrender.com> (Render free tier; it sleeps when id
 
 - **Eight tabs** — Overview, Candidates, Research desks, Scenario lab, Yellow
   Sheets, Research resources, Multi-agent desk, About.
-- **Three access tiers, published openly.** GUEST is the open 31-day test drive on
-  synthetic research only. MEMBER is the self-serve subscription: real market data
-  and connecting your own broker **read-only**. LP is an investor in the LLC —
-  invited by the GP, never a paid tier, capped at 99 seats. The About tab states all
-  three; the server enforces them (`/api/tier`), and the guest lane is never walled.
-- **Email-OTP sign-in** with rate limiting (5 codes per address / 15 min, 20 per IP),
-  a first-party consent list, and `HttpOnly` session cookies. Social login via
-  Supabase Auth appears only when `SUPABASE_URL` + an anon key are configured.
-- **GP console** — appears for the `GP_EMAIL` address: LP seats used against the cap,
-  member counts, and issue-an-LP-invite. Enforced server-side, not just hidden in UI.
-- **Broker linking (read-only)** — tier-gated Schwab OAuth scaffold. It reports
-  "not configured" cleanly until `SCHWAB_*` is set, and the desk never places orders.
+- **Public research workspace.** Sign-in, membership, subscription, investor-seat,
+  and brokerage-link surfaces have been retired. Their legacy API routes return
+  `410 Gone`; live research feeds and paper-only controls remain available.
 - **Multi-agent desk** — the six SOUL specialists, their models, mandates and
   boundaries, plus a results timeline. Commit history is shown only when the
   timeline loads; it is never fabricated.
@@ -143,7 +134,6 @@ bash scripts/demo.sh > /tmp/demo.log 2>&1 &        # server, codes -> /tmp/demo.
 node scripts/vv_console.mjs  http://127.0.0.1:8765            # full V&V matrix
 node scripts/vv_console.mjs  http://127.0.0.1:8765 --engine=webkit
 node scripts/smoke_console.mjs http://127.0.0.1:8765          # routes + data-loss + RoR + desks
-node scripts/smoke_auth.mjs  http://127.0.0.1:8765 /tmp/demo.log   # sign-in lifecycle
 ```
 
 V&V follows `docs/CONSOLE_VV_SPEC.md`: **VERIFIED** means the artifact meets its

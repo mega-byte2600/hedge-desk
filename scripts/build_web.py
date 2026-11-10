@@ -36,7 +36,6 @@ CONSOLE_ASSETS = (
     "navigation-stability.js",
     "disclosures.js",
     "disclosures.json",
-    "account.js",
     "report.json",
     "research-brief.json",
     "research-today.md",

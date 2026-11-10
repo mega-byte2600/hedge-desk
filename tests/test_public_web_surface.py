@@ -28,20 +28,11 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn('mailto:michael.bolton.ph@dartmouth.edu', acknowledgements)
         self.assertIn('https://github.com/mega-byte2600/hedge-desk', acknowledgements)
 
-    def test_about_page_publishes_the_access_tiers_openly(self):
-        # The membership model is public, not hidden: guests can read exactly
-        # what the tiers are and what each gets.
+    def test_about_page_keeps_research_disclosure_without_membership_pitch(self):
         app = (WEB / "app.js").read_text(encoding="utf-8")
-        self.assertIn("Access & membership", app)
-        self.assertIn("Guest", app)
-        self.assertIn("Member", app)
-        self.assertIn("LP", app)
-        # honest framing: read-only broker + not investment advice
-        self.assertIn("read-only", app.lower())
-        self.assertIn("Not a paid tier", app)
+        self.assertNotIn("Access & membership", app)
+        self.assertNotIn("open-account", app)
         self.assertIn("investment advice", app.lower())
-        # guests can open the sign-in surface from the public page
-        self.assertIn("open-account", app)
 
     def test_public_brand_and_copy_stay_launch_safe(self):
         index = (WEB / "index.html").read_text(encoding="utf-8")
@@ -187,8 +178,8 @@ class PublicWebSurfaceTests(unittest.TestCase):
 
     def test_schwab_surface_is_market_data_only_and_exposes_no_account_data(self):
         index = (WEB / "index.html").read_text(encoding="utf-8")
-        account = (WEB / "account.js").read_text(encoding="utf-8")
-        combined = index + "\n" + account
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+        combined = index + "\n" + app
 
         for route in (
             "/api/broker/accounts",

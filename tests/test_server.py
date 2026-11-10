@@ -1,9 +1,8 @@
 import json
 import unittest
-from contextlib import nullcontext
 from unittest.mock import patch
 
-from hedge_desk.server import _static_cache_control, _supabase_status, application
+from hedge_desk.server import _static_cache_control, application
 
 class ServerTests(unittest.TestCase):
     def request(self, path):
@@ -22,31 +21,13 @@ class ServerTests(unittest.TestCase):
                          "no-cache, must-revalidate")
         self.assertIn("max-age=300", _static_cache_control(__import__("pathlib").Path("styles.css")))
 
-    def test_health_is_paper_only_and_reports_unconfigured_supabase(self):
+    def test_health_is_paper_only_without_membership_service_probe(self):
         with patch.dict('os.environ', {}, clear=True):
             status, payload = self.request('/api/health')
         self.assertEqual(status, '200 OK')
         self.assertEqual(payload['mode'], 'paper')
         self.assertFalse(payload['live_orders_enabled'])
-        self.assertFalse(payload['supabase']['configured'])
-
-    def test_supabase_health_uses_public_key_without_bearer_token(self):
-        response = type("Response", (), {"status": 200})()
-        env = {
-            "SUPABASE_URL": "https://project.supabase.co",
-            "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_test",
-        }
-        with patch.dict('os.environ', env, clear=True), patch(
-            'hedge_desk.server.urlopen', return_value=nullcontext(response)
-        ) as opened:
-            supabase = _supabase_status()
-
-        self.assertTrue(supabase['configured'])
-        self.assertTrue(supabase['reachable'])
-        request = opened.call_args.args[0]
-        self.assertEqual(request.full_url, "https://project.supabase.co/auth/v1/health")
-        self.assertEqual(request.get_header("Apikey"), "sb_publishable_test")
-        self.assertIsNone(request.get_header("Authorization"))
+        self.assertNotIn('supabase', payload)
 
     def test_candidate_api_covers_all_six_desks(self):
         status, payload = self.request('/api/candidates')
@@ -64,9 +45,7 @@ class ServerTests(unittest.TestCase):
         self.assertGreaterEqual(payload['desk_count'], 6)
         self.assertTrue(payload['executive_actions'])
 
-    def test_auth_route_is_wired_into_server_and_report_stays_public(self):
-        # /api/auth/me should respond through the server (unauthenticated now,
-        # but a real 200 JSON from the auth app, not a 404 or the SPA fallback).
+    def test_retired_auth_route_is_gone_and_report_stays_public(self):
         from hedge_desk.server import _dispatch
         captured = {}
 
@@ -74,11 +53,9 @@ class ServerTests(unittest.TestCase):
             captured['status'] = status
             captured['headers'] = headers
 
-        import json as _json
         body = b''.join(_dispatch({'PATH_INFO': '/api/auth/me', 'REQUEST_METHOD': 'GET'}, start))
-        self.assertEqual(captured['status'], '200 OK')
-        payload = _json.loads(body)
-        self.assertIn('authenticated', payload)
+        self.assertEqual(captured['status'], '410 Gone')
+        self.assertEqual(json.loads(body)['error'], 'feature_retired')
 
         # report/candidate endpoints remain publicly reachable without auth (guest tier open)
         status2, report = self.request('/api/candidates')
@@ -143,15 +120,13 @@ class ServerTests(unittest.TestCase):
         self.assertTrue(live, 'at least one desk must have live data')
         self.assertIn('last', live[0]['live_data'][next(iter(live[0]['live_data']))])
 
-    def test_auth_tier_and_broker_routes_are_forwarded_to_the_auth_app(self):
-        # Regression: the server previously forwarded only /api/auth/*, so
-        # /api/tier and /api/broker/* fell through to the SPA fallback and
-        # returned HTML instead of JSON. Assert every auth-app route resolves
-        # to a JSON response from the server's dispatch.
+    def test_retired_membership_and_broker_routes_are_explicitly_disabled(self):
         from hedge_desk.server import _dispatch
         import json as _json
 
         for path, method in (
+            ('/api/auth', 'GET'),
+            ('/api/broker', 'GET'),
             ('/api/tier', 'GET'),
             ('/api/broker/status', 'GET'),
             ('/api/data/real', 'GET'),
@@ -170,9 +145,11 @@ class ServerTests(unittest.TestCase):
             self.assertIn('application/json', content_type, f'{path} should return JSON')
             parsed = _json.loads(body)
             self.assertIsInstance(parsed, dict)
+            self.assertEqual(captured['status'], '410 Gone')
+            self.assertEqual(parsed.get('error'), 'feature_retired')
 
     def test_public_report_endpoints_are_not_gated(self):
-        # The guest test-drive tier must stay open: no auth required.
+        # Public research endpoints remain available without an account.
         for path in ('/api/health', '/api/candidates', '/api/risk-dashboard'):
             status, payload = self.request(path)
             self.assertEqual(status, '200 OK', path)

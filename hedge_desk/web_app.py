@@ -245,9 +245,23 @@ def _probe_source(
         }
     except Exception as exc:
         detail = str(exc)[:200]
-        # Redact credentials from error messages
-        import re
-        detail = re.sub(r"(api_key|apikey|token)=[^&\s]+", r"\1=[REDACTED]", detail, flags=re.IGNORECASE)
+        # SEC error bodies may be HTML and are not useful in the public status
+        # endpoint. Report a safe diagnostic without reflecting the upstream page.
+        if provider_id == "sec-edgar":
+            import re
+            match = re.search(r"status\s+(\d+)", detail, flags=re.IGNORECASE)
+            if match:
+                status = int(match.group(1))
+                if status == 403:
+                    detail = "SEC EDGAR returned HTTP 403; verify the declared client identity and access policy."
+                else:
+                    detail = f"SEC EDGAR returned HTTP {status}."
+            else:
+                detail = "SEC EDGAR request failed; check network access and the declared client identity."
+        else:
+            # Redact credentials from other provider error messages.
+            import re
+            detail = re.sub(r"(api_key|apikey|token)=[^&\s]+", r"\1=[REDACTED]", detail, flags=re.IGNORECASE)
         return {
             "provider_id": provider_id,
             "status": "BLOCKED",

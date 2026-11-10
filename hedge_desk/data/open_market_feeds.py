@@ -24,6 +24,8 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Callable, Mapping, Sequence, Tuple
 
+from .feed_base import _sec_user_agent
+
 
 Transport = Callable[[str], Tuple[int, bytes]]
 RequestTransport = Callable[[urllib.request.Request], Tuple[int, bytes]]
@@ -168,24 +170,19 @@ def _default_transport(url: str) -> Tuple[int, bytes]:
     ).strip()
     req = urllib.request.Request(
         url,
-        headers={"Accept": "application/json", "User-Agent": user_agent},
+        headers={
+            "Accept": "application/json",
+            "User-Agent": user_agent,
+        },
     )
     return _default_request_transport(req)
 
 
 def _sec_transport(url: str) -> Tuple[int, bytes]:
     """SEC transport with a declared bot identity per EDGAR fair-access guidance."""
-    contact = os.environ.get("SEC_CONTACT_EMAIL", "").strip()
-    user_agent = os.environ.get("SEC_USER_AGENT", "").strip()
-    if not user_agent:
-        user_agent = (
-            f"hedge-desk/1.0 {contact}"
-            if contact
-            else "hedge-desk/1.0 research https://github.com/mega-byte2600/hedge-desk"
-        )
     req = urllib.request.Request(
         url,
-        headers={"Accept": "application/json", "User-Agent": user_agent},
+        headers={"Accept": "application/json", "User-Agent": _sec_user_agent()},
     )
     return _default_request_transport(req)
 

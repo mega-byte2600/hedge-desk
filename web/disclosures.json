@@ -1,7 +1,7 @@
 {
   "schema_version": "emporion-disclosures-1",
-  "disclosure_version": "2026.09-a",
-  "effective": "2026-09-11",
+  "disclosure_version": "2026.11-a",
+  "effective": "2026-11-10",
   "review_note": "Reviewed whenever the public surface changes. Language is capability-framed and scanned by tests/test_public_claims.py.",
   "disclosures": [
     {
@@ -11,8 +11,8 @@
     },
     {
       "id": "synthetic-fixtures",
-      "title": "The public console runs on synthetic research fixtures.",
-      "text": "Report inputs are synthetic fixtures, not current market data. No current market opportunity is claimed and no live market feed is connected. Method-qualified picks read zero until real, licensed evidence is connected."
+      "title": "Live feeds are descriptive research inputs.",
+      "text": "Market-data panels identify their source, observation time, and availability. A blocked feed is disclosed rather than replaced with synthetic live data. Hypothetical cases are labeled as hypothetical."
     },
     {
       "id": "not-advice",
@@ -31,13 +31,13 @@
     },
     {
       "id": "broker-read-only",
-      "title": "Broker access, when enabled, is read-only.",
-      "text": "A member may connect their own brokerage for read-only access to positions and balances. The desk cannot place, modify, or cancel orders through that connection. Broker linking is inert until the deployment is explicitly configured for it."
+      "title": "Brokerage accounts are not connected through this console.",
+      "text": "The public research console provides no brokerage account linking. It cannot place, modify, or cancel orders, and its output remains research-only."
     },
     {
       "id": "tier-boundaries",
-      "title": "What each access tier may see.",
-      "text": "Guest access is a time-limited test drive over synthetic research only. Subscription members may enable licensed real market data and their own read-only broker connection. Members of the LLC are investors in the entity, are invited by the GP, and are never a paid tier."
+      "title": "The public console has no account tiers.",
+      "text": "The public research workspace is available without an account. It does not offer sign-in, subscriptions, investor seats, or brokerage links."
     },
     {
       "id": "not-an-offering",
@@ -52,7 +52,7 @@
     {
       "id": "reproducibility",
       "title": "Decisions retain their inputs.",
-      "text": "Engine decisions carry reason codes and the inputs needed to reproduce them, and membership and approval events are appended to a tamper-evident, hash-chained trail. Records are kept so a decision can be explained after the fact."
+      "text": "Engine decisions carry reason codes and reproducible inputs. Paper evaluation events are linked in a tamper-evident hash chain so a decision can be explained after the fact."
     }
   ]
 }

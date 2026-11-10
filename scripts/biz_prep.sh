@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 # Emporion — demo prep, one command.
 #
-# Builds the console, starts the server, checks it is healthy, and prints the
-# business reference cheat sheet with the URL to open. Everything runs locally so
-# sign-in codes print to this terminal and the GP console works.
+# Builds the public console, starts the server, checks it is healthy, and prints
+# the business reference cheat sheet with the URL to open.
 #
 #   bash scripts/biz_prep.sh                 # prep + serve on :8765
 #   PORT=9000 bash scripts/biz_prep.sh       # different port
-#   GP_EMAIL=you@example.com bash scripts/biz_prep.sh
 #   bash scripts/biz_prep.sh --no-serve      # print the pack only
 #   bash scripts/biz_prep.sh --vv            # also run the V&V matrix first
 #
@@ -16,7 +14,6 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 PORT="${PORT:-8765}"
-GP_EMAIL="${GP_EMAIL:-boltonmd13@gmail.com}"
 REFERENCE="docs/biz/EMPORION_BIZ_REFERENCE.md"
 SERVE=1
 RUN_VV=0
@@ -75,11 +72,10 @@ if [ "$SERVE" = "1" ]; then
   echo
   echo "== starting the desk =="
   echo "   URL:      http://127.0.0.1:${PORT}"
-  echo "   GP login: ${GP_EMAIL}   (console appears for this address)"
-  echo "   codes:    sign-in codes print below, in this terminal"
+  echo "   public research console; no sign-in required"
   echo "   stop:     Ctrl-C"
   echo
-  export PORT GP_EMAIL
+  export PORT
   exec bash scripts/demo.sh
 else
   echo

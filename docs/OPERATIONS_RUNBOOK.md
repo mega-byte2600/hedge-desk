@@ -14,7 +14,7 @@ Companion documents: `docs/DEMO_RUNBOOK.md` (demo script and what to click),
 | URL | What it is | Use it for | Depends on |
 | --- | --- | --- | --- |
 | `https://hedge-desk.onrender.com` | **Production host.** Render free tier. | Anything you would send to another person. | Render account; Render's free tier sleeping after ~15 min idle. |
-| `https://astra-mini.tail16a2cd.ts.net:8443` | **Stable demo URL.** Tailscale Funnel from this Mac. Verified publicly reachable. | Your own checking, and demoing with sign-in while Render email is unconfigured. | This Mac staying awake and the demo server running. |
+| `https://astra-mini.tail16a2cd.ts.net:8443` | **Stable demo URL.** Tailscale Funnel from this Mac. Verified publicly reachable. | Your own checking or a fallback demo. | This Mac staying awake and the demo server running. |
 | `https://here-enb-exotic-node.trycloudflare.com` | **Ephemeral backup.** Cloudflare quick tunnel. | Emergencies only. The name changes on every restart. | Same as above, plus the `cloudflared` process. |
 
 Rule of thumb: **Render for anything you share; the funnel URL for anything you want to
@@ -53,9 +53,7 @@ Files that matter:
 
 ```bash
 cd ~/workspace/projects/hedge-desk
-PORT=8765 MEMBERSHIP_DB=/tmp/hd-demo-live.db \
-  GP_EMAIL=<the GP address> MEMBERSHIP_SECRET=<a local secret> \
-  bash scripts/demo.sh
+PORT=8765 bash scripts/demo.sh
 ```
 
 **Stop it** (and, because the watchdog would restart it, stop the watchdog first):
@@ -118,8 +116,8 @@ curl -sS -m 30 -o /dev/null -w '%{http_code}\n' https://hedge-desk.onrender.com/
 cd ~/workspace/projects/hedge-desk
 node scripts/smoke_console.mjs https://hedge-desk.onrender.com
 
-# 3. is sign-in working on the URL you plan to show?
-#    (Render needs SMTP_* configured; the funnel URL works today)
+# 3. are the authoritative data feeds reachable?
+curl -sS https://hedge-desk.onrender.com/api/data-sources
 ```
 
 - Open the URL in a **fresh private window** so a stale cache cannot fool you.
@@ -137,11 +135,10 @@ node scripts/smoke_console.mjs https://hedge-desk.onrender.com
 | --- | --- | --- |
 | Site loads after a long pause | Render idle sleep | Wait 30-60s, reload. Not an outage. |
 | Blank page / frozen tab | A render loop | Reload. If repeatable, report it — this class of bug has shipped twice and both times came from a MutationObserver callback writing to its own observed subtree. |
-| "Code sent" but no email | `SMTP_*` unset on Render | Use the funnel URL, or complete the Render email configuration (section 8). The code is visible in the Render log meanwhile. |
-| Members/invites vanished | Supabase not configured | Expected on free tier: state resets on redeploy. Configure Supabase (section 8) for durable membership. |
+| Legacy sign-in, tier, or broker route returns 410 | Feature retired | Expected. The public research console does not require accounts. |
+| SEC EDGAR reports BLOCKED | SEC returned an error or denied the request | Check the declared SEC User-Agent/contact identity and the live source response; do not call filings live until the probe passes. |
 | Funnel URL dead | Mac asleep, or server/watchdog stopped | Restart the server (section 3); the watchdog should have done it — check `/tmp/hd-watchdog.log`. |
 | `exotic-node` URL dead | `cloudflared` stopped | Restart `cloudflared tunnel --url http://127.0.0.1:8765`; a **new** hostname is issued. |
-| Sign-in says a tier changed | Regression | Stop the demo and report it. Tier changes were fixed once already (`SignInMustNotDowngradeTests`). |
 
 ---
 
@@ -151,13 +148,12 @@ Current state, honestly:
 
 | Setting | State | Consequence | To close it |
 | --- | --- | --- | --- |
-| `GP_EMAIL` | Set locally, unset on Render | GP console lane not addressable on Render | Set it in Render → Environment |
-| `SMTP_*` | Unset everywhere | Emailed codes reach only the service log | Set SMTP host/port/user/password on Render |
-| `SUPABASE_URL` / anon key | Unset | Social login off; member state resets per deploy | Create a Supabase project, set both, then the auth path is live |
-| `SCHWAB_*` | Unset | Broker connect is inert (by design, paper-only) | Only when read-only brokerage access is deliberately released |
+| Sign-in and membership | Retired | Console is public; legacy endpoints return 410 | No auth configuration is required |
+| Broker linking | Retired from the public service | No account or brokerage data is accepted by the research console | Use the broker's own application outside the desk |
+| SEC User-Agent/contact | Declared application identity is required for automated EDGAR access | Missing or rejected identity can produce HTTP 403 | Configure `SEC_USER_AGENT` or `SEC_CONTACT_EMAIL` only if the built-in public identity is not accepted |
 
-Setting Render environment variables requires `render login` once on this machine — about
-30 seconds of your time, then the GP console and email delivery work on the real host.
+Only configure a Render variable when the source requires it and the public probe confirms
+that requirement. Never add secrets or private data to the repository.
 
 ---
 
@@ -168,7 +164,8 @@ The product's own boundary language, from the shipped disclosures (`web/disclosu
 - Paper only. **No orders can be placed.** Nothing here trades.
 - Research output is not investment advice, not a recommendation, and not an offer to sell
   any security.
-- The guest/demo tier runs on synthetic fixtures, not live market data.
+- The current feed state is reported by `/api/data-sources`; never call a blocked
+  source live.
 - The console does not calculate, estimate, or validate a Risk of Ruin figure. Any RoR
   value must come from the separately versioned deterministic component.
 - No performance history exists and none may be implied. Positioning is stated as
@@ -182,8 +179,8 @@ If a sentence would sound like a promise of returns, it does not go on a slide.
 
 - No secrets, credentials, or personal data in the repository, commits, PR bodies, issues,
   or logs. The repository is public.
-- The demo instance uses a **synthetic** membership secret and a local SQLite store; it
-  holds no real member data.
+- The public research console no longer initializes membership stores or accepts sign-in.
+  Historical membership code and records remain inert and are not exposed by the service.
 - Environment values live only in the process environment or the Render dashboard. This
   document deliberately names variables, never values.
 
@@ -191,8 +188,8 @@ If a sentence would sound like a promise of returns, it does not go on a slide.
 
 ## 11. Escalation
 
-Bring the operator (the GP) in when: sign-in or tier behaviour changes, anything suggests
-live order capability, or the disclosure language above stops being true.
+Bring the operator in when: a source status changes unexpectedly, anything suggests live
+order capability, or the disclosure language above stops being true.
 
 When reporting a problem, send: the URL, what you clicked, what you expected, what you saw,
 and whether a reload changed it. That is enough to reproduce almost everything.

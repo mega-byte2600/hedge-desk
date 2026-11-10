@@ -7,7 +7,6 @@ from pathlib import Path
 from socketserver import ThreadingMixIn
 from threading import Lock
 from time import monotonic, perf_counter
-from urllib.request import Request, urlopen
 from wsgiref.simple_server import WSGIServer, make_server
 
 from typing import Dict
@@ -21,7 +20,6 @@ from hedge_desk.candidates import (
 from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
 from hedge_desk.console_report import build_console_payload
 from hedge_desk.overnight import current_morning_report
-from hedge_desk.auth_app import make_auth_app, default_membership_store
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
@@ -30,48 +28,6 @@ WEB = DEPLOY_ROOT / "web" if (DEPLOY_ROOT / "web").is_dir() else PACKAGE_ROOT / 
 # live) over the installed-package dir, so Render serves the real report.
 ARTIFACTS = (DEPLOY_ROOT / "artifacts") if (DEPLOY_ROOT / "artifacts").is_dir() else PACKAGE_ROOT / "artifacts"
 API_CACHE_SECONDS = max(0.0, float(os.getenv("EMPORION_API_CACHE_SECONDS", "15")))
-
-# Lazy singleton for the membership/auth app. The store is only opened on the
-# first auth request so that a plain report server never pays the SQLite cost.
-_AUTH_APP = None
-_AUTH_APP_LOCK = Lock()
-GP_EMAIL = os.getenv("GP_EMAIL", "").strip()
-
-
-def _auth_app():
-    global _AUTH_APP
-    if _AUTH_APP is None:
-        with _AUTH_APP_LOCK:
-            if _AUTH_APP is None:
-                store = default_membership_store()
-                from hedge_desk.supabase_auth import verifier_from_env
-                from hedge_desk.broker_link import default_broker_store
-                from hedge_desk.brokers.schwab_oauth import SchwabOAuth, SchwabOAuthConfig
-                from hedge_desk.brokers.schwab_readonly import SchwabReadOnlyBroker
-                from hedge_desk.brokers.schwab_market_data import SchwabMarketDataBroker
-                from hedge_desk.membership_audit import default_audit_log
-
-                broker_oauth = None
-                try:
-                    cfg = SchwabOAuthConfig.from_environment()
-                    if cfg.configured:
-                        broker_oauth = SchwabOAuth(cfg)
-                except Exception:
-                    broker_oauth = None
-                _AUTH_APP = make_auth_app(
-                    store,
-                    gp_email=GP_EMAIL,
-                    jwt_verifier=verifier_from_env(),
-                    broker_store=default_broker_store(),
-                    broker_oauth=broker_oauth,
-                    broker_adapter=SchwabReadOnlyBroker(),
-                    market_data_adapter=SchwabMarketDataBroker(),
-                    audit=default_audit_log(),
-                )
-    return _AUTH_APP
-
-
-
 
 class ThreadingWSGIServer(ThreadingMixIn, WSGIServer):
     """Keep the deployment dependency-light while allowing concurrent reads."""
@@ -170,9 +126,8 @@ def _cached(key, builder, ttl_seconds=None):
     """Serve a built value from a short-lived cache.
 
     The builder runs *outside* the lock. It used to run inside, so one slow build
-    serialised every other endpoint: ``_cached("supabase-status", ...)`` does a
-    urlopen with a 5s timeout on the health path that Render polls, and while it
-    was in flight a request for the engine-backed report or risk dashboard blocked
+    serialized every other endpoint: any upstream health probe on the path that
+    Render polls could hold the lock while a report or risk-dashboard request blocked
     behind it. A concurrent miss may now build twice, which is harmless for these
     idempotent builders and far cheaper than a cross-endpoint stall.
     """
@@ -326,31 +281,17 @@ def _nightly_outcomes_or_503(start_response):
         )
 
 
-def _supabase_status():
-    url = os.getenv("SUPABASE_URL", "").rstrip("/")
-    key = os.getenv("SUPABASE_PUBLISHABLE_KEY", "") or os.getenv("SUPABASE_ANON_KEY", "")
-    if not url or not key:
-        return {"configured": False, "reachable": False}
-    try:
-        # The REST schema root now requires a secret key. Auth health is the
-        # supported public-key probe and does not expose or query user data.
-        request = Request(url + "/auth/v1/health", headers={"apikey": key})
-        with urlopen(request, timeout=5) as response:
-            return {"configured": True, "reachable": 200 <= response.status < 300}
-    except Exception:
-        return {"configured": True, "reachable": False}
-
-
 def _dispatch(environ, start_response):
     path = environ.get("PATH_INFO", "/")
-    # Membership/auth surface. The auth app owns the auth, tier, data-gate,
-    # and broker routes; the report/candidate/risk-dashboard endpoints below
-    # stay public so the guest "test drive" tier remains open.
-    if path.startswith("/api/auth/") or path.startswith("/api/broker/") or path in (
+    # Retired sign-in, membership, tier, and brokerage surfaces. Return an
+    # explicit API response so stale clients cannot fall through to the SPA.
+    if path.startswith(("/api/auth/", "/api/broker/")) or path in (
+        "/api/auth",
+        "/api/broker",
         "/api/tier",
         "/api/data/real",
     ):
-        return _auth_app()(environ, start_response)
+        return _json(start_response, {"error": "feature_retired"}, "410 Gone")
     if path == "/api/health":
         from hedge_desk.schwab_core_data import status as schwab_core_status
         return _json(start_response, {
@@ -358,7 +299,6 @@ def _dispatch(environ, start_response):
             "status": "ok",
             "mode": "paper",
             "live_orders_enabled": False,
-            "supabase": _cached("supabase-status", _supabase_status),
             "schwab_core": _cached("schwab-core-status", schwab_core_status),
             "deploy_sha": os.environ.get("RENDER_GIT_COMMIT", "unknown")[:8],
         })

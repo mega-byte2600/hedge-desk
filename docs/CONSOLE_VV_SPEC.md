@@ -29,18 +29,12 @@ means every check met its spec. Measured values are printed beside each target.
 
 | # | Spec | Source | Pass condition |
 |---|------|--------|----------------|
-| H1 | Guest test drive lasts 31 days | `GUEST_ACCESS_DAYS = 31`, membership.py | `/api/tier` reports `guest_days_left` in 30–31 on a new guest |
-| H2 | LP seats capped at 99 | `MAX_LP_MEMBERS = 99`, membership_base.py | cap reported as 99; enforced server-side |
-| H3 | Paper only, no live orders | `AGENTS.md`; `live_orders_enabled: false` | `/api/health` returns `mode: paper` and `live_orders_enabled: false` |
-| H4 | Real data is member/LP/GP only | tier_access.py | guest `/api/data/real` → 403; member → 200 |
-| H5 | Unknown `/api/*` is a JSON 404 | server.py dispatch | status 404, `content-type: application/json`, body has `error` |
-| H6 | OTP request limit 5 per address / 15 min | `SlidingWindowLimiter(5, 900)` | 6th request in the window → 429 |
-| H7 | OTP request limit 20 per IP / 15 min | `SlidingWindowLimiter(20, 900)` | 21st request from one IP → 429 |
-| H8 | Session cookie is HttpOnly + SameSite + Path | auth_app.py | Set-Cookie contains all three; `Secure` over TLS; `Cache-Control: no-store` |
-| H9 | A sign-in never lowers a role | membership.py / supabase_membership.py | LP/MEMBER/GP survive `upsert_guest` |
-| H10 | Yellow Sheet lifecycle fields persist | web/yellow-sheet.js | all 9 fields stored after submit |
-| H11 | Zero uncaught JS errors on any route | a console must not error | 0 `pageerror` events across the walk |
-| H12 | No tracked secrets or credentials | GP directive; SECURITY.md | no key material, tokens, or `.env` in tracked files |
+| H1 | Paper only, no live orders | `AGENTS.md`; `live_orders_enabled: false` | `/api/health` returns `mode: paper` and `live_orders_enabled: false` |
+| H2 | Unknown `/api/*` is a JSON 404 | server.py dispatch | status 404, `content-type: application/json`, body has `error` |
+| H3 | Retired account and broker routes stay disabled | server.py dispatch | `/api/auth/*`, `/api/tier`, `/api/data/real`, and `/api/broker/*` return JSON `410 Gone` |
+| H4 | Yellow Sheet lifecycle fields persist | web/yellow-sheet.js | all 9 fields stored after submit |
+| H5 | Zero uncaught JS errors on any route | a console must not error | 0 `pageerror` events across the walk |
+| H6 | No tracked secrets or credentials | GP directive; SECURITY.md | no key material, tokens, or `.env` in tracked files |
 
 ## B. Derived specs (no hard value in the repo — target and tolerable range)
 
@@ -87,8 +81,8 @@ A change is done only when all four hold, and the PR says so explicitly:
 
 ## E. Standing limitation
 
-Automated validation cannot accept the product. V3 in particular stays *partially*
-validated while the deployed service lacks `SMTP_*` and `GP_EMAIL`: sign-in codes
-reach only the Render log and the operator's console needs the GP address. Those two
-values are the difference between "the demo works if you read the server log" and
-"the demo works as published". See `docs/DEMO_RUNBOOK.md` §5.
+Automated validation cannot accept the product. The console's sign-in and membership
+surfaces have been retired; deployed validation should focus on the public research
+experience and the live source status endpoint. SEC EDGAR availability must be
+verified against the deployed service after release because upstream access policy
+cannot be proven by deterministic local tests.

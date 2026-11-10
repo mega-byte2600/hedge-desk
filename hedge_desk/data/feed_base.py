@@ -101,12 +101,21 @@ def _sec_user_agent() -> str:
         return user_agent
     if contact:
         return f"hedge-desk/1.0 {contact}"
-    return _DEFAULT_UA
+    # SEC fair-access guidance asks scripted clients to identify both the
+    # application and a contact. A browser UA or a project URL alone can be
+    # rejected by EDGAR's automated-access gate.
+    return "Emporion Hedge Desk/1.0 michael.bolton.ph@dartmouth.edu"
 
 
-_sec_transport = make_get_transport(
-    {"Accept": "application/json", "User-Agent": _sec_user_agent()}
-)
+def _sec_transport(url: str) -> Tuple[int, bytes]:
+    """Fetch SEC data with a declared, environment-overridable client identity."""
+    transport = make_get_transport(
+        {
+            "Accept": "application/json",
+            "User-Agent": _sec_user_agent(),
+        }
+    )
+    return transport(url)
 
 
 def _decode_json(raw: bytes, provider: str) -> Any:
