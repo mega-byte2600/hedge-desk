@@ -1,0 +1,263 @@
+/* market-ticker.css — Noir Institutional markets strip.
+ * Load after noir-shell.css. All selectors are namespaced .mkt- so the
+ * strip cannot restyle page copy. Green appears only on the fresh-feed
+ * dot (live-data semantics); direction is shown with an arrow glyph
+ * and a sign, never with color. */
+
+#market-ticker {
+  background: var(--noir-surface, #121215);
+  border-bottom: 1px solid var(--noir-line, #232329);
+  color: var(--noir-ink, #f4f1e8);
+  font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+}
+
+.mkt-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow: hidden;
+}
+
+.mkt-rail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  padding: 8px 12px;
+  border-right: 1px solid var(--noir-line, #232329);
+  border-left: 3px solid var(--brass, #c6a15b);
+  background: var(--noir-surface-2, #0e0e11);
+  white-space: nowrap;
+}
+
+.mkt-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass, #c6a15b);
+}
+
+.mkt-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--noir-faint, #8f8a81);
+  flex: none;
+}
+
+.mkt-dot-live {
+  background: var(--live, #35c26e);
+}
+
+.mkt-asof {
+  font-size: 12px;
+  color: var(--noir-muted, #a39e93);
+}
+
+.mkt-btn {
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 9px;
+  border: 1px solid var(--noir-line, #232329);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--noir-ink, #f4f1e8);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mkt-btn:hover {
+  border-color: var(--brass-deep, #8a6d3b);
+  color: var(--brass-bright, #dcb96f);
+}
+
+.mkt-btn-primary {
+  background: var(--brass, #c6a15b);
+  border-color: var(--brass, #c6a15b);
+  color: #0a0a0c;
+  font-weight: 600;
+}
+
+.mkt-btn-primary:hover {
+  background: var(--brass-bright, #dcb96f);
+  color: #0a0a0c;
+}
+
+.mkt-viewport {
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.mkt-track {
+  display: inline-flex;
+  white-space: nowrap;
+  will-change: transform;
+  animation: mkt-scroll var(--mkt-duration, 60s) linear infinite;
+  padding: 8px 0;
+}
+
+/* Pause on hover or keyboard focus, matching the HARDBALL wire. */
+.mkt-strip:hover .mkt-track,
+.mkt-strip:focus-within .mkt-track,
+.mkt-strip.mkt-paused .mkt-track {
+  animation-play-state: paused;
+}
+
+@keyframes mkt-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.mkt-half {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+.mkt-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-right: 28px;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.mkt-sym {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-weight: 500;
+}
+
+.mkt-tag {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--noir-muted, #a39e93);
+  border: 1px solid var(--noir-line, #232329);
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
+.mkt-label-text {
+  color: var(--noir-muted, #a39e93);
+  font-size: 12px;
+}
+
+.mkt-price,
+.mkt-move {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.mkt-move {
+  color: var(--noir-muted, #a39e93);
+}
+
+.mkt-na {
+  color: var(--noir-faint, #8f8a81);
+  font-size: 12px;
+}
+
+.mkt-static {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--noir-muted, #a39e93);
+}
+
+.mkt-panel {
+  border-top: 1px solid var(--noir-hairline, #1b1b20);
+  padding: 12px 14px 14px;
+}
+
+.mkt-panel form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mkt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--noir-muted, #a39e93);
+}
+
+.mkt-field input {
+  font: inherit;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 13px;
+  text-transform: uppercase;
+  width: 120px;
+  padding: 6px 8px;
+  border: 1px solid var(--noir-line, #232329);
+  border-radius: 6px;
+  background: var(--noir-bg, #0a0a0c);
+  color: var(--noir-ink, #f4f1e8);
+}
+
+.mkt-error {
+  font-size: 13px;
+  color: var(--brass-bright, #dcb96f);
+  margin: 0 0 8px;
+}
+
+.mkt-note {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--noir-muted, #a39e93);
+  margin: 0 0 10px;
+}
+
+.mkt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 6px 18px;
+  margin-bottom: 10px;
+}
+
+.mkt-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--noir-hairline, #1b1b20);
+  font-size: 13px;
+}
+
+.mkt-row .mkt-label-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Motion-sensitive users get a static strip they can scroll by hand. */
+@media (prefers-reduced-motion: reduce) {
+  .mkt-track {
+    animation: none;
+  }
+  .mkt-viewport {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .mkt-asof {
+    display: none;
+  }
+  .mkt-label-text {
+    display: none;
+  }
+  .mkt-item {
+    margin-right: 20px;
+  }
+}
