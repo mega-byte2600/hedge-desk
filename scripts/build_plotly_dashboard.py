@@ -56,6 +56,17 @@ def chart(fig: go.Figure, div_id: str, source: str = "") -> str:
     fig.update_layout(title=None, autosize=True)
     fig.update_xaxes(automargin=True)
     fig.update_yaxes(automargin=True)
+    # Legends for multi-series visuals need their own real estate. A wrapped
+    # seven-symbol legend cannot share the plotting rectangle on a 390px phone.
+    # Do not change series, values, axis semantics or visibility.
+    if len(fig.data) > 1 and fig.layout.showlegend is not False:
+        margin = dict(fig.layout.margin.to_plotly_json()) if fig.layout.margin else {}
+        margin.update(l=max(54, margin.get("l", 0)),
+                      r=max(20, margin.get("r", 0)),
+                      t=max(26, margin.get("t", 0)), b=max(118, margin.get("b", 0)))
+        fig.update_layout(legend=dict(orientation="h", x=0, xanchor="left", y=-0.25,
+                                      yanchor="top"), margin=margin,
+                          height=max(430, fig.layout.height or 0))
     html = fig.to_html(
         full_html=False, include_plotlyjs=False, div_id=div_id,
         config={"responsive": True, "displaylogo": False},
