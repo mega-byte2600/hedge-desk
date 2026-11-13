@@ -4,7 +4,7 @@ services:
     runtime: python
     region: virginia
     plan: free
-    buildCommand: python scripts/build_web.py && pip install .
+    buildCommand: pip install . && python scripts/build_plotly_dashboard.py && python scripts/build_web.py
     startCommand: hedge-desk-web
     healthCheckPath: /api/health
     autoDeployTrigger: commit
