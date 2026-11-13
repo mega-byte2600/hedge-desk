@@ -22,6 +22,17 @@ main{max-width:1180px;margin:0 auto;padding:16px 20px 40px}
 .q{color:var(--noir-muted);font-size:13px;margin:0 0 10px;font-style:italic}
 .src{font-size:11px;color:var(--noir-faint);margin-top:8px}
 .unavail{border:1px dashed var(--brass-deep);background:var(--noir-surface-2);padding:14px;border-radius:6px;font-size:14px}
+.chart-caption{font-family:'Inter',sans-serif;font-size:13px;line-height:1.45;font-weight:500;margin:14px 4px 4px;color:var(--noir-ink);overflow-wrap:anywhere}
+.panel,.grid2,.grid2>div{min-width:0}
+.js-plotly-plot{width:100%;max-width:100%;min-width:0}
+@media(max-width:760px){
+  header{padding:18px 16px}
+  main{padding:12px 10px 30px}
+  .panel{padding:14px 10px}
+  .chart-caption{font-size:12px;line-height:1.5}
+  table{display:block;max-width:100%;overflow-x:auto}
+  .js-plotly-plot .plotly .modebar-container{display:none!important}
+}
 /* Keep Plotly modebar below chart title and above traces. */
 .js-plotly-plot .plotly .modebar-container{top:40px!important}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -93,7 +104,24 @@ const SCHEMA_VERSION = 'rates-dashboard-1';
 const REQUIRED_KEYS = ['schema_version','generated_at','as_of','tenor_labels','snapshots','curve_hist','base_10y','base_10y_date','kalshi','kalshi_meeting_label','infl','be','pay_chg','pay_avg3','unrate','icsa','icsa_avg4','jolts','slopes','spreads','michigan','manual','unavailable'];
 const CHART_IDS = ['curveSnap','curveHist','kalshi','inflMM','breakeven','payChart','unrateChart','icsaChart','joltsChart','slopeChart','spreadChart','gordonChart'];
 const BRASS='#c6a15b', BRASSBRIGHT='#dcb96f', GREY='#a39e93', INK='#f4f1e8', SURFACE='#121215', LINE='#232329';
-const layout = (t)=>({title:{text:t,font:{size:14,color:INK}},margin:{l:50,r:20,t:80,b:44},paper_bgcolor:SURFACE,plot_bgcolor:SURFACE,hovermode:'closest',font:{color:INK,family:'Inter, sans-serif'},hoverlabel:{bgcolor:'#1b1b20',font:{color:INK}},xaxis:{gridcolor:LINE,zerolinecolor:LINE},yaxis:{gridcolor:LINE,zerolinecolor:LINE},legend:{font:{color:INK}}});
+const layout = (t)=>({title:{text:t,font:{size:14,color:INK}},margin:{l:50,r:20,t:30,b:58},autosize:true,paper_bgcolor:SURFACE,plot_bgcolor:SURFACE,hovermode:'closest',font:{color:INK,family:'Inter, sans-serif'},hoverlabel:{bgcolor:'#1b1b20',font:{color:INK}},xaxis:{gridcolor:LINE,zerolinecolor:LINE,automargin:true},yaxis:{gridcolor:LINE,zerolinecolor:LINE,automargin:true},legend:{font:{color:INK}}});
+/* Chart headings belong in document flow, not beneath Plotly's floating
+ * modebar. This preserves full titles, hover, data and interactivity. */
+function renderPlot(id,traces,chartLayout){
+  const host=document.getElementById(id);
+  const name=chartLayout.title && chartLayout.title.text || '';
+  if(host && name){
+    let heading=host.previousElementSibling;
+    if(!heading || !heading.classList.contains('chart-caption')){
+      heading=document.createElement('h3');
+      heading.className='chart-caption';
+      host.parentNode.insertBefore(heading,host);
+    }
+    heading.textContent=name;
+  }
+  const safeLayout={...chartLayout,title:null,autosize:true};
+  return Plotly.newPlot(id,traces,safeLayout,{responsive:true,displaylogo:false});
+}
 
 function showUnavailable(ids, reason){
   ids.forEach(function(id){
@@ -137,13 +165,13 @@ function render(D){
 
   // Panel 1
   if (D.snapshots.length) {
-    Plotly.newPlot('curveSnap', D.snapshots.map((s,i)=>({x:D.tenor_labels,y:s.y,mode:'lines+markers',name:s.label,line:{width:i===0?3:2},marker:{size:7}})), layout('Treasury curve snapshots (% — FRED, as-of dates in legend)'));
+    renderPlot('curveSnap', D.snapshots.map((s,i)=>({x:D.tenor_labels,y:s.y,mode:'lines+markers',name:s.label,line:{width:i===0?3:2},marker:{size:7}})), layout('Treasury curve snapshots (% — FRED, as-of dates in legend)'));
   } else {
     showUnavailable(['curveSnap'], reasonFor(D, ['DTB3','DGS2','DGS5','DGS10','DGS30','snapshots']));
   }
   var histTenors = nonEmpty(D.curve_hist, D.tenor_labels);
   if (histTenors.length) {
-    Plotly.newPlot('curveHist', histTenors.map(t=>({x:xsOf(D.curve_hist[t]),y:ysOf(D.curve_hist[t]),mode:'lines',name:t})), {...layout('Curve history — drag to zoom, range slider below'),xaxis:{rangeslider:{visible:true,bgcolor:SURFACE},gridcolor:LINE}});
+    renderPlot('curveHist', histTenors.map(t=>({x:xsOf(D.curve_hist[t]),y:ysOf(D.curve_hist[t]),mode:'lines',name:t})), {...layout('Curve history — drag to zoom, range slider below'),xaxis:{rangeslider:{visible:true,bgcolor:SURFACE},gridcolor:LINE}});
   } else {
     showUnavailable(['curveHist'], reasonFor(D, ['DTB3','DGS2','DGS5','DGS10','DGS30']));
   }
@@ -161,7 +189,7 @@ function render(D){
   // Panel 2
   var k = D.kalshi;
   if (k.length) {
-    Plotly.newPlot('kalshi', [{x:k.map(r=>r.label),y:k.map(r=>r.price),type:'bar',marker:{color:k.map(function(r,i){ return (i===1 && k.length===5) ? BRASS : GREY; })},text:k.map(r=>'$'+r.price.toFixed(2)),textposition:'outside',
+    renderPlot('kalshi', [{x:k.map(r=>r.label),y:k.map(r=>r.price),type:'bar',marker:{color:k.map(function(r,i){ return (i===1 && k.length===5) ? BRASS : GREY; })},text:k.map(r=>'$'+r.price.toFixed(2)),textposition:'outside',
     customdata:k.map(r=>`bid $${r.bid.toFixed(2)} / ask $${r.ask.toFixed(2)} · prev $${r.prev.toFixed(2)} · 24h vol ${Math.round(r.vol24h).toLocaleString()}`),
     hovertemplate:'%{x}<br>last $%{y:.2f}<br>%{customdata}<extra></extra>'}],
     {...layout('Kalshi ' + D.kalshi_meeting_label + ' FOMC outcome prices (last $)'),yaxis:{range:[0,1.05],gridcolor:LINE}});
@@ -186,7 +214,7 @@ function render(D){
     var inflTraces = inflPresent.map(s=>({x:xsOf(D.infl[s]),y:ysOf(D.infl[s]),mode:'lines+markers',name:inflNames[s]}));
     var inflRef = D.infl[inflPresent[0]];
     inflTraces.push({x:[inflRef[0][0],inflRef[inflRef.length-1][0]],y:[0.167,0.167],mode:'lines',name:'0.17%/mo (= 2% ann.)',line:{dash:'dash',color:BRASSBRIGHT}});
-    Plotly.newPlot('inflMM', inflTraces, layout('Monthly % change, recomputed from index levels (consecutive months only)'));
+    renderPlot('inflMM', inflTraces, layout('Monthly % change, recomputed from index levels (consecutive months only)'));
   } else {
     showUnavailable(['inflMM'], reasonFor(D, inflOrder));
   }
@@ -199,7 +227,7 @@ function render(D){
     if (D.michigan && typeof D.michigan.value === 'number' && D.michigan.observation_date) {
       beTraces.push({x:[D.michigan.observation_date],y:[D.michigan.value],mode:'markers',name:'Michigan yr-ahead (' + D.michigan.label + ')',marker:{size:11,color:BRASS,symbol:'diamond'}});
     }
-    Plotly.newPlot('breakeven', beTraces, layout('Inflation expectations: market breakevens vs 2% target (%)'));
+    renderPlot('breakeven', beTraces, layout('Inflation expectations: market breakevens vs 2% target (%)'));
   } else {
     showUnavailable(['breakeven'], reasonFor(D, beOrder));
   }
@@ -213,24 +241,24 @@ function render(D){
   if (D.pay_chg.length) {
     var payTraces = [{x:xsOf(D.pay_chg),y:ysOf(D.pay_chg),type:'bar',name:'Monthly change (k)',marker:{color:GREY}}];
     if (D.pay_avg3.length) payTraces.push({x:xsOf(D.pay_avg3),y:ysOf(D.pay_avg3),mode:'lines',name:'3-mo avg (k)',line:{color:BRASSBRIGHT,width:3}});
-    Plotly.newPlot('payChart', payTraces, layout('Nonfarm payrolls, monthly change (thousands)'));
+    renderPlot('payChart', payTraces, layout('Nonfarm payrolls, monthly change (thousands)'));
   } else {
     showUnavailable(['payChart'], reasonFor(D, ['PAYEMS']));
   }
   if (D.unrate.length) {
-    Plotly.newPlot('unrateChart', [{x:xsOf(D.unrate),y:ysOf(D.unrate),mode:'lines+markers',name:'Unemployment %'}], layout('Unemployment rate (%)'));
+    renderPlot('unrateChart', [{x:xsOf(D.unrate),y:ysOf(D.unrate),mode:'lines+markers',name:'Unemployment %'}], layout('Unemployment rate (%)'));
   } else {
     showUnavailable(['unrateChart'], reasonFor(D, ['UNRATE']));
   }
   if (D.icsa.length) {
     var icsaTraces = [{x:xsOf(D.icsa),y:ysOf(D.icsa),mode:'lines',name:'Weekly claims'}];
     if (D.icsa_avg4.length) icsaTraces.push({x:xsOf(D.icsa_avg4),y:ysOf(D.icsa_avg4),mode:'lines',name:'4-wk avg',line:{color:BRASSBRIGHT,width:3}});
-    Plotly.newPlot('icsaChart', icsaTraces, layout('Initial claims (weekly)'));
+    renderPlot('icsaChart', icsaTraces, layout('Initial claims (weekly)'));
   } else {
     showUnavailable(['icsaChart'], reasonFor(D, ['ICSA']));
   }
   if (D.jolts.length) {
-    Plotly.newPlot('joltsChart', [{x:xsOf(D.jolts),y:ysOf(D.jolts),mode:'lines+markers',name:'Openings (k)'}], layout('JOLTS job openings (thousands)'));
+    renderPlot('joltsChart', [{x:xsOf(D.jolts),y:ysOf(D.jolts),mode:'lines+markers',name:'Openings (k)'}], layout('JOLTS job openings (thousands)'));
   } else {
     showUnavailable(['joltsChart'], reasonFor(D, ['JTSJOL']));
   }
@@ -243,7 +271,7 @@ function render(D){
     var slopeTraces = slopePresent.map(s=>({x:xsOf(D.slopes[s]),y:ysOf(D.slopes[s]),mode:'lines',name:slopeNames[s]}));
     var slopeRef = D.slopes[slopePresent[0]];
     slopeTraces.push({x:[slopeRef[0][0],slopeRef[slopeRef.length-1][0]],y:[0,0],mode:'lines',name:'Inversion (0)',line:{dash:'dash',color:BRASSBRIGHT}});
-    Plotly.newPlot('slopeChart', slopeTraces, layout('Curve slopes (percentage points)'));
+    renderPlot('slopeChart', slopeTraces, layout('Curve slopes (percentage points)'));
   } else {
     showUnavailable(['slopeChart'], reasonFor(D, slopeOrder));
   }
@@ -256,7 +284,7 @@ function render(D){
     var spreadX = [spreadRef[0][0],spreadRef[spreadRef.length-1][0]];
     spreadTraces.push({x:spreadX,y:[1.5,1.5],mode:'lines',name:'IG stress 1.50%',line:{dash:'dot',color:GREY}});
     spreadTraces.push({x:spreadX,y:[5,5],mode:'lines',name:'HY stress 5.00%',line:{dash:'dot',color:GREY}});
-    Plotly.newPlot('spreadChart', spreadTraces, layout('Credit spreads, option-adjusted (%)'));
+    renderPlot('spreadChart', spreadTraces, layout('Credit spreads, option-adjusted (%)'));
   } else {
     showUnavailable(['spreadChart'], reasonFor(D, ['BAMLC0A0CM','BAMLH0A0HYM2']));
   }
@@ -268,7 +296,7 @@ function render(D){
   const xs=[];for(let v=3.5;v<=6.51;v+=0.05)xs.push(v);
   const base=1/(D.base_10y/100-g);
   const ys=xs.map(v=>1/(v/100-g));
-  Plotly.newPlot('gordonChart',[{x:xs,y:ys,mode:'lines',name:'Implied multiple 1/(r−g)'},
+  renderPlot('gordonChart',[{x:xs,y:ys,mode:'lines',name:'Implied multiple 1/(r−g)'},
   {x:[D.base_10y],y:[base],mode:'markers',name:'Real base (10Y '+D.base_10y.toFixed(2)+'%)',marker:{size:12,color:BRASSBRIGHT}},
   {x:[r*100],y:[1/(r-g)],mode:'markers',name:'Scenario r',marker:{size:12,color:BRASS,symbol:'diamond'}}],
   {...layout('Gordon-implied multiple vs discount rate — HYPOTHETICAL scenario from real base'),
