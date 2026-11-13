@@ -72,6 +72,35 @@ def _report(**overrides):
     return base
 
 
+class MobileChartLayoutTests(unittest.TestCase):
+    """Regression guard for the overlapping iPhone charts observed Nov 13."""
+
+    def test_titles_are_outside_plotly_canvas(self):
+        import plotly.graph_objects as go
+        figure = go.Figure(data=[go.Scatter(x=[1, 2], y=[1, 2])])
+        figure.update_layout(title="Detailed chart title")
+        html = dash.chart(figure, "test-chart", "Test provenance")
+        self.assertIn('class="chart-caption"', html)
+        self.assertIn("Detailed chart title", html)
+        self.assertIn("Test provenance", html)
+        self.assertNotIn('"title":{"text":"Detailed chart title"', html)
+        self.assertIn('responsive', html)
+
+    def test_trend_uses_three_separate_vertical_axes(self):
+        import inspect
+        code = inspect.getsource(dash.history_trend_chart)
+        self.assertIn('make_subplots(rows=3, cols=1', code)
+        self.assertNotIn('overlaying="y"', code)
+        self.assertIn('row=3, col=1', code)
+
+    def test_all_generated_cards_keep_source_and_chart_captions(self):
+        source = Path(dash.__file__).read_text()
+        self.assertIn(".chart-caption", source)
+        self.assertIn("modebar-container", source)
+        self.assertIn("display:none!important", source)
+        self.assertIn("src_note(source)", source)
+
+
 class DashboardBuildTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
