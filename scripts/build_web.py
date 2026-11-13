@@ -18,6 +18,7 @@ CONSOLE_ASSETS = (
     "index.html",
     "iphone-preview.html",
     "rates-dashboard.html",
+    "rates-dashboard-data.json",
     "styles.css",
     "public-surface.js",
     "app.js",
