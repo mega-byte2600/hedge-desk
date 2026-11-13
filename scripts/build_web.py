@@ -17,8 +17,6 @@ from hedge_desk.overnight import current_morning_report
 CONSOLE_ASSETS = (
     "index.html",
     "iphone-preview.html",
-    "rates-dashboard.html",
-    "rates-dashboard-data.json",
     "styles.css",
     "public-surface.js",
     "app.js",
