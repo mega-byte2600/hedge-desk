@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from hedge_desk.candidates import CIK_TO_SYMBOL
 
@@ -193,22 +194,27 @@ def history_trend_chart() -> str:
         vix.append(r.get("vix_regime", {}).get("last_close"))
     if len(dates) < 2:
         return "<p class='muted'>need 2+ dated reports for a trend</p>"
-    fig = go.Figure()
+    # Separate scales vertically rather than overlaying three y-axes. The
+    # previous mobile layout placed VIX and RoC tick labels atop each other.
+    fig = make_subplots(rows=3, cols=1, shared_xaxes=True, vertical_spacing=0.10,
+                        subplot_titles=("Candidates", "Average return on collateral", "VIX"))
     fig.add_trace(go.Scatter(x=dates, y=cands, name="candidates", mode="lines+markers",
-                             line=dict(color="#c6a15b"), hovertemplate="%{x}<br>%{y} candidates<extra></extra>"))
+                             line=dict(color="#c6a15b"),
+                             hovertemplate="%{x}<br>%{y} candidates<extra></extra>"), row=1, col=1)
     fig.add_trace(go.Scatter(x=dates, y=roc, name="avg return on collateral", mode="lines+markers",
-                             line=dict(color="#dcb96f"), yaxis="y2",
-                             hovertemplate="%{x}<br>avg RoC %{y:.2%}<extra></extra>"))
+                             line=dict(color="#dcb96f"),
+                             hovertemplate="%{x}<br>avg RoC %{y:.2%}<extra></extra>"), row=2, col=1)
     fig.add_trace(go.Scatter(x=dates, y=vix, name="VIX", mode="lines+markers",
-                             line=dict(color="#8a6d3b"), yaxis="y3",
-                             hovertemplate="%{x}<br>VIX %{y:.1f}<extra></extra>"))
-    fig.update_layout(margin=dict(l=10, r=10, t=40, b=10), height=340,
+                             line=dict(color="#8a6d3b"),
+                             hovertemplate="%{x}<br>VIX %{y:.1f}<extra></extra>"), row=3, col=1)
+    fig.update_layout(margin=dict(l=62, r=20, t=86, b=52), height=560,
                       title="Multi-Day Trend — real nightly history",
-                      xaxis_title="date", legend=dict(orientation="h", y=1.12),
-                      yaxis=dict(title="candidates", gridcolor="#232329"),
-                      yaxis2=dict(title="avg RoC", overlaying="y", side="right", tickformat=".1%", showgrid=False),
-                      yaxis3=dict(title="VIX", overlaying="y", side="right", position=1.0, showgrid=False),
+                      showlegend=False,
                       font=dict(color="#f4f1e8"), paper_bgcolor="#121215", plot_bgcolor="#121215")
+    fig.update_yaxes(gridcolor="#232329", tickformat=".0f", row=1, col=1)
+    fig.update_yaxes(gridcolor="#232329", tickformat=".1%", row=2, col=1)
+    fig.update_yaxes(gridcolor="#232329", tickformat=".1f", row=3, col=1)
+    fig.update_xaxes(title_text="date", row=3, col=1)
     return fig.to_html(full_html=False, include_plotlyjs=False, div_id="ch_trend")
 
 
@@ -885,6 +891,14 @@ table.health th{{color:{MUTED};font-weight:600}}
 td.ok{{color:#27ae60}} td.warn{{color:#f39c12}}
 .blocked{{background:#2a1a12;border:1px solid #7a4a1f;border-radius:8px;padding:12px;margin:8px 0;font-size:13px}}
 @media(max-width:900px){{.grid{{grid-template-columns:1fr}}.grid{{padding:0 12px 12px}}header{{padding:14px 12px}}.ts{{padding:8px 12px}}}}
+/* Plotly's floating controls must not cover chart labels on a phone. */
+.js-plotly-plot .plotly .modebar-container{{top:44px!important}}
+@media(max-width:640px){{
+ .js-plotly-plot .plotly .modebar-container{{display:none!important}}
+ .js-plotly-plot .gtitle{{display:none!important}}
+ .card{{min-width:0}}
+ .js-plotly-plot{{max-width:100%}}
+}}
 </style></head><body>
 <header><img class="brand-logo" src="/brand/emporion-logo-hermes-transparent.png?v=20261004-power" alt=""><div><h1>Emporion Overnight Desk</h1>
 <div class="tag">Markets · Intelligence · Discipline</div></div>
