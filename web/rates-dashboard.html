@@ -22,6 +22,8 @@ main{max-width:1180px;margin:0 auto;padding:16px 20px 40px}
 .q{color:var(--noir-muted);font-size:13px;margin:0 0 10px;font-style:italic}
 .src{font-size:11px;color:var(--noir-faint);margin-top:8px}
 .unavail{border:1px dashed var(--brass-deep);background:var(--noir-surface-2);padding:14px;border-radius:6px;font-size:14px}
+/* Keep Plotly modebar below chart title and above traces. */
+.js-plotly-plot .plotly .modebar-container{top:40px!important}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media (max-width:760px){.grid2{grid-template-columns:1fr}}
 label{font-size:13px}.slider-row{display:flex;gap:14px;align-items:center;margin:8px 0;flex-wrap:wrap}
@@ -91,7 +93,7 @@ const SCHEMA_VERSION = 'rates-dashboard-1';
 const REQUIRED_KEYS = ['schema_version','generated_at','as_of','tenor_labels','snapshots','curve_hist','base_10y','base_10y_date','kalshi','kalshi_meeting_label','infl','be','pay_chg','pay_avg3','unrate','icsa','icsa_avg4','jolts','slopes','spreads','michigan','manual','unavailable'];
 const CHART_IDS = ['curveSnap','curveHist','kalshi','inflMM','breakeven','payChart','unrateChart','icsaChart','joltsChart','slopeChart','spreadChart','gordonChart'];
 const BRASS='#c6a15b', BRASSBRIGHT='#dcb96f', GREY='#a39e93', INK='#f4f1e8', SURFACE='#121215', LINE='#232329';
-const layout = (t)=>({title:{text:t,font:{size:14,color:INK}},margin:{l:50,r:20,t:36,b:44},paper_bgcolor:SURFACE,plot_bgcolor:SURFACE,hovermode:'closest',font:{color:INK,family:'Inter, sans-serif'},hoverlabel:{bgcolor:'#1b1b20',font:{color:INK}},xaxis:{gridcolor:LINE,zerolinecolor:LINE},yaxis:{gridcolor:LINE,zerolinecolor:LINE},legend:{font:{color:INK}}});
+const layout = (t)=>({title:{text:t,font:{size:14,color:INK}},margin:{l:50,r:20,t:80,b:44},paper_bgcolor:SURFACE,plot_bgcolor:SURFACE,hovermode:'closest',font:{color:INK,family:'Inter, sans-serif'},hoverlabel:{bgcolor:'#1b1b20',font:{color:INK}},xaxis:{gridcolor:LINE,zerolinecolor:LINE},yaxis:{gridcolor:LINE,zerolinecolor:LINE},legend:{font:{color:INK}}});
 
 function showUnavailable(ids, reason){
   ids.forEach(function(id){
