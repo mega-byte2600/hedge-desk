@@ -5,10 +5,25 @@ import json
 import os
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
 from hedge_desk.nightly import NIGHTLY_VERSION, run_nightly
+
+
+class _FixedClock(datetime):
+    """datetime whose now() returns a fixed evening-batch instant.
+
+    Sat 2026-09-19 04:54 UTC = Fri 2026-09-18 23:54 ET = Fri 20:54 PT,
+    with the fake fixtures' last bar on Fri 2026-09-18.
+    """
+
+    FIXED = datetime(2026, 9, 19, 4, 54, tzinfo=timezone.utc)
+
+    @classmethod
+    def now(cls, tz=None):
+        return cls.FIXED if tz is None else cls.FIXED.astimezone(tz)
 
 
 def _fake_market_context():
@@ -189,6 +204,39 @@ class NightlyTests(unittest.TestCase):
                 json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
             ).hexdigest()
             self.assertEqual(report["report_sha256"], expected)
+
+    def test_report_uses_market_trading_day(self):
+        # Regression: with the UTC date as the cutoff, a Fri 20:54 PT batch
+        # expected Saturday's close and failed closed on Friday's bars.
+        # The fake fixtures' last bar is Fri 2026-09-18; the fixed clock is
+        # that Friday's 20:54 PT batch instant.
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("hedge_desk.nightly.datetime", _FixedClock):
+                with patch(
+                    "hedge_desk.nightly.build_market_context",
+                    side_effect=_fake_market_context,
+                ):
+                    report = run_nightly(
+                        ["AAPL"], artifacts_dir=tmp, transport=_fake_transport,
+                        chain_transport=_fake_chain_transport,
+                        csp_transport=_fake_csp_transport,
+                        rates_transport=_fake_rates_transport,
+                        vix_transport=_fake_vix_transport,
+                        macro_transport=_fake_rates_transport,
+                    )
+            freshness = report["data_freshness"]
+            self.assertEqual(freshness["expected_trading_day"], "2026-09-18")
+            self.assertTrue(freshness["is_current"], freshness)
+            self.assertEqual(freshness["as_of"], "2026-09-18")
+            self.assertEqual(
+                freshness["note"],
+                "Running on 2026-09-18 close (current trading day).",
+            )
+            self.assertEqual(report["series"]["as_of"], "2026-09-18")
+            self.assertTrue(
+                report["report_path"].endswith("am-report-2026-09-18.json"),
+                report["report_path"],
+            )
 
 
 if __name__ == "__main__":

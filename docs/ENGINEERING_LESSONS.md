@@ -133,3 +133,21 @@ means at hand, say which capability is missing rather than gesturing at uncertai
 
 Also: never claim a fix is live until the deployed artefact has been re-measured. Merged is
 not deployed, and deployed is not correct.
+
+## 10. A date gate must be computed in the domain's timezone, not the server's
+
+**What happened.** The nightly batch runs at 20:54 PT (23:54 ET). The freshness gate
+derived the expected trading day from `datetime.now(timezone.utc).date()`, which is
+already the next day in UTC, so it expected a close that cannot exist yet and failed
+closed on fresh data — eight consecutive Sunday–Thursday evenings (2026-11-03/04/05/
+08/09/10/11/12), leaving the dashboard on the Nov 6 close for four trading days.
+The data was never stale; the gate's calendar was wrong. The same UTC date also
+misdated the report file (`am-report-2026-11-10.json` holding Nov 9 data) and the
+series `as_of`.
+
+**Rule.** Any check that compares a data date against "today" must derive "today" from
+the market's clock (America/New_York, with the 16:00 ET close as the day boundary),
+never from UTC or the server's local date. A gate that fails closed for the wrong
+reason is a defect, not safety: it withholds good data exactly as surely as a gate
+that passes bad data ships it. Pin the rule with fixed-clock reference cases for
+every run time the schedule actually uses (evening batch, daily run, pre-close).

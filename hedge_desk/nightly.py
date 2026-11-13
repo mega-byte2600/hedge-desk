@@ -37,7 +37,7 @@ from hedge_desk.rates_desk import rates_environment
 from hedge_desk.vix_regime import vix_regime, apply_vix_regime_filter
 from hedge_desk.macro_desk import macro_environment
 from hedge_desk.market_context import build_market_context
-from hedge_desk.freshness import freshness_summary
+from hedge_desk.freshness import freshness_summary, latest_completed_trading_day
 from hedge_desk.data_quality import quality_report
 from hedge_desk.account import read_account_equity
 from hedge_desk.position_sizing import wheel_fit_for_equity, scale_position_to_equity
@@ -139,6 +139,11 @@ def run_nightly(
     if not symbols:
         raise ValueError("nightly watchlist cannot be empty")
     cutoff = datetime.now(timezone.utc)
+    # The report's trading day is market time, not UTC: at 20:54 PT the UTC
+    # date is already tomorrow, but today's close is the latest that can
+    # exist. Ingest/chain/vix keep the UTC cutoff as their "now"; only the
+    # freshness expectation and the report's as-of dating use market time.
+    trading_day = latest_completed_trading_day(cutoff)
     account_equity = read_account_equity()
 
     eod = (ingest_eod(symbols, cutoff, transport=transport, range_param=FEATURE_YAHOO_RANGE)
@@ -149,7 +154,7 @@ def run_nightly(
         str(row["last_day"]) for row in eod.get("source_results", [])
         if isinstance(row, dict) and row.get("status") == "PASS" and row.get("last_day")
     ]
-    freshness = freshness_summary(last_bar_dates, cutoff.date())
+    freshness = freshness_summary(last_bar_dates, trading_day)
 
     days_by_symbol = {}
     for row in eod.get("source_results", []):
@@ -275,7 +280,7 @@ def run_nightly(
         return [points[i] for i in idxs]
 
     series = {
-        "as_of": cutoff.date().isoformat(),
+        "as_of": trading_day.isoformat(),
         "symbols": {
             sym: _downsample([[d.date, str(d.close)] for d in days])
             for sym, days in sorted(days_by_symbol.items())
@@ -346,7 +351,7 @@ def run_nightly(
 
     root = Path(artifacts_dir)
     root.mkdir(parents=True, exist_ok=True)
-    date_stamp = cutoff.date().isoformat()
+    date_stamp = trading_day.isoformat()
     final_path = root / f"am-report-{date_stamp}.json"
     tmp_path = root / f".am-report-{date_stamp}.tmp"
     tmp_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
