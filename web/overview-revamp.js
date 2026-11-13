@@ -137,7 +137,13 @@
           '<p>' + esc(deskMethod(p.project_id, data.registry)) + '</p>' +
           '<div class="ov-desk-foot"><span class="mono">as of ' + esc(fmtDate(p.data_as_of)) + '</span></div>' +
         '</article>';
-    }).join('');
+    }).join('') +
+      '<article class="ov-desk" aria-label="Desk 07 Bonds and Rates">' +
+        '<div class="ov-desk-top"><span class="ov-eyebrow">Desk 07</span><span class="ov-status">Rates research</span></div>' +
+        '<h3>Bonds &amp; Rates</h3>' +
+        '<p>Yield curves, Fed decisions, inflation, labor, and valuation sensitivity.</p>' +
+        '<div class="ov-desk-foot"><a class="text-link" href="./rates-dashboard.html">Open Desk 7 dashboard ↗</a></div>' +
+      '</article>';
     return '' +
       '<section class="ov-desks" aria-label="Research desks">' +
         '<div class="ov-eyebrow">Research desks</div>' +
