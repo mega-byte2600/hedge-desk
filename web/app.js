@@ -120,7 +120,18 @@ async function hydrateRealEstate(){
   }
 }
 function fitFrame(f){try{const d=f.contentDocument;if(!d||!d.documentElement)return;const h=Math.max(d.documentElement.scrollHeight,d.body?d.body.scrollHeight:0);f.style.height=Math.max(500,h+8)+'px';}catch(_){}}
-function wireFrames(){document.querySelectorAll('#main iframe[data-autofit]').forEach(f=>{if(f.dataset.wired)return;f.dataset.wired='1';f.addEventListener('load',()=>{const sk=f.previousElementSibling;if(sk&&sk.classList.contains('skeleton'))sk.style.display='none';fitFrame(f);try{new ResizeObserver(()=>fitFrame(f)).observe(f.contentDocument.documentElement);}catch(_){}});});}
+// The /dashboard chart wall is embedded from this same origin. On phones, Plotly's
+// floating toolbar and redundant in-chart headings collide with chart content.
+// The containing card already supplies a visible, readable heading. This is
+// presentation-only; figures, axes, traces and calculations are untouched.
+function fitMobilePlotlyChrome(f){try{
+  if(!f.classList.contains('dash-frame'))return;
+  const d=f.contentDocument;if(!d||!d.head||d.getElementById('hedge-mobile-plotly-qa'))return;
+  const s=d.createElement('style');s.id='hedge-mobile-plotly-qa';
+  s.textContent='@media(max-width:640px){.js-plotly-plot .plotly .modebar-container{display:none!important}.js-plotly-plot .gtitle{display:none!important}}';
+  d.head.appendChild(s);
+}catch(_){}}
+function wireFrames(){document.querySelectorAll('#main iframe[data-autofit]').forEach(f=>{if(f.dataset.wired)return;f.dataset.wired='1';f.addEventListener('load',()=>{const sk=f.previousElementSibling;if(sk&&sk.classList.contains('skeleton'))sk.style.display='none';fitMobilePlotlyChrome(f);fitFrame(f);try{new ResizeObserver(()=>fitFrame(f)).observe(f.contentDocument.documentElement);}catch(_){}});});}
 let framesResizeArmed=false;
 function armFramesResize(){if(framesResizeArmed)return;framesResizeArmed=true;window.addEventListener('resize',()=>{document.querySelectorAll('#main iframe[data-wired]').forEach(fitFrame);});}
 async function render(){route=location.hash.slice(1)||'overview';if(!title[route])route='overview';document.body.dataset.route=route;document.querySelectorAll('[data-nav]').forEach(a=>{a.classList.toggle('active',a.dataset.nav===route);if(a.dataset.nav===route)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});$('#breadcrumb').textContent=title[route];if(route==='overview')await ensureOverviewBrief();$('#main').innerHTML=({overview,dashboard,candidates,desks,controls,journal,resources,workbench,'real-estate':realEstate,brief,about})[route]();if(route==='candidates')hydrateGraham();if(route==='brief')hydrateBrief();if(route==='controls')hydrateMarketContext();if(route==='workbench')hydrateWorkbench();if(route==='real-estate')hydrateRealEstate();wireFrames();}
