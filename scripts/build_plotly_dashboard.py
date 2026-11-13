@@ -46,8 +46,22 @@ def base_layout(title: str, height: int = 340) -> dict:
 
 
 def chart(fig: go.Figure, div_id: str, source: str = "") -> str:
-    html = fig.to_html(full_html=False, include_plotlyjs=False, div_id=div_id)
-    return html + src_note(source) if source else html
+    """Keep descriptive chart headings outside Plotly's toolbar/axis canvas.
+
+    The visible heading occupies normal document flow, never shares a drawing
+    layer with the floating modebar, axes, annotations or legends. Retain the
+    complete original title as text and keep every real-data trace unchanged.
+    """
+    heading = str(fig.layout.title.text or "") if fig.layout.title else ""
+    fig.update_layout(title=None, autosize=True)
+    fig.update_xaxes(automargin=True)
+    fig.update_yaxes(automargin=True)
+    html = fig.to_html(
+        full_html=False, include_plotlyjs=False, div_id=div_id,
+        config={"responsive": True, "displaylogo": False},
+    )
+    label = f"<h4 class='chart-caption'>{esc(heading)}</h4>" if heading else ""
+    return label + html + (src_note(source) if source else "")
 
 
 def muted(msg: str) -> str:
@@ -215,7 +229,7 @@ def history_trend_chart() -> str:
     fig.update_yaxes(gridcolor="#232329", tickformat=".1%", row=2, col=1)
     fig.update_yaxes(gridcolor="#232329", tickformat=".1f", row=3, col=1)
     fig.update_xaxes(title_text="date", row=3, col=1)
-    return fig.to_html(full_html=False, include_plotlyjs=False, div_id="ch_trend")
+    return chart(fig, "ch_trend", source="Dated real overnight reports, nightly batch")
 
 
 def macro_panel(vix: dict, rates: dict, oil: dict, macro: dict) -> str:
@@ -525,8 +539,7 @@ def premium_yield_chart(csp: dict) -> str:
                       yaxis_tickformat=".1%", yaxis_title="per 30-45d", xaxis_title="symbol",
                       xaxis_tickangle=-30, legend=dict(orientation="h", y=1.12),
                       font=dict(color="#f4f1e8"), paper_bgcolor="#121215", plot_bgcolor="#121215")
-    return (fig.to_html(full_html=False, include_plotlyjs=False, div_id="ch_premium")
-            + src_note("Cboe delayed option chains, nightly premium scan"))
+    return chart(fig, "ch_premium", source="Cboe delayed option chains, nightly premium scan")
 
 
 # ---------------------------------------------------------------- price trends
@@ -879,6 +892,12 @@ header h1{{margin:0;font-family:'Fraunces',Georgia,serif;font-size:20px;letter-s
 .card.wide{{grid-column:1/-1}}
 .card h3{{margin:6px 4px 10px;font-size:15px;color:{FG}}}
 .card h4{{margin:10px 4px;font-size:13px}}
+/* Chart names have their own accessible, wrapping line above the graphics. */
+.chart-caption{{font-size:13px;line-height:1.45;margin:12px 6px 6px;color:#f4f1e8;font-weight:500;overflow-wrap:anywhere}}
+.card .js-plotly-plot{{width:100%;max-width:100%;min-width:0}}
+.card .plot-container{{max-width:100%}}
+.card, .grid{{min-width:0}}
+.card svg{{overflow:visible}}
 .macropanel{{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:8px}}
 .metric{{background:#121215;border:1px solid #232329;border-radius:8px;padding:14px}}
 .ml{{color:{MUTED};font-size:12px}} .ml .src{{color:#c6a15b;font-size:10px}}
@@ -896,6 +915,10 @@ td.ok{{color:#27ae60}} td.warn{{color:#f39c12}}
 @media(max-width:640px){{
  .js-plotly-plot .plotly .modebar-container{{display:none!important}}
  .js-plotly-plot .gtitle{{display:none!important}}
+ .chart-caption{{font-size:13px;line-height:1.5}}
+ .card{{padding:10px 8px}}
+ .grid{{gap:12px}}
+ .js-plotly-plot .legend{{max-width:100%}}
  .card{{min-width:0}}
  .js-plotly-plot{{max-width:100%}}
 }}
