@@ -12,7 +12,7 @@ REQUIRED_INDICATOR_FIELDS = ("name", "series", "source", "why", "trigger", "read
 class Desk7IndicatorsTests(unittest.TestCase):
     def test_json_schema_tally_and_call(self):
         data = json.loads((WEB / "desk7-indicators.json").read_text(encoding="utf-8"))
-        self.assertEqual(data["schema_version"], "desk7-indicators-1")
+        self.assertEqual(data["schema_version"], "desk7-indicators-2")
         self.assertEqual(data["as_of"], "2026-11-13")
         indicators = data["indicators"]
         self.assertEqual(len(indicators), 10)
@@ -78,6 +78,77 @@ class Desk7IndicatorsTests(unittest.TestCase):
         self.assertNotIn("trade_authorized", payload)
         self.assertNotIn("/api/order", payload)
         self.assertIn("live_orders_enabled!==false", app)
+
+
+    def test_gauge_encoding_recomputes_every_vote(self):
+        # Each gauge carries the trigger rule as numbers. Recomputing the
+        # vote from value + tripwires must reproduce the stated vote, so a
+        # chart can never show a marker on the wrong side of its tripwire.
+        data = json.loads((WEB / "desk7-indicators.json").read_text(encoding="utf-8"))
+        gauged = [item for item in data["indicators"] if item["gauge"] is not None]
+        self.assertEqual(len(gauged), 9)
+        fomc = [item for item in data["indicators"] if item["name"] == "FOMC vote and guidance"]
+        self.assertEqual(len(fomc), 1)
+        self.assertIsNone(fomc[0]["gauge"])
+        for item in gauged:
+            g = item["gauge"]
+            self.assertEqual(len(g["values"]), len(g["labels"]), item["name"])
+            self.assertEqual(len(g["values"]), len(g["display"]), item["name"])
+            lo, hi = g["window"]
+            for value in g["values"]:
+                self.assertGreaterEqual(value, lo, item["name"])
+                self.assertLessEqual(value, hi, item["name"])
+            if g["hike_at"] is not None:
+                self.assertGreaterEqual(g["hike_at"], lo, item["name"])
+                self.assertLessEqual(g["hike_at"], hi, item["name"])
+            if g["cut_at"] is not None:
+                self.assertGreaterEqual(g["cut_at"], lo, item["name"])
+                self.assertLessEqual(g["cut_at"], hi, item["name"])
+            implied = "NEUTRAL"
+            for value in g["values"]:
+                if g["hike_at"] is not None and (
+                    (g["hike_when"] == "above" and value > g["hike_at"])
+                    or (g["hike_when"] == "below" and value < g["hike_at"])
+                ):
+                    implied = "HIKE"
+                if g["cut_at"] is not None and (
+                    (g["cut_when"] == "above" and value > g["cut_at"])
+                    or (g["cut_when"] == "below" and value < g["cut_at"])
+                ):
+                    implied = "CUT"
+            self.assertEqual(implied, item["vote"], item["name"])
+
+    def test_kalshi_markets_sum_to_over_round_and_total_hike(self):
+        data = json.loads((WEB / "desk7-indicators.json").read_text(encoding="utf-8"))
+        markets = data["market_pricing"]["kalshi_markets"]
+        self.assertEqual(len(markets), 4)
+        self.assertAlmostEqual(sum(m["last"] for m in markets), 1.05)
+        hike = sum(m["last"] for m in markets if m["family"] == "hike")
+        self.assertAlmostEqual(hike, 1.00)
+        self.assertEqual(data["market_pricing"]["total_hike"], "$1.00")
+        for market in markets:
+            self.assertIn(market["family"], ("hike", "hold", "cut"))
+            self.assertGreater(market["last"], 0)
+
+    def test_plotly_charts_wired_and_theme_safe(self):
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+        self.assertIn("desk7-indicators-2", app)
+        self.assertIn('id="desk7-vote-chart"', app)
+        self.assertIn('id="desk7-gauge-chart"', app)
+        self.assertIn('id="desk7-kalshi-chart"', app)
+        self.assertIn("renderDesk7Charts", app)
+        self.assertIn("vendor/plotly-2.35.2.min.js", app)
+        self.assertIn("plotly_click", app)
+        self.assertIn("desk7-row-", app)
+        self.assertIn("Chart unavailable. The table below carries the same data.", app)
+        # Vote colors: brass for HIKE, muted for NEUTRAL, workbench blue for
+        # CUT. Live green (#35c26e) is reserved for live-data semantics and
+        # must not appear in the Desk 7 chart block.
+        block = app[app.index("const DESK7_VOTE_COLOR") : app.index("function fitFrame")]
+        self.assertIn("'#dcb96f'", block)
+        self.assertIn("'#a39e93'", block)
+        self.assertIn("'#4a90d9'", block)
+        self.assertNotIn("#35c26e", block)
 
 
 if __name__ == "__main__":

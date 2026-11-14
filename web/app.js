@@ -126,20 +126,98 @@ async function hydrateDesk7(){
     const r=await fetch('./desk7-indicators.json',{cache:'default'});
     if(!r.ok)throw Error('Desk 7 indicators unavailable');
     const d=await r.json();
-    if(d.schema_version!=='desk7-indicators-1'||!Array.isArray(d.indicators)||d.indicators.length!==10)throw Error('Desk 7 indicators unavailable');
+    if(d.schema_version!=='desk7-indicators-2'||!Array.isArray(d.indicators)||d.indicators.length!==10)throw Error('Desk 7 indicators unavailable');
     if(route!=='desk7')return;
     const t=d.decision.tally;
-    const rows=d.indicators.map(x=>`<tr><td><strong>${e(x.name)}</strong><br><span class="mono small">${e(x.series)}</span><br><span class="small muted">${e(x.source)}</span></td><td data-label="Why it matters">${e(x.why)}</td><td data-label="Trigger rule">${e(x.trigger)}</td><td data-label="Today's read">${e(x.read)}</td><td data-label="Vote"><strong>${e(x.vote)}</strong></td><td data-label="Broker view">${e(x.broker)}</td></tr>`).join('');
+    const rows=d.indicators.map((x,i)=>`<tr id="desk7-row-${i}"><td><strong>${e(x.name)}</strong><br><span class="mono small">${e(x.series)}</span><br><span class="small muted">${e(x.source)}</span></td><td data-label="Why it matters">${e(x.why)}</td><td data-label="Trigger rule">${e(x.trigger)}</td><td data-label="Today's read">${e(x.read)}</td><td data-label="Vote"><strong>${e(x.vote)}</strong></td><td data-label="Broker view">${e(x.broker)}</td></tr>`).join('');
     host.innerHTML=`<div class="stats">${stat('Call',e(d.decision.call),'FOMC '+e(d.decision.meeting)+', range '+e(d.decision.target_range))}${stat('Tally',t.hike+' HIKE / '+t.cut+' CUT / '+t.neutral+' NEUTRAL','Across the 10 core indicators')}${stat('Market pricing',e(d.market_pricing.total_hike),'Kalshi total hike, Dec meeting')}${stat('As of',e(d.as_of),'Snapshot, see note below')}</div>`
     +panel('The decision','',`<div class="panel-body"><p>${e(d.decision.summary)}</p><p class="small muted">${e(d.as_of_note)}</p></div>`)
+    +`<div class="section-gap">${panel('Vote balance','The tally as a balance. Hover a segment for the indicators behind it.',`<div class="panel-body"><div id="desk7-vote-chart"><p class="muted">Loading chart…</p></div></div>`)}</div>`
+    +`<div class="section-gap">${panel('Where each indicator sits against its trigger','Each row is one indicator in its own units. Dashed lines are the tripwires from the trigger rule; the marker is today’s read. Click a row to jump to its detail.',`<div class="panel-body"><div id="desk7-gauge-chart"><p class="muted">Loading chart…</p></div><p class="small muted">FOMC vote and guidance has no numeric trigger: it votes HIKE on the 10–2 dissent pattern. See the table.</p><p class="small muted">On Claims and HY OAS, higher readings push toward a cut, so the CUT zone is on the right; on every other row the HIKE zone is on the right.</p></div>`)}</div>`
     +`<div class="section-gap">${panel('Core indicators','Each indicator carries its trigger rule, today\u2019s read, and its vote.',`<div class="table-scroll cards-table"><table><thead><tr><th>Indicator</th><th>Why it matters</th><th>Trigger rule</th><th>Today's read</th><th>Vote</th><th>Broker view</th></tr></thead><tbody>${rows}</tbody></table></div>`)}</div>`
-    +`<div class="section-gap">${panel('Market pricing vs indicators','',`<div class="panel-body"><p>${e(d.market_pricing.kalshi_note)}</p><p>${e(d.market_pricing.fedwatch_note)}</p><p>${e(d.market_pricing.disagreement)}</p></div>`)}</div>`
+    +`<div class="section-gap">${panel('Market pricing vs indicators','',`<div class="panel-body"><div id="desk7-kalshi-chart"><p class="muted">Loading chart…</p></div><p>${e(d.market_pricing.kalshi_note)}</p><p>${e(d.market_pricing.fedwatch_note)}</p><p>${e(d.market_pricing.disagreement)}</p></div>`)}</div>`
     +`<div class="section-gap">${panel('What would change the call','',`<div class="panel-body">${d.what_would_change.map(w=>`<p class="small">\u25b8 ${e(w)}</p>`).join('')}</div>`)}</div>`
     +`<div class="section-gap">${panel('Graham lens','',`<div class="panel-body">${d.graham.lines.map(g=>`<p>${e(g)}</p>`).join('')}<p class="small">${e(d.graham.spread)}</p></div>`)}</div>`
     +`<div class="section-gap">${panel('Grounding','',`<div class="panel-body"><p class="small">${e(d.grounding)}</p><p class="small"><a class="text-link" href="#brief">Daily brief ↗</a> — the full package carries the newer read.</p></div>`)}</div>`;
+    renderDesk7Charts(d);
   }catch(err){
     host.innerHTML=`<div class="error"><h2>Desk 7 indicators unavailable</h2><p>data unavailable</p><p>The rest of Emporion remains available.</p></div>`;
   }
+}
+const DESK7_VOTE_COLOR={HIKE:'#dcb96f',NEUTRAL:'#a39e93',CUT:'#4a90d9'};
+let desk7PlotlyPromise=null;
+async function ensureDesk7Plotly(){
+  if(window.Plotly)return window.Plotly;
+  if(!desk7PlotlyPromise){desk7PlotlyPromise=import('./vendor/plotly-2.35.2.min.js').then(()=>window.Plotly,()=>null);}
+  return desk7PlotlyPromise;
+}
+function desk7ChartBase(){return {paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',font:{size:11,color:'#f4f1e8'},showlegend:false};}
+function desk7ChartFail(id){const el=document.getElementById(id);if(el)el.innerHTML='<p class="muted">Chart unavailable. The table below carries the same data.</p>';}
+async function renderDesk7Charts(d){
+  const P=await ensureDesk7Plotly();
+  if(route!=='desk7')return;
+  if(!P){['desk7-vote-chart','desk7-gauge-chart','desk7-kalshi-chart'].forEach(desk7ChartFail);return;}
+  try{renderDesk7VoteChart(P,d);}catch(_){desk7ChartFail('desk7-vote-chart');}
+  try{await renderDesk7GaugeChart(P,d);}catch(_){desk7ChartFail('desk7-gauge-chart');}
+  try{renderDesk7KalshiChart(P,d);}catch(_){desk7ChartFail('desk7-kalshi-chart');}
+}
+function renderDesk7VoteChart(P,d){
+  const el=document.getElementById('desk7-vote-chart');if(!el)return;
+  el.innerHTML='';
+  const traces=['HIKE','NEUTRAL','CUT'].map(v=>{
+    const names=d.indicators.filter(x=>x.vote===v).map(x=>x.name);
+    return {x:[names.length],y:['Votes'],type:'bar',orientation:'h',marker:{color:DESK7_VOTE_COLOR[v]},text:[names.length+' '+v],textposition:v==='CUT'?'outside':'inside',textfont:{size:11,color:v==='CUT'?'#f4f1e8':'#0a0a0c'},hovertext:['<b>'+v+' ('+names.length+')</b><br>'+names.map(n=>e(n)).join('<br>')],hovertemplate:'%{hovertext}<extra></extra>'};
+  });
+  const layout={...desk7ChartBase(),barmode:'stack',height:104,margin:{l:8,r:8,t:8,b:28},xaxis:{range:[0,12],tickvals:[0,2,4,6,8,10],gridcolor:'rgba(128,128,128,.25)',zeroline:false,tickfont:{size:10,color:'#a39e93'}},yaxis:{showticklabels:false,showgrid:false,zeroline:false}};
+  return P.newPlot(el,traces,layout,{responsive:true,displayModeBar:false});
+}
+async function renderDesk7GaugeChart(P,d){
+  const el=document.getElementById('desk7-gauge-chart');if(!el)return;
+  el.innerHTML='';
+  const rows=d.indicators.map((x,i)=>({x,i})).filter(o=>o.x.gauge);
+  const n=rows.length;
+  const traces=[],shapes=[],annotations=[];
+  const layout={...desk7ChartBase(),grid:{rows:n,columns:1,pattern:'independent',roworder:'top to bottom'},margin:{l:92,r:16,t:12,b:30},height:n*72+48};
+  rows.forEach((o,k)=>{
+    const g=o.x.gauge,ax=k===0?'x':'x'+(k+1),ay=k===0?'y':'y'+(k+1);
+    const axKey=k===0?'xaxis':'xaxis'+(k+1),ayKey=k===0?'yaxis':'yaxis'+(k+1);
+    const [lo,hi]=g.window;
+    if(g.hike_at!=null){
+      shapes.push({type:'rect',xref:ax,yref:ay,x0:g.hike_when==='above'?g.hike_at:lo,x1:g.hike_when==='above'?hi:g.hike_at,y0:-0.55,y1:0.75,fillcolor:'rgba(220,185,111,.08)',line:{width:0},layer:'below'});
+      shapes.push({type:'line',xref:ax,yref:ay,x0:g.hike_at,x1:g.hike_at,y0:-0.55,y1:0.75,line:{color:'#dcb96f',width:1,dash:'dash'}});
+    }
+    if(g.cut_at!=null){
+      shapes.push({type:'rect',xref:ax,yref:ay,x0:g.cut_when==='above'?g.cut_at:lo,x1:g.cut_when==='above'?hi:g.cut_at,y0:-0.55,y1:0.75,fillcolor:'rgba(74,144,217,.08)',line:{width:0},layer:'below'});
+      shapes.push({type:'line',xref:ax,yref:ay,x0:g.cut_at,x1:g.cut_at,y0:-0.55,y1:0.75,line:{color:'#4a90d9',width:1,dash:'dash'}});
+    }
+    const hover=g.values.map((v,j)=>'<b>'+e(o.x.name)+'</b><br>'+e(g.labels[j])+': '+e(g.display[j])+' — '+o.x.vote+'<br>Trigger: '+e(o.x.trigger)+'<br>Read: '+e(o.x.read)+(g.note?'<br>'+e(g.note):''));
+    const multi=g.values.length>1;
+    if(multi){const mean=g.values.reduce((a,b)=>a+b,0)/g.values.length;annotations.push({xref:ax,yref:ay,x:mean,y:0.62,text:g.display.join(' / '),showarrow:false,font:{size:10,color:'#f4f1e8'}});}
+    traces.push({x:g.values,y:g.values.map(()=>0),xaxis:ax,yaxis:ay,type:'scatter',mode:'markers+text',marker:{size:13,symbol:'diamond',color:DESK7_VOTE_COLOR[o.x.vote],line:{color:'#0a0a0c',width:1}},text:multi?g.values.map(()=> ''):g.display,textposition:'top center',textfont:{size:10,color:'#f4f1e8'},hovertext:hover,hovertemplate:'%{hovertext}<extra></extra>',customdata:g.values.map(()=>o.i)});
+    layout[axKey]={range:[lo,hi],showgrid:true,gridcolor:'rgba(128,128,128,.25)',zeroline:false,nticks:4,tickfont:{size:9,color:'#a39e93'}};
+    if(hi>=10000)layout[axKey].tickformat=',';
+    layout[ayKey]={range:[-0.55,0.75],showticklabels:true,tickvals:[0],ticktext:[g.short+(g.unit?' ('+g.unit+')':'')],tickfont:{size:11,color:'#f4f1e8'},showgrid:false,zeroline:false};
+  });
+  layout.shapes=shapes;layout.annotations=annotations;
+  await P.newPlot(el,traces,layout,{responsive:true,displayModeBar:false});
+  el.on('plotly_click',ev=>{
+    try{
+      const idx=ev.points[0].customdata;
+      const row=document.getElementById('desk7-row-'+idx);
+      if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.style.background='rgba(198,161,91,.16)';setTimeout(()=>{row.style.background='';},1800);}
+    }catch(_){}
+  });
+}
+function renderDesk7KalshiChart(P,d){
+  const el=document.getElementById('desk7-kalshi-chart');if(!el)return;
+  el.innerHTML='';
+  const m=d.market_pricing.kalshi_markets;
+  if(!Array.isArray(m)||!m.length)throw Error('no kalshi markets');
+  const FAM={hike:'#dcb96f',hold:'#a39e93',cut:'#4a90d9'};
+  const rows=[...m].reverse();
+  const trace={x:rows.map(r=>r.last),y:rows.map(r=>r.outcome),type:'bar',orientation:'h',marker:{color:rows.map(r=>FAM[r.family])},text:rows.map(r=>'$'+r.last.toFixed(2)),textposition:rows.map(r=>r.last>=0.5?'inside':'outside'),textfont:{size:11,color:rows.map(r=>r.last>=0.5?'#0a0a0c':'#f4f1e8')},hovertext:rows.map(r=>'<b>'+e(r.outcome)+'</b><br>Last $'+r.last.toFixed(2)+(r.bid!=null?'<br>Bid/ask '+r.bid.toFixed(2)+' / '+r.ask.toFixed(2):'')+(r.note?'<br>'+e(r.note):'')),hovertemplate:'%{hovertext}<extra></extra>'};
+  const layout={...desk7ChartBase(),height:216,margin:{l:116,r:44,t:8,b:30},xaxis:{range:[0,1.0],tickvals:[0,0.25,0.5,0.75,1],tickprefix:'$',gridcolor:'rgba(128,128,128,.25)',zeroline:false,tickfont:{size:10,color:'#a39e93'}},yaxis:{tickfont:{size:11,color:'#f4f1e8'},showgrid:false,zeroline:false}};
+  return P.newPlot(el,[trace],layout,{responsive:true,displayModeBar:false});
 }
 function fitFrame(f){try{const d=f.contentDocument;if(!d||!d.documentElement)return;const h=Math.max(d.documentElement.scrollHeight,d.body?d.body.scrollHeight:0);f.style.height=Math.max(500,h+8)+'px';}catch(_){}}
 // The /dashboard chart wall is embedded from this same origin. On phones, Plotly's
