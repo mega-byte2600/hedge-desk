@@ -153,7 +153,7 @@ function installStyle() {
 // unreachable on the Research desks tab. Each visible card/row is wired to the
 // real button app.js rendered, matched by the desk name it displays, so no
 // project id is guessed. Bonds & Rates has no evaluated research yet, so its
-// card goes to the institutional rates sources instead of doing nothing.
+// card goes to the Desk 7 indicator dashboard instead of doing nothing.
 function wireDeskRows() {
   const surfaces = [
     ...document.querySelectorAll('#main .ws-desk-methods article'),
@@ -179,7 +179,7 @@ function wireDeskRows() {
     const label = nameOf(node.querySelector('h2') || node.querySelector('strong'));
     if (!label) continue;
     // Bonds & Rates has no evaluated research yet: its card links to the
-    // institutional rates sources rather than sitting inert.
+    // Desk 7 indicator dashboard rather than sitting inert.
     if (label.includes('bonds') && label.includes('rates')) {
       node.dataset.wired = 'true';
       node.classList.add('ws-desk-openable');
@@ -187,7 +187,7 @@ function wireDeskRows() {
       node.setAttribute('tabindex', '0');
       const go = (event) => {
         event.preventDefault();
-        location.hash = '#resources';
+        location.hash = '#desk7';
       };
       node.addEventListener('click', go);
       node.addEventListener('keydown', (event) => {

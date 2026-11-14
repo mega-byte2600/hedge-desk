@@ -6,14 +6,14 @@ let data, report, route='overview';
 let grahamNightly=null, grahamLoading=null;
 const names={'overnight-premium-desk':'Overnight Premium','earnings-event-desk':'Earnings Event','arbitrage-observer':'Box / Parity Observer','dividend-opportunity-desk':'Dividend Opportunity','open-quant-ai-model-lab':'Quant / AI Model Lab','event-futures-desk':'Futures Event'};
 const layers={OBSERVED:'Observed data',STAT:'Statistical evidence',BIG:'Research proposal',DETERMINISTIC_RISK:'Deterministic risk',DETERMINISTIC_COMPLIANCE:'Compliance',HUMAN:'Human review'};
-const title={overview:'Overview',dashboard:'Dashboard',candidates:'Candidates',desks:'Research desks',controls:'Controls & evidence',journal:'Yellow Sheets',resources:'Research resources',workbench:'Options Workbench','real-estate':'Real Estate',brief:'Daily brief',about:'About'};
+const title={overview:'Overview',dashboard:'Dashboard',candidates:'Candidates',desks:'Research desks',desk7:'Desk 7 · Bonds & Rates',controls:'Controls & evidence',journal:'Yellow Sheets',resources:'Research resources',workbench:'Options Workbench','real-estate':'Real Estate',brief:'Daily brief',about:'About'};
 const tag=s=>`<span class="tag ${statusClass(s)}">${e(human(s))}</span>`;
 const money=v=>{const n=String(v);return `${n.startsWith('-')?'−':''}$${n.replace('-','').replace(/\B(?=(\d{3})+(?!\d))/g,',')}`;};
 const date=v=>new Date(v).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'});
 const shortName=id=>names[id]||human(id);
 const head=(t,sub,actions='')=>`<div class="page-head"><div><h1>${t}</h1><p class="subtitle">${sub}</p></div><div class="actions">${actions}</div></div>`;
 const btn=(a,t,primary=false)=>`<button class="btn ${primary?'primary':''}" data-action="${a}">${t}</button>`;
-const gates=p=>`<div class="gate-bars" aria-label="${e(p.layers.map(l=>`${layers[l.layer]}: ${human(l.status)}`).join('; '))}">${p.layers.map(l=>`<span class="${statusClass(l.status)}" title="${e(layers[l.layer]+': '+human(l.status))}"></span>`).join('')}</div>`;
+const gates=p=>{const ls=p.layers||[];return `<div class="gate-bars" aria-label="${e(ls.map(l=>`${layers[l.layer]}: ${human(l.status)}`).join('; '))}">${ls.map(l=>`<span class="${statusClass(l.status)}" title="${e(layers[l.layer]+': '+human(l.status))}"></span>`).join('')}</div>`;};
 const stat=(label,value,foot)=>`<article class="stat"><div class="eyebrow">${label}</div><div class="stat-value">${value}</div><div class="stat-foot">${foot}</div></article>`;
 const panel=(t,sub,body,link='')=>`<section class="panel"><div class="panel-head"><div><h2>${t}</h2>${sub?`<p>${sub}</p>`:''}</div>${link}</div>${body}</section>`;
 let overviewBrief=null, overviewBriefDone=false;
@@ -33,7 +33,7 @@ host.innerHTML=`<div class="panel-head"><div><div class="eyebrow">${e(b.date||''
 `<details><summary>Per-desk one-liners</summary><div class="table-scroll"><table><thead><tr><th>Desk</th><th>Note</th></tr></thead><tbody>${Object.entries(b.desks||{}).map(([k,v])=>`<tr><td><strong>${e(k)}</strong></td><td>${e(v)}</td></tr>`).join('')}</tbody></table></div></details>`+
 `<p class="small-note">${e(b.note||'')}</p><p><a class="text-link" href="${e(b.full_report||'./research-today.md')}" download>Download the full research package (.md) ↗</a></p></div>`;
 }catch(err){host.innerHTML=`<div class="panel-body"><p class="muted">Today\u2019s brief has not been published yet. Check back after the morning research run.</p></div>`;}}
-function desks(){return head('Research desks','Inspect each workflow, its evidence, and what stops the next decision.')+`<div class="cards">${report.projects.map((p,i)=>{const reg=data.registry.find(r=>r.project_id===p.project_id);return `<article class="panel desk-card"><div style="display:flex;justify-content:space-between"><span class="eyebrow">DESK 0${i+1}</span>${tag(p.disposition)}</div><h2>${e(shortName(p.project_id))}</h2><p>${e(reg.objective)}</p>${gates(p)}<button class="btn" data-desk="${p.project_id}">Open desk ↗</button></article>`}).join('')}</div>`;}
+function desks(){return head('Research desks','Inspect each workflow, its evidence, and what stops the next decision.')+`<div class="cards">${report.projects.map((p,i)=>{const reg=data.registry.find(r=>r.project_id===p.project_id);return `<article class="panel desk-card"><div style="display:flex;justify-content:space-between"><span class="eyebrow">DESK 0${i+1}</span>${p.disposition?tag(p.disposition):''}</div><h2>${e(shortName(p.project_id))}</h2><p>${e(reg.objective)}</p>${gates(p)}<button class="btn" data-desk="${p.project_id}">Open desk ↗</button>${p.project_id==='bonds-rates-desk'?`<a class="btn" href="#desk7">Indicator dashboard ↗</a>`:''}</article>`}).join('')}</div>`;}
 function grahamBadge(value){return `<span class="graham-badge graham-${String(value).toLowerCase().replace(/_/g,'-')}">${e(human(value))}</span>`;}
 function grahamCell(row,vix){
   if(!row.grahamEligible)return '<span class="muted">Not a short put</span>';
@@ -119,6 +119,28 @@ async function hydrateRealEstate(){
     host.innerHTML=`<div class="error"><h2>Real Estate models unavailable</h2><p>${e(err.message||'The model UI could not load.')}</p><p>The rest of Emporion remains available.</p></div>`;
   }
 }
+function desk7(){return head('Desk 7 · Bonds & Rates','The core indicators behind the Fed rate decision, with the trigger rule, the read, and the vote on each.')+`<div id="desk7-host"><div class="panel"><div class="panel-body"><p class="muted">Loading Desk 7 indicators…</p></div></div></div>`;}
+async function hydrateDesk7(){
+  const host=document.getElementById('desk7-host');if(!host)return;
+  try{
+    const r=await fetch('./desk7-indicators.json',{cache:'default'});
+    if(!r.ok)throw Error('Desk 7 indicators unavailable');
+    const d=await r.json();
+    if(d.schema_version!=='desk7-indicators-1'||!Array.isArray(d.indicators)||d.indicators.length!==10)throw Error('Desk 7 indicators unavailable');
+    if(route!=='desk7')return;
+    const t=d.decision.tally;
+    const rows=d.indicators.map(x=>`<tr><td><strong>${e(x.name)}</strong><br><span class="mono small">${e(x.series)}</span><br><span class="small muted">${e(x.source)}</span></td><td data-label="Why it matters">${e(x.why)}</td><td data-label="Trigger rule">${e(x.trigger)}</td><td data-label="Today's read">${e(x.read)}</td><td data-label="Vote"><strong>${e(x.vote)}</strong></td><td data-label="Broker view">${e(x.broker)}</td></tr>`).join('');
+    host.innerHTML=`<div class="stats">${stat('Call',e(d.decision.call),'FOMC '+e(d.decision.meeting)+', range '+e(d.decision.target_range))}${stat('Tally',t.hike+' HIKE / '+t.cut+' CUT / '+t.neutral+' NEUTRAL','Across the 10 core indicators')}${stat('Market pricing',e(d.market_pricing.total_hike),'Kalshi total hike, Dec meeting')}${stat('As of',e(d.as_of),'Snapshot, see note below')}</div>`
+    +panel('The decision','',`<div class="panel-body"><p>${e(d.decision.summary)}</p><p class="small muted">${e(d.as_of_note)}</p></div>`)
+    +`<div class="section-gap">${panel('Core indicators','Each indicator carries its trigger rule, today\u2019s read, and its vote.',`<div class="table-scroll cards-table"><table><thead><tr><th>Indicator</th><th>Why it matters</th><th>Trigger rule</th><th>Today's read</th><th>Vote</th><th>Broker view</th></tr></thead><tbody>${rows}</tbody></table></div>`)}</div>`
+    +`<div class="section-gap">${panel('Market pricing vs indicators','',`<div class="panel-body"><p>${e(d.market_pricing.kalshi_note)}</p><p>${e(d.market_pricing.fedwatch_note)}</p><p>${e(d.market_pricing.disagreement)}</p></div>`)}</div>`
+    +`<div class="section-gap">${panel('What would change the call','',`<div class="panel-body">${d.what_would_change.map(w=>`<p class="small">\u25b8 ${e(w)}</p>`).join('')}</div>`)}</div>`
+    +`<div class="section-gap">${panel('Graham lens','',`<div class="panel-body">${d.graham.lines.map(g=>`<p>${e(g)}</p>`).join('')}<p class="small">${e(d.graham.spread)}</p></div>`)}</div>`
+    +`<div class="section-gap">${panel('Grounding','',`<div class="panel-body"><p class="small">${e(d.grounding)}</p><p class="small"><a class="text-link" href="#brief">Daily brief ↗</a> — the full package carries the newer read.</p></div>`)}</div>`;
+  }catch(err){
+    host.innerHTML=`<div class="error"><h2>Desk 7 indicators unavailable</h2><p>data unavailable</p><p>The rest of Emporion remains available.</p></div>`;
+  }
+}
 function fitFrame(f){try{const d=f.contentDocument;if(!d||!d.documentElement)return;const h=Math.max(d.documentElement.scrollHeight,d.body?d.body.scrollHeight:0);f.style.height=Math.max(500,h+8)+'px';}catch(_){}}
 // The /dashboard chart wall is embedded from this same origin. On phones, Plotly's
 // floating toolbar and redundant in-chart headings collide with chart content.
@@ -134,7 +156,7 @@ function fitMobilePlotlyChrome(f){try{
 function wireFrames(){document.querySelectorAll('#main iframe[data-autofit]').forEach(f=>{if(f.dataset.wired)return;f.dataset.wired='1';f.addEventListener('load',()=>{const sk=f.previousElementSibling;if(sk&&sk.classList.contains('skeleton'))sk.style.display='none';fitMobilePlotlyChrome(f);fitFrame(f);try{new ResizeObserver(()=>fitFrame(f)).observe(f.contentDocument.documentElement);}catch(_){}});});}
 let framesResizeArmed=false;
 function armFramesResize(){if(framesResizeArmed)return;framesResizeArmed=true;window.addEventListener('resize',()=>{document.querySelectorAll('#main iframe[data-wired]').forEach(fitFrame);});}
-async function render(){route=location.hash.slice(1)||'overview';if(!title[route])route='overview';document.body.dataset.route=route;document.querySelectorAll('[data-nav]').forEach(a=>{a.classList.toggle('active',a.dataset.nav===route);if(a.dataset.nav===route)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});$('#breadcrumb').textContent=title[route];if(route==='overview')await ensureOverviewBrief();$('#main').innerHTML=({overview,dashboard,candidates,desks,controls,journal,resources,workbench,'real-estate':realEstate,brief,about})[route]();if(route==='candidates')hydrateGraham();if(route==='brief')hydrateBrief();if(route==='controls')hydrateMarketContext();if(route==='workbench')hydrateWorkbench();if(route==='real-estate')hydrateRealEstate();wireFrames();}
+async function render(){route=location.hash.slice(1)||'overview';if(!title[route])route='overview';document.body.dataset.route=route;document.querySelectorAll('[data-nav]').forEach(a=>{a.classList.toggle('active',a.dataset.nav===route);if(a.dataset.nav===route)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});$('#breadcrumb').textContent=title[route];if(route==='overview')await ensureOverviewBrief();$('#main').innerHTML=({overview,dashboard,candidates,desks,desk7,controls,journal,resources,workbench,'real-estate':realEstate,brief,about})[route]();if(route==='candidates')hydrateGraham();if(route==='brief')hydrateBrief();if(route==='controls')hydrateMarketContext();if(route==='workbench')hydrateWorkbench();if(route==='real-estate')hydrateRealEstate();if(route==='desk7')hydrateDesk7();wireFrames();}
 function download(name,content,type='application/json'){const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Download prepared');}
 function toast(message){$('#toast').textContent=message;$('#toast').style.display='block';setTimeout(()=>$('#toast').style.display='none',3500)}
 async function acceptPayload(candidate){if(candidate.schema_version!=='desk-console-1'||candidate.report?.environment!=='paper'||candidate.report.live_orders_enabled!==false||candidate.report.synthetic_data!==false||!Array.isArray(candidate.report.projects)||candidate.report.projects.length<6||!candidate.summary||!candidate.registry||candidate.candidate_feed?.schema_version!=='hedge-desk-candidates-1.0.0')throw Error('Unsupported report or paper boundary.');}

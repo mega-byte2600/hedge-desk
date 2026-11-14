@@ -39,6 +39,7 @@ CONSOLE_ASSETS = (
     "report.json",
     "research-brief.json",
     "research-today.md",
+    "desk7-indicators.json",
     "market-ticker.css",
     "market-ticker.mjs",
     "market-ticker.json",
