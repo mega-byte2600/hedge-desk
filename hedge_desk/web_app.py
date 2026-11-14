@@ -28,7 +28,7 @@ from hedge_desk.data.open_market_feeds import (
     sec_submissions,
     treasury_latest_auctions,
 )
-from hedge_desk.market_context import build_market_context
+from hedge_desk.market_context_service import get_market_context_snapshot
 from hedge_desk.rates_desk import fred_series_rows
 from datetime import date, timedelta
 
@@ -415,7 +415,12 @@ def application(environ, start_response):
         payload = base_server._cached("data-source-status", build_data_source_status)
         return _json(start_response, payload)
     if path == "/api/market-context":
-        payload = base_server._cached("market-context", build_market_context)
+        # Never fan out to providers on the request thread: the synchronous
+        # build calls ~27 providers sequentially (15s timeout each), so a
+        # cold cache hit blocked past the 30s probe timeout. Serve the
+        # snapshot (LOADING on cold start, last-good after) and refresh in
+        # the background, same as server.py already does.
+        payload = get_market_context_snapshot()
         return _json(start_response, payload)
     if path in ("/dashboard", "/dashboard.html"):
         return _serve_enhanced_dashboard(environ, start_response)

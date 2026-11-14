@@ -37,9 +37,7 @@ class LiveDataPlaneWebTests(unittest.TestCase):
             "sources": {"finra": {"status": "LIVE", "observation_count": 1}},
             "trade_authorized": False,
         }
-        with patch.object(web_app, "build_market_context", return_value=payload), patch.object(
-            web_app.base_server, "_cached", side_effect=lambda _key, builder: builder()
-        ):
+        with patch.object(web_app, "get_market_context_snapshot", return_value=payload):
             captured, body = _call("/api/market-context")
 
         self.assertEqual(captured["status"], "200 OK")
@@ -47,6 +45,36 @@ class LiveDataPlaneWebTests(unittest.TestCase):
         self.assertEqual(captured["headers"]["Cache-Control"], "no-store")
         decoded = json.loads(body)
         self.assertEqual(decoded["sources"]["finra"]["status"], "LIVE")
+        self.assertFalse(decoded["trade_authorized"])
+
+    def test_market_context_never_blocks_on_provider_fanout(self):
+        # Regression: the live route used to run build_market_context
+        # synchronously on the request thread (~27 providers, sequential,
+        # 15s timeout each), so a cold cache hit timed out the 30s probe.
+        # The endpoint must answer from the snapshot service without ever
+        # invoking the synchronous builder, even on a cold start.
+        from hedge_desk import market_context
+
+        loading = {
+            "schema_version": "hedge-desk-market-context-1.0.0",
+            "status": "LOADING",
+            "live_sources": 0,
+            "sources": {},
+            "trade_authorized": False,
+        }
+        with (
+            patch.object(
+                market_context,
+                "build_market_context",
+                side_effect=AssertionError("synchronous provider fan-out on request path"),
+            ),
+            patch.object(web_app, "get_market_context_snapshot", return_value=loading),
+        ):
+            captured, body = _call("/api/market-context")
+
+        self.assertEqual(captured["status"], "200 OK")
+        decoded = json.loads(body)
+        self.assertEqual(decoded["status"], "LOADING")
         self.assertFalse(decoded["trade_authorized"])
 
     def test_dashboard_injects_live_api_layer_without_replacing_nightly_health(self):
