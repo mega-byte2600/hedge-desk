@@ -1,6 +1,7 @@
 """Nonblocking, read-only SEC submissions feed for the approved Desk 5 watchlist."""
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from threading import Lock, Thread
 from time import monotonic
 from typing import Dict, Iterable
@@ -57,18 +58,23 @@ def _extract_filings(symbol: str, payload: dict) -> dict:
 def _refresh(symbols: tuple[str, ...]) -> None:
     global _snapshot, _built_at, _refreshing
     try:
-        fresh: Dict[str, dict] = {}
-        for symbol in symbols:
+        def load_symbol(symbol: str) -> tuple[str, dict]:
             if symbol not in CIK_BY_TICKER:
-                fresh[symbol] = {"status": "CIK_UNMAPPED", "filings": []}
-                continue
+                return symbol, {"status": "CIK_UNMAPPED", "filings": []}
             try:
                 payload = sec_submissions(CIK_BY_TICKER[symbol], retries=0)
-                fresh[symbol] = _extract_filings(symbol, payload)
-                if not fresh[symbol]["filings"]:
-                    fresh[symbol] = {"status": "LIVE_NO_RECENT_FORMS", "company_name": payload.get("name", ""), "filings": []}
+                record = _extract_filings(symbol, payload)
+                if not record["filings"]:
+                    record = {"status": "LIVE_NO_RECENT_FORMS", "company_name": payload.get("name", ""), "filings": []}
+                return symbol, record
             except Exception:
-                fresh[symbol] = {"status": "BLOCKED", "filings": []}
+                return symbol, {"status": "BLOCKED", "filings": []}
+
+        # SEC fair-access guidance allows up to 10 requests per second. Four
+        # workers keep the approved watchlist refresh comfortably below that
+        # ceiling while avoiding a long serial spinner for every user.
+        with ThreadPoolExecutor(max_workers=min(4, max(1, len(symbols)))) as pool:
+            fresh = dict(pool.map(load_symbol, symbols))
         with _lock:
             _snapshot = {**_snapshot, **fresh}
             _built_at = monotonic()
