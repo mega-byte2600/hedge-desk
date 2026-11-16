@@ -1,7 +1,7 @@
 """Nonblocking, read-only SEC submissions feed for the approved Desk 5 watchlist."""
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock, Thread
 from time import monotonic
 from typing import Dict, Iterable
@@ -74,10 +74,14 @@ def _refresh(symbols: tuple[str, ...]) -> None:
         # workers keep the approved watchlist refresh comfortably below that
         # ceiling while avoiding a long serial spinner for every user.
         with ThreadPoolExecutor(max_workers=min(4, max(1, len(symbols)))) as pool:
-            fresh = dict(pool.map(load_symbol, symbols))
-        with _lock:
-            _snapshot = {**_snapshot, **fresh}
-            _built_at = monotonic()
+            futures = [pool.submit(load_symbol, symbol) for symbol in symbols]
+            for future in as_completed(futures):
+                symbol, record = future.result()
+                # Publish each issuer immediately; one slow SEC response must
+                # not hide filings already fetched for the rest of the list.
+                with _lock:
+                    _snapshot[symbol] = record
+                    _built_at = monotonic()
     finally:
         with _lock:
             _refreshing = False
