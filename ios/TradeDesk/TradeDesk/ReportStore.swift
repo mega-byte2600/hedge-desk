@@ -30,7 +30,7 @@ struct RegistryDesk: Decodable, Identifiable {
         RegistryDesk(number: 2, project_id: "earnings-event-desk", name: "Earnings Event Desk", status: "working_foundation", objective: "Compare equity, defined-risk option, hedged-equity, and no-trade arms."),
         RegistryDesk(number: 3, project_id: "arbitrage-observer", name: "European Index Box/Parity Observer", status: "working_foundation", objective: "Observe executable parity and box dislocations after all costs."),
         RegistryDesk(number: 4, project_id: "dividend-opportunity-desk", name: "Dividend Opportunity Desk", status: "working_foundation", objective: "Rank sustainable dividend opportunities and compare shares, options, and no trade."),
-        RegistryDesk(number: 5, project_id: "open-quant-ai-model-lab", name: "Open Quant/AI Model Lab", status: "working_foundation", objective: "Run independent Quant and AI research teams with reproducible open artifacts."),
+        RegistryDesk(number: 5, project_id: "open-quant-ai-model-lab", name: "Short Sale Research Desk", status: "architecture_only", objective: "Develop sourced short-sale research candidates from the approved watchlist, test the bear thesis against counter-evidence, and surface catalysts, liquidity, borrow, and regulatory constraints for independent review."),
         RegistryDesk(number: 6, project_id: "event-futures-desk", name: "Weather/War/Logistics Futures Event Desk", status: "working_foundation", objective: "Compare validated physical-event surprise with curve pricing, basis, roll, and costs."),
         RegistryDesk(number: 7, project_id: "bonds-rates-desk", name: "Bonds and Rates Desk", status: "architecture_only", objective: "Anchor cross-asset research in Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress.")
     ]
@@ -55,7 +55,7 @@ struct ResearchDesk: Decodable, Identifiable {
     var name: String {
         ["overnight-premium-desk": "Overnight Premium", "earnings-event-desk": "Earnings Event",
          "arbitrage-observer": "Box / Parity Observer", "dividend-opportunity-desk": "Dividend Opportunity",
-         "open-quant-ai-model-lab": "Quant / AI Model Lab", "event-futures-desk": "Futures Event"][id] ?? readable(id)
+         "open-quant-ai-model-lab": "Short Sale Research", "event-futures-desk": "Futures Event"][id] ?? readable(id)
     }
 }
 struct ControlLayer: Decodable, Identifiable {

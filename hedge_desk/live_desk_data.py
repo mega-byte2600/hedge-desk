@@ -30,7 +30,9 @@ DESK_SYMBOLS = {
     "earnings-event-desk": ["AAPL", "MSFT", "NVDA", "TSLA"],
     "arbitrage-observer": ["SPY", "QQQ", "DIA"],
     "dividend-opportunity-desk": ["SPY", "DIA"],
-    "open-quant-ai-model-lab": ["SPY", "QQQ", "IWM", "DIA"],
+    # Desk 5 only accepts the user's approved watchlist; do not imply broad ETFs
+    # are short candidates or silently invent a default universe.
+    "open-quant-ai-model-lab": [],
     "event-futures-desk": ["USO", "GLD"],
     "bonds-rates-desk": ["TLT", "IEF"],
 }
@@ -97,6 +99,18 @@ def build_desk_projects(fetcher=None):
 
     projects = []
     for project_id, syms in DESK_SYMBOLS.items():
+        if not syms:
+            projects.append({
+                "project_id": project_id,
+                "evaluated_at": now,
+                "data_status": DATA_UNAVAILABLE,
+                "data_as_of": now,
+                "data_source": "data unavailable",
+                "reason": "approved watchlist symbols required for Desk 5 research",
+                "live_data": {},
+                "unavailable": [],
+            })
+            continue
         live_data = {}
         missing = []
         for symbol in syms:

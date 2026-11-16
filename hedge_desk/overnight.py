@@ -152,62 +152,22 @@ def _reference_batch() -> Any:
     )
 
 
-def _model_lab_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
-    quorum = build_synthetic_reference_quorum(evaluated_at)
-    quant_training = build_synthetic_training_gate(ModelTeam.QUANT)
-    ai_training = build_synthetic_training_gate(ModelTeam.AI)
-    split_gate = build_synthetic_split_gate(evaluated_at)
-    otc = evaluate_otc_weekly_observation(
-        OtcWeeklyObservation(
-            "synthetic-finra-week", "TEST", "T1", date(2026, 6, 29),
-            100000, 1000, evaluated_at - timedelta(days=1),
-            evaluated_at - timedelta(days=1), 14, "1" * 64,
-        ),
-        evaluated_at,
-    )
+def _short_research_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
+    """Desk 5 remains fail-closed until approved-watchlist case files exist."""
     layers = (
         LayerEvaluation(
-            EvaluationLayer.OBSERVED, EvaluationStatus.PASS, (),
-            {
-                "source": "synthetic_fixture",
-                "otc_delayed_aggregate_admissible": str(otc.admissible).lower(),
-                "otc_average_shares_per_trade": str(otc.average_shares_per_trade),
-                "otc_live_hidden_order_visibility": str(
-                    otc.live_hidden_order_visibility
-                ).lower(),
-            },
-            quorum.model_artifact_ids + ("1" * 64,),
+            EvaluationLayer.OBSERVED, EvaluationStatus.BLOCKED,
+            ("APPROVED_WATCHLIST_REQUIRED", "NO_SHORT_CASES_RESEARCHED"),
+            {"source": "no_candidate_data", "trade_authorized": "false"},
         ),
         LayerEvaluation(
             EvaluationLayer.STAT, EvaluationStatus.NOT_REQUIRED,
-            ("RESEARCH_LABELS_ONLY",), {},
+            ("NO_SHORT_CANDIDATE_MODEL_OR_SCORE",), {},
         ),
         LayerEvaluation(
-            EvaluationLayer.BIG, EvaluationStatus.PASS, (),
-            {
-                "disposition": quorum.disposition,
-                "label": quorum.label.value,
-                "authoritative_risk_input": str(quorum.authoritative_risk_input).lower(),
-                "quant_training_manifest_admissible": str(
-                    quant_training.admissible
-                ).lower(),
-                "ai_training_manifest_admissible": str(
-                    ai_training.admissible
-                ).lower(),
-                "training_trade_authorized": "false",
-                "purged_split_admissible": str(split_gate.admissible).lower(),
-                "purged_split_artifact": split_gate.artifact_sha256,
-                "purged_split_authoritative_risk_input": str(
-                    split_gate.authoritative_risk_input
-                ).lower(),
-                "purged_split_trade_authorized": str(
-                    split_gate.trade_authorized
-                ).lower(),
-                "otc_directional_signal_authorized": str(
-                    otc.directional_signal_authorized
-                ).lower(),
-            },
-            quorum.model_artifact_ids + (split_gate.artifact_sha256,),
+            EvaluationLayer.BIG, EvaluationStatus.BLOCKED,
+            ("POINT_IN_TIME_SEC_AND_CORROBORATING_EVIDENCE_REQUIRED",),
+            {"workflow": "short_sale_candidate_research", "trade_authorized": "false"},
         ),
         LayerEvaluation(
             EvaluationLayer.DETERMINISTIC_RISK, EvaluationStatus.BLOCKED,
@@ -218,8 +178,8 @@ def _model_lab_evaluation(evaluated_at: datetime) -> ProjectEvaluation:
             ("RESEARCH_ONLY_NO_TRADE",), {},
         ),
         LayerEvaluation(
-            EvaluationLayer.HUMAN, EvaluationStatus.NOT_REQUIRED,
-            ("RESEARCH_ONLY_NO_TRADE",), {},
+            EvaluationLayer.HUMAN, EvaluationStatus.BLOCKED,
+            ("INDEPENDENT_HUMAN_REVIEW_REQUIRED",), {},
         ),
     )
     return ProjectEvaluation(
@@ -799,7 +759,7 @@ def evaluate_reference_projects() -> Tuple[ProjectEvaluation, ...]:
             _dividend_evaluation(FIXTURE_AS_OF),
         )
         + (
-            _model_lab_evaluation(FIXTURE_AS_OF),
+            _short_research_evaluation(FIXTURE_AS_OF),
             _futures_event_evaluation(FIXTURE_AS_OF),
         )
     )

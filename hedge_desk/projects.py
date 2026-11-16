@@ -51,9 +51,9 @@ MVP_PROJECTS: Tuple[MvpProject, ...] = (
     MvpProject(
         5,
         "open-quant-ai-model-lab",
-        "Open Quant/AI Model Lab",
-        ProjectStatus.WORKING_FOUNDATION,
-        "Run independent Quant and AI research teams with reproducible open artifacts.",
+        "Short Sale Research Desk",
+        ProjectStatus.ARCHITECTURE_ONLY,
+        "Develop sourced short-sale research candidates from the approved watchlist, test the bear thesis against counter-evidence, and surface catalysts, liquidity, borrow, and regulatory constraints for independent review.",
     ),
     MvpProject(
         6,

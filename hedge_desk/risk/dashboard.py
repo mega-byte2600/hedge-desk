@@ -4,6 +4,7 @@ from collections import Counter
 from typing import Dict, Mapping, Optional
 
 from hedge_desk.candidates import build_candidate_feed
+from hedge_desk.projects import MVP_PROJECTS
 
 
 def build_candidate_risk_dashboard(candidate_feed: Optional[Mapping[str, object]] = None) -> Dict[str, object]:
@@ -11,6 +12,8 @@ def build_candidate_risk_dashboard(candidate_feed: Optional[Mapping[str, object]
     feed = candidate_feed or build_candidate_feed()
     candidates = list(feed.get("candidates", []))
     desk_counts = Counter(str(row.get("desk_id", "")) for row in candidates)
+    for project in MVP_PROJECTS:
+        desk_counts.setdefault(project.project_id, 0)
     stage_counts = Counter(str(row.get("stage", "")) for row in candidates)
     evidence_gaps = Counter(_evidence_lane(str(row.get("evidence_needed", ""))) for row in candidates)
     authorized = [row for row in candidates if row.get("trade_authorized") is True]

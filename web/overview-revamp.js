@@ -22,7 +22,7 @@
     'earnings-event-desk': 'Earnings Event',
     'arbitrage-observer': 'Box / Parity Observer',
     'dividend-opportunity-desk': 'Dividend Opportunity',
-    'open-quant-ai-model-lab': 'Quant / AI Model Lab',
+    'open-quant-ai-model-lab': 'Short Sale Research',
     'event-futures-desk': 'Futures Event'
   };
 
@@ -31,7 +31,7 @@
     'earnings-event-desk': 'Expected vs. reported results, and price reaction.',
     'arbitrage-observer': 'Parity and box relationships, net of costs.',
     'dividend-opportunity-desk': 'Payout durability: cash flow, yield, valuation.',
-    'open-quant-ai-model-lab': 'Reproducible quant and model-signal research.',
+    'open-quant-ai-model-lab': 'Sourced bear theses, catalysts, counter-evidence, and short-side constraints.',
     'event-futures-desk': 'Physical events read against futures curves.'
   };
 

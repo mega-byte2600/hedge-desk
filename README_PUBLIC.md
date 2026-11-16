@@ -16,7 +16,7 @@ Produce research candidates that are explainable, reproducible, and control-gate
 
 ## Data and research sources
 
-The current public console uses validated synthetic fixtures for deterministic research demonstrations and a code-ready Papers With Backtest news adapter for licensed research workflows. Public High-Flyer / DeepSeek research, models, repositories, methods, and open infrastructure may inform the Quant / AI Model Lab where applicable, but proprietary hedge-fund data, internal signals, positions, or non-public research are not represented as available.
+The current public console uses validated synthetic fixtures for deterministic research demonstrations and a code-ready Papers With Backtest news adapter for licensed research workflows. Desk 5 is a short-sale research framework; it does not claim to have a connected approved watchlist, locate/borrow availability, or trade authority. Proprietary hedge-fund data, internal signals, positions, or non-public research are not represented as available.
 
 ## Market data timing
 
@@ -50,7 +50,7 @@ If a future private fund or investment vehicle is formed, any investor outreach,
 2. Earnings Event
 3. Box / Parity Observer
 4. Dividend Opportunity
-5. Quant / AI Model Lab
+5. Short Sale Research Desk
 6. Futures Event
 
 ## Public-use note

@@ -50,13 +50,9 @@ desk mappings, and a bounded local-model evaluation handoff.
    point-in-time ten-year histories, then compare owning shares, a defined-risk
    option expression, and `NO_TRADE`. Long calls do not receive dividends, so
    the system must never equate buying a call with earning the cash payout.
-5. **Open Quant/AI Model Lab:** independent Quant and AI research teams using
-   versioned open code, open-weight models where applicable, explicit licenses,
-   immutable hashes, frozen training cutoffs, and reproducible evaluations.
-   Purged walk-forward train/validation/test windows and embargoes are enforced
-   by executable split gates, not model-authored metadata.
-   Neither team can create authoritative RoR, clear compliance, or authorize a
-   trade.
+5. **Short Sale Research Desk:** develop sourced bear theses from the approved
+   watchlist, challenge them with counter-evidence, and document catalysts and
+   short-side constraints before independent human review.
 6. **Weather/War/Logistics Futures Event Desk:** compare validated physical
    event surprise with what the curve already prices, basis, roll, liquidity,
    margin, and transaction costs. Physical delivery and live trading are
