@@ -80,7 +80,7 @@ class MobileChartLayoutTests(unittest.TestCase):
         figure = go.Figure(data=[go.Scatter(x=[1, 2], y=[1, 2])])
         figure.update_layout(title="Detailed chart title")
         html = dash.chart(figure, "test-chart", "Test provenance")
-        self.assertIn('class="chart-caption"', html)
+        self.assertRegex(html, r"class=['\"]chart-caption['\"]")
         self.assertIn("Detailed chart title", html)
         self.assertIn("Test provenance", html)
         self.assertNotIn('"title":{"text":"Detailed chart title"', html)

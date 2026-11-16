@@ -27,7 +27,7 @@ class ProjectRegistryTests(unittest.TestCase):
         self.assertEqual(project.number, 5)
         self.assertEqual(project.project_id, "open-quant-ai-model-lab")
         self.assertEqual(project.name, "Short Sale Research Desk")
-        self.assertEqual(project.status, ProjectStatus.ARCHITECTURE_ONLY)
+        self.assertEqual(project.status, ProjectStatus.WORKING_FOUNDATION)
         self.assertIn("bear thesis", project.objective)
 
     def test_earnings_mvp_has_working_point_in_time_foundation(self) -> None:
@@ -49,7 +49,7 @@ class ProjectRegistryTests(unittest.TestCase):
         bonds = DESK_ARCHITECTURE[6]
         self.assertEqual(bonds.number, 7)
         self.assertEqual(bonds.project_id, "bonds-rates-desk")
-        self.assertEqual(bonds.status, ProjectStatus.ARCHITECTURE_ONLY)
+        self.assertEqual(bonds.status, ProjectStatus.WORKING_FOUNDATION)
         self.assertIn("Treasury curves", bonds.objective)
         self.assertIn("Fed policy", bonds.objective)
 
