@@ -332,6 +332,12 @@ def _dispatch(environ, start_response):
                 },
                 "503 Service Unavailable",
             )
+    if path == "/api/short-research":
+        from hedge_desk.short_research_board import build_short_research_board
+        return _json(start_response, _cached(
+            "short-research-board",
+            lambda: build_short_research_board(ARTIFACTS / "am-report-latest.json"),
+        ))
     if path == "/api/report":
         try:
             return _json(start_response, _cached("console-report", build_live_console_payload))
