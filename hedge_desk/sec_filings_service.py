@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import logging
 from threading import Lock, Thread
 from time import monotonic
 from typing import Dict, Iterable
@@ -24,7 +23,6 @@ _snapshot: Dict[str, dict] = {}
 _built_at = 0.0
 _refreshing = False
 _CACHE_SECONDS = 3600.0
-_LOG = logging.getLogger(__name__)
 
 
 def _extract_filings(symbol: str, payload: dict) -> dict:
@@ -64,23 +62,25 @@ def _refresh(symbols: tuple[str, ...]) -> None:
             if symbol not in CIK_BY_TICKER:
                 return symbol, {"status": "CIK_UNMAPPED", "filings": []}
             started = monotonic()
-            _LOG.info("Desk 5 SEC fetch started: %s", symbol)
+            print(f"DESK5_SEC_FETCH_START {symbol}", flush=True)
             try:
                 payload = sec_submissions(CIK_BY_TICKER[symbol], retries=0)
                 record = _extract_filings(symbol, payload)
                 if not record["filings"]:
                     record = {"status": "LIVE_NO_RECENT_FORMS", "company_name": payload.get("name", ""), "filings": []}
-                _LOG.info("Desk 5 SEC fetch complete: %s status=%s filings=%s seconds=%.1f", symbol, record["status"], len(record["filings"]), monotonic() - started)
+                print(f"DESK5_SEC_FETCH_DONE {symbol} {record['status']} {len(record['filings'])} {monotonic() - started:.1f}s", flush=True)
                 return symbol, record
             except Exception as exc:
-                _LOG.warning("Desk 5 SEC fetch failed: %s error=%s seconds=%.1f", symbol, type(exc).__name__, monotonic() - started)
+                print(f"DESK5_SEC_FETCH_FAIL {symbol} {type(exc).__name__} {monotonic() - started:.1f}s", flush=True)
                 return symbol, {"status": "BLOCKED", "filings": []}
 
         # SEC fair-access guidance allows up to 10 requests per second. Four
         # workers keep the approved watchlist refresh comfortably below that
         # ceiling while avoiding a long serial spinner for every user.
+        print(f"DESK5_SEC_REFRESH_START symbols={len(symbols)}", flush=True)
         with ThreadPoolExecutor(max_workers=min(4, max(1, len(symbols)))) as pool:
             futures = [pool.submit(load_symbol, symbol) for symbol in symbols]
+            print(f"DESK5_SEC_REFRESH_SUBMITTED futures={len(futures)}", flush=True)
             for future in as_completed(futures):
                 symbol, record = future.result()
                 # Publish each issuer immediately; one slow SEC response must
@@ -88,6 +88,7 @@ def _refresh(symbols: tuple[str, ...]) -> None:
                 with _lock:
                     _snapshot[symbol] = record
                     _built_at = monotonic()
+        print("DESK5_SEC_REFRESH_DONE", flush=True)
     finally:
         with _lock:
             _refreshing = False
