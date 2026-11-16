@@ -16,6 +16,8 @@ Branch: `toby/desk6-all-desk-coverage`
 - Passed: `test_burry_sensitivity.py` (3), `test_short_research_board.py` (6), `test_market_context.py` (3), `test_public_signal_feeds.py` (7), `test_data_integrations.py` (103), `test_desk_coverage_copy.py` (3), `test_desk7_indicators.py` (9), `test_copy_quality.py` (1), `test_public_web_surface.py` (24), `test_web_page_guards.py` (24), and `test_iphone_preview_surface.py` (1).
 - Passed: browser JavaScript syntax check (`node --check` on an `.mjs` copy), Python compile check, `git diff --check`.
 - The complete legacy suite cannot be imported in this environment because `plotly` is not installed (`tests/test_dashboard_build.py`). Do not represent the whole suite as passing.
+- SEC handling is implemented and unit-tested, but a live watchlist fetch and the production `/api/short-research` response have not been verified from this branch. The prior Desk 5 handoff recorded a direct EDGAR timeout from this workspace. After merge/deploy, confirm that the per-symbol statuses move from `LOADING` to `LIVE` in Render logs/board; until then, do not tell the GP that production SEC is fixed.
+- No live browser visual inspection was completed in this environment. `test_iphone_preview_surface.py` checks the packaged mobile preview contract; the narrow-screen visual check remains for the independent reviewer.
 
 ## Independent review checks before merge
 
