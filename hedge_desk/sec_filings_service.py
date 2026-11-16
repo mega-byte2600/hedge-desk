@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
 from threading import Lock, Thread
 from time import monotonic
 from typing import Dict, Iterable
@@ -23,6 +24,7 @@ _snapshot: Dict[str, dict] = {}
 _built_at = 0.0
 _refreshing = False
 _CACHE_SECONDS = 3600.0
+_LOG = logging.getLogger(__name__)
 
 
 def _extract_filings(symbol: str, payload: dict) -> dict:
@@ -61,13 +63,17 @@ def _refresh(symbols: tuple[str, ...]) -> None:
         def load_symbol(symbol: str) -> tuple[str, dict]:
             if symbol not in CIK_BY_TICKER:
                 return symbol, {"status": "CIK_UNMAPPED", "filings": []}
+            started = monotonic()
+            _LOG.info("Desk 5 SEC fetch started: %s", symbol)
             try:
                 payload = sec_submissions(CIK_BY_TICKER[symbol], retries=0)
                 record = _extract_filings(symbol, payload)
                 if not record["filings"]:
                     record = {"status": "LIVE_NO_RECENT_FORMS", "company_name": payload.get("name", ""), "filings": []}
+                _LOG.info("Desk 5 SEC fetch complete: %s status=%s filings=%s seconds=%.1f", symbol, record["status"], len(record["filings"]), monotonic() - started)
                 return symbol, record
-            except Exception:
+            except Exception as exc:
+                _LOG.warning("Desk 5 SEC fetch failed: %s error=%s seconds=%.1f", symbol, type(exc).__name__, monotonic() - started)
                 return symbol, {"status": "BLOCKED", "filings": []}
 
         # SEC fair-access guidance allows up to 10 requests per second. Four
