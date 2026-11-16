@@ -19,7 +19,7 @@ class ShortResearchBoardTests(unittest.TestCase):
                 "series": {"as_of": "2026-01-22", "symbols": {"ABC": prices}},
                 "eod_source_results": [{"symbol": "ABC", "status": "PASS"}],
             }), encoding="utf-8")
-            with patch("hedge_desk.sec_filings_service.get_sec_filings", return_value={"status":"CACHED","source":"SEC EDGAR submissions","symbols":{"ABC":{"status":"CIK_UNMAPPED","filings":[]}}}):
+            with patch("hedge_desk.sec_filings_service.get_sec_filings", return_value={"status":"CACHED","source":"SEC EDGAR submissions","symbols":{"ABC":{"status":"CIK_UNMAPPED","filings":[]}}}), patch("hedge_desk.short_interest_service.get_short_interest", return_value={"status":"UNCONFIGURED","source":"FINRA Consolidated Short Interest","interpretation":"snapshot only","symbols":{"ABC":{"status":"UNCONFIGURED"}}}):
                 board = build_short_research_board(report)
 
         self.assertEqual(board["status"], "LIVE")
@@ -33,7 +33,8 @@ class ShortResearchBoardTests(unittest.TestCase):
         self.assertEqual(row["price_context"], "BOTH_LOOKBACKS_POSITIVE")
         self.assertEqual(row["sec_filing_status"], "CIK_UNMAPPED")
         self.assertEqual(row["sec_filings"], [])
-        self.assertEqual(row["borrow_status"], "NOT_CHECKED")
+        self.assertEqual(row["borrow_status"], "BROKER_CONFIRMATION_REQUIRED")
+        self.assertEqual(row["short_interest_status"], "UNCONFIGURED")
         self.assertFalse(row["trade_authorized"])
 
     def test_failed_eod_source_does_not_publish_price_context(self):
@@ -44,7 +45,7 @@ class ShortResearchBoardTests(unittest.TestCase):
                 "series": {"as_of": "2026-01-22", "symbols": {"ABC": [["2026-01-22", "10"]]}},
                 "eod_source_results": [{"symbol": "ABC", "status": "BLOCKED"}],
             }), encoding="utf-8")
-            with patch("hedge_desk.sec_filings_service.get_sec_filings", return_value={"status":"CACHED","source":"SEC EDGAR submissions","symbols":{"ABC":{"status":"CIK_UNMAPPED","filings":[]}}}):
+            with patch("hedge_desk.sec_filings_service.get_sec_filings", return_value={"status":"CACHED","source":"SEC EDGAR submissions","symbols":{"ABC":{"status":"CIK_UNMAPPED","filings":[]}}}), patch("hedge_desk.short_interest_service.get_short_interest", return_value={"status":"UNCONFIGURED","source":"FINRA Consolidated Short Interest","interpretation":"snapshot only","symbols":{"ABC":{"status":"UNCONFIGURED"}}}):
                 row = build_short_research_board(report)["symbols"][0]
         self.assertEqual(row["status"], "PRICE_DATA_UNAVAILABLE")
         self.assertEqual(row["price_context"], "INSUFFICIENT_DATA")
@@ -66,7 +67,7 @@ class ShortResearchBoardTests(unittest.TestCase):
             captured["headers"] = dict(headers)
         server._api_cache.pop("short-research-board", None)
         try:
-            with patch("hedge_desk.sec_filings_service.get_sec_filings", return_value={"status":"REFRESHING","source":"SEC EDGAR submissions","symbols":{symbol:{"status":"LOADING","filings":[]} for symbol in ["NKE","CCL","AAL","LYFT","NCLH","F","DVN"]}}):
+            with patch("hedge_desk.sec_filings_service.get_sec_filings", return_value={"status":"REFRESHING","source":"SEC EDGAR submissions","symbols":{symbol:{"status":"LOADING","filings":[]} for symbol in ["NKE","CCL","AAL","LYFT","NCLH","F","DVN"]}}), patch("hedge_desk.short_interest_service.get_short_interest", return_value={"status":"UNCONFIGURED","source":"FINRA Consolidated Short Interest","interpretation":"snapshot only","symbols":{symbol:{"status":"UNCONFIGURED"} for symbol in ["NKE","CCL","AAL","LYFT","NCLH","F","DVN"]}}):
                 payload = b"".join(server.application(
                     {"PATH_INFO": "/api/short-research", "REQUEST_METHOD": "GET"},
                     start_response,
@@ -106,6 +107,7 @@ class ShortResearchBoardTests(unittest.TestCase):
                 "reportDate": ["2026-06-30", ""],
                 "accessionNumber": ["0000789019-26-000123", "0000789019-26-000124"],
                 "primaryDocument": ["msft-20260630.htm", "x.xml"],
+                "items": ["2.02, 5.02", ""],
             }},
         }
         result = _extract_filings("MSFT", payload)
@@ -113,7 +115,22 @@ class ShortResearchBoardTests(unittest.TestCase):
         self.assertEqual(result["company_name"], "Microsoft Corporation")
         self.assertEqual(result["filings"][0]["form"], "10-K")
         self.assertEqual(result["filings"][0]["filing_date"], "2026-07-30")
+        self.assertEqual(result["filings"][0]["items"], "2.02, 5.02")
+        self.assertEqual(result["filings"][0]["catalyst_evidence"], "DATED_REGULATORY_FILING")
         self.assertEqual(result["filings"][0]["url"], "https://www.sec.gov/Archives/edgar/data/789019/000078901926000123/msft-20260630.htm")
+
+    def test_eight_k_item_is_preserved_as_a_dated_lead_not_a_thesis(self):
+        payload = {"name": "Microsoft Corporation", "filings": {"recent": {
+            "form": ["8-K"], "filingDate": ["2026-11-13"],
+            "reportDate": ["2026-11-12"],
+            "accessionNumber": ["0000789019-26-000999"],
+            "primaryDocument": ["msft-20261113.htm"],
+            "items": ["2.02, 7.01"],
+        }}}
+        result = _extract_filings("MSFT", payload)
+        filing = result["filings"][0]
+        self.assertEqual(filing["items"], "2.02, 7.01")
+        self.assertEqual(filing["catalyst_evidence"], "SEC_FILING_EVENT_LEAD")
 
 
 if __name__ == "__main__":

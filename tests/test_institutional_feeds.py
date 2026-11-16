@@ -122,6 +122,37 @@ class InstitutionalFeedTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsupported FINRA equity"):
             finra_equity("not-a-dataset", access_token="x")
 
+    def test_finra_short_interest_posts_an_exact_symbol_filter(self):
+        seen = []
+
+        def request_transport(request):
+            seen.append(request)
+            return 200, json.dumps([{
+                "symbolCode": "MSFT", "settlementDate": "2026-10-31",
+                "currentShortPositionQuantity": 1000,
+                "previousShortPositionQuantity": 900,
+                "changePercent": "11.1",
+                "averageDailyVolumeQuantity": 500000,
+                "daysToCoverQuantity": "0.002",
+            }]).encode()
+
+        result = finra_equity(
+            "consolidated_short_interest", limit=1,
+            request_transport=request_transport, access_token="test-token",
+            symbol_code="msft",
+        )
+        self.assertEqual(result.rows[0]["symbolCode"], "MSFT")
+        self.assertEqual(seen[0].method, "POST")
+        body = json.loads(seen[0].data.decode())
+        self.assertEqual(body["compareFilters"][0]["fieldValue"], "MSFT")
+        self.assertEqual(body["sortFields"], ["-settlementDate"])
+
+    def test_finra_symbol_filter_rejects_other_datasets_and_bad_symbols(self):
+        with self.assertRaisesRegex(ValueError, "symbol_code filter"):
+            finra_equity("reg_sho_daily", access_token="x", symbol_code="MSFT")
+        with self.assertRaisesRegex(ValueError, "symbol_code filter"):
+            finra_equity("consolidated_short_interest", access_token="x", symbol_code="MSFT&x")
+
 
 if __name__ == "__main__":
     unittest.main()

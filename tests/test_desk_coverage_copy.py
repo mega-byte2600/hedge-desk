@@ -20,6 +20,9 @@ class DeskCoverageCopyTests(unittest.TestCase):
         self.assertIn("hydrateDesk5()", app)
         self.assertIn("hydrateDesk6()", app)
         self.assertIn("SEC EDGAR", app)
+        self.assertIn("FINRA short interest", app)
+        self.assertIn("8-K item lead", app)
+        self.assertIn("CME Market Data APIs", app)
         self.assertIn("NOT INGESTED · no contract-month curve", app)
         build = (ROOT / "scripts" / "build_web.py").read_text(encoding="utf-8")
         self.assertIn('"desk-research.css"', build)
@@ -28,6 +31,15 @@ class DeskCoverageCopyTests(unittest.TestCase):
         app = (ROOT / "web" / "app.js").read_text(encoding="utf-8")
         self.assertIn("Snapshot is ${ageDays} days old", app)
         self.assertIn("dashboard does not.", app)
+
+    def test_research_desks_keep_one_sidebar_entry_and_open_from_the_desk_page(self):
+        index = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
+        app = (ROOT / "web" / "app.js").read_text(encoding="utf-8")
+        self.assertEqual(index.count('data-nav="desks"'), 1)
+        for route in ("desk5", "desk6", "desk7"):
+            self.assertNotIn(f'data-nav="{route}"', index)
+            self.assertIn(f"'{route}'", app)
+        self.assertIn("includes(route)?'desks':route", app)
 
 
 if __name__ == "__main__":

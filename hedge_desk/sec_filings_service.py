@@ -29,8 +29,11 @@ def _extract_filings(symbol: str, payload: dict) -> dict:
     columns = ("form", "filingDate", "reportDate", "accessionNumber", "primaryDocument")
     if not all(isinstance(recent.get(key), list) for key in columns):
         raise ValueError("SEC submissions recent-filings fields are malformed")
+    item_rows = recent.get("items", [])
+    if not isinstance(item_rows, list):
+        item_rows = []
     rows = []
-    for values in zip(*(recent[key] for key in columns)):
+    for index, values in enumerate(zip(*(recent[key] for key in columns))):
         form, filing_date, report_date, accession, document = values
         if form not in {"10-K", "10-Q", "8-K", "20-F", "6-K"}:
             continue
@@ -42,6 +45,8 @@ def _extract_filings(symbol: str, payload: dict) -> dict:
             "form": form,
             "filing_date": filing_date,
             "report_date": report_date if isinstance(report_date, str) else "",
+            "items": item_rows[index] if index < len(item_rows) and isinstance(item_rows[index], str) else "",
+            "catalyst_evidence": "SEC_FILING_EVENT_LEAD" if form == "8-K" else "DATED_REGULATORY_FILING",
             "url": f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_path}/{document}",
         })
         if len(rows) == 5:

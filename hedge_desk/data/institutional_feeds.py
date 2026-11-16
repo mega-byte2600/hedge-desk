@@ -172,8 +172,14 @@ def finra_equity(
     access_token: str | None = None,
     client_id: str | None = None,
     client_secret: str | None = None,
+    symbol_code: str | None = None,
 ) -> OpenFeedResult:
-    """Fetch a vetted FINRA equity dataset through the existing OAuth seam."""
+    """Fetch a vetted FINRA equity dataset through the existing OAuth seam.
+
+    ``symbol_code`` is intentionally limited to consolidated short interest so
+    Desk 5 requests only its approved watchlist symbols instead of downloading
+    a broad market snapshot.
+    """
     if dataset not in FINRA_EQUITY_DATASETS:
         raise ValueError(f"unsupported FINRA equity dataset: {dataset}")
     limit = _positive_limit(limit, 5000)
@@ -184,14 +190,42 @@ def finra_equity(
     )
     group, dataset_name = FINRA_EQUITY_DATASETS[dataset]
     base = FINRA_DATA_URL.format(group=group, dataset=dataset_name)
-    request = urllib.request.Request(
-        f"{base}?{urllib.parse.urlencode({'limit': str(limit)})}",
-        headers={
-            "Accept": "application/json",
-            "Authorization": f"Bearer {token}",
-            "User-Agent": "hedge-desk/1.0 research",
-        },
-    )
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {token}",
+        "User-Agent": "hedge-desk/1.0 research",
+    }
+    if symbol_code is not None:
+        symbol = symbol_code.strip().upper()
+        if dataset != "consolidated_short_interest" or not re.fullmatch(r"[A-Z0-9.\-]{1,16}", symbol):
+            raise ValueError("symbol_code filter is supported only for a valid short-interest symbol")
+        payload = {
+            "limit": limit,
+            "fields": [
+                "symbolCode", "issueName", "settlementDate",
+                "currentShortPositionQuantity", "previousShortPositionQuantity",
+                "changePercent", "averageDailyVolumeQuantity", "daysToCoverQuantity",
+                "marketClassCode", "revisionFlag",
+            ],
+            "compareFilters": [{
+                "compareType": "equal",
+                "fieldName": "symbolCode",
+                "fieldValue": symbol,
+            }],
+            "sortFields": ["-settlementDate"],
+        }
+        headers["Content-Type"] = "application/json"
+        request = urllib.request.Request(
+            base,
+            data=json.dumps(payload).encode("utf-8"),
+            headers=headers,
+            method="POST",
+        )
+    else:
+        request = urllib.request.Request(
+            f"{base}?{urllib.parse.urlencode({'limit': str(limit)})}",
+            headers=headers,
+        )
     payload = _fetch_request_json(request, "finra-equity", request_transport)
     if not isinstance(payload, list):
         raise ValueError("finra-equity payload is not a row list")

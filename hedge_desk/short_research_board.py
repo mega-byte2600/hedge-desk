@@ -1,9 +1,4 @@
-"""Build Desk 5's sourced watchlist and price-context payload.
-
-Price movement is descriptive context, not a short recommendation or ranking.
-This board deliberately does not infer catalysts, borrow, short interest, or a
-complete short thesis from daily closes.
-"""
+"""Build Desk 5's sourced short-research queue from approved watchlist data."""
 
 from __future__ import annotations
 
@@ -44,6 +39,8 @@ def build_short_research_board(report_path: Path) -> Dict[str, Any]:
     series = report.get("series", {}).get("symbols", {})
     from hedge_desk.sec_filings_service import get_sec_filings
     sec_snapshot = get_sec_filings(report.get("watchlist", []))
+    from hedge_desk.short_interest_service import get_short_interest
+    short_snapshot = get_short_interest(report.get("watchlist", []))
     rows: List[Dict[str, Any]] = []
     for raw_symbol in report.get("watchlist", []):
         symbol = str(raw_symbol).strip().upper()
@@ -71,6 +68,8 @@ def build_short_research_board(report_path: Path) -> Dict[str, Any]:
             price_context = "MIXED_LOOKBACKS"
         else:
             price_context = "BOTH_LOOKBACKS_POSITIVE"
+        issuer_filings = sec_snapshot["symbols"].get(symbol, {}).get("filings", [])
+        issuer_short = short_snapshot["symbols"].get(symbol, {"status": "LOADING"})
         rows.append({
             "symbol": symbol,
             "status": "PRICE_CONTEXT_AVAILABLE" if source_ok else "PRICE_DATA_UNAVAILABLE",
@@ -81,11 +80,18 @@ def build_short_research_board(report_path: Path) -> Dict[str, Any]:
             "price_context": price_context,
             "eod_source_status": source.get("status", "MISSING"),
             "sec_filing_status": sec_snapshot["symbols"].get(symbol, {}).get("status", "LOADING"),
-            "sec_filings": sec_snapshot["symbols"].get(symbol, {}).get("filings", []),
+            "sec_filings": issuer_filings,
             "sec_company_name": sec_snapshot["symbols"].get(symbol, {}).get("company_name", ""),
-            "short_interest_status": "NOT_RESEARCHED",
-            "catalyst_status": "NOT_RESEARCHED",
-            "borrow_status": "NOT_CHECKED",
+            "catalyst_status": (
+                "SEC_8K_EVENT_LEADS_AVAILABLE"
+                if any(filing.get("form") == "8-K" for filing in issuer_filings)
+                else "DATED_FILINGS_ONLY"
+                if issuer_filings
+                else "NO_DATED_SEC_FILING_LEAD"
+            ),
+            "short_interest": issuer_short,
+            "short_interest_status": issuer_short.get("status", "LOADING"),
+            "borrow_status": "BROKER_CONFIRMATION_REQUIRED",
             "case_status": "NO_SHORT_THESIS",
             "trade_authorized": False,
         })
@@ -99,7 +105,10 @@ def build_short_research_board(report_path: Path) -> Dict[str, Any]:
         "watchlist_source": "latest validated nightly report",
         "sec_feed_status": sec_snapshot["status"],
         "sec_feed_source": sec_snapshot["source"],
+        "short_interest_feed_status": short_snapshot["status"],
+        "short_interest_feed_source": short_snapshot["source"],
+        "short_interest_interpretation": short_snapshot["interpretation"],
         "symbols": rows,
-        "interpretation": "Price behavior is descriptive screening context only. No short thesis, catalyst, short-interest evidence, borrow confirmation, or trade authorization is inferred.",
+        "interpretation": "Price behavior is descriptive context. SEC filings and FINRA short-interest snapshots are evidence leads, not a completed short thesis or borrow confirmation. No trade is authorized.",
         "trade_authorized": False,
     }

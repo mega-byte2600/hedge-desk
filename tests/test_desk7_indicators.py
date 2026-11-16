@@ -43,7 +43,8 @@ class Desk7IndicatorsTests(unittest.TestCase):
         self.assertIn("hydrateDesk7", app)
         self.assertIn("desk7-indicators.json", app)
         self.assertIn("route==='desk7'", app)
-        self.assertIn('data-nav="desk7"', index)
+        self.assertIn('data-nav="desks"', index)
+        self.assertNotIn('data-nav="desk7"', index)
         self.assertIn('"desk7-indicators.json"', build)
 
     def test_desk7_card_links_to_indicator_dashboard(self):
