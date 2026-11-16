@@ -337,6 +337,12 @@ def _dispatch(environ, start_response):
         return _json(start_response, _cached(
             "short-research-board",
             lambda: build_short_research_board(ARTIFACTS / "am-report-latest.json"),
+            # The board includes asynchronous SEC/FINRA refresh state. Do not
+            # cache the initial LOADING/REFRESHING response: the feed services
+            # already cache upstream data and a fresh board build is a cheap
+            # local snapshot read. Otherwise users can remain stuck seeing an
+            # obsolete spinner after the background fetch has completed.
+            ttl_seconds=0,
         ))
     if path == "/api/burry-sensitivity":
         if environ.get("REQUEST_METHOD", "GET").upper() != "POST":

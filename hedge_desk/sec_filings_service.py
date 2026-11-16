@@ -61,26 +61,20 @@ def _refresh(symbols: tuple[str, ...]) -> None:
         def load_symbol(symbol: str) -> tuple[str, dict]:
             if symbol not in CIK_BY_TICKER:
                 return symbol, {"status": "CIK_UNMAPPED", "filings": []}
-            started = monotonic()
-            print(f"DESK5_SEC_FETCH_START {symbol}", flush=True)
             try:
                 payload = sec_submissions(CIK_BY_TICKER[symbol], retries=0)
                 record = _extract_filings(symbol, payload)
                 if not record["filings"]:
                     record = {"status": "LIVE_NO_RECENT_FORMS", "company_name": payload.get("name", ""), "filings": []}
-                print(f"DESK5_SEC_FETCH_DONE {symbol} {record['status']} {len(record['filings'])} {monotonic() - started:.1f}s", flush=True)
                 return symbol, record
-            except Exception as exc:
-                print(f"DESK5_SEC_FETCH_FAIL {symbol} {type(exc).__name__} {monotonic() - started:.1f}s", flush=True)
+            except Exception:
                 return symbol, {"status": "BLOCKED", "filings": []}
 
         # SEC fair-access guidance allows up to 10 requests per second. Four
         # workers keep the approved watchlist refresh comfortably below that
         # ceiling while avoiding a long serial spinner for every user.
-        print(f"DESK5_SEC_REFRESH_START symbols={len(symbols)}", flush=True)
         with ThreadPoolExecutor(max_workers=min(4, max(1, len(symbols)))) as pool:
             futures = [pool.submit(load_symbol, symbol) for symbol in symbols]
-            print(f"DESK5_SEC_REFRESH_SUBMITTED futures={len(futures)}", flush=True)
             for future in as_completed(futures):
                 symbol, record = future.result()
                 # Publish each issuer immediately; one slow SEC response must
@@ -88,7 +82,6 @@ def _refresh(symbols: tuple[str, ...]) -> None:
                 with _lock:
                     _snapshot[symbol] = record
                     _built_at = monotonic()
-        print("DESK5_SEC_REFRESH_DONE", flush=True)
     finally:
         with _lock:
             _refreshing = False
