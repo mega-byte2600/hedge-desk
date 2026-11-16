@@ -2,13 +2,13 @@
 import { currentRoute } from './core.mjs';
 
 const deskMethods = [
-  ['Overnight Premium', 'Sells defined risk premium, and only after liquidity, volatility, event, and spread checks pass.', 'Active'],
-  ['Earnings Event', 'Compares what was expected against what the company confirmed, and how the stock reacted.', 'Active'],
-  ['Box / Parity Observer', 'Checks parity and box relationships after spreads, fees, settlement, and financing.', 'Active'],
-  ['Dividend Opportunity', 'Asks whether the payout can survive: cash generation, shareholder yield, and valuation.', 'Active'],
-  ['Global Quant & AI Research Lab', 'Covers quantitative and machine learning research, datasets, benchmarks, and reproducible model checks.', 'Active'],
-  ['Futures Event', 'Reads physical events against futures curves, liquidity, and contract specifications.', 'Active'],
-  ['Bonds & Rates', 'Uses Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress as the backdrop for other research.', 'Coming soon']
+  ['Overnight Premium', 'Research defined-risk option premium, then check liquidity, volatility, event exposure, spread costs, and timed exits.', 'Paper workflow · current quote and option-chain gates apply', ''],
+  ['Earnings Event', 'Compare shares, defined-risk options, hedged equity, and no trade around a dated, source-verified earnings event.', 'Paper workflow · verify event date and option inputs', ''],
+  ['Box / Parity Observer', 'Check European index box/parity relationships after executable bid/ask, fees, settlement, financing, and contract terms.', 'Observer · all-in executable prices required', ''],
+  ['Dividend Opportunity', 'Assess payout durability, cash generation, shareholder yield, valuation, and share/option/no-trade alternatives.', 'Paper workflow · filings and ex-dates must be current', ''],
+  ['Desk 5 · Short Sale Research', 'Develop watchlist-only short candidates from SEC filings and corroborating evidence. Test accounting and cash-flow claims, dated catalysts, valuation, counter-thesis, liquidity, short interest, borrow, and invalidation. Includes a transparent Burry depreciation scenario, never a made-up Burry score.', 'Short board · SEC filings + scenario math', 'desk5'],
+  ['Desk 6 · Weather / War / Futures', 'Carpe DATA tracks official U.S. weather alerts, natural hazards, conflict-news leads, energy/crop context, and CFTC positioning. A futures thesis stays blocked until contract-month curves, basis, roll, costs, and specs are sourced.', 'Event board · observed feeds + explicit price-data gates', 'desk6'],
+  ['Desk 7 · Bonds & Rates', 'Connect Treasury yields, real rates, Fed policy, credit spreads, duration, and liquidity evidence to a dated policy decision with triggers and counter-evidence.', 'Indicator board · dated research snapshot', 'desk7']
 ];
 
 function applyBrand() {
@@ -29,7 +29,7 @@ function applyBrand() {
     const mode = sidebarBottom.querySelector('.mode');
     if (mode) mode.textContent = 'RESEARCH PLATFORM';
     const p = sidebarBottom.querySelector('p');
-    if (p) p.innerHTML = 'Seven research desks.<br>Six evaluated workflows.';
+    if (p) p.innerHTML = 'Seven research desks.<br>Every mandate has evidence gates.';
   }
 
   const footerBrand = document.querySelector('footer > span:first-child');
@@ -75,7 +75,7 @@ function overviewBlock() {
       </div>
       <div class="ws-desk-list">
         <div class="ws-list-head"><span>Research desk</span><span>Status</span></div>
-        ${deskMethods.map(([name,,state]) => `<div class="ws-list-row"><strong>${name}</strong><span class="ws-state">${state}</span></div>`).join('')}
+        ${deskMethods.map(([name,,state,route]) => `<div class="ws-list-row" ${route?`data-desk-route="${route}"`:''}><strong>${name}</strong><span class="ws-state">${state}</span></div>`).join('')}
       </div>
     </section>`;
 }
@@ -84,8 +84,8 @@ function desksBlock() {
   if (currentRoute() !== 'desks') return '';
   return `
     <section class="ws-operational ws-desk-methods" aria-label="Research desk methods">
-      ${deskMethods.map(([name, method, state], index) => `
-        <article>
+      ${deskMethods.map(([name, method, state, route], index) => `
+        <article ${route?`data-desk-route="${route}"`:''}>
           <div class="ws-label">DESK 0${index + 1}</div>
           <h2>${name}</h2>
           <p>${method}</p>
@@ -152,21 +152,17 @@ function installStyle() {
 // detail dialog (and from there "Write Yellow Sheet") was the hidden one — i.e.
 // unreachable on the Research desks tab. Each visible card/row is wired to the
 // real button app.js rendered, matched by the desk name it displays, so no
-// project id is guessed. Bonds & Rates has no evaluated research yet, so its
-// card goes to the Desk 7 indicator dashboard instead of doing nothing.
+// project id is guessed. Desks 5–7 route to their dedicated evidence boards.
 function wireDeskRows() {
   const surfaces = [
     ...document.querySelectorAll('#main .ws-desk-methods article'),
     ...document.querySelectorAll('#main .ws-desk-list .ws-list-row'),
   ];
   const openers = [...document.querySelectorAll('#main>.cards button[data-desk]')];
-  if (!surfaces.length || !openers.length) return;
+  if (!surfaces.length) return;
   const nameOf = (el) => (el?.textContent || '').trim().toLowerCase();
-  // Two surfaces name the same desk differently ("Global Quant & AI Research Lab"
-  // in this module's copy vs "Quant / AI Model Lab" on app.js's card), so exact
-  // and substring matching both miss it. Significant-token overlap catches that
-  // pair without matching distinct desks: "Futures Event" and "Earnings Event"
-  // share only the word "event", and the rule needs two.
+  // Significant-token overlap handles names that differ between the visible
+  // card and the hidden native card without crossing similar desk names.
   const tokens = (text) => new Set(text.split(/[^a-z0-9]+/).filter((t) => t.length > 2));
   const sharesTwoTokens = (a, b) => {
     const ta = tokens(a);
@@ -178,8 +174,18 @@ function wireDeskRows() {
     if (node.dataset.wired === 'true') continue;
     const label = nameOf(node.querySelector('h2') || node.querySelector('strong'));
     if (!label) continue;
-    // Bonds & Rates has no evaluated research yet: its card links to the
-    // Desk 7 indicator dashboard rather than sitting inert.
+    const route = node.dataset.deskRoute;
+    if (route) {
+      node.dataset.wired = 'true';
+      node.classList.add('ws-desk-openable');
+      node.setAttribute('role', 'link');
+      node.setAttribute('tabindex', '0');
+      const go = (event) => { event.preventDefault(); location.hash = `#${route}`; };
+      node.addEventListener('click', go);
+      node.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') go(event); });
+      continue;
+    }
+    // Keep a defensive path for a Desk 7 card if its visible link changes.
     if (label.includes('bonds') && label.includes('rates')) {
       node.dataset.wired = 'true';
       node.classList.add('ws-desk-openable');

@@ -52,7 +52,7 @@ MVP_PROJECTS: Tuple[MvpProject, ...] = (
         5,
         "open-quant-ai-model-lab",
         "Short Sale Research Desk",
-        ProjectStatus.ARCHITECTURE_ONLY,
+        ProjectStatus.WORKING_FOUNDATION,
         "Develop sourced short-sale research candidates from the approved watchlist, test the bear thesis against counter-evidence, and surface catalysts, liquidity, borrow, and regulatory constraints for independent review.",
     ),
     MvpProject(
@@ -68,7 +68,7 @@ BONDS_RATES_DESK = MvpProject(
     7,
     "bonds-rates-desk",
     "Bonds and Rates Desk",
-    ProjectStatus.ARCHITECTURE_ONLY,
+    ProjectStatus.WORKING_FOUNDATION,
     "Anchor cross-asset research in Treasury curves, real rates, Fed policy, credit spreads, duration, and liquidity stress.",
 )
 

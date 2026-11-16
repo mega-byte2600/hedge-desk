@@ -42,6 +42,8 @@ def build_short_research_board(report_path: Path) -> Dict[str, Any]:
                    for row in report.get("eod_source_results", [])
                    if isinstance(row, dict)}
     series = report.get("series", {}).get("symbols", {})
+    from hedge_desk.sec_filings_service import get_sec_filings
+    sec_snapshot = get_sec_filings(report.get("watchlist", []))
     rows: List[Dict[str, Any]] = []
     for raw_symbol in report.get("watchlist", []):
         symbol = str(raw_symbol).strip().upper()
@@ -78,7 +80,9 @@ def build_short_research_board(report_path: Path) -> Dict[str, Any]:
             "return_20_sessions_pct": float(ret20) if source_ok and ret20 is not None else None,
             "price_context": price_context,
             "eod_source_status": source.get("status", "MISSING"),
-            "sec_filing_status": "NOT_RESEARCHED",
+            "sec_filing_status": sec_snapshot["symbols"].get(symbol, {}).get("status", "LOADING"),
+            "sec_filings": sec_snapshot["symbols"].get(symbol, {}).get("filings", []),
+            "sec_company_name": sec_snapshot["symbols"].get(symbol, {}).get("company_name", ""),
             "short_interest_status": "NOT_RESEARCHED",
             "catalyst_status": "NOT_RESEARCHED",
             "borrow_status": "NOT_CHECKED",
@@ -93,6 +97,8 @@ def build_short_research_board(report_path: Path) -> Dict[str, Any]:
         "generated_at": report.get("generated_at"),
         "as_of": as_of,
         "watchlist_source": "latest validated nightly report",
+        "sec_feed_status": sec_snapshot["status"],
+        "sec_feed_source": sec_snapshot["source"],
         "symbols": rows,
         "interpretation": "Price behavior is descriptive screening context only. No short thesis, catalyst, short-interest evidence, borrow confirmation, or trade authorization is inferred.",
         "trade_authorized": False,

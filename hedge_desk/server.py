@@ -338,6 +338,20 @@ def _dispatch(environ, start_response):
             "short-research-board",
             lambda: build_short_research_board(ARTIFACTS / "am-report-latest.json"),
         ))
+    if path == "/api/burry-sensitivity":
+        if environ.get("REQUEST_METHOD", "GET").upper() != "POST":
+            return _json(start_response, {"error": "method_not_allowed"}, "405 Method Not Allowed")
+        try:
+            length = int(environ.get("CONTENT_LENGTH") or "0")
+            if length < 1 or length > 8192:
+                raise ValueError("request body size is invalid")
+            inputs = json.loads(environ["wsgi.input"].read(length).decode("utf-8"))
+            if not isinstance(inputs, dict):
+                raise ValueError("request body must be an object")
+            from hedge_desk.burry_sensitivity import calculate_depreciation_sensitivity
+            return _json(start_response, calculate_depreciation_sensitivity(inputs))
+        except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            return _json(start_response, {"error": str(exc)}, "400 Bad Request")
     if path == "/api/report":
         try:
             return _json(start_response, _cached("console-report", build_live_console_payload))

@@ -1,37 +1,19 @@
-## Title
+# Desk 5 SEC/Burry research and Desk 6 Carpe DATA coverage
 
-Desk 5: add sourced short-research queue and Plotly price-context map
+## What changed
 
-## Body
+- Connect Desk 5 to the official SEC EDGAR submissions API for the approved watchlist and link the most recent relevant primary filings.
+- Add an exact-input, `Decimal` based one-cohort depreciation sensitivity grounded in a specific SEC filing, with transparent tax/EPS/constant-multiple assumptions and no invented Burry score.
+- Keep the 48-hour Desk 5 research workflow anchored to Burry's official publication; treat Reddit as an unverified lead source.
+- Connect paced GDELT headlines to Desk 6 Carpe DATA as uncorroborated conflict/shipping leads, alongside official event and commodity feeds.
+- Show Desk 6's missing contract curves, basis, roll, costs, and specs as explicit gates; no futures candidate is ranked without them.
+- Correct mobile desk copy/routes and remove stale generic status claims. Flag Desk 7's dated snapshot as stale when older than two days.
+- Add seven-desk coverage audit and regression coverage; package the new stylesheet.
 
-Add a dedicated Desk 5 view backed by the latest validated nightly watchlist
-snapshot. The Plotly scatter compares each symbol's 5-session and 20-session
-price changes, labels points directly, and exposes close/as-of values on hover.
-The queue carries the same sourced values and makes missing SEC research,
-catalyst dates, short-interest reports, and borrow evidence explicit.
+## Validation
 
-On the current snapshot, LYFT and F are negative over both lookback windows.
-They are surfaced only as price-context follow-ups. No symbol has a completed
-short thesis, and no short-sale recommendation, locate, broker confirmation, or
-trade authorization is represented.
+Targeted SEC, depreciation, market-context, GDELT, public-signal, Desk 7, public-surface, copy-quality, iPhone-preview, and page-guard checks pass. JavaScript syntax, Python compilation, and whitespace checks pass. Full legacy test discovery remains blocked by the missing `plotly` dependency in `tests/test_dashboard_build.py`.
 
-The design follows Plotly's scatter/hover guidance, SEC Regulation SHO
-requirements, and FINRA's distinction between reported short interest and
-daily short-sale volume. CFA Standards V(A), V(B), VI(A), FINRA Series 7, and
-Series 4 supervisory concepts inform the research checklist without copying
-licensed materials.
+## Review focus
 
-**Verification:** 24 targeted tests, ESM syntax, `git diff --check`, and web
-bundle build passed. Browser visual QA was not completed in the sandbox; see
-HANDOFF.md for details and the remaining phone-width review.
-
-Adds a one-request, five-second SEC source-health probe to prevent a blocked EDGAR
-request from holding the endpoint through repeated 15-second retries. Desk 5
-also states the Burry-inspired valuation diagnostic and Schwab/TOS manual
-locate/borrow verification fields. The existing 48-hour research task now uses
-the same research and broker checklist.
-
-**Current verification:** 151 targeted tests, ESM syntax, `git diff --check`,
-and web bundle build passed. SEC EDGAR timed out from this workspace, so no live
-feed success is claimed. Browser visual QA was not completed in the sandbox;
-see HANDOFF.md for remaining review checks.
+See `HANDOFF.md` for independent review details, particularly SEC contact/production feed status, financial-sensitivity math, GDELT corroboration labels, narrow-screen review, and Desk 6 futures readiness gates.
