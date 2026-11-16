@@ -2067,9 +2067,9 @@
     {
       "number": 5,
       "project_id": "open-quant-ai-model-lab",
-      "name": "Open Quant/AI Model Lab",
-      "status": "working_foundation",
-      "objective": "Run independent Quant and AI research teams with reproducible open artifacts."
+      "name": "Short Sale Research Desk",
+      "status": "architecture_only",
+      "objective": "Develop sourced short-sale research candidates from the approved watchlist, test the bear thesis against counter-evidence, and surface catalysts, liquidity, borrow, and regulatory constraints for independent review."
     },
     {
       "number": 6,
@@ -2891,7 +2891,7 @@
         "no trade authorization",
         "no RoR / probability"
       ],
-      "notes": "No-key EOD fallback. 2026-09-28: BLOCKED \u2014 /q/l/ 404s and /q/d/l/ serves a JS bot challenge from this network. Treat as secondary when available."
+      "notes": "No-key EOD fallback. 2026-09-28: BLOCKED — /q/l/ 404s and /q/d/l/ serves a JS bot challenge from this network. Treat as secondary when available."
     },
     {
       "source_id": "nasdaq",

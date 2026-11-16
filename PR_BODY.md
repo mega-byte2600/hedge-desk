@@ -1,44 +1,19 @@
-# PR BODY (ready to paste)
+# Desk 5 SEC/Burry research and Desk 6 Carpe DATA coverage
 
-## Title
+## What changed
 
-Desk 7: interactive Plotly indicator dashboard (vote balance, trigger gauges, Kalshi)
+- Connect Desk 5 to the official SEC EDGAR submissions API for the approved watchlist and link the most recent relevant primary filings.
+- Add an exact-input, `Decimal` based one-cohort depreciation sensitivity grounded in a specific SEC filing, with transparent tax/EPS/constant-multiple assumptions and no invented Burry score.
+- Keep the 48-hour Desk 5 research workflow anchored to Burry's official publication; treat Reddit as an unverified lead source.
+- Connect paced GDELT headlines to Desk 6 Carpe DATA as uncorroborated conflict/shipping leads, alongside official event and commodity feeds.
+- Show Desk 6's missing contract curves, basis, roll, costs, and specs as explicit gates; no futures candidate is ranked without them.
+- Correct mobile desk copy/routes and remove stale generic status claims. Flag Desk 7's dated snapshot as stale when older than two days.
+- Add seven-desk coverage audit and regression coverage; package the new stylesheet.
 
-## Body
+## Validation
 
-User order 2026-11-14: the Desk 7 table alone was rejected as "a list of
-indicators". This replaces the list-only presentation with an interactive
-Plotly dashboard that visualizes where each indicator sits against its
-hike/cut trigger.
+Targeted SEC, depreciation, market-context, GDELT, public-signal, Desk 7, public-surface, copy-quality, iPhone-preview, and page-guard checks pass. JavaScript syntax, Python compilation, and whitespace checks pass. Full legacy test discovery remains blocked by the missing `plotly` dependency in `tests/test_dashboard_build.py`.
 
-**Charts (progressive enhancement over the unchanged table):**
+## Review focus
 
-- Vote balance — the 5 HIKE / 1 CUT / 4 NEUTRAL tally as a stacked bar;
-  hover a segment for the indicators behind it.
-- Trigger gauges — one row per numeric indicator, in its own real units,
-  with dashed tripwires from the trigger rule, tinted HIKE/CUT zones, and a
-  diamond marker for today's read. Click a marker to jump to that
-  indicator's table row. FOMC has no numeric trigger and is footnoted.
-- Kalshi pricing — the four Dec-meeting outcomes as bars ($0.88 / $0.12 /
-  $0.03 / $0.02 combined cuts).
-
-**Data:** the same labeled Nov 13 snapshot — no new numbers. The JSON schema
-bumps to `desk7-indicators-2`: each numeric indicator carries a `gauge`
-object encoding its trigger rule as numbers, and the Kalshi markets are
-carried as data. A test recomputes every stated vote from the gauge numbers,
-so a chart can never show a marker on the wrong side of its tripwire.
-
-**Theme:** brass HIKE / muted NEUTRAL / workbench-blue CUT. Live green is
-reserved for live-data semantics and is not used here. Plotly is the
-already-vendored bundle, loaded by dynamic import; if it fails, the table
-below carries the same data.
-
-**Verification:** 9/9 Desk 7 tests (ESM syntax gate, lint, scratch build),
-Playwright desktop + phone with the click-to-row path exercised and 0 page
-errors. The one `test_dashboard_build.py` failure is pre-existing on clean
-main. See HANDOFF.md on the branch for the full evidence and reviewer
-checklist.
-
-**Not in scope:** data refresh (still an open user decision; no pipeline),
-the rejected Nov 13 rates dashboard (no yield-curve re-presentation, no
-framework).
+See `HANDOFF.md` for independent review details, particularly SEC contact/production feed status, financial-sensitivity math, GDELT corroboration labels, narrow-screen review, and Desk 6 futures readiness gates.

@@ -48,27 +48,25 @@ class Desk7IndicatorsTests(unittest.TestCase):
 
     def test_desk7_card_links_to_indicator_dashboard(self):
         app = (WEB / "app.js").read_text(encoding="utf-8")
-        self.assertIn("p.project_id==='bonds-rates-desk'", app)
-        self.assertIn('href="#desk7"', app)
-        self.assertIn("Indicator dashboard", app)
-        # No second Desk 07 card: the live report already carries bonds-rates-desk
-        # as a project, so the dashboard link rides on the existing card.
-        self.assertNotIn("desk7Card", app)
+        self.assertIn("'bonds-rates-desk':'desk7'", app)
+        self.assertIn('href="#${routeFor}"', app)
+        self.assertIn("function desk7()", app)
 
     def test_visible_desk7_card_opens_indicator_dashboard(self):
         # professional.js hides app.js's cards and substitutes its own markup;
         # the visible Bonds & Rates card must land on #desk7, not #resources.
         prof = (WEB / "professional.js").read_text(encoding="utf-8")
-        self.assertIn("location.hash = '#desk7'", prof)
-        self.assertIn("indicator dashboard", prof)
+        self.assertIn("['Desk 7 · Bonds & Rates'", prof)
+        self.assertIn('data-desk-route="${route}"', prof)
+        self.assertIn("location.hash = `#${route}`", prof)
 
     def test_desks_view_tolerates_missing_layers_and_disposition(self):
         # The live /api/report payload omits layers/disposition for every
         # project; gates() threw and the whole Desks view never rendered.
         # The dashboard link rides the Desks view, so the guards ship here.
         app = (WEB / "app.js").read_text(encoding="utf-8")
-        self.assertIn("p.layers||[]", app)
-        self.assertIn("p.disposition?tag(p.disposition)", app)
+        self.assertIn("const ls=p.layers||[]", app)
+        self.assertIn("p?.disposition", app)
 
     def test_fail_closed_copy_and_no_execution_boundaries(self):
         app = (WEB / "app.js").read_text(encoding="utf-8")

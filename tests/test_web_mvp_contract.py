@@ -7,7 +7,7 @@ from hedge_desk.candidates import build_candidate_feed
 from hedge_desk.server import application
 
 
-GOLDEN_CANDIDATE_FEED_BLOB_SHA = "5a81ad4ee99822a1c7370e78a8eb34d01d7ac3d3"
+GOLDEN_CANDIDATE_FEED_BLOB_SHA = "5db52e63a90470bef50a732b36fbc336495b2121"
 
 
 class WebMvpContractTests(unittest.TestCase):
@@ -33,7 +33,7 @@ class WebMvpContractTests(unittest.TestCase):
         self.assertEqual(
             git_blob,
             GOLDEN_CANDIDATE_FEED_BLOB_SHA,
-            "Golden Master drift detected. Treat baseline changes as an explicit regression-baseline update.",
+            "Desk 5 no longer gets fabricated ETF seed candidates; update this lock only with a reviewed contract change.",
         )
 
     def test_health_contract_is_paper_only(self):
@@ -63,12 +63,13 @@ class WebMvpContractTests(unittest.TestCase):
         self.assertEqual(headers["Content-Type"], "application/json")
         self.assertEqual(json.loads(body), self._golden_payload())
 
-    def test_candidate_contract_has_six_desks_and_tickers(self):
+    def test_candidate_contract_has_five_seeded_desks_and_no_fake_short_candidates(self):
         payload = build_candidate_feed()
         desks = {row["desk_id"] for row in payload["candidates"]}
         symbols = {row["symbol"] for row in payload["candidates"]}
-        self.assertEqual(len(desks), 6)
+        self.assertEqual(len(desks), 5)
         self.assertTrue({"SPY", "QQQ", "AAPL", "NVDA", "SPX", "XSP", "KO", "JNJ", "CL", "NG", "ZW"}.issubset(symbols))
+        self.assertNotIn("open-quant-ai-model-lab", desks)
         self.assertTrue(all(row["trade_authorized"] is False for row in payload["candidates"]))
         self.assertEqual(payload["candidate_definition"], "SEED_UNIVERSE_NOT_METHOD_QUALIFIED")
 

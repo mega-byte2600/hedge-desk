@@ -25,7 +25,6 @@ from hedge_desk.data.open_market_feeds import (
     eia_v2,
     finra_fixed_income,
     nyfed_reference_rates,
-    sec_companyfacts,
     sec_submissions,
     treasury_latest_auctions,
 )
@@ -282,10 +281,14 @@ def build_data_source_status() -> Dict[str, object]:
     )
 
     def probe_sec():
-        try:
-            return sec_submissions(320193)
-        except Exception:
-            return sec_companyfacts(320193)
+        # A health probe must not turn a provider outage into a 90-second
+        # request: one identified SEC request, 5-second timeout, no retry.
+        from hedge_desk.data.feed_base import _sec_user_agent, make_get_transport
+        transport = make_get_transport(
+            {"Accept": "application/json", "User-Agent": _sec_user_agent()},
+            timeout=5,
+        )
+        return sec_submissions(320193, transport=transport, retries=0)
 
     definitions = {
         "fred": (

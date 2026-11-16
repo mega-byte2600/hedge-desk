@@ -61,7 +61,7 @@ requires them. An identity hovers between assignments and is stood up against
 the relevant trading desk on demand.
 
 - **They are not owned by a desk.** No SOUL is permanently assigned to Overnight
-  Premium, Earnings Event, Box/Parity, Dividend, Quant/AI Model Lab, or Futures
+  Premium, Earnings Event, Box/Parity, Dividend, Short Sale Research, or Futures
   Event. Each can be invoked for any of them.
 - **They choose and are free.** The orchestrator routes; the specialists accept
   work where their mandate applies. A SOUL does not need to be recreated per

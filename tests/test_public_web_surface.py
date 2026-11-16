@@ -46,7 +46,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertNotIn('emporion-institutional-seal.svg', combined)
         self.assertIn('Independent research platform', combined)
         self.assertIn('RESEARCH PLATFORM', combined)
-        self.assertIn('Seven research desks.<br>Six evaluated workflows.', combined)
+        self.assertIn('Seven research desks.<br>Every mandate has evidence gates.', combined)
         self.assertNotIn('<b>6</b> desks + 1 coming soon', combined)
         self.assertNotIn('No orders placed', combined)
         self.assertNotIn('AI-native', combined)
@@ -191,7 +191,7 @@ class PublicWebSurfaceTests(unittest.TestCase):
 
         self.assertNotIn("acct-broker-account", combined)
         self.assertNotIn("Connect Schwab", combined)
-        self.assertNotIn("Schwab account", combined)
+        self.assertIn("No Schwab account, positions, balances, order history", combined)
 
     def test_watchlist_is_the_candidates_input_contract(self):
         agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
@@ -278,10 +278,10 @@ class PublicWebSurfaceTests(unittest.TestCase):
         self.assertIn('"desk-architecture.js"', build)
         self.assertIn('Bonds &amp; Rates', architecture)
         self.assertIn('DESK 07</span>', architecture)
-        self.assertIn('Coming soon', architecture)
-        self.assertIn('Research for this desk is still in progress.', architecture)
-        self.assertIn("['Bonds & Rates'", professional)
-        self.assertIn('Seven research desks.<br>Six evaluated workflows.', professional)
+        self.assertIn('Dated indicator board', architecture)
+        self.assertIn('Snapshot research; check the as-of date', architecture)
+        self.assertIn("['Desk 7 · Bonds & Rates'", professional)
+        self.assertIn('Seven research desks.<br>Every mandate has evidence gates.', professional)
         self.assertNotIn('<b>6</b> desks + 1 coming soon', professional)
         self.assertNotIn('Six research workflows.<br>Structured decision support.', professional)
         self.assertNotIn('<b>WORKFLOWS</b> SIX DESKS', professional)

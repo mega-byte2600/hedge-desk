@@ -29,10 +29,11 @@ class ServerTests(unittest.TestCase):
         self.assertFalse(payload['live_orders_enabled'])
         self.assertNotIn('supabase', payload)
 
-    def test_candidate_api_covers_all_six_desks(self):
+    def test_candidate_api_does_not_fabricate_short_desk_candidates(self):
         status, payload = self.request('/api/candidates')
         self.assertEqual(status, '200 OK')
-        self.assertEqual(len({row['desk_id'] for row in payload['candidates']}), 6)
+        self.assertEqual(len({row['desk_id'] for row in payload['candidates']}), 5)
+        self.assertNotIn('open-quant-ai-model-lab', {row['desk_id'] for row in payload['candidates']})
         self.assertTrue(all(not row['trade_authorized'] for row in payload['candidates']))
 
     def test_risk_dashboard_is_paper_only(self):
@@ -60,7 +61,7 @@ class ServerTests(unittest.TestCase):
         # report/candidate endpoints remain publicly reachable without auth (guest tier open)
         status2, report = self.request('/api/candidates')
         self.assertEqual(status2, '200 OK')
-        self.assertEqual(len({row['desk_id'] for row in report['candidates']}), 6)
+        self.assertEqual(len({row['desk_id'] for row in report['candidates']}), 5)
 
     @staticmethod
     def _fake_quotes(symbols, timeout=8):

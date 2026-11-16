@@ -18,6 +18,7 @@ CONSOLE_ASSETS = (
     "index.html",
     "iphone-preview.html",
     "styles.css",
+    "desk-research.css",
     "public-surface.js",
     "app.js",
     "candidate-context.js",

@@ -22,11 +22,13 @@ class ProjectRegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "identifiers must be unique"):
             validate_project_registry(MVP_PROJECTS[:4] + (duplicate,))
 
-    def test_fifth_mvp_is_open_quant_ai_lab(self) -> None:
+    def test_fifth_desk_is_short_sale_research_framework(self) -> None:
         project = MVP_PROJECTS[4]
         self.assertEqual(project.number, 5)
         self.assertEqual(project.project_id, "open-quant-ai-model-lab")
+        self.assertEqual(project.name, "Short Sale Research Desk")
         self.assertEqual(project.status, ProjectStatus.WORKING_FOUNDATION)
+        self.assertIn("bear thesis", project.objective)
 
     def test_earnings_mvp_has_working_point_in_time_foundation(self) -> None:
         self.assertEqual(MVP_PROJECTS[1].status, ProjectStatus.WORKING_FOUNDATION)
@@ -47,7 +49,7 @@ class ProjectRegistryTests(unittest.TestCase):
         bonds = DESK_ARCHITECTURE[6]
         self.assertEqual(bonds.number, 7)
         self.assertEqual(bonds.project_id, "bonds-rates-desk")
-        self.assertEqual(bonds.status, ProjectStatus.ARCHITECTURE_ONLY)
+        self.assertEqual(bonds.status, ProjectStatus.WORKING_FOUNDATION)
         self.assertIn("Treasury curves", bonds.objective)
         self.assertIn("Fed policy", bonds.objective)
 

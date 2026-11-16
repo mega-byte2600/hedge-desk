@@ -123,39 +123,12 @@ class OvernightEvaluationTests(unittest.TestCase):
             len(evaluations[0].layers[4].metrics["paper_reconciliation_artifact"]),
             64,
         )
-        model_lab = evaluations[4]
-        self.assertEqual(model_lab.project_id, "open-quant-ai-model-lab")
-        self.assertEqual(
-            model_lab.layers[0].metrics["otc_live_hidden_order_visibility"],
-            "false",
-        )
-        self.assertEqual(
-            model_lab.layers[2].metrics["quant_training_manifest_admissible"],
-            "true",
-        )
-        self.assertEqual(
-            model_lab.layers[2].metrics["ai_training_manifest_admissible"],
-            "true",
-        )
-        self.assertEqual(
-            model_lab.layers[2].metrics["training_trade_authorized"], "false"
-        )
-        self.assertEqual(model_lab.layers[2].metrics["purged_split_admissible"], "true")
-        self.assertEqual(
-            model_lab.layers[2].metrics["purged_split_authoritative_risk_input"],
-            "false",
-        )
-        self.assertEqual(
-            model_lab.layers[2].metrics["purged_split_trade_authorized"], "false"
-        )
-        self.assertEqual(
-            model_lab.layers[2].metrics["otc_directional_signal_authorized"],
-            "false",
-        )
-        self.assertEqual(
-            model_lab.layers[2].metrics["authoritative_risk_input"], "false"
-        )
-        self.assertEqual(model_lab.layers[3].status, EvaluationStatus.BLOCKED)
+        short_desk = evaluations[4]
+        self.assertEqual(short_desk.project_id, "open-quant-ai-model-lab")
+        self.assertIn("APPROVED_WATCHLIST_REQUIRED", short_desk.layers[0].reason_codes)
+        self.assertIn("INDEPENDENT_HUMAN_REVIEW_REQUIRED", short_desk.layers[5].reason_codes)
+        self.assertEqual(short_desk.layers[2].metrics["trade_authorized"], "false")
+        self.assertEqual(short_desk.layers[3].status, EvaluationStatus.BLOCKED)
         earnings = evaluations[1]
         self.assertEqual(earnings.project_id, "earnings-event-desk")
         self.assertEqual(earnings.layers[0].metrics["surprise_alignment"], "BOTH_POSITIVE")

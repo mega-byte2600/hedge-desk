@@ -39,6 +39,7 @@ from hedge_desk.data.institutional_feeds import (
     coinbase_product_trades,
     finra_equity,
 )
+from hedge_desk.data.event_wire import gdelt_artlist
 from hedge_desk.data.public_signal_feeds import (
     bea_nipa_table,
     nws_active_alerts,
@@ -251,6 +252,14 @@ def _nws_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     return [_pick(row, keys) for row in result.rows[:25]]
 
 
+def _gdelt_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
+    return [
+        {**_pick(row, ("title", "url", "seendate", "domain", "language", "sourcecountry")),
+         "signal_type": "MEDIA_LEAD_UNCORROBORATED"}
+        for row in result.rows[:25]
+    ]
+
+
 def _bea_summary(result: OpenFeedResult) -> list[Dict[str, object]]:
     keys = (
         "TableName",
@@ -352,6 +361,7 @@ def build_market_context(
     bis_fetch: Callable[..., OpenFeedResult] = bis_global_liquidity,
     ecb_fetch: Callable[..., OpenFeedResult] = ecb_exchange_rates,
     nws_fetch: Callable[..., OpenFeedResult] = nws_active_alerts,
+    gdelt_fetch: Callable[..., OpenFeedResult] = gdelt_artlist,
     bea_fetch: Callable[..., OpenFeedResult] = bea_nipa_table,
     usda_fetch: Callable[..., OpenFeedResult] = usda_nass_crop_progress,
     eia_fetch: Callable[..., OpenFeedResult] = eia_v2,
@@ -484,6 +494,17 @@ def build_market_context(
         sources["nws"] = _live(result, _nws_summary(result))
     except Exception as exc:
         sources["nws"] = _blocked("nws", "UPSTREAM_OR_RATE_LIMIT", str(exc))
+
+    try:
+        result = gdelt_fetch(
+            query='(war OR conflict OR attack OR blockade OR "shipping disruption" OR "Strait of Hormuz" OR sanctions OR pipeline)',
+            maxrecords=25,
+        )
+        sources["gdelt-conflict-news"] = _live(result, _gdelt_summary(result))
+    except Exception as exc:
+        sources["gdelt-conflict-news"] = _blocked(
+            "gdelt-conflict-news", "UPSTREAM_OR_RATE_LIMIT", str(exc)
+        )
 
     try:
         result = cftc_fetch(report="tff_futures_only", limit=25)

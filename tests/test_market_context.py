@@ -35,6 +35,9 @@ def _common_fakes():
         "nws_fetch": lambda limit: _result(
             "nws", "active-alerts", [{"event": "Flood Warning", "severity": "Severe"}]
         ),
+        "gdelt_fetch": lambda query, maxrecords: _result(
+            "gdelt", "doc-artlist", [{"title": "Shipping report", "url": "https://example.org/story", "seendate": "2026-09-29T12:00:00Z"}]
+        ),
         "nasdaq_quote_fetch": lambda symbols: _result(
             "nasdaq", "quote-info", [{"symbol": "SPY", "lastSalePrice": "$765.05"}]
         ),
@@ -163,8 +166,10 @@ class MarketContextTests(unittest.TestCase):
 
         self.assertEqual(context["schema_version"], MARKET_CONTEXT_SCHEMA)
         self.assertEqual(context["status"], "LIVE")
-        self.assertEqual(context["live_sources"], 25)
+        self.assertEqual(context["live_sources"], 26)
         self.assertEqual(context["sources"]["nws"]["status"], "LIVE")
+        self.assertEqual(context["sources"]["gdelt-conflict-news"]["status"], "LIVE")
+        self.assertEqual(context["sources"]["gdelt-conflict-news"]["observations"][0]["signal_type"], "MEDIA_LEAD_UNCORROBORATED")
         self.assertEqual(context["sources"]["bea"]["status"], "LIVE")
         self.assertEqual(context["sources"]["usda-nass"]["status"], "LIVE")
         self.assertEqual(context["sources"]["bis"]["status"], "LIVE")
