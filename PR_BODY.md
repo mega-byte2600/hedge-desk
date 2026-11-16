@@ -24,3 +24,14 @@ licensed materials.
 **Verification:** 24 targeted tests, ESM syntax, `git diff --check`, and web
 bundle build passed. Browser visual QA was not completed in the sandbox; see
 HANDOFF.md for details and the remaining phone-width review.
+
+Adds a one-request, five-second SEC source-health probe to prevent a blocked EDGAR
+request from holding the endpoint through repeated 15-second retries. Desk 5
+also states the Burry-inspired valuation diagnostic and Schwab/TOS manual
+locate/borrow verification fields. The existing 48-hour research task now uses
+the same research and broker checklist.
+
+**Current verification:** 151 targeted tests, ESM syntax, `git diff --check`,
+and web bundle build passed. SEC EDGAR timed out from this workspace, so no live
+feed success is claimed. Browser visual QA was not completed in the sandbox;
+see HANDOFF.md for remaining review checks.

@@ -971,10 +971,14 @@ def _normalize_cik(cik: str | int) -> str:
 def sec_submissions(
     cik: str | int,
     transport: Transport = _sec_transport,
+    retries: int = 2,
 ) -> Mapping[str, object]:
     """Fetch SEC EDGAR company submission history (no API key)."""
     normalized = _normalize_cik(cik)
-    payload = _fetch_json(SEC_SUBMISSIONS_URL.format(cik=normalized), "sec-edgar", transport)
+    payload = _fetch_json(
+        SEC_SUBMISSIONS_URL.format(cik=normalized), "sec-edgar", transport,
+        retries=retries,
+    )
     if not isinstance(payload, dict) or "cik" not in payload:
         raise ValueError("sec-edgar submissions payload is malformed")
     return payload

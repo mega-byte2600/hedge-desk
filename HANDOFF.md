@@ -10,6 +10,10 @@ Branch: `toby/desk5-short-research` (base: `d93bd49`).
   It never invents a short thesis, catalyst, SEC filing status, short interest,
   borrow status, or trade authorization.
 - `hedge_desk/server.py` exposes `/api/short-research` with `no-store` caching.
+- `hedge_desk/web_app.py` now probes EDGAR with the declared SEC user agent, a
+  single bounded 5-second request, and no retry. A probe outage no longer falls
+  back to another slow SEC request. The actual SEC request from this workspace
+  timed out; live connectivity remains unverified here.
 - `web/index.html` and `web/app.js` add a dedicated Desk 5 navigation route, a
   Plotly return-context scatter with direct symbol labels and source-dated hover
   details, a mobile-friendly queue, explicit missing-evidence fields, and
@@ -17,6 +21,10 @@ Branch: `toby/desk5-short-research` (base: `d93bd49`).
 - `tests/test_short_research_board.py` covers exact calculations, failed/missing
   source behavior, API response semantics, and the current report's two
   negative/negative price-context rows.
+- Desk 5 documents an explicitly labeled Burry-inspired valuation diagnostic,
+  without an invented Burry formula, plus Schwab/TOS manual availability,
+  locate, fee, quantity, and timestamp checks. The 48-hour task now includes
+  this research lens and broker checklist.
 
 ## Current report read
 
@@ -44,10 +52,13 @@ broker-ready.
 
 ## Verification
 
-- 24 targeted Python tests passed: Desk 5 board/research, Desk 7 Plotly contract,
-  and live web-data plane.
+- 151 targeted Python tests passed across Desk 5, SEC/open-market integrations,
+  data-source health, Desk 7 Plotly, and the live web-data plane.
 - Browser ESM syntax check, `git diff --check`, and `scripts/build_web.py`
   passed.
+- Direct SEC API request timed out after 4 seconds from this workspace. The
+  source-health probe is now bounded, but a live EDGAR `LIVE` response has not
+  been achieved or claimed.
 - Visual browser QA could not be completed: Playwright's bundled Chromium was
   absent and the available system Chromium could not launch in this sandbox.
   Phone-width rendering and Plotly blocked-load fallback remain reviewer checks.
