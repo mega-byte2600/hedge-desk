@@ -3,6 +3,13 @@
 Read [SOUL.md](SOUL.md) first. It is the governing project charter and takes
 precedence over every other repository file; the GP’s orders are final authority.
 
+## GP-directed scope control
+
+- The GP's explicit request and corrections are the acceptance criteria. Do only the requested work and the changes strictly necessary to make it work.
+- If a material requirement is unclear, ask before choosing a product behavior. Do not treat a plausible improvement as authorization.
+- Preserve existing information architecture and visual structure unless the GP explicitly asks to change them. In particular, desk implementation work must not add individual Desk 5, Desk 6, or Desk 7 sidebar links; the existing `7 - Research Desks` entry remains the sole sidebar entry for the research desks.
+- Before reporting completion, inspect the full diff against the request. Remove unrelated additions, and verify each requested behavior in code or the running product. Do not call a desk functional merely because it has a title, card, or placeholder.
+
 ## 80/20 delivery rule
 
 - Target 80% working, tested code and 20% durable decision records.
