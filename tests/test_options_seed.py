@@ -124,7 +124,8 @@ def _ok_transport(raw):
 
 def test_refresh_writes_seed_on_success(tmp_path, monkeypatch):
     monkeypatch.setattr(refresh_mod, "SEED_PATH", tmp_path / "seed.json")
-    rc = refresh_mod.refresh(transport=_ok_transport(_payload(_fixture_options())))
+    rc = refresh_mod.refresh(transport=_ok_transport(_payload(_fixture_options())),
+                             now=AS_OF)
     assert rc == 0
     d = json.loads((tmp_path / "seed.json").read_text())
     assert d["contract_id"] == "SPY261029P00755000"
@@ -134,12 +135,13 @@ def test_refresh_writes_seed_on_success(tmp_path, monkeypatch):
 def test_refresh_failure_preserves_last_good_byte_identical(tmp_path, monkeypatch):
     seed_file = tmp_path / "seed.json"
     monkeypatch.setattr(refresh_mod, "SEED_PATH", seed_file)
-    assert refresh_mod.refresh(transport=_ok_transport(_payload(_fixture_options()))) == 0
+    assert refresh_mod.refresh(transport=_ok_transport(_payload(_fixture_options())),
+                               now=AS_OF) == 0
     before = seed_file.read_bytes()
 
     def failing(url):
         return (500, b"")
-    assert refresh_mod.refresh(transport=failing) == 0  # last-good path
+    assert refresh_mod.refresh(transport=failing, now=AS_OF) == 0  # last-good path
     after = json.loads(seed_file.read_bytes())
     before_d = json.loads(before)
     # contract fields byte-identical: nothing synthetic, nothing rewritten

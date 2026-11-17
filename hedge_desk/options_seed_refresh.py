@@ -45,18 +45,22 @@ def _read_last_good() -> Dict[str, Any] | None:
         return None
 
 
-def _mark_failed(last_good: Dict[str, Any], reason: str) -> None:
+def _mark_failed(last_good: Dict[str, Any], reason: str, now: datetime) -> None:
     last_good["refresh"] = {
         "status": "fetch_failed",
-        "refreshed_at": _now().isoformat(),
+        "refreshed_at": now.isoformat(),
         "reason": reason,
         "previous_as_of": last_good.get("as_of"),
     }
     SEED_PATH.write_text(json.dumps(last_good, indent=2) + "\n", encoding="utf-8")
 
 
-def refresh(transport: cboe_chain.Transport | None = None) -> int:
-    now = _now()
+def refresh(transport: cboe_chain.Transport | None = None,
+            now: datetime | None = None) -> int:
+    # ``now`` is injectable so tests can pin the clock: the seed fixture's
+    # expirations are fixed dates, and a wall-clock ``now`` past them makes
+    # selection fail closed with "no put expiration within 30 days".
+    now = now or _now()
     fetch = transport or cboe_chain._default_transport
     try:
         status, raw = fetch(cboe_chain.CBOE_URL.format(symbol=SYMBOL))
@@ -70,7 +74,7 @@ def refresh(transport: cboe_chain.Transport | None = None) -> int:
         if last_good is None:
             print(f"options-seed: no data and no last-good file: {reason}", file=sys.stderr)
             return 1
-        _mark_failed(last_good, reason)
+        _mark_failed(last_good, reason, now)
         print(f"options-seed: fetch failed, last-good preserved: {reason}")
         return 0
     payload = seed_to_dict(

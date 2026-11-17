@@ -1,19 +1,17 @@
-# Desk 5 SEC/Burry research and Desk 6 Carpe DATA coverage
+test: fix 3 failing tests — options-seed clock, Schwab disclosure
 
-## What changed
+Tuesday testing run. Full suite was 1296 passed / 3 failed; after these
+fixes it is 1299 passed / 0 failed.
 
-- Connect Desk 5 to the official SEC EDGAR submissions API for the approved watchlist and link the most recent relevant primary filings.
-- Add an exact-input, `Decimal` based one-cohort depreciation sensitivity grounded in a specific SEC filing, with transparent tax/EPS/constant-multiple assumptions and no invented Burry score.
-- Keep the 48-hour Desk 5 research workflow anchored to Burry's official publication; treat Reddit as an unverified lead source.
-- Connect paced GDELT headlines to Desk 6 Carpe DATA as uncorroborated conflict/shipping leads, alongside official event and commodity feeds.
-- Show Desk 6's missing contract curves, basis, roll, costs, and specs as explicit gates; no futures candidate is ranked without them.
-- Correct mobile desk copy/routes and remove stale generic status claims. Flag Desk 7's dated snapshot as stale when older than two days.
-- Add seven-desk coverage audit and regression coverage; package the new stylesheet.
+- `options_seed_refresh.refresh()` gains an optional `now` parameter so
+  the refresh tests can pin the fixed 2026-09-30 clock instead of the
+  wall clock, which had aged past the fixture expirations and failed
+  closed with "no put expiration within 30 days". Production calls are
+  unchanged (workflow calls `refresh()` with no arguments).
+- Restored the locked Schwab market-data-only disclosure panel on the
+  Desk 5 view, dropped by the Nov 16 polish. Sentence restored verbatim.
 
-## Validation
-
-Targeted SEC, depreciation, market-context, GDELT, public-signal, Desk 7, public-surface, copy-quality, iPhone-preview, and page-guard checks pass. JavaScript syntax, Python compilation, and whitespace checks pass. Full legacy test discovery remains blocked by the missing `plotly` dependency in `tests/test_dashboard_build.py`.
-
-## Review focus
-
-See `HANDOFF.md` for independent review details, particularly SEC contact/production feed status, financial-sensitivity math, GDELT corroboration labels, narrow-screen review, and Desk 6 futures readiness gates.
+Test evidence: full suite 1299 passed, 0 failed; named Tuesday areas
+(data integrations, Graham, real-estate, Yahoo failover paths,
+workbench, options lab) 173 passed; `node --check` on a `.mjs` copy of
+`web/app.js` passed.
