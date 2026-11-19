@@ -895,6 +895,49 @@ def paper_panels(paper: dict, yellow: dict) -> str:
 
 # ---------------------------------------------------------------- build
 
+def premium_candidates_panel(chain_income: dict) -> str:
+    """Trader view (GP brief): top premium-selling candidates by score, with
+    each component's weighted contribution, so the reason for the rank is
+    visible at a glance. Empty state until a nightly carries the score."""
+    rows = []
+    for sym, chain in (chain_income or {}).items():
+        for s in (chain or {}).get("gated_income_structures") or (chain or {}).get("income_structures") or []:
+            if (s.get("premium") or {}).get("premium_score") is not None:
+                rows.append((sym, s))
+    if not rows:
+        return muted("Premium scores appear after the next nightly run (this report predates the "
+                     "premium-selling score). Ranking will show vol edge, time value, 30-45 DTE "
+                     "window and 16-30 delta placement per structure.")
+    rows.sort(key=lambda t: -t[1]["premium"]["premium_score"])
+    top = rows[:10]
+    labels = [f"{s.get('contract_id', '')[:18]}… {s.get('days_to_expiration')}d" for _, s in top][::-1]
+    names = {"vol_edge": "Vol edge (30%)", "time_value": "Time value (25%)",
+             "entry_window": "30-45 DTE window (25%)", "strike_placement": "16-30 delta (20%)"}
+    colors = {"vol_edge": "#c9a227", "time_value": "#8a6d3b", "entry_window": "#5b8db8", "strike_placement": "#7fa37a"}
+    fig = go.Figure()
+    for k, label in names.items():
+        w = top[0][1]["premium"]["weights"][k]
+        fig.add_bar(y=labels, x=[round(100 * w * s["premium"]["components"][k], 1) for _, s in top][::-1],
+                    name=label, orientation="h", marker_color=colors[k])
+    fig.update_layout(**base_layout("Premium score by component (0-100)", height=420), barmode="stack")
+    rows_html = "".join(
+        f"<tr><td>{esc(s.get('contract_id'))}</td><td>{esc(s['premium']['premium_score'])}</td>"
+        f"<td>{esc(s.get('days_to_expiration'))}</td>"
+        f"<td>{esc(s['premium']['inputs'].get('short_leg_abs_delta'))}</td>"
+        f"<td>{esc(round(100 * s['premium']['inputs']['monthly_return_on_risk'], 1))}%</td>"
+        f"<td>${esc(s['premium']['management']['take_profit_at_credit_captured'])} / "
+        f"{esc(s['premium']['management']['days_until_time_exit'])}d</td>"
+        f"<td>{esc(', '.join(s['premium']['flags']) or '—')}</td></tr>"
+        for _, s in top)
+    table = ("<div class='dc-wrap'><table><thead><tr><th scope='col'>Structure</th><th scope='col'>Score</th>"
+             "<th scope='col'>DTE</th><th scope='col'>|Δ| short</th><th scope='col'>Return on collateral / 30d</th>"
+             "<th scope='col'>Take profit / days to 21-DTE exit</th><th scope='col'>Flags</th></tr></thead>"
+             f"<tbody>{rows_html}</tbody></table></div>")
+    return (chart(fig, "premium-candidates",
+                  source="Cboe delayed chain + Yahoo EOD realized vol; hedge_desk.premium_score")
+            + table)
+
+
 def card(title: str, body: str, wide: bool = False) -> str:
     cls = "card wide" if wide else "card"
     return f"<div class='{cls}'><h3>{esc(title)}</h3>{body}</div>"
@@ -925,6 +968,7 @@ def build() -> None:
         card("Cash-secured puts", csp_scan_chart(r.get("cash_secured_put_scan")), wide=True),
         card("Options premium", premium_yield_chart(r.get("cash_secured_put_scan")), wide=True),
         card("Equity candidates", candidates_chart(r.get("candidates", [])), wide=True),
+        card("Premium-selling candidates", premium_candidates_panel(r.get("chain_income", {})), wide=True),
         card("Premium chain income", chain_panel(r.get("chain_income", {})), wide=True),
         card("Rates", rates_chart(r.get("rates_environment", {}), series)),
         card("Volatility", vix_chart(series, r.get("vix_regime", {}))),

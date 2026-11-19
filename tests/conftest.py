@@ -22,3 +22,37 @@ import pytest
 @pytest.fixture(autouse=True)
 def _sandbox_fred_cache(tmp_path, monkeypatch):
     monkeypatch.setenv("HEDGE_DESK_CACHE_DIR", str(tmp_path / "fred-cache"))
+
+
+# --- Hermetic network guard (CarpeDATA invariant 5) --------------------------
+# Any attempt to open a non-loopback connection during the session raises, so
+# a leaking test fails loudly instead of silently hitting a real provider.
+# Local servers on 127.0.0.1/::1 stay allowed. Equivalent to pytest-socket's
+# --disable-socket --allow-hosts=127.0.0.1.
+import os
+import socket
+
+_LOOPBACK = {"127.0.0.1", "::1", "localhost"}
+_real_create_connection = socket.create_connection
+
+
+class LiveNetworkBlocked(OSError):
+    """Raised when a test tries to reach the live network."""
+
+
+def _guarded_create_connection(address, *args, **kwargs):
+    host = str(address[0]) if isinstance(address, tuple) else str(address)
+    if host in _LOOPBACK:
+        return _real_create_connection(address, *args, **kwargs)
+    raise LiveNetworkBlocked(f"test attempted live network access to {host}; inject a transport")
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _no_live_network():
+    saved = {k: os.environ.pop(k) for k in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "ALL_PROXY", "all_proxy") if k in os.environ}
+    socket.create_connection = _guarded_create_connection
+    try:
+        yield
+    finally:
+        socket.create_connection = _real_create_connection
+        os.environ.update(saved)

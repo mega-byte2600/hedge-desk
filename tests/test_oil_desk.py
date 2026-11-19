@@ -200,15 +200,23 @@ class NightlyOilTests(unittest.TestCase):
             os.environ["HEDGE_DESK_CACHE_DIR"] = self._old_cache
 
     def _run(self, oil_transport, tmp):
-        return run_nightly(
-            ["AAPL"],
-            artifacts_dir=tmp,
-            transport=_fake_eod_transport,
-            chain_transport=_fake_chain_transport,
-            rates_transport=_FakeRatesTransport(),
-            macro_transport=_FakeRatesTransport(),
-            oil_transport=oil_transport,
-        )
+        # Hermetic: every provider this test does not exercise fails closed
+        # locally instead of reaching the live network (CLAUDE.md: CI never
+        # uses the live network).
+        from unittest.mock import patch
+        with patch("hedge_desk.nightly.build_market_context",
+                   return_value={"status": "UNAVAILABLE", "sources": {}}):
+            return run_nightly(
+                ["AAPL"],
+                artifacts_dir=tmp,
+                transport=_fake_eod_transport,
+                chain_transport=_fake_chain_transport,
+                csp_transport=_failing_oil_transport,
+                rates_transport=_FakeRatesTransport(),
+                vix_transport=_failing_oil_transport,
+                macro_transport=_FakeRatesTransport(),
+                oil_transport=oil_transport,
+            )
 
     def test_failing_oil_transport_blocks_without_breaking_report(self):
         with tempfile.TemporaryDirectory() as tmp:

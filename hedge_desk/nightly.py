@@ -262,8 +262,14 @@ def run_nightly(
         except Exception:  # noqa: BLE001 - RV is optional context; the score flags it
             rv_annual = None
         if isinstance(chain, dict):
+            import math as _m
             from hedge_desk.premium_score import rank_chain_income
-            chain_results[cs] = rank_chain_income(chain, rv_annual)
+            # Short rate: effective fed funds (FRED DFF), as a continuous rate.
+            try:
+                rate = _m.log1p(float((rates or {}).get("fed_funds_effective_rate")) / 100.0)
+            except (TypeError, ValueError):
+                rate = 0.0
+            chain_results[cs] = rank_chain_income(chain, rv_annual, rate)
 
     csp_results = apply_vix_regime_filter(vix, csp_results)
 

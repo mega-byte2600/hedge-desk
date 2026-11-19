@@ -35,7 +35,38 @@ def test_missing_rv_is_flagged_not_invented_and_ranking_is_by_score():
                                    _s("SPY261224P00700000--SPY261224P00695000", 36, 120, 380, 0.24, "0.31")]}
     ranked = rank_chain_income(chain, None)
     assert "RV_UNAVAILABLE" in ranked["income_structures"][0]["premium"]["flags"]
+    assert ranked["income_structures"][0]["premium"]["components"]["vol_edge"] == 0.0
+    assert ranked["ranking"]["dividend_yield"] == 0.0  # no symbol -> no assumed yield
     assert ranked["income_structures"][0]["contract_id"].startswith("SPY261224P00700000")
     assert ranked["ranking"]["by"] == "premium_score"
     scores = [r["premium"]["premium_score"] for r in ranked["income_structures"]]
     assert scores == sorted(scores, reverse=True)
+
+
+def test_merton_delta_matches_win_probability_model():
+    from hedge_desk.risk.win_probability import _bs_put_delta
+    d = short_leg_delta(737.5, 700, 36 / 365, 0.22, False, rate=0.038, dividend_yield=0.012)
+    assert abs(d - abs(_bs_put_delta(737.5, 700, 36 / 365, 0.038, 0.22, 0.012))) < 1e-12
+    assert d != short_leg_delta(737.5, 700, 36 / 365, 0.22, False)
+
+
+def test_spy_gets_its_dividend_assumption_and_annualized_ror():
+    chain = {"symbol": "SPY", "underlying_bid": "737", "underlying_ask": "738",
+             "income_structures": [_s("SPY261224P00700000--SPY261224P00695000", 36, 120, 380, 0.24)]}
+    r = rank_chain_income(chain, 0.15, rate=0.038)
+    p = r["income_structures"][0]["premium"]
+    assert r["ranking"]["dividend_yield"] == 0.012 and p["inputs"]["rate"] == 0.038
+    assert abs(p["inputs"]["annualized_return_on_risk"] - p["inputs"]["monthly_return_on_risk"] * 365 / 30) < 1e-3
+
+
+def test_trader_panel_renders_ranked_components_and_empty_state():
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location(
+        "bpd", Path(__file__).resolve().parents[1] / "scripts" / "build_plotly_dashboard.py")
+    bpd = importlib.util.module_from_spec(spec); spec.loader.exec_module(bpd)
+    assert "next nightly run" in bpd.premium_candidates_panel({})
+    chain = {"symbol": "SPY", "underlying_bid": "737", "underlying_ask": "738",
+             "income_structures": [_s("SPY261224P00700000--SPY261224P00695000", 36, 120, 380, 0.24)]}
+    html = bpd.premium_candidates_panel({"SPY": rank_chain_income(chain, 0.15, rate=0.038)})
+    assert "premium-candidates" in html and "Return on collateral" in html and "16-30 delta" in html

@@ -64,7 +64,11 @@ def _urlopen(request: urllib.request.Request, timeout: int) -> Tuple[int, bytes]
         return 0, str(exc).encode("utf-8")
 
 
-RETRYABLE_STATUSES = frozenset({0, 429, 500, 502, 503, 504})
+# 429 (rate limited) is deliberately NOT retried: the provider has told us to
+# stop, so the call fails closed with its status and the caller reports it
+# (CarpeDATA invariant 4: respect every provider's limits). Only transport
+# errors (0) and transient 5xx are retried.
+RETRYABLE_STATUSES = frozenset({0, 500, 502, 503, 504})
 
 
 def with_retries(
@@ -77,7 +81,7 @@ def with_retries(
 ) -> Transport:
     """Wrap a GET transport with bounded exponential backoff and full jitter.
 
-    Retries only transport errors (status 0) and 429/5xx, the transient
+    Retries only transport errors (status 0) and 5xx (never 429), the transient
     classes in Google SRE "Handling Overload" and the AWS Architecture Blog
     "Exponential Backoff and Jitter" (full-jitter variant). GET is
     idempotent, so a retry cannot double-act. The last response is returned
@@ -108,7 +112,10 @@ def make_get_transport(
         req = urllib.request.Request(url, headers=dict(headers))
         return _urlopen(req, timeout)
 
-    return with_retries(transport)
+    # Single attempt, exactly as established. Callers own their retry policy
+    # (_fetch_json/_fetch_bytes already retry; the SEC probe must not retry).
+    # Wrapping here stacked retries (up to 9 calls) — reverted per CarpeDATA.
+    return transport
 
 
 _DEFAULT_UA = os.environ.get(

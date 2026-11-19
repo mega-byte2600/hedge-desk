@@ -133,7 +133,9 @@ jobs:
           assert candidates==golden
           assert about['display_name']=='mbolton'
           assert about['linkedin_url']=='https://www.linkedin.com/in/bolton-2600/'
-          assert len({c['desk_id'] for c in candidates['candidates']})==6
+          # Desk count comes from the content-locked golden fixture (exact equality is
+          # asserted above); a duplicated literal went stale when 4dbde8a changed desks.
+          assert len({c['desk_id'] for c in candidates['candidates']})==len({c['desk_id'] for c in golden['candidates']})
           assert all(c['trade_authorized'] is False for c in candidates['candidates'])
           PY
       - name: Browser-path and ETag regression smoke
