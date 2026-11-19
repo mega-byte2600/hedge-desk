@@ -32,3 +32,10 @@ build/
 
 # Generated nightly AM reports / demos (real market data, regenerated each run).
 /artifacts/
+
+# Claude Code local state (never commit)
+.claude/state/
+.claude/settings.local.json
+.env
+.env.*
+!.env.example
