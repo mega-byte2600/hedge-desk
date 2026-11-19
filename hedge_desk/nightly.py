@@ -238,8 +238,32 @@ def run_nightly(
                 oil = res
             elif kind == "earnings":
                 earnings_results[key] = res
+
             elif kind == "market_context":
                 market_context = res
+
+    # Premium-selling ranking (GP brief 2026-11-19): score every SPY vertical on
+    # vol edge (IV vs the underlying's realized vol), time value, entry window
+    # and short-strike placement. RV comes from the same EOD source as the
+    # watchlist; on failure the score marks RV_UNAVAILABLE (never invented).
+    for cs, chain in list(chain_results.items()):
+        rv_annual = None
+        try:
+            from hedge_desk.features import build_symbol_features
+            from hedge_desk.premium_score import annualized_rv
+            under = (ingest_eod((cs,), cutoff, transport=transport, range_param=FEATURE_YAHOO_RANGE)
+                     if transport else ingest_eod((cs,), cutoff, range_param=FEATURE_YAHOO_RANGE))
+            row = next((r for r in under.get("source_results", [])
+                        if r.get("symbol") == cs and r.get("status") == "PASS" and r.get("days")), None)
+            days = [EodDay(d["date"], d["close"], d["open"], d["high"], d["low"], d["volume"])
+                    for d in row["days"]] if row else []
+            rv = build_symbol_features(cs, days).realized_vol_21d if days else None
+            rv_annual = annualized_rv(float(rv)) if rv is not None else None
+        except Exception:  # noqa: BLE001 - RV is optional context; the score flags it
+            rv_annual = None
+        if isinstance(chain, dict):
+            from hedge_desk.premium_score import rank_chain_income
+            chain_results[cs] = rank_chain_income(chain, rv_annual)
 
     csp_results = apply_vix_regime_filter(vix, csp_results)
 

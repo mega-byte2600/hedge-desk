@@ -102,3 +102,25 @@ Scored by a fresh reviewer after the round-1 fixes. The loop was **paused at the
      put-call parity with dividends, and an IV round trip.
    - Note: N(d2) is the **risk-neutral** probability, the market's price of
      the outcome. It is not a real-world forecast.
+
+## GP brief: premium-selling ranking (2026-11-19)
+The GP stated the objective: the desk sells premium, so candidates are ranked
+by time value captured at the right point in the contract's life.
+`hedge_desk/premium_score.py` scores every credit vertical from 0 to 100 as
+a transparent weighted sum, and every component is reported:
+
+| Component | Weight | Full marks when | Source |
+|---|---|---|---|
+| Vol edge (IV vs 21-day realized vol) | 30% | (IV−RV)/IV ≥ 0.5 | Carr & Wu 2009; Bollerslev, Tauchen & Zhou 2009 (variance risk premium) |
+| Time value | 25% | credit/max-loss ≥ 50% per 30 days | monthly return on risk |
+| Entry window | 25% | 30–45 DTE (zero at 14 and 60) | practitioner premium-selling management; CBOE PUT/BXM monthly roll |
+| Strike placement | 20% | short-leg delta 0.16–0.30 (zero at 0.05 and 0.45) | about 70–84% chance of expiring OTM |
+
+- Management printed per candidate: take profit at 50% of the credit, or
+  close by 21 DTE.
+- Missing data is flagged (`RV_UNAVAILABLE`, `IV_UNAVAILABLE`), never
+  invented.
+- The nightly run computes the underlying's realized volatility from the
+  same EOD source and ranks the chain.
+- The Desk call shortlist and the am-demo table use the score.
+- 1,320 tests pass.

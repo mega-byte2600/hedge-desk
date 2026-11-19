@@ -43,3 +43,11 @@ def test_approved_and_current_yields_paper_candidate_only():
     assert call["action"] == "PAPER_CANDIDATE" and call["trade_authorized"] is False
     stale = build_desk_call(_report([_s("ok", decision="APPROVED")], current=False))
     assert stale["action"] == "NO_TRADE" and "DATA_NOT_CURRENT" in stale["reason_codes"]
+
+
+def test_premium_score_ranks_when_present():
+    a = _s("a", ror="0.9"); a["premium"] = {"premium_score": 40.0, "components": {}, "management": {"time_exit_dte": 21}}
+    b = _s("b", ror="0.2"); b["premium"] = {"premium_score": 82.5, "components": {}, "management": {"time_exit_dte": 21}}
+    call = build_desk_call(_report([a, b]))
+    assert [s["contract_id"] for s in call["shortlist"]] == ["b", "a"]
+    assert call["shortlist"][0]["premium_score"] == 82.5 and call["ranked_by"].startswith("premium score")

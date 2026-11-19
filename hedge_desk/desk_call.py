@@ -7,8 +7,8 @@ carries. It adds no model and changes no gate:
 * ACTION is NO_TRADE unless data is current AND a structure's risk-gate
   decision is APPROVED. The gate is consumed, never re-evaluated (AGENTS.md:
   agents may not substitute or weaken the Risk-of-Ruin gate).
-* SHORTLIST is at most three structures in the scanner's return-on-risk
-  order; probability of profit and EV are displayed, not used to rank.
+* SHORTLIST is at most three structures ranked by the premium-selling score
+  (hedge_desk.premium_score) when present, else by return on risk.
 * INVALIDATION is the structure's break-even; EXITS are the released
   PremiumExitPolicy defaults (50% profit capture, 50%-of-max-loss stop).
 * RISK is max loss as a share of the DEMO equity the gate already uses; it is
@@ -34,10 +34,13 @@ def _dec(value: Any) -> Optional[Decimal]:
 
 
 def _rank_key(s: Dict[str, Any]):
-    """Return on risk, matching the scanner's released order (GP decision:
-    EV-first ranking rejected). PoP and EV are shown, never used to rank."""
+    """Premium score (hedge_desk.premium_score, GP brief 2026-11-19) when the
+    nightly carries it; otherwise the scanner's return-on-risk order."""
+    prem = (s.get("premium") or {}).get("premium_score")
     ror = _dec(s.get("return_on_risk")) or Decimal("0")
-    return (-ror, s.get("contract_id", ""))
+    if prem is not None:
+        return (0, -Decimal(str(prem)), -ror, s.get("contract_id", ""))
+    return (1, Decimal("0"), -ror, s.get("contract_id", ""))
 
 
 def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, Any]:
@@ -77,11 +80,16 @@ def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, An
             "max_loss_pct_demo_equity": (
                 str((max_loss / equity * 100).quantize(Decimal("0.01"))) if equity else None),
             "gate_decision": s.get("gate_decision", "NOT_EVALUATED"),
+            "premium_score": (s.get("premium") or {}).get("premium_score"),
+            "premium_components": (s.get("premium") or {}).get("components"),
+            "time_exit_dte": ((s.get("premium") or {}).get("management") or {}).get("time_exit_dte"),
         })
     action = "PAPER_CANDIDATE" if approved and not reasons else "NO_TRADE"
     vix = report.get("vix_regime") or {}
     vix_close = _dec(vix.get("last_close"))
-    ranked_by = "return on risk (probability of profit and EV shown for information)"
+    ranked_by = ("premium score: vol edge 30%, time value 25%, 30-45 DTE window 25%, 16-30 delta 20%"
+                 if shortlist and shortlist[0].get("premium_score") is not None
+                 else "return on risk (premium score absent in this nightly; next run adds it)")
     if action == "NO_TRADE":
         headline = ("No trade today. " + ("Risk gate has not approved any structure; "
                     "the shortlist is research only." if structures else "Nothing admissible."))
