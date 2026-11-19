@@ -12,6 +12,7 @@ and model changes are implemented and tested here but **not self-approved**
 | Round | Version | Code quality | API & data health | UI/UX | Insight | Rigor | Actionability |
 |---|---|---|---|---|---|---|---|
 | 1 (baseline, pre-fix) | `review-r1` | 6 | 6 | 5 | 7 | 6 | 5 |
+| 2 (after r1 fixes) | `review-r2` | 8 | 7 | 6 | 7 | 7 | 7 |
 
 ## Round 1 — fixes shipped in `review-r1`
 
@@ -77,3 +78,7 @@ and model changes are implemented and tested here but **not self-approved**
 
 **Needs independent (human) review before release:** promoting N(d2) to the
 gate value, and the EV-first ranking.
+
+## Round 2 — status
+
+Scored by a fresh reviewer after the round-1 fixes. The loop was **paused at the ~500K-token budget** before a round-2 fix pass; see the final session report for the open items and owner decisions.
