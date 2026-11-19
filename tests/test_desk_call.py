@@ -26,10 +26,11 @@ def test_indeterminate_gate_is_always_no_trade():
     assert call["context"]["vix_close"] == "25.46"
 
 
-def test_ranks_by_ev_then_pop_and_prints_exits():
-    call = build_desk_call(_report([_s("x", "-9.0", "0.8"), _s("y", "-2.0", "0.6"),
-                                    _s("z", "-2.0", "0.7"), _s("w", "-20", "0.9")]))
-    assert [s["contract_id"] for s in call["shortlist"]] == ["z", "y", "x"]
+def test_ranks_by_return_on_risk_and_prints_exits():
+    call = build_desk_call(_report([_s("x", "-9.0", "0.8", ror="0.9"), _s("y", "-2.0", "0.6", ror="0.3"),
+                                    _s("z", "-2.0", "0.7", ror="0.5"), _s("w", "-20", "0.9", ror="0.1")]))
+    assert [s["contract_id"] for s in call["shortlist"]] == ["x", "z", "y"]
+    assert call["shortlist"][0]["risk_neutral_ev"] == "-9.0"  # shown, not ranked
     top = call["shortlist"][0]
     assert top["take_profit_at_credit_captured"] == "50.00"
     assert top["stop_at_loss"] == "200.00"

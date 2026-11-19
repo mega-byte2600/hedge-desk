@@ -7,9 +7,8 @@ carries. It adds no model and changes no gate:
 * ACTION is NO_TRADE unless data is current AND a structure's risk-gate
   decision is APPROVED. The gate is consumed, never re-evaluated (AGENTS.md:
   agents may not substitute or weaken the Risk-of-Ruin gate).
-* SHORTLIST is at most three structures, ranked by risk-neutral EV and then
-  probability of profit when the nightly carries them (cboe_chain), else by
-  return on risk with an explicit flag.
+* SHORTLIST is at most three structures in the scanner's return-on-risk
+  order; probability of profit and EV are displayed, not used to rank.
 * INVALIDATION is the structure's break-even; EXITS are the released
   PremiumExitPolicy defaults (50% profit capture, 50%-of-max-loss stop).
 * RISK is max loss as a share of the DEMO equity the gate already uses; it is
@@ -35,12 +34,10 @@ def _dec(value: Any) -> Optional[Decimal]:
 
 
 def _rank_key(s: Dict[str, Any]):
-    ev = _dec(s.get("risk_neutral_ev"))
-    pop = _dec(s.get("probability_of_profit")) or Decimal("0")
+    """Return on risk, matching the scanner's released order (GP decision:
+    EV-first ranking rejected). PoP and EV are shown, never used to rank."""
     ror = _dec(s.get("return_on_risk")) or Decimal("0")
-    if ev is not None:
-        return (0, -ev, -pop, s.get("contract_id", ""))
-    return (1, -ror, Decimal("0"), s.get("contract_id", ""))
+    return (-ror, s.get("contract_id", ""))
 
 
 def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, Any]:
@@ -84,9 +81,7 @@ def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, An
     action = "PAPER_CANDIDATE" if approved and not reasons else "NO_TRADE"
     vix = report.get("vix_regime") or {}
     vix_close = _dec(vix.get("last_close"))
-    ranked_by = ("risk-neutral EV, then probability of profit"
-                 if shortlist and shortlist[0]["risk_neutral_ev"] is not None
-                 else "return on risk (EV fields absent in this nightly; next run adds them)")
+    ranked_by = "return on risk (probability of profit and EV shown for information)"
     if action == "NO_TRADE":
         headline = ("No trade today. " + ("Risk gate has not approved any structure; "
                     "the shortlist is research only." if structures else "Nothing admissible."))

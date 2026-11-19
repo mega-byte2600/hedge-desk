@@ -354,14 +354,10 @@ def real_chain_income(
                 "risk_neutral_ev": f"{probs['expected_value']:.2f}",
                 "short_leg_iv": f"{s_iv:.4f}",
             })
-    # Rank by risk-neutral EV (least negative = cheapest to own the risk),
-    # then probability of profit; spreads without exchange IV sort last.
-    # Return-on-risk alone favoured near-the-money coin flips.
-    structures.sort(key=lambda s: (
-        "risk_neutral_ev" not in s,
-        -float(s.get("risk_neutral_ev", "-1e18")),
-        -float(s.get("probability_of_profit", "0")),
-    ))
+    # Ranking: return on risk (GP decision 2026-11-19 — EV-first ranking
+    # rejected pending the GP's stated objective). Probability of profit and
+    # risk-neutral EV are reported per structure as information only.
+    structures.sort(key=lambda s: -float(s["return_on_risk"]))
     top = structures[:40]  # present the best defined-risk economics, not all pairs
     return {
         "schema_version": "hedge-desk-cboe-chain-1.0.0",

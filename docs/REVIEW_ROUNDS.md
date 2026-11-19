@@ -82,3 +82,23 @@ gate value, and the EV-first ranking.
 ## Round 2 — status
 
 Scored by a fresh reviewer after the round-1 fixes. The loop was **paused at the ~500K-token budget** before a round-2 fix pass; see the final session report for the open items and owner decisions.
+
+## GP decisions applied (2026-11-19)
+1. **Stale-report fallback: KEEP.** This is the industry pattern of serving
+   the last good result while retrying (stale-while-revalidate, RFC 5861;
+   cached fallbacks as in Netflix Hystrix). A stale report can never
+   authorize anything: `freshness.trade_authorized=false`, and the Desk call
+   is NO_TRADE whenever the data is not current.
+2. **EV-first spread ranking: REJECTED.** The scanner and the Desk call are
+   back to return-on-risk order. Probability of profit and risk-neutral EV
+   stay as information columns only. The ranking objective is open until the
+   GP states the desk's purpose.
+3. **Win probability promoted to exact BSM N(d2), model 2.0.0.**
+   - Adds a continuous risk-free rate and dividend yield (Merton), with
+     implied volatility inverted under the same (r, q).
+   - The no-arbitrage band is checked, and the delta-rule value is kept for
+     audit only.
+   - Reference cases: Hull Example 15.6, Hull Example 17.1 (Merton),
+     put-call parity with dividends, and an IV round trip.
+   - Note: N(d2) is the **risk-neutral** probability, the market's price of
+     the outcome. It is not a real-world forecast.
