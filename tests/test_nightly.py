@@ -127,10 +127,17 @@ def _fake_vix_transport(url):
     return 200, json.dumps(payload).encode("utf-8")
 
 
+def _offline_transport(url):
+    """Hermetic stand-in for providers a test does not exercise: fail closed
+    (the provider reports BLOCKED) instead of reaching the live network."""
+    return 503, b""
+
+
 def _fake_csp_transport(url):
     import json
-    from datetime import datetime, timedelta, timezone
-    exp = (datetime.now(timezone.utc) + timedelta(days=38)).strftime("%y%m%d")
+    from datetime import timedelta
+    # Relative to the fixed batch instant, never the wall clock (deterministic).
+    exp = (_FixedClock.FIXED + timedelta(days=38)).strftime("%y%m%d")
     payload = {
         "data": {
             "symbol": "AAPL", "current_price": "36.00", "bid": "36.00", "ask": "36.10",
@@ -155,12 +162,14 @@ class NightlyTests(unittest.TestCase):
             os.environ["HEDGE_DESK_CACHE_DIR"] = self._old_cache
 
     def _run(self, tmp):
-        with patch("hedge_desk.nightly.build_market_context", side_effect=_fake_market_context):
+        with patch("hedge_desk.nightly.datetime", _FixedClock), \
+                patch("hedge_desk.nightly.build_market_context", side_effect=_fake_market_context):
             return run_nightly(
                 ["AAPL"], artifacts_dir=tmp, transport=_fake_transport,
                 chain_transport=_fake_chain_transport, csp_transport=_fake_csp_transport,
                 rates_transport=_fake_rates_transport,
                 vix_transport=_fake_vix_transport, macro_transport=_fake_rates_transport,
+                oil_transport=_offline_transport,
             )
 
     def test_run_nightly_writes_content_addressed_report(self):
@@ -223,6 +232,7 @@ class NightlyTests(unittest.TestCase):
                         rates_transport=_fake_rates_transport,
                         vix_transport=_fake_vix_transport,
                         macro_transport=_fake_rates_transport,
+                oil_transport=_offline_transport,
                     )
             freshness = report["data_freshness"]
             self.assertEqual(freshness["expected_trading_day"], "2026-09-18")
