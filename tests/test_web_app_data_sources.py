@@ -15,6 +15,13 @@ class _Rows:
 class DataSourceStatusTests(unittest.TestCase):
     def setUp(self):
         base_server._api_cache.clear()
+        # Hermetic: the FRED probe is the one public source the per-test
+        # patches did not cover, so it reached fred.stlouisfed.org from a
+        # worker thread. Stub it for every test in this class (CarpeDATA).
+        fred = patch.object(web_app, "fred_series_rows",
+                            return_value=[{"date": "2026-10-01", "value": "1"}])
+        fred.start()
+        self.addCleanup(fred.stop)
 
     def tearDown(self):
         base_server._api_cache.clear()

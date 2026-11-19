@@ -86,14 +86,20 @@ It ships dark until the GP enables it.
    behaviour requires the GP's yes.
 5. Record symptom, cause, fix and prevention in `docs/ENGINEERING_LESSONS.md`.
 
-## Open items to bring to the GP (found when CarpeDATA was created)
-- `feed_base.with_retries`, merged in #171, retries **429** with jittered
-  backoff for Cboe and Yahoo EOD.
-  - Should a 429 instead stop immediately, honouring `Retry-After`, as
-    Hardball does?
-  - That is the GP's call, because it changes an established connection.
-- One FRED request was seen during the full test suite from a background
-  thread. Make it hermetic.
+## Open items for the GP (CarpeDATA log)
+- RESOLVED 2026-11-19 (harm caught by `guard`): #171 made
+  `make_get_transport` add retries. That stacked on `_fetch_json`'s own
+  retries (up to 9 calls) and broke the SEC probe's "no retry" contract. It
+  is restored to a single attempt and test-guarded.
+- RESOLVED 2026-11-19: `feed_base.with_retries` (Cboe and Yahoo EOD) no
+  longer retries 429. A rate limit now stops the call and is reported.
+- OPEN: the older `_fetch_json` and `_fetch_bytes` in `feed_base.py` (used by
+  the keyless public-feed adapters) retry 429 twice with 1 s and 2 s waits.
+  - This is established behaviour, so it is untouched.
+  - The best-practice option is to stop on 429, or to honour `Retry-After`.
+  - It needs the GP's yes because it changes established connections.
+- OPEN: one FRED request seen during the full test suite (see `check`). Make
+  it hermetic.
 
 ## Definition of done
 The GP can see, from one `check` table, that every provider is LIVE or
