@@ -11,6 +11,20 @@ where delta_put is computed from REAL option inputs (strike, spot, time to
 expiry, risk-free rate) and an implied volatility backed out of the real
 option mid price by Black-Scholes inversion (bisection).
 
+Correction (review round 1): |delta_put| = N(-d1) is only an approximation
+of the risk-neutral probability of finishing in the money, which is N(-d2)
+(Hull, *Options, Futures, and Other Derivatives*, 11th ed., §15.8 / eq. 15.21:
+N(d2) is the risk-neutral probability that a call is exercised). Because
+d1 = d2 + sigma*sqrt(T) > d2, N(-d1) < N(-d2): the delta rule UNDERSTATES
+the put's P(ITM) and so OVERSTATES the short put's win probability, by
+roughly phi(d2)*sigma*sqrt(T) (about 2.6 points for a 30-day 5%-OTM put at
+28% IV). Both are reported: ``win_probability`` keeps the
+released delta rule (model 1.0.0, consumed unchanged), and
+``risk_neutral_win_probability`` = N(d2) is the exact Black-Scholes value.
+Promoting N(d2) to the decision value is a model change that needs the
+independent review AGENTS.md requires; it is not self-approved here.
+Neither is a real-world (physical-measure) probability.
+
 This is a sourced, reproducible model input — NOT a fabricated number and NOT
 a performance claim. It is a financial-model change and therefore requires
 reference cases and independent review before release (AGENTS.md). It is
@@ -25,17 +39,12 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
-# Black-Scholes normal CDF (Abramowitz & Stegun 7.1.26, 7.1.28).
 def _norm_cdf(x: float) -> float:
-    if x < -6.0:
-        return 0.0
-    if x > 6.0:
-        return 1.0
-    t = 1.0 / (1.0 + 0.2316419 * abs(x))
-    d = 0.3989422804014327 * math.exp(-0.5 * x * x)
-    # A&S 7.1.26: this polynomial is the TAIL probability for positive x.
-    tail = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))))
-    return 1.0 - tail if x >= 0 else tail
+    """Standard normal CDF via the C-library erf (exact to double precision).
+
+    Replaces the Abramowitz & Stegun 26.2.17 polynomial (|error| < 7.5e-8).
+    """
+    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
 
 
 def _bs_put_price(s: float, k: float, t: float, r: float, sigma: float) -> float:
@@ -44,6 +53,10 @@ def _bs_put_price(s: float, k: float, t: float, r: float, sigma: float) -> float
     d1 = (math.log(s / k) + (r + 0.5 * sigma * sigma) * t) / (sigma * math.sqrt(t))
     d2 = d1 - sigma * math.sqrt(t)
     return k * math.exp(-r * t) * _norm_cdf(-d2) - s * _norm_cdf(-d1)
+
+
+def _bs_d2(s: float, k: float, t: float, r: float, sigma: float) -> float:
+    return (math.log(s / k) + (r - 0.5 * sigma * sigma) * t) / (sigma * math.sqrt(t))
 
 
 def _bs_put_delta(s: float, k: float, t: float, r: float, sigma: float) -> float:
@@ -90,6 +103,8 @@ class WinProbabilityResult:
     model_id: str
     model_version: str
     source: str
+    # Exact risk-neutral P(S_T > K) = N(d2); reported, not yet the gate value.
+    risk_neutral_win_probability: Optional[Decimal] = None
 
 
 MODEL_ID = "market-implied-put-delta"
@@ -133,6 +148,11 @@ def win_probability_for_short_put(
         model_id=MODEL_ID,
         model_version=MODEL_VERSION,
         source="cboe-delayed-public-http-200",
+        risk_neutral_win_probability=min(
+            Decimal("0.9999"),
+            max(Decimal("0.0001"), Decimal(str(_norm_cdf(_bs_d2(
+                float(spot), float(strike), years, float(rate), iv))))),
+        ),
     )
 
 

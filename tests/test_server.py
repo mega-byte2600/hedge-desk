@@ -75,7 +75,6 @@ class ServerTests(unittest.TestCase):
         return quotes, []
 
     def test_live_report_recomputes_a_valid_paper_only_console_payload(self):
-        from hedge_desk.live_desk_data import STATUS_LIVE
         with patch('hedge_desk.live_desk_data.fetch_market_snapshot', self._fake_quotes):
             status, payload = self.request('/api/report')
 

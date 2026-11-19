@@ -477,7 +477,7 @@ def render_morning_markdown(report: Mapping[str, Any]) -> str:
         raise ValueError(
             "morning report is not publishable: " + ",".join(decision.reason_codes)
         )
-    summary = report["summary"]
+    report["summary"]
     war_games = report["war_games"]
     war_summary = war_games["summary"]
     premium = war_summary["premium_fixed_trade"]

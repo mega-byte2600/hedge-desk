@@ -16,7 +16,6 @@ from unittest.mock import patch
 
 from hedge_desk import rates_desk
 from hedge_desk.rates_desk import (
-    _default_transport,
     _fred_via_skill_cli,
     fred_series_rows,
 )

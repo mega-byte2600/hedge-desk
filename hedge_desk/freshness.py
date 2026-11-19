@@ -22,7 +22,7 @@ data is current. Market holidays are approximated by weekdays; a holiday shows a
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
-from typing import Iterable, Sequence
+from typing import Iterable
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 FRESHNESS_VERSION = "hedge-desk-data-freshness-1.0.0"

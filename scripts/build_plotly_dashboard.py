@@ -18,12 +18,23 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from hedge_desk.candidates import CIK_TO_SYMBOL
+from hedge_desk.desk_call import build_desk_call
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "artifacts" / "am-report-latest.json"
 OUT = ROOT / "artifacts" / "am-demo.html"
 
-PLOTLY_JS = "https://cdn.plot.ly/plotly-2.35.2.min.js"
+# Plotly is vendored in web/vendor (served at /vendor/ by hedge_desk.server).
+# Load order: served path -> repo-relative path (file:// opens of artifacts/)
+# -> versioned CDN, so charts render offline and behind CDN-blocking CSPs.
+PLOTLY_VERSION = "2.35.2"
+PLOTLY_LOADER = (
+    f'<script src="/vendor/plotly-{PLOTLY_VERSION}.min.js"></script>'
+    "<script>window.Plotly||document.write('<script src=\"../web/vendor/plotly-"
+    f"{PLOTLY_VERSION}.min.js\"><\\/script>')</script>"
+    "<script>window.Plotly||document.write('<script src=\"https://cdn.plot.ly/plotly-"
+    f"{PLOTLY_VERSION}.min.js\"><\\/script>')</script>"
+)
 
 BG = "#121215"
 FG = "#f4f1e8"
@@ -114,15 +125,54 @@ def _xy(pts):
 
 # ---------------------------------------------------------------- freshness
 
+def human_time(value) -> str:
+    """'2026-11-18T04:55:20.57+00:00' -> 'Nov 18, 2026 04:55 UTC' (raw on parse failure)."""
+    from datetime import datetime, timezone
+
+    try:
+        ts = datetime.fromisoformat(str(value).replace("Z", "+00:00")).astimezone(timezone.utc)
+    except (TypeError, ValueError):
+        return "" if value is None else str(value)
+    return ts.strftime("%b %d, %Y %H:%M UTC")
+
+
 def freshness_strip(r: dict) -> str:
     f = r.get("data_freshness", {}) or {}
     return (
-        f"<p class='ts'>REAL overnight report &middot; generated {esc(r.get('generated_at'))} &middot; "
+        f"<p class='ts'>REAL overnight report &middot; generated "
+        f"<time datetime='{esc(r.get('generated_at'))}'>{esc(human_time(r.get('generated_at')))}</time> &middot; "
         f"{esc(r.get('candidate_count'))} candidates &middot; {esc(r.get('mode'))} &middot; "
         f"eod {esc(r.get('eod_batch_status'))} &middot; "
         f"trading day {esc(f.get('expected_trading_day'))} "
         f"({'current' if f.get('is_current') else 'STALE'})</p>"
     )
+
+
+def desk_call_block(r: dict) -> str:
+    """Three-line decision header (hedge_desk.desk_call): action, shortlist, exits."""
+    call = build_desk_call(r)
+    rows = "".join(
+        f"<tr><td>{esc(s['contract_id'])}</td><td>{esc(s['days_to_expiration'])}d</td>"
+        f"<td>${esc(s['net_credit'])}</td><td>${esc(s['maximum_loss'])}</td>"
+        f"<td>{esc(s['probability_of_profit'] or '—')}</td><td>{esc(s['risk_neutral_ev'] or '—')}</td>"
+        f"<td>{esc(s['invalidation_underlying_through'])}</td>"
+        f"<td>+${esc(s['take_profit_at_credit_captured'])} / −${esc(s['stop_at_loss'])}</td></tr>"
+        for s in call["shortlist"])
+    ctx = call["context"]
+    cls = "dc-go" if call["action"] == "PAPER_CANDIDATE" else "dc-no"
+    return (
+        f"<section class='deskcall {cls}' aria-labelledby='dc-h'>"
+        f"<h2 id='dc-h'>Desk call · {esc(call['as_of'])}: {esc(call['action'].replace('_', ' '))}</h2>"
+        f"<p class='dc-head'>{esc(call['headline'])} VIX {esc(ctx['vix_close'])} "
+        f"({esc(ctx['vix_regime'])}). Reasons: {esc('; '.join(call['reason_codes']) or 'none')}.</p>"
+        "<div class='dc-wrap'><table><caption>Top 3 SPY credit verticals, ranked by "
+        f"{esc(call['ranked_by'])}. Exits: take profit at 50% of credit, stop at 50% of max loss.</caption>"
+        "<thead><tr><th scope='col'>Structure</th><th scope='col'>DTE</th><th scope='col'>Credit</th>"
+        "<th scope='col'>Max loss</th><th scope='col'>P(profit)</th><th scope='col'>RN EV</th>"
+        "<th scope='col'>Invalidation</th><th scope='col'>Exit +/−</th></tr></thead>"
+        f"<tbody>{rows}</tbody></table></div>"
+        "<p class='dc-foot'>Paper only. Probabilities are risk-neutral, not forecasts. "
+        "Nothing is trade-authorized; a human approves every paper entry.</p></section>")
 
 
 def _human_status(mode: str) -> str:
@@ -888,10 +938,10 @@ def build() -> None:
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <title>Emporion — Overnight Desk</title>
-<script src="{PLOTLY_JS}"></script>
+{PLOTLY_LOADER}
 <style>
 body{{margin:0;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;background:#0a0a0c;color:{FG}}}
-header{{padding:16px 28px;background:#0a0a0c;border-bottom:1px solid #232329;display:flex;align-items:center;gap:14px}}
+header{{padding:16px 28px;background:#0a0a0c;border-bottom:1px solid #232329;display:flex;flex-wrap:wrap;align-items:center;gap:14px}}
 .brand-logo{{width:46px;height:46px;object-fit:contain;display:block;filter:drop-shadow(0 2px 8px rgba(198,161,91,.22))}}
 header h1{{margin:0;font-family:'Fraunces',Georgia,serif;font-size:20px;letter-spacing:.02em;font-weight:600}} header .tag{{color:#c6a15b;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase}}
 .gbtn{{margin-left:auto;color:#f4f1e8;text-decoration:none;background:#121215;border:1px solid #8a6d3b;padding:8px 14px;border-radius:6px;font-size:13px;white-space:nowrap}}
@@ -920,7 +970,7 @@ table.health th,table.health td{{text-align:left;padding:6px 8px;border-bottom:1
 table.health th{{color:{MUTED};font-weight:600}}
 td.ok{{color:#27ae60}} td.warn{{color:#f39c12}}
 .blocked{{background:#2a1a12;border:1px solid #7a4a1f;border-radius:8px;padding:12px;margin:8px 0;font-size:13px}}
-@media(max-width:900px){{.grid{{grid-template-columns:1fr}}.grid{{padding:0 12px 12px}}header{{padding:14px 12px}}.ts{{padding:8px 12px}}}}
+@media(max-width:900px){{.grid{{grid-template-columns:1fr}}.grid{{padding:0 12px 12px}}header{{padding:14px 12px}}.gbtn{{margin-left:0;white-space:normal}}.ts{{padding:8px 12px}}}}
 /* Plotly's floating controls must not cover chart labels on a phone. */
 .js-plotly-plot .plotly .modebar-container{{top:44px!important}}
 @media(max-width:640px){{
@@ -933,10 +983,12 @@ td.ok{{color:#27ae60}} td.warn{{color:#f39c12}}
  .card{{min-width:0}}
  .js-plotly-plot{{max-width:100%}}
 }}
+.deskcall{{overflow-wrap:anywhere;min-width:0;max-width:100%;box-sizing:border-box;margin:16px 28px;padding:14px 18px;border:1px solid #232329;border-left:4px solid #8a6d3b;border-radius:8px;background:#121215}}.deskcall h2{{margin:0 0 6px;font-size:18px}}.dc-head{{margin:0 0 10px;color:#f4f1e8}}.dc-wrap{{overflow-x:auto}}.deskcall table{{border-collapse:collapse;width:100%;font-size:13px}}.deskcall caption{{text-align:left;color:#a39e93;font-size:12px;padding-bottom:6px}}.deskcall th,.deskcall td{{padding:6px 8px;border-bottom:1px solid #232329;text-align:left;white-space:nowrap}}.dc-foot{{margin:8px 0 0;font-size:12px;color:#a39e93}}.dc-no{{border-left-color:#a39e93}}@media(max-width:900px){{.deskcall{{margin:12px}}}}
 </style></head><body>
-<header><img class="brand-logo" src="/brand/emporion-logo-hermes-transparent.png?v=20261004-power" alt=""><div><h1>Emporion Overnight Desk</h1>
+<header><img class="brand-logo" src="/brand/emporion-logo-hermes-transparent.png?v=20261004-power" alt="Emporion" onerror="this.onerror=null;this.src='../web/brand/emporion-logo-hermes-transparent.png'"><div><h1>Emporion Overnight Desk</h1>
 <div class="tag">Markets · Intelligence · Discipline</div></div>
 <a class="gbtn" href="/guide/selling-options-premium">📘 Selling Options Premium — visual guide</a></header>
+{desk_call_block(r)}
 {freshness_strip(r)}
 <div class="grid">
 {body}

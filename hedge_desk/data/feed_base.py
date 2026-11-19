@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import ssl
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable, Mapping, Sequence, Tuple
+from typing import Any, Callable, Mapping, Tuple
 
 
 Transport = Callable[[str], Tuple[int, bytes]]
@@ -62,6 +64,40 @@ def _urlopen(request: urllib.request.Request, timeout: int) -> Tuple[int, bytes]
         return 0, str(exc).encode("utf-8")
 
 
+RETRYABLE_STATUSES = frozenset({0, 429, 500, 502, 503, 504})
+
+
+def with_retries(
+    transport: Transport,
+    attempts: int = 3,
+    base_delay: float = 0.5,
+    max_delay: float = 8.0,
+    sleeper: Sleeper = time.sleep,
+    rng: Callable[[], float] = random.random,
+) -> Transport:
+    """Wrap a GET transport with bounded exponential backoff and full jitter.
+
+    Retries only transport errors (status 0) and 429/5xx, the transient
+    classes in Google SRE "Handling Overload" and the AWS Architecture Blog
+    "Exponential Backoff and Jitter" (full-jitter variant). GET is
+    idempotent, so a retry cannot double-act. The last response is returned
+    unchanged, so callers keep their fail-closed status handling.
+    """
+    if attempts < 1:
+        raise ValueError("attempts must be >= 1")
+
+    def wrapped(url: str) -> Tuple[int, bytes]:
+        status, body = transport(url)
+        for attempt in range(1, attempts):
+            if status not in RETRYABLE_STATUSES:
+                break
+            sleeper(rng() * min(max_delay, base_delay * (2 ** (attempt - 1))))
+            status, body = transport(url)
+        return status, body
+
+    return wrapped
+
+
 def make_get_transport(
     headers: Mapping[str, str],
     timeout: int = 15,
@@ -72,7 +108,7 @@ def make_get_transport(
         req = urllib.request.Request(url, headers=dict(headers))
         return _urlopen(req, timeout)
 
-    return transport
+    return with_retries(transport)
 
 
 _DEFAULT_UA = os.environ.get(

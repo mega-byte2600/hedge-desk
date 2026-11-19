@@ -90,7 +90,6 @@ def _check_eod(report: Dict) -> Dict[str, str]:
     expected = freshness.get("expected_trading_day", "unknown")
 
     # Check for fallback usage in source results.
-    sources_used = set()
     for sr in report.get("eod_source_results", []):
         # source_results don't carry source_id; check artifacts if present.
         pass

@@ -48,7 +48,6 @@ class ConnectLocalTests(unittest.TestCase):
         self.assertEqual(r["error"], "state_mismatch")
 
     def test_state_round_trip_persist_and_consume(self):
-        import os
         import tempfile
         from pathlib import Path
         from hedge_desk.connect_local import _save_state, _read_and_consume_state

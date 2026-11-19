@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Dict, Sequence, Tuple
+from typing import Dict, Tuple
 
 from hedge_desk.data.eod_ingest import EodDay
 from hedge_desk.options.requirements import (

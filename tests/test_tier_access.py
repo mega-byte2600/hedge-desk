@@ -1,7 +1,6 @@
 import os
 import tempfile
 import unittest
-from datetime import datetime, timezone
 
 from hedge_desk.membership import MembershipStore, Clock
 from hedge_desk.tier_access import (
@@ -83,7 +82,7 @@ class TierAccessEndpointTests(unittest.TestCase):
         return sc[SESSION_COOKIE].value
 
     def test_tier_endpoint_guest_is_synthetic(self):
-        import io, json
+        import json
         cookie = self._guest_session()
         env = {"PATH_INFO": "/api/tier", "REQUEST_METHOD": "GET",
                "HTTP_COOKIE": "emporion_session=" + cookie}

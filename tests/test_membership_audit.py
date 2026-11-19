@@ -9,7 +9,6 @@ from hedge_desk.membership_audit import (
     GENESIS,
     MembershipAuditLog,
     SupabaseMembershipAuditLog,
-    entry_hash,
     verify_chain,
 )
 

@@ -29,7 +29,7 @@ import hmac
 import json
 import os
 import secrets
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
@@ -424,7 +424,6 @@ class SupabaseBrokerLinkStore:
         if query:
             url += "?" + query
         import json as _json
-        import urllib.request as _ur
 
         data = _json.dumps(body).encode("utf-8") if body is not None else None
         status, raw = self._transport(method, url, self._headers(prefer), data)

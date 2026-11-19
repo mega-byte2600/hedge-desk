@@ -3,7 +3,6 @@ from decimal import Decimal
 import unittest
 
 from hedge_desk.backoffice import (
-    PortfolioPolicy,
     PositionExposure,
     evaluate_drawdown_circuit_breaker,
     evaluate_portfolio_gate,

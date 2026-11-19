@@ -125,7 +125,7 @@ def main(argv=None) -> int:
     entry = record_yellow_sheet(
         args.vault, symbol=args.symbol, strategy=args.strategy,
         thesis=args.thesis, evidence=args.evidence, invalidation=args.invalidation,
-        planned_exit=getattr(args, "planned_exit"), decision=args.decision,
+        planned_exit=args.planned_exit, decision=args.decision,
         strike=args.strike, dte=args.dte, risk_state=risk, bound_report_sha256=bound,
     )
     print(json.dumps({

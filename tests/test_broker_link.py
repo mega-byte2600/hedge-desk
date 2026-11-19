@@ -12,7 +12,6 @@ from hedge_desk.broker_link import (
     _encrypt_token,
     build_broker_gate,
 )
-from hedge_desk.membership import MembershipStore, Clock
 
 
 class BrokerLinkStoreTests(unittest.TestCase):

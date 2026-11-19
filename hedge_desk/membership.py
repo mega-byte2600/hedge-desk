@@ -30,11 +30,10 @@ from __future__ import annotations
 import hashlib
 import hmac
 import secrets
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Optional
 
 from hedge_desk.sqlite_thread import new_lock, open_connection, thread_safe
 

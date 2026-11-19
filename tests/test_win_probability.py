@@ -74,3 +74,32 @@ class WinProbabilityTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RiskNeutralReferenceCases(unittest.TestCase):
+    """Hull, Options Futures and Other Derivatives, Example 15.6:
+    S=42, K=40, r=10%, sigma=20%, T=0.5 -> d1=0.7693, d2=0.6278,
+    put price 0.81, N(d2)=0.7349 (risk-neutral P(S_T > K))."""
+
+    def test_hull_example_d2_and_cdf(self):
+        from hedge_desk.risk.win_probability import _bs_d2, _bs_put_price, _norm_cdf
+
+        self.assertAlmostEqual(_bs_d2(42, 40, 0.5, 0.10, 0.20), 0.6278, places=4)
+        self.assertAlmostEqual(_norm_cdf(0.6278), 0.7349, places=4)
+        self.assertAlmostEqual(_bs_put_price(42, 40, 0.5, 0.10, 0.20), 0.81, places=2)
+        self.assertEqual(_norm_cdf(0.0), 0.5)
+
+    def test_delta_rule_overstates_short_put_win_probability(self):
+        from datetime import date, datetime, timezone
+        from decimal import Decimal
+
+        from hedge_desk.risk.win_probability import win_probability_for_short_put
+
+        r = win_probability_for_short_put(
+            spot=Decimal("100"), strike=Decimal("95"), expiration=date(2026, 12, 18),
+            as_of=datetime(2026, 11, 18, 21, 0, tzinfo=timezone.utc),
+            option_mid_price=Decimal("1.20"))
+        self.assertIsNotNone(r.risk_neutral_win_probability)
+        self.assertLess(r.risk_neutral_win_probability, r.win_probability)
+        self.assertAlmostEqual(float(r.win_probability - r.risk_neutral_win_probability), 0.0256, places=3)
+        self.assertEqual(r.model_version, "1.0.0")  # gate value unchanged

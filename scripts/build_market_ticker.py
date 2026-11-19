@@ -257,7 +257,7 @@ def yahoo_close_quote(symbol: str, label: str, kind: str) -> dict:
     pairs = [(t, c) for t, c in zip(timestamps, closes) if c is not None]
     if len(pairs) < 2:
         raise RuntimeError(f"{symbol}: fewer than two closes returned")
-    (prev_ts, prev), (last_ts, last) = pairs[-2], pairs[-1]
+    (_prev_ts, prev), (last_ts, last) = pairs[-2], pairs[-1]
     prev = float(prev)
     last = float(last)
     if prev == 0:

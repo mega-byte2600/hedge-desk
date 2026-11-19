@@ -42,3 +42,17 @@ source = ["hedge_desk"]
 fail_under = 80
 show_missing = true
 skip_covered = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+# Gating set: syntax errors, pyflakes (undefined names, unused imports and
+# variables) and the bugbear checks that catch real defects. Long-line and
+# style findings are advisory and not gating for legacy modules.
+select = ["E9", "F", "B"]
+ignore = ["B008", "B904", "B905", "B007", "B028"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011", "B017"]

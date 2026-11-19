@@ -171,7 +171,7 @@ class SchwabMarketDataBroker:
         }
         if not isinstance(symbol, str) or not symbol.strip() or set(params) - allowed:
             return {"status": "error", "error": "invalid_history_request", "read_only": True}
-        return self._get(f"/pricehistory", token, {"symbol": symbol.strip(), **params})
+        return self._get("/pricehistory", token, {"symbol": symbol.strip(), **params})
 
     def movers(self, token: str, symbol_id: str, **params) -> dict:
         if not isinstance(symbol_id, str) or not symbol_id.strip():

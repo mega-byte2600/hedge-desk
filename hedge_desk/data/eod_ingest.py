@@ -25,6 +25,7 @@ artifact boundary. It does not estimate market value or make a trade decision.
 from __future__ import annotations
 
 import json
+from decimal import ROUND_HALF_EVEN, Decimal
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -34,7 +35,6 @@ import urllib.request
 from typing import Callable, Dict, Sequence, Tuple
 
 from hedge_desk.data.batch import (
-    BatchManifest,
     SourceBatchResult,
     SourceBatchStatus,
     build_batch_manifest,
@@ -56,6 +56,8 @@ STOOQ_CSV_URL = "https://stooq.com/q/d/l/?s={symbol}.us&d1={d1}&d2={d2}&i=d"
 # Transport injection for deterministic tests.
 Transport = Callable[[str], Tuple[int, bytes]]
 
+
+from hedge_desk.data.feed_base import with_retries  # noqa: E402
 
 @dataclass(frozen=True)
 class EodDay:
@@ -79,7 +81,21 @@ class EodSymbolResult:
     source_id: str = EOD_SOURCE_ID  # which source actually served this symbol
 
 
-def _default_transport(url: str) -> Tuple[int, bytes]:
+PRICE_QUANTUM = Decimal("0.0001")
+
+
+def _px(value) -> str:
+    """Quantize a vendor float price to 4 dp.
+
+    Yahoo's chart API serializes float32 artefacts (12.92 -> 12.920000076293945);
+    US equity prices are quoted to at most 4 decimals (Reg NMS Rule 612 sub-penny
+    for < $1), so 4 dp is lossless for real quotes and strips the noise.
+    """
+    q = Decimal(repr(float(value))).quantize(PRICE_QUANTUM, rounding=ROUND_HALF_EVEN)
+    return format(q.normalize(), "f") if q != q.to_integral_value() else format(q.to_integral_value(), "f") + ".0"
+
+
+def _single_attempt_transport(url: str) -> Tuple[int, bytes]:
     req = urllib.request.Request(
         url, headers={"Accept": "application/json", "User-Agent": "hedge-desk/1.0"}
     )
@@ -90,6 +106,10 @@ def _default_transport(url: str) -> Tuple[int, bytes]:
         return exc.code, exc.read()
     except Exception as exc:
         return 0, str(exc).encode("utf-8")
+
+
+# Bounded retry with jittered backoff on transient failures (feed_base).
+_default_transport = with_retries(_single_attempt_transport)
 
 
 def _canonical_payload(symbol: str, days: Sequence[EodDay]) -> str:
@@ -158,10 +178,10 @@ def _parse_chart_payload(symbol: str, raw: bytes) -> Tuple[Tuple[EodDay, ...], s
         day_date = datetime.fromtimestamp(int(ts), tz=timezone.utc).date().isoformat()
         vals = {
             "date": day_date,
-            "open": str(float(open_)),
-            "high": str(float(high)),
-            "low": str(float(low)),
-            "close": str(float(close)),
+            "open": _px(open_),
+            "high": _px(high),
+            "low": _px(low),
+            "close": _px(close),
         }
         if not all(_decimal_ok(v) for v in (vals["open"], vals["high"], vals["low"], vals["close"])):
             return (), "NON_NUMERIC_PRICE"

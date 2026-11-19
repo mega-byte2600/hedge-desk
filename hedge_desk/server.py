@@ -18,8 +18,6 @@ from hedge_desk.candidates import (
     build_real_eod_candidate_feed,
 )
 from hedge_desk.risk.dashboard import build_candidate_risk_dashboard
-from hedge_desk.console_report import build_console_payload
-from hedge_desk.overnight import current_morning_report
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 DEPLOY_ROOT = Path.cwd()
@@ -207,6 +205,81 @@ def build_live_console_payload():
     }
 
 
+# --- last-good console report (degrade, never fabricate) -------------------
+LAST_GOOD_MAX_AGE_SECONDS = 72 * 3600  # covers a weekend of upstream outage
+
+
+def _last_good_path():
+    import os
+    import tempfile
+    from pathlib import Path
+
+    root = os.environ.get("HEDGE_DESK_STATE_DIR") or tempfile.gettempdir()
+    return Path(root) / "hedge-desk-console-last-good.json"
+
+
+def save_last_good_console(payload, now=None):
+    """Persist the last successfully built REAL console payload."""
+    import time as _time
+
+    try:
+        record = {"saved_at_epoch": float(now if now is not None else _time.time()), "payload": payload}
+        path = _last_good_path()
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(record), encoding="utf-8")
+        tmp.replace(path)  # atomic on POSIX
+    except (OSError, TypeError, ValueError):
+        pass  # best effort: the live path never fails because the cache did
+
+
+def load_last_good_console(live_error, now=None, max_age=LAST_GOOD_MAX_AGE_SECONDS):
+    """Return the last-good payload labelled STALE, or None if absent/too old."""
+    import time as _time
+    from datetime import datetime, timezone
+
+    try:
+        record = json.loads(_last_good_path().read_text(encoding="utf-8"))
+        saved = float(record["saved_at_epoch"])
+        payload = record["payload"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    age = float(now if now is not None else _time.time()) - saved
+    if age < 0 or age > max_age or not isinstance(payload, dict):
+        return None
+    payload = dict(payload)
+    payload["freshness"] = {
+        "status": "STALE",
+        "last_good_at": datetime.fromtimestamp(saved, timezone.utc).isoformat(),
+        "age_seconds": int(age),
+        "max_age_seconds": int(max_age),
+        "live_error": str(live_error)[:300],
+        "trade_authorized": False,
+    }
+    return payload
+
+
+# The seed refreshes weekly (Mondays, .github/workflows/options-seed.yml);
+# a seed older than one cycle plus a day of slack is labelled STALE.
+OPTIONS_SEED_SLA_SECONDS = 8 * 24 * 3600
+
+
+def options_seed_freshness(seed, now=None):
+    """Age and staleness of the options seed against its refresh SLA."""
+    from datetime import datetime, timezone
+
+    now = now or datetime.now(timezone.utc)
+    try:
+        as_of = datetime.fromisoformat(str(seed.get("as_of")).replace("Z", "+00:00"))
+        if as_of.tzinfo is None:
+            raise ValueError("naive as_of")
+    except (TypeError, ValueError):
+        return {"status": "UNKNOWN", "is_stale": True, "reason": "as_of missing or invalid"}
+    age = int((now - as_of).total_seconds())
+    stale = age > OPTIONS_SEED_SLA_SECONDS or (seed.get("refresh") or {}).get("status") == "fetch_failed"
+    return {"status": "STALE" if stale else "CURRENT", "is_stale": stale,
+            "age_seconds": age, "sla_seconds": OPTIONS_SEED_SLA_SECONDS}
+
+
 def build_market_context_payload():
     """Return latest public context quickly; provider refresh runs in background."""
     from hedge_desk.market_context_service import get_market_context_snapshot
@@ -360,12 +433,19 @@ def _dispatch(environ, start_response):
             return _json(start_response, {"error": str(exc)}, "400 Bad Request")
     if path == "/api/report":
         try:
-            return _json(start_response, _cached("console-report", build_live_console_payload))
+            payload = _cached("console-report", build_live_console_payload)
         except RuntimeError as exc:
-            # Fail-closed: no synthetic fallback. The console renders
-            # "data unavailable" with this reason.
+            # No synthetic fallback, ever. If a REAL report was built earlier
+            # and is younger than the stale budget, serve it labelled STALE
+            # (age + live error) so the PM still sees the last validated
+            # decisions; otherwise fail closed with 503 as before.
+            stale = load_last_good_console(str(exc))
+            if stale is not None:
+                return _json(start_response, stale)
             start_response("503 Service Unavailable", [("Content-Type", "application/json")])
             return [json.dumps({"status": "data_unavailable", "reason": str(exc)}).encode()]
+        save_last_good_console(payload)
+        return _json(start_response, payload)
     # True-MVP demo: serve the regenerated AM report page / live report JSON
     # straight from artifacts/ (the real EOD -> overnight -> AM candidate output).
     # Live overview dashboard (was /am-demo); old path redirects. Root serves
@@ -382,7 +462,12 @@ def _dispatch(environ, start_response):
     # committed). Fails closed to 404 artifact_missing when no seed exists;
     # the refresh job preserves last-good on fetch failure, never synthetic.
     if path == "/api/options-seed":
-        return _serve_artifact(start_response, ARTIFACTS / "options-seed-latest.json", as_json=True)
+        try:
+            seed = json.loads((ARTIFACTS / "options-seed-latest.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return _serve_artifact(start_response, ARTIFACTS / "options-seed-latest.json", as_json=True)
+        seed["freshness"] = options_seed_freshness(seed)
+        return _json(start_response, seed)
     # Muse/Toby's Selling Options Premium visual guide (static, self-contained).
     if path in ("/guide/selling-options-premium", "/guide/selling-options-premium.html"):
         guide = DEPLOY_ROOT / "docs" / "guides" / "selling-options-premium-visual-guide.html"

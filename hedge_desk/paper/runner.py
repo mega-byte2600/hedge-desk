@@ -22,7 +22,6 @@ Paper boundary:
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
@@ -288,7 +287,7 @@ def advance_paper_lifecycle(
     for plan_file in plan_files:
         try:
             plan = load_plan_file(plan_file)
-        except (ValueError, KeyError, json.JSONDecodeError) as exc:
+        except (ValueError, KeyError, json.JSONDecodeError):
             report["skipped"].append(
                 {
                     "plan_file": str(plan_file),

@@ -7,11 +7,9 @@ from datetime import datetime, timedelta, timezone
 from hedge_desk.membership import (
     MAX_LP_MEMBERS,
     OTP_TTL_SECONDS,
-    ROLE_GP,
     ROLE_GUEST,
     ROLE_LP,
     ROLE_MEMBER,
-    SESSION_TTL_SECONDS,
     Clock,
     MembershipStore,
 )

@@ -15,7 +15,6 @@ entries again. Tests that need explicit cache control (e.g.
 ``test_fred_cache.py``) still override the variable in their own setUp.
 """
 
-import os
 
 import pytest
 

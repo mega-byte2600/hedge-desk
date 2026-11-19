@@ -7,7 +7,6 @@ keep the renderer following the console's hardened enhancement conventions.
 """
 
 import json
-import re
 import unittest
 from pathlib import Path
 

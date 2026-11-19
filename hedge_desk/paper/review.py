@@ -49,7 +49,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List
 
 from hedge_desk.paper.workflow import (
     HumanAuthorizationStatus,
