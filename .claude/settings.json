@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./secrets/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./**/credentials.json)",
+      "Read(./**/service-account*.json)",
+      "Bash(printenv*)",
+      "Bash(env)",
+      "Bash(cat .env*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(rm -rf /*)",
+      "Read(./.schwab/**)",
+      "Read(./**/*env.env)",
+      "Read(./data/**)",
+      "Read(./**/schwab*.json)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(*deploy*)",
+      "Bash(*migrate*)"
+    ]
+  }
+}
