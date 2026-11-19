@@ -36,6 +36,7 @@ CI (`.github/workflows/ci.yml`) is the source of truth for gates; mirror it loca
 ## Workflow playbook — use these automatically when the situation fits
 | Situation | Use |
 |---|---|
+| **Anything touching a provider, transport, feed, artifact freshness or `/api/health`** | **`/carpedata` first** (`check` / `guard` / `onboard` / `incident`). Do-no-harm: established provider connections are frozen unless the GP approves the exact change |
 | New GP-requested feature or multi-file change | `/kickoff` → `/build` |
 | Code touching a data adapter/provider/transport | `/harden-datalink` standards |
 | Data health, outages, provider reliability questions | `/datalink-audit` |
@@ -45,6 +46,7 @@ CI (`.github/workflows/ci.yml`) is the source of truth for gates; mirror it loca
 | Monitoring within a session | `/loop 15m /datalink-watch`, `/loop 30m` (maintenance) |
 
 ## Workflow overrides for this repo (these beat the generic workflow text)
+- **CarpeDATA governs every data link.** `/harden-datalink`, `/datalink-audit`, `/datalink-watch`, `/build` and `/ship` run inside its invariants: no change to an established provider connection without the GP's yes, real data only, honest STALE degradation, and hermetic tests (pass with the network disabled).
 - **Scope control:** the GP's request is the acceptance criteria. Workflows never add unrequested features or "improvements." The `/loop` maintenance step 5 ("hygiene") is **disabled** here.
 - **Branches & PRs:** follow `docs/AGENT_GITHUB_CLI_WORKFLOW.md` (issue claim, `agent/<issue>-<slug>` branch). Fill `.github/PULL_REQUEST_TEMPLATE.md` with pasted command evidence. Never push to `main`; never merge.
 - **Independent review:** an agent may implement and test but may not approve its own risk-control or financial-model change. `/review` output is input to the human reviewer, not an approval.
