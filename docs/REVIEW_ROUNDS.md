@@ -1,0 +1,126 @@
+# Independent review rounds
+
+Each round: an independent reviewer (a separate agent that does not see the
+fixer's reasoning) scores six dimensions from 1 to 10. Everything below 9
+is fixed against primary sources and saved as a tagged version
+(`review-rN`). The loop stops when every score is 9 or higher. Risk-control
+and model changes are implemented and tested here but **not self-approved**
+(AGENTS.md); each one is listed for independent review.
+
+## Score history
+
+| Round | Version | Code quality | API & data health | UI/UX | Insight | Rigor | Actionability |
+|---|---|---|---|---|---|---|---|
+| 1 (baseline, pre-fix) | `review-r1` | 6 | 6 | 5 | 7 | 6 | 5 |
+| 2 (after r1 fixes) | `review-r2` | 8 | 7 | 6 | 7 | 7 | 7 |
+
+## Round 1 — fixes shipped in `review-r1`
+
+**Tests:** 1,313 passed and 51 subtests passed, 0 failed (baseline: 4 failed).
+
+**Code quality (6)**
+- CI ran `unittest discover`, which never collects pytest-style tests, so
+  four failures got through. CI now runs `coverage run -m pytest`.
+- Fixed the tests that depended on the calendar:
+  - The options-seed refresh takes an injected clock (`now=`).
+  - The short-board API test asserts against the committed artifact instead
+    of literals.
+- Restored the broker-scope disclosure in the console footer.
+- Added a `[tool.ruff]` config and a CI lint step (gating set: E9, F, B).
+  Cleared all 77 findings, including F821 (`Optional` undefined in
+  `email_transport.py`) and B023 (a loop variable captured in a lambda).
+
+**API & data health (6)**
+- `feed_base.with_retries`: bounded exponential backoff with full jitter,
+  only on transport errors, 429 and 5xx (per Google SRE *Handling Overload*
+  and AWS *Exponential Backoff and Jitter*). Wired into the Cboe, EOD and
+  `make_get_transport` fetchers.
+- `/api/report` no longer returns a bare 503 when a real report was built in
+  the last 72 hours. It serves that report labelled `freshness.status=STALE`
+  with its age and the live error, and `trade_authorized=false`. It still
+  fails closed if there is none. Nothing synthetic is served.
+- `/api/options-seed` now carries `freshness` (age, `is_stale`) against
+  the weekly refresh SLA.
+- EOD prices are quantized to 4 dp at ingest
+  (`12.920000076293945` → `12.92`).
+
+**UI/UX (5)**
+- `am-demo.html` loads the vendored Plotly first (served path, then the
+  repo-relative path, then the CDN). It now renders 14 of 14 charts offline.
+- Logo fallback for file opens; times shown in readable form; mobile has no
+  horizontal scroll at 390 px (was 481 px).
+- The console stamp shows STALE, with the age and the reason, when the
+  fallback is used. Fixed the doubled "Data unavailable: data unavailable"
+  message.
+
+**Rigor (6)** (model changes, pending independent review)
+- `win_probability`:
+  - Documented that |Δput| = N(−d1) **overstates** a short put's win
+    probability compared with the risk-neutral N(−d2) (Hull, eq. 15.21),
+    by about 2.6 points for a 30-day 5%-OTM put at 28% IV.
+  - The exact `risk_neutral_win_probability` is added alongside the released
+    value; the gate value is unchanged.
+  - The A&S CDF is replaced by `erf`.
+  - Reference case added: Hull's Example 15.6.
+- The Cboe spread scan now reports the probability of profit,
+  P(max loss) and risk-neutral EV for each leg using its own exchange IV. It
+  ranks by EV, then probability of profit, instead of return on risk, which
+  favoured near-the-money coin flips.
+
+**Actionability (5) / Insight (7)**
+- `hedge_desk/desk_call.py` and the am-demo header:
+  - A **Desk call** states the action. It is `NO_TRADE` unless the data is
+    current and the existing risk gate says APPROVED; the gate is consumed,
+    not re-evaluated.
+  - It gives a top-3 shortlist with invalidation (break-even), released exit
+    rules (50% profit capture, 50% max-loss stop) and max loss as a share of
+    demo equity, plus VIX context.
+
+**Needs independent (human) review before release:** promoting N(d2) to the
+gate value, and the EV-first ranking.
+
+## Round 2 — status
+
+Scored by a fresh reviewer after the round-1 fixes. The loop was **paused at the ~500K-token budget** before a round-2 fix pass; see the final session report for the open items and owner decisions.
+
+## GP decisions applied (2026-11-19)
+1. **Stale-report fallback: KEEP.** This is the industry pattern of serving
+   the last good result while retrying (stale-while-revalidate, RFC 5861;
+   cached fallbacks as in Netflix Hystrix). A stale report can never
+   authorize anything: `freshness.trade_authorized=false`, and the Desk call
+   is NO_TRADE whenever the data is not current.
+2. **EV-first spread ranking: REJECTED.** The scanner and the Desk call are
+   back to return-on-risk order. Probability of profit and risk-neutral EV
+   stay as information columns only. The ranking objective is open until the
+   GP states the desk's purpose.
+3. **Win probability promoted to exact BSM N(d2), model 2.0.0.**
+   - Adds a continuous risk-free rate and dividend yield (Merton), with
+     implied volatility inverted under the same (r, q).
+   - The no-arbitrage band is checked, and the delta-rule value is kept for
+     audit only.
+   - Reference cases: Hull Example 15.6, Hull Example 17.1 (Merton),
+     put-call parity with dividends, and an IV round trip.
+   - Note: N(d2) is the **risk-neutral** probability, the market's price of
+     the outcome. It is not a real-world forecast.
+
+## GP brief: premium-selling ranking (2026-11-19)
+The GP stated the objective: the desk sells premium, so candidates are ranked
+by time value captured at the right point in the contract's life.
+`hedge_desk/premium_score.py` scores every credit vertical from 0 to 100 as
+a transparent weighted sum, and every component is reported:
+
+| Component | Weight | Full marks when | Source |
+|---|---|---|---|
+| Vol edge (IV vs 21-day realized vol) | 30% | (IV−RV)/IV ≥ 0.5 | Carr & Wu 2009; Bollerslev, Tauchen & Zhou 2009 (variance risk premium) |
+| Time value | 25% | credit/max-loss ≥ 50% per 30 days | monthly return on risk |
+| Entry window | 25% | 30–45 DTE (zero at 14 and 60) | practitioner premium-selling management; CBOE PUT/BXM monthly roll |
+| Strike placement | 20% | short-leg delta 0.16–0.30 (zero at 0.05 and 0.45) | about 70–84% chance of expiring OTM |
+
+- Management printed per candidate: take profit at 50% of the credit, or
+  close by 21 DTE.
+- Missing data is flagged (`RV_UNAVAILABLE`, `IV_UNAVAILABLE`), never
+  invented.
+- The nightly run computes the underlying's realized volatility from the
+  same EOD source and ranks the chain.
+- The Desk call shortlist and the am-demo table use the score.
+- 1,320 tests pass.

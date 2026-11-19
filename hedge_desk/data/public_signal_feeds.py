@@ -15,7 +15,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date
-from typing import Callable, Mapping, Tuple
+from typing import Callable, Tuple
 
 from hedge_desk.data.open_market_feeds import OpenFeedResult
 

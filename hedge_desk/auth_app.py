@@ -290,7 +290,7 @@ def make_auth_app(
                 refresh_token_issued_at=instant.isoformat(),
                 scope=tokens.get("scope", "api"),
             )
-        except (PermissionError, ValueError) as exc:
+        except (PermissionError, ValueError):
             return _json_response(start_response, {"error": "broker_link_invalid"}, "400 Bad Request")
         except Exception:
             return _json_response(start_response, {"error": "broker_link_persistence_failed"}, "503 Service Unavailable")
@@ -357,7 +357,7 @@ def make_auth_app(
                     f"Your one-time sign-in code is:\n\n{code}\n\n"
                     f"It expires in 10 minutes. If you didn't request this, ignore it.\n",
                 )
-            except Exception as exc:  # email is not an access control; don't fail signup
+            except Exception:  # email is not an access control; don't fail signup
                 return _json_response(
                     start_response,
                     {"error": "mail_unavailable"},
@@ -462,7 +462,7 @@ def make_auth_app(
             try:
                 entries = audit.entries()
                 reasons = audit.verify()
-            except Exception as exc:
+            except Exception:
                 return _json_response(start_response, {"error": "audit_unavailable"}, "503 Service Unavailable")
             return _json_response(
                 start_response,
@@ -477,7 +477,7 @@ def make_auth_app(
             invite_email = str(data.get("email", "")).strip().lower()
             try:
                 invite = store.issue_lp_invite(invite_email)
-            except ValueError as exc:
+            except ValueError:
                 return _json_response(start_response, {"error": "invite_unavailable"}, "409 Conflict")
             _audit("lp_invited", invite_email, actor=email)
             return _json_response(start_response, {"status": "invited", **invite}, "201 Created")

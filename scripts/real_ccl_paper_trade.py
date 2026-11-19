@@ -24,7 +24,7 @@ from hedge_desk.options import (
 from hedge_desk.paper import (
     approve_paper_trade, create_paper_trade_plan, write_plan_file,
 )
-from hedge_desk.paper.runner import advance_paper_lifecycle, close_paper_position, _load_state
+from hedge_desk.paper.runner import advance_paper_lifecycle, close_paper_position
 from hedge_desk.paper.settler import settle_paper_outcomes
 from hedge_desk.risk import build_validated_risk_inputs
 from hedge_desk.risk.ruin import estimate_risk_of_ruin

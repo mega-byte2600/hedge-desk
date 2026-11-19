@@ -13,7 +13,6 @@ No key required. Data published weekly (Fridays, as of prior Tuesday).
 
 from __future__ import annotations
 
-import datetime as _dt
 import json
 import time
 import urllib.parse

@@ -127,7 +127,7 @@ class PaperRunnerTests(unittest.TestCase):
         )
 
     def test_insufficient_size_and_worse_credit_stay_pending(self) -> None:
-        plan = self._write_plan("plan-bad-fill")
+        self._write_plan("plan-bad-fill")
 
         def thin(plan):
             return (0, plan.spread.net_credit)

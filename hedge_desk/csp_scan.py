@@ -13,9 +13,8 @@ no probability, trade_authorized stays False.
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
-from typing import Callable, Dict, Sequence, Tuple
+from typing import Callable, Dict
 
 from hedge_desk.cboe_chain import (
     build_snapshot_from_cboe,
@@ -52,7 +51,6 @@ def _put_10pct_otm(symbol: str, raw: bytes, now) -> Dict[str, object]:
     # candidate: ~10% OTM put (strike ~ 0.90 * mid), with real executable bid/ask.
     target_strike = mid * (Decimal("1") - OTM_DELTA_FRACTION)
     best = min(puts, key=lambda q: abs(q.strike - target_strike))
-    credit = best.ask  # we SELL -> collect the bid-side? We sell at the bid.
     # Selling a put: we receive the BID. But executable realism = use bid.
     net_credit = best.bid
     collateral = cash_secured_put_collateral(best.strike, net_credit, 1).requirement

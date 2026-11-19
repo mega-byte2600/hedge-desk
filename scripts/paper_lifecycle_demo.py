@@ -19,7 +19,6 @@ from hedge_desk.paper import (
 from hedge_desk.paper.runner import (
     advance_paper_lifecycle,
     close_paper_position,
-    _load_state,
 )
 from hedge_desk.paper.settler import settle_paper_outcomes
 

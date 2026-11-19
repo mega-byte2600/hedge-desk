@@ -76,7 +76,6 @@ class AuthRateLimitsTests(unittest.TestCase):
 
 class AuthEndpointRateLimitTests(unittest.TestCase):
     def setUp(self):
-        import io, json
 
         from hedge_desk.auth_app import make_auth_app
 

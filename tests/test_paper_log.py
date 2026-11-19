@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 
-from hedge_desk.paper_log import (ALLOWED_OUTCOMES, append_outcome, read_log,
+from hedge_desk.paper_log import (append_outcome, read_log,
                                   summarize)
 
 

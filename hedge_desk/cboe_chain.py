@@ -15,10 +15,10 @@ C/P + strike code (strike = int(code) / 1000), giving $300.00 for ``00300000``.
 from __future__ import annotations
 
 import json
+import math
 import urllib.error
 import urllib.request
-from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Callable, Dict, Tuple
 
@@ -31,11 +31,13 @@ from hedge_desk.options import (
     scan_vertical_credit_spreads,
 )
 
+from hedge_desk.data.feed_base import with_retries  # noqa: E402
+
 CBOE_URL = "https://cdn.cboe.com/api/global/delayed_quotes/options/{symbol}.json"
 Transport = Callable[[str], Tuple[int, bytes]]
 
 
-def _default_transport(url: str) -> Tuple[int, bytes]:
+def _single_attempt_transport(url: str) -> Tuple[int, bytes]:
     req = urllib.request.Request(url, headers={"User-Agent": "hedge-desk/1.0"})
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -44,6 +46,10 @@ def _default_transport(url: str) -> Tuple[int, bytes]:
         return exc.code, exc.read()
     except Exception as exc:
         return 0, str(exc).encode("utf-8")
+
+
+# Bounded retry with jittered backoff on transient failures (feed_base).
+_default_transport = with_retries(_single_attempt_transport)
 
 
 def _d(value) -> Decimal:
@@ -214,6 +220,53 @@ def build_snapshot_from_cboe(
     )
 
 
+def _iv_by_contract(raw: bytes) -> Dict[str, float]:
+    """Exchange implied volatility per option symbol from the raw Cboe payload."""
+    try:
+        options = json.loads(raw.decode("utf-8"))["data"]["options"]
+    except (ValueError, KeyError, TypeError, UnicodeDecodeError):
+        return {}
+    out: Dict[str, float] = {}
+    for item in options:
+        try:
+            iv = float(item.get("iv"))
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(iv) and iv > 0 and item.get("option"):
+            out[str(item["option"])] = iv
+    return out
+
+
+def _rn_p_itm(spot: float, strike: float, years: float, iv: float, is_call: bool) -> float:
+    """Risk-neutral P(finish ITM) = N(d2) for a call, N(-d2) for a put (r = 0)."""
+    d2 = (math.log(spot / strike) - 0.5 * iv * iv * years) / (iv * math.sqrt(years))
+    z = d2 if is_call else -d2
+    return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
+
+
+def spread_probabilities(spot: float, short_k: float, long_k: float, years: float,
+                         short_iv: float, long_iv: float, is_call: bool,
+                         credit: float, max_loss: float) -> Dict[str, float]:
+    """Probability of profit and risk-neutral expected value of a credit vertical.
+
+    P(short ITM) and P(long ITM) use each leg's own exchange IV (smile-aware).
+    Between strikes the loss is approximated as linear, so the expected loss is
+    P(long ITM) * max_loss + (P(short ITM) - P(long ITM)) * (credit - max_loss) / 2
+    ... expressed in P&L terms below. Under the pricing measure a fairly
+    priced spread has EV ~ 0 before costs, so a negative EV is the measured
+    cost of crossing bid/ask plus commissions -- a hurdle, not a forecast.
+    """
+    p_short = _rn_p_itm(spot, short_k, years, short_iv, is_call)
+    p_long = _rn_p_itm(spot, long_k, years, long_iv, is_call)
+    p_long = min(p_long, p_short)
+    p_between = p_short - p_long
+    # P&L: +credit if OTM; -max_loss beyond the long; linear midpoint between.
+    ev = ((1.0 - p_short) * credit - p_long * max_loss
+          + p_between * (credit - max_loss) / 2.0)
+    return {"probability_of_profit": 1.0 - p_short, "p_max_loss": p_long,
+            "expected_value": ev}
+
+
 def real_chain_income(
     symbol: str,
     cutoff: datetime,
@@ -242,6 +295,7 @@ def real_chain_income(
         min_volume=policy.minimum_volume,
     )
     scan = scan_vertical_credit_spreads(snapshot, cutoff, policy)
+    iv_map = _iv_by_contract(raw)
     underlying_mid = (
         snapshot.underlying_quote.bid + snapshot.underlying_quote.ask
     ) / Decimal("2")
@@ -287,6 +341,22 @@ def real_chain_income(
                 "trade_authorized": False,
             }
         )
+        years = max(calc.days_to_expiration, 1) / 365.0
+        s_iv, l_iv = iv_map.get(short_id), iv_map.get(long_id)
+        if s_iv and l_iv:
+            probs = spread_probabilities(
+                float(underlying_mid), float(short_q.strike), float(long_q.strike), years,
+                s_iv, l_iv, short_q.option_type is OptionType.CALL,
+                float(calc.net_credit), float(calc.maximum_loss))
+            structures[-1].update({
+                "probability_of_profit": f"{probs['probability_of_profit']:.4f}",
+                "p_max_loss": f"{probs['p_max_loss']:.4f}",
+                "risk_neutral_ev": f"{probs['expected_value']:.2f}",
+                "short_leg_iv": f"{s_iv:.4f}",
+            })
+    # Ranking: return on risk (GP decision 2026-11-19 — EV-first ranking
+    # rejected pending the GP's stated objective). Probability of profit and
+    # risk-neutral EV are reported per structure as information only.
     structures.sort(key=lambda s: -float(s["return_on_risk"]))
     top = structures[:40]  # present the best defined-risk economics, not all pairs
     return {
@@ -303,8 +373,10 @@ def real_chain_income(
         "data_source": "cboe-delayed-public-http-200",
         "trade_authorized": False,
         "note": (
-            "Executable-side net credit from REAL delayed bid/ask. No probability, "
-            "no RoR. No order placed. Max-loss economics per defined-risk vertical."
+            "Executable-side net credit from REAL delayed bid/ask. Probability of profit "
+            "and EV are risk-neutral (Black-Scholes N(d2) on each leg's exchange IV), "
+            "not real-world forecasts; EV < 0 measures the bid/ask + commission hurdle. "
+            "No order placed. Max-loss economics per defined-risk vertical."
         ),
     }
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 import smtplib
 from email.message import EmailMessage
 from email.utils import formataddr, formatdate
-from typing import Callable
+from typing import Callable, Optional
 
 SenderFn = Callable[[str, str, str], None]
 

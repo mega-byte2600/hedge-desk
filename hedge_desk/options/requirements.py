@@ -15,7 +15,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from hedge_desk.options.valuation import STANDARD_MULTIPLIER, money
 

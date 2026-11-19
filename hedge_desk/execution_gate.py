@@ -27,7 +27,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Dict, Optional, Tuple
 
-from hedge_desk.domain import Account, AccountType, TradeCandidate, ProductType
+from hedge_desk.domain import Account, TradeCandidate, ProductType
 from hedge_desk.risk.ruin import RiskPolicy, risk_gate
 from hedge_desk.release import (
     REQUIRED_RELEASE_EVIDENCE,

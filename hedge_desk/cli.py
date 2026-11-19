@@ -36,7 +36,6 @@ from hedge_desk.data import (
     evaluate_pwb_daily_news,
     load_pwb_daily_news,
     ingest_eod,
-    provider_console_rows,
 )
 from hedge_desk.paper import (
     PaperReviewQueue,

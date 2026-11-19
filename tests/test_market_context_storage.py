@@ -1,6 +1,5 @@
 import json
 import unittest
-from unittest.mock import patch
 
 from hedge_desk.market_context_storage import (
     load_latest_market_context,

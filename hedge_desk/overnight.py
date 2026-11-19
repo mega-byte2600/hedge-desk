@@ -40,16 +40,6 @@ from hedge_desk.reporting import finalize_report
 from hedge_desk.audit import build_audit_evaluation
 from hedge_desk.stat_evaluation import build_stat_evaluation
 from hedge_desk.portfolio_stress import build_portfolio_stress_report
-from hedge_desk.models import (
-    ModelTeam,
-    build_synthetic_reference_quorum,
-    build_synthetic_training_gate,
-    build_synthetic_split_gate,
-)
-from hedge_desk.off_exchange import (
-    OtcWeeklyObservation,
-    evaluate_otc_weekly_observation,
-)
 from hedge_desk.earnings import (
     EarningsConsensus,
     EarningsEventInput,

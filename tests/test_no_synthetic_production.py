@@ -80,7 +80,6 @@ class TestNoSyntheticPayload(unittest.TestCase):
             self.assertNotIn("fixture", json.dumps(scenario).lower())
 
     def test_fail_closed_when_no_live_data(self):
-        from hedge_desk import server
         from hedge_desk.live_desk_data import build_live_console_report
         with patch("hedge_desk.live_desk_data.fetch_market_snapshot", lambda s, timeout=8: ({}, [])):
             with self.assertRaises(RuntimeError):

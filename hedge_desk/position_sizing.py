@@ -13,7 +13,7 @@ input. trade_authorized stays False. No order.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Dict, Tuple
+from typing import Dict
 
 from hedge_desk.options.requirements import cash_secured_put_collateral
 

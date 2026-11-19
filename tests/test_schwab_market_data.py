@@ -60,7 +60,7 @@ class SchwabMarketDataTests(unittest.TestCase):
 
     def test_provider_failures_return_stable_errors_without_payload_leaks(self):
         for status, raw, error in ((500, b"secret", None), (200, b"invalid-json-secret", "bad_json"), (200, b"123", "unexpected_response_schema")):
-            adapter = SchwabMarketDataBroker(transport=lambda *args: (status, raw))
+            adapter = SchwabMarketDataBroker(transport=lambda *args, _s=status, _r=raw: (_s, _r))
             result = adapter.price_history("token", "SPY", period=1)
             self.assertEqual(result["status"], "error")
             self.assertNotIn("secret", str(result))

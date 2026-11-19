@@ -5,7 +5,6 @@ import unittest
 from datetime import datetime, timezone
 
 from hedge_desk.data.eod_ingest import (
-    EOD_INGEST_VERSION,
     EOD_SOURCE_ID,
     _canonical_payload,
     _parse_chart_payload,

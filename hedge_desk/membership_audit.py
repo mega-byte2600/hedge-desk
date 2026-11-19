@@ -21,7 +21,6 @@ import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 from hedge_desk.sqlite_thread import new_lock, open_connection, thread_safe
 

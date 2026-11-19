@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict
 
 from .contracts import DataArtifact, DataGateResult, validate_data_artifact
 

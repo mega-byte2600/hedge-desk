@@ -55,8 +55,10 @@ def _mark_failed(last_good: Dict[str, Any], reason: str) -> None:
     SEED_PATH.write_text(json.dumps(last_good, indent=2) + "\n", encoding="utf-8")
 
 
-def refresh(transport: cboe_chain.Transport | None = None) -> int:
-    now = _now()
+def refresh(transport: cboe_chain.Transport | None = None,
+            now: datetime | None = None) -> int:
+    """Refresh the seed; ``now`` is injectable so tests use a fixed clock."""
+    now = now or _now()
     fetch = transport or cboe_chain._default_transport
     try:
         status, raw = fetch(cboe_chain.CBOE_URL.format(symbol=SYMBOL))

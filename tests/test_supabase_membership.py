@@ -177,7 +177,7 @@ class SupabaseMembershipTests(unittest.TestCase):
 
 class StoreSelectionTests(unittest.TestCase):
     def test_selects_supabase_when_configured(self):
-        import os, tempfile
+        import os
         from unittest.mock import patch
         from hedge_desk.auth_app import default_membership_store
         from hedge_desk.supabase_membership import SupabaseMembershipStore

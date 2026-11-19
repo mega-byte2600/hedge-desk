@@ -1,6 +1,5 @@
 """Deterministic tests for the account-equity input (no network, no secrets)."""
 
-import os
 import tempfile
 import unittest
 from decimal import Decimal

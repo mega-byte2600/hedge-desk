@@ -23,8 +23,6 @@ from typing import Callable, Sequence
 from .feed_base import (
     FeedResult,
     Transport,
-    _decode_json,
-    _default_transport,
     _fetch_bytes,
     _fetch_json,
     _positive_limit,

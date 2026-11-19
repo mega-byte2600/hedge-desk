@@ -1,4 +1,6 @@
 """Reproducible depreciation scenario math; no Burry-specific scoring formula."""
+from __future__ import annotations
+
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Mapping
 
