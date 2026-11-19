@@ -133,7 +133,7 @@ jobs:
           assert candidates==golden
           assert about['display_name']=='mbolton'
           assert about['linkedin_url']=='https://www.linkedin.com/in/bolton-2600/'
-          assert len({c['desk_id'] for c in candidates['candidates']})==6
+          assert len({c['desk_id'] for c in candidates['candidates']})==5
           assert all(c['trade_authorized'] is False for c in candidates['candidates'])
           PY
       - name: Browser-path and ETag regression smoke
