@@ -36,11 +36,14 @@ def _dec(value: Any) -> Optional[Decimal]:
 def _rank_key(s: Dict[str, Any]):
     """Premium score (hedge_desk.premium_score, GP brief 2026-11-19) when the
     nightly carries it; otherwise the scanner's return-on-risk order."""
-    prem = (s.get("premium") or {}).get("premium_score")
+    p = s.get("premium") or {}
+    prem = p.get("premium_score")
     ror = _dec(s.get("return_on_risk")) or Decimal("0")
     if prem is not None:
-        return (0, -Decimal(str(prem)), -ror, s.get("contract_id", ""))
-    return (1, Decimal("0"), -ror, s.get("contract_id", ""))
+        # Eligible (inside the GP's delta/DTE bands with a positive vol edge)
+        # always outrank ineligible structures.
+        return (0, not p.get("eligible", True), -Decimal(str(prem)), -ror, s.get("contract_id", ""))
+    return (1, True, Decimal("0"), -ror, s.get("contract_id", ""))
 
 
 def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, Any]:
@@ -62,7 +65,8 @@ def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, An
     pool = approved if approved else structures
     shortlist = []
     policy = PremiumExitPolicy()
-    for s in sorted(pool, key=_rank_key)[:SHORTLIST_SIZE]:
+    from hedge_desk.premium_score import unique_by_short_leg
+    for s in unique_by_short_leg(sorted(pool, key=_rank_key))[:SHORTLIST_SIZE]:
         credit = _dec(s.get("net_credit")) or Decimal("0")
         max_loss = _dec(s.get("maximum_loss")) or Decimal("0")
         shortlist.append({
@@ -79,6 +83,13 @@ def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, An
             "stop_at_loss": str((max_loss * policy.maximum_loss_fraction).quantize(Decimal("0.01"))),
             "max_loss_pct_demo_equity": (
                 str((max_loss / equity * 100).quantize(Decimal("0.01"))) if equity else None),
+            # SOUL rule 7 (2%-of-equity max loss) applied to the DEMO equity the
+            # gate already uses: an example, never an order or the GP's balance.
+            "collateral_per_contract": str((credit + max_loss).quantize(Decimal("0.01"))),
+            "example_max_contracts_2pct_demo_equity": (
+                int((equity * Decimal("0.02")) // max_loss) if equity and max_loss > 0 else None),
+            "eligible": (s.get("premium") or {}).get("eligible"),
+            "eligibility_reasons": (s.get("premium") or {}).get("eligibility_reasons") or [],
             "gate_decision": s.get("gate_decision", "NOT_EVALUATED"),
             "premium_score": (s.get("premium") or {}).get("premium_score"),
             "premium_components": (s.get("premium") or {}).get("components"),
@@ -87,7 +98,8 @@ def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, An
     action = "PAPER_CANDIDATE" if approved and not reasons else "NO_TRADE"
     vix = report.get("vix_regime") or {}
     vix_close = _dec(vix.get("last_close"))
-    ranked_by = ("premium score: vol edge 30%, time value 25%, 30-45 DTE window 25%, 16-30 delta 20%"
+    ranked_by = ("eligible first (16-30 delta, 21-60 DTE, positive vol edge), then premium score: "
+                 "vol edge 30%, return on collateral 25%, 30-45 DTE window 25%, 16-30 delta 20%"
                  if shortlist and shortlist[0].get("premium_score") is not None
                  else "return on risk (premium score absent in this nightly; next run adds it)")
     if action == "NO_TRADE":

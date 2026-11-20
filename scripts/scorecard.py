@@ -60,7 +60,9 @@ def checks(full: bool) -> list[dict]:
     add("UI/UX", "vendored plotly first (offline)", "/vendor/plotly-2.35.2.min.js" in demo
         and (ROOT / "web/vendor/plotly-2.35.2.min.js").exists())
     add("UI/UX", "desk call header above fold", 0 <= demo.find("class='deskcall") < demo.find("class='ts'"))
-    add("UI/UX", "premium-selling trader panel", "Premium-selling candidates" in demo)
+    add("UI/UX", "premium panel shows real scored rows + eligibility + wheel",
+        "meet the GP bands" in demo and "Why / warnings" in demo and "GP wheel" in demo
+        and "next nightly run" not in demo)
 
     ps = _read("hedge_desk/premium_score.py")
     add("Insight", "premium score: 4 sourced components", all(k in ps for k in (
@@ -69,7 +71,13 @@ def checks(full: bool) -> list[dict]:
     add("Rigor", "exact BSM N(d2) w/ r,q (model 2.0.0)", 'MODEL_VERSION = "2.0.0"' in wp and "dividend_yield" in wp)
     add("Rigor", "Hull reference cases", "Example 17.1" in _read("tests/test_win_probability.py"))
     add("Rigor", "delta consistent with r,q", "dividend_yield" in ps and "rate - dividend_yield" in ps)
-    add("Rigor", "missing data never credited", "vol_edge = None, 0.0" in ps.replace("vrp, vol_edge", "vol_edge"))
+    # Behaviour, not strings: run the tests that pin the GP brief's hard rules.
+    rc, txt = _run([PY, "-m", "pytest", "-q", "-o", "addopts=",
+                    "tests/test_premium_score.py::test_out_of_band_or_no_edge_can_never_rank_first",
+                    "tests/test_premium_score.py::test_time_value_is_return_on_collateral",
+                    "tests/test_premium_score.py::test_missing_rv_is_flagged_not_invented_and_ranking_is_by_score",
+                    "tests/test_desk_call.py::test_shortlist_dedupes_short_leg_ranks_eligible_first_and_sizes_under_2pct"])
+    add("Rigor", "behaviour: brief bands enforced, RoC, no unearned credit, 2% sizing", rc == 0, txt.strip()[-80:])
     dc = _read("hedge_desk/desk_call.py")
     add("Actionability", "desk call: action, shortlist, invalidation, exits",
         all(k in dc for k in ("NO_TRADE", "invalidation_underlying_through", "take_profit_at_credit_captured",

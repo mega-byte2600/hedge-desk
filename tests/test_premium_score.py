@@ -70,3 +70,24 @@ def test_trader_panel_renders_ranked_components_and_empty_state():
              "income_structures": [_s("SPY261224P00700000--SPY261224P00695000", 36, 120, 380, 0.24)]}
     html = bpd.premium_candidates_panel({"SPY": rank_chain_income(chain, 0.15, rate=0.038)})
     assert "premium-candidates" in html and "Return on collateral" in html and "16-30 delta" in html
+
+
+def test_out_of_band_or_no_edge_can_never_rank_first():
+    """GP brief as hard constraints (review r5): a 40-delta coin flip or a
+    negative-VRP structure must rank below any eligible candidate."""
+    coin = _s("SPY261224C00740000--SPY261224C00747000", 36, 341.7, 358.3, 0.18)   # ~ATM, high RoC
+    good = _s("SPY261224P00690000--SPY261224P00685000", 36, 60, 440, 0.26)       # ~20 delta put
+    chain = {"symbol": "SPY", "underlying_bid": "737", "underlying_ask": "738", "income_structures": [coin, good]}
+    hi_rv = rank_chain_income(chain, 0.30, rate=0.038)          # IV < RV: nobody has an edge
+    assert all(not r["premium"]["eligible"] for r in hi_rv["income_structures"])
+    lo_rv = rank_chain_income(chain, 0.12, rate=0.038)          # IV > RV: edge exists
+    top = lo_rv["income_structures"][0]
+    assert top["contract_id"].startswith("SPY261224P00690000") and top["premium"]["eligible"]
+    coin_p = next(r for r in lo_rv["income_structures"] if r["contract_id"].startswith("SPY261224C"))["premium"]
+    assert "DELTA_OUT_OF_BAND" in coin_p["eligibility_reasons"]
+
+
+def test_time_value_is_return_on_collateral():
+    p = score_structure(_s("SPY261224P00700000--SPY261224P00695000", 30, 100, 400, 0.24), 737.5, 0.15)
+    assert p["inputs"]["collateral_usd"] == 500 and p["inputs"]["return_on_collateral"] == 0.2
+    assert abs(p["components"]["time_value"] - 0.2 / 0.30) < 1e-3

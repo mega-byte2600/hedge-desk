@@ -50,4 +50,20 @@ def test_premium_score_ranks_when_present():
     b = _s("b", ror="0.2"); b["premium"] = {"premium_score": 82.5, "components": {}, "management": {"time_exit_dte": 21}}
     call = build_desk_call(_report([a, b]))
     assert [s["contract_id"] for s in call["shortlist"]] == ["b", "a"]
-    assert call["shortlist"][0]["premium_score"] == 82.5 and call["ranked_by"].startswith("premium score")
+    assert call["shortlist"][0]["premium_score"] == 82.5 and "premium score" in call["ranked_by"]
+
+
+def test_shortlist_dedupes_short_leg_ranks_eligible_first_and_sizes_under_2pct():
+    def prem(score, eligible):
+        return {"premium_score": score, "eligible": eligible, "components": {},
+                "eligibility_reasons": [] if eligible else ["DELTA_OUT_OF_BAND"], "management": {"time_exit_dte": 21}}
+    atm1 = _s("SPY261224C00740000--SPY261224C00747000"); atm1["premium"] = prem(90.0, False)
+    atm2 = _s("SPY261224C00740000--SPY261224C00748000"); atm2["premium"] = prem(89.0, False)
+    good = _s("SPY261224P00700000--SPY261224P00695000"); good["premium"] = prem(60.0, True)
+    call = build_desk_call(_report([atm1, atm2, good]))
+    ids = [s["contract_id"] for s in call["shortlist"]]
+    assert ids[0].startswith("SPY261224P00700000")          # eligible beats higher-scored ineligible
+    assert len([i for i in ids if i.startswith("SPY261224C00740000")]) == 1  # one row per short leg
+    top = call["shortlist"][0]
+    assert top["collateral_per_contract"] == "500.00"       # credit 100 + max loss 400
+    assert top["example_max_contracts_2pct_demo_equity"] == 5  # 2% of 100k / 400

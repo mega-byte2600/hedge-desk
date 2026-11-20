@@ -5,6 +5,7 @@ a self-contained HTML with Plotly interactive charts. plotly.js is loaded once
 from CDN in the <head>. No synthetic data, no fabricated numbers. BLOCKED or
 missing sections render as honest state panels, never as invented values.
 """
+from typing import Optional
 import html
 import json
 import sys
@@ -157,6 +158,7 @@ def desk_call_block(r: dict) -> str:
         f"<td><b>{esc(s.get('premium_score') if s.get('premium_score') is not None else '—')}</b></td>"
         f"<td>{esc(s['probability_of_profit'] or '—')}</td><td>{esc(s['risk_neutral_ev'] or '—')}</td>"
         f"<td>{esc(s['invalidation_underlying_through'])}</td>"
+        f"<td>${esc(s.get('collateral_per_contract'))} / {esc(s.get('example_max_contracts_2pct_demo_equity'))}</td>"
         f"<td>+${esc(s['take_profit_at_credit_captured'])} / −${esc(s['stop_at_loss'])}</td></tr>"
         for s in call["shortlist"])
     ctx = call["context"]
@@ -170,7 +172,7 @@ def desk_call_block(r: dict) -> str:
         f"{esc(call['ranked_by'])}. Exits: take profit at 50% of credit, close by 21 DTE, stop at 50% of max loss.</caption>"
         "<thead><tr><th scope='col'>Structure</th><th scope='col'>DTE</th><th scope='col'>Credit</th>"
         "<th scope='col'>Max loss</th><th scope='col'>Premium score</th><th scope='col'>P(profit)</th><th scope='col'>RN EV</th>"
-        "<th scope='col'>Invalidation</th><th scope='col'>Exit +/−</th></tr></thead>"
+        "<th scope='col'>Invalidation</th><th scope='col'>Collateral / max contracts (2% rule, DEMO equity)</th><th scope='col'>Exit +/−</th></tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
         "<p class='dc-foot'>Paper only. Probabilities are risk-neutral, not forecasts. "
         "Nothing is trade-authorized; a human approves every paper entry.</p></section>")
@@ -895,48 +897,92 @@ def paper_panels(paper: dict, yellow: dict) -> str:
 
 # ---------------------------------------------------------------- build
 
-def premium_candidates_panel(chain_income: dict) -> str:
-    """Trader view (GP brief): top premium-selling candidates by score, with
-    each component's weighted contribution, so the reason for the rank is
-    visible at a glance. Empty state until a nightly carries the score."""
+def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None) -> str:
+    """Trader view (GP brief): premium-selling candidates, Wall-Street style.
+
+    Structures are re-scored at render time from the report's own real inputs
+    (IV, RV, rate, DTE, credit) with the current premium model, so the page
+    reflects the model even between nightly runs. Eligible structures (16-30
+    delta, 21-60 DTE, positive vol edge) always rank first; one row per short
+    leg; every row shows why it is or is not eligible. The GP's wheel (cash-
+    secured puts) is shown alongside with return on collateral."""
+    from hedge_desk.premium_score import rank_chain_income, rank_key, unique_by_short_leg
     rows = []
     for sym, chain in (chain_income or {}).items():
-        for s in (chain or {}).get("gated_income_structures") or (chain or {}).get("income_structures") or []:
+        chain = chain or {}
+        rk = chain.get("ranking") or {}
+        if rk.get("by") == "premium_score":
+            chain = rank_chain_income(chain, rk.get("realized_vol_21d_annual"), rk.get("rate") or 0.0,
+                                      rk.get("dividend_yield"))
+        for s in chain.get("gated_income_structures") or chain.get("income_structures") or []:
             if (s.get("premium") or {}).get("premium_score") is not None:
-                rows.append((sym, s))
+                rows.append(s)
     if not rows:
         return muted("Premium scores appear after the next nightly run (this report predates the "
-                     "premium-selling score). Ranking will show vol edge, time value, 30-45 DTE "
-                     "window and 16-30 delta placement per structure.")
-    rows.sort(key=lambda t: -t[1]["premium"]["premium_score"])
-    top = rows[:10]
-    labels = [f"{s.get('contract_id', '')[:18]}… {s.get('days_to_expiration')}d" for _, s in top][::-1]
-    names = {"vol_edge": "Vol edge (30%)", "time_value": "Time value (25%)",
+                     "premium-selling score).")
+    top = unique_by_short_leg(sorted(rows, key=rank_key))[:10]
+    n_eligible = sum(1 for s in top if s["premium"].get("eligible"))
+    labels = [f"{'✓ ' if s['premium'].get('eligible') else '✗ '}{s.get('contract_id', '')[:18]}… "
+              f"{s.get('days_to_expiration')}d" for s in top][::-1]
+    names = {"vol_edge": "Vol edge (30%)", "time_value": "Return on collateral (25%)",
              "entry_window": "30-45 DTE window (25%)", "strike_placement": "16-30 delta (20%)"}
     colors = {"vol_edge": "#c9a227", "time_value": "#8a6d3b", "entry_window": "#5b8db8", "strike_placement": "#7fa37a"}
     fig = go.Figure()
     for k, label in names.items():
-        w = top[0][1]["premium"]["weights"][k]
-        fig.add_bar(y=labels, x=[round(100 * w * s["premium"]["components"][k], 1) for _, s in top][::-1],
+        w = top[0]["premium"]["weights"][k]
+        fig.add_bar(y=labels, x=[round(100 * w * s["premium"]["components"][k], 1) for s in top][::-1],
                     name=label, orientation="h", marker_color=colors[k])
-    fig.update_layout(**base_layout("Premium score by component (0-100)", height=420), barmode="stack")
-    rows_html = "".join(
-        f"<tr><td>{esc(s.get('contract_id'))}</td><td>{esc(s['premium']['premium_score'])}</td>"
-        f"<td>{esc(s.get('days_to_expiration'))}</td>"
-        f"<td>{esc(s['premium']['inputs'].get('short_leg_abs_delta'))}</td>"
-        f"<td>{esc(round(100 * s['premium']['inputs']['monthly_return_on_risk'], 1))}%</td>"
-        f"<td>${esc(s['premium']['management']['take_profit_at_credit_captured'])} / "
-        f"{esc(s['premium']['management']['days_until_time_exit'])}d</td>"
-        f"<td>{esc(', '.join(s['premium']['flags']) or '—')}</td></tr>"
-        for _, s in top)
-    table = ("<div class='dc-wrap'><table><thead><tr><th scope='col'>Structure</th><th scope='col'>Score</th>"
-             "<th scope='col'>DTE</th><th scope='col'>|Δ| short</th><th scope='col'>Return on collateral / 30d</th>"
-             "<th scope='col'>Take profit / days to 21-DTE exit</th><th scope='col'>Flags</th></tr></thead>"
-             f"<tbody>{rows_html}</tbody></table></div>")
+    fig.update_layout(**base_layout("Premium score by component (0-100); ✓ eligible, ✗ outside GP bands", height=440),
+                      barmode="stack")
+    reason_text = {"DELTA_OUT_OF_BAND": "delta outside 16-30", "NO_VOL_EDGE": "IV ≤ realized vol (no edge)",
+                   "DTE_OUT_OF_WINDOW": "DTE outside 21-60"}
+
+    def _row(s):
+        p = s["premium"]
+        i = p["inputs"]
+        why = "; ".join(reason_text.get(r, r) for r in p.get("eligibility_reasons") or []) or "eligible"
+        vrp = i.get("variance_risk_premium")
+        return (f"<tr><td>{'✓' if p.get('eligible') else '✗'}</td><td>{esc(s.get('contract_id'))}</td>"
+                f"<td>{esc(p['premium_score'])}</td><td>{esc(s.get('days_to_expiration'))}</td>"
+                f"<td>{esc(i.get('short_leg_abs_delta'))}</td>"
+                f"<td>{esc('—' if vrp is None else f'{round(100 * vrp)}%')}</td>"
+                f"<td>{esc(round(100 * i.get('return_on_collateral_30d', 0), 1))}%</td>"
+                f"<td>${esc(p['management']['take_profit_at_credit_captured'])} / "
+                f"{esc(p['management']['days_until_time_exit'])}d</td><td>{esc(why)}</td></tr>")
+    table = ("<div class='dc-wrap'><table><caption>"
+             f"{n_eligible} of {len(top)} shortlisted structures meet the GP bands. Ineligible rows are shown "
+             "for context and always rank below eligible ones.</caption><thead><tr>"
+             "<th scope='col'>OK</th><th scope='col'>Structure</th><th scope='col'>Score</th>"
+             "<th scope='col'>DTE</th><th scope='col'>|Δ| short</th><th scope='col'>Vol edge (IV vs RV)</th>"
+             "<th scope='col'>Return on collateral / 30d</th><th scope='col'>Take profit / days to 21-DTE exit</th>"
+             f"<th scope='col'>Why / warnings</th></tr></thead><tbody>{''.join(_row(s) for s in top)}</tbody></table></div>")
+    wheel = ""
+    csp_rows = []
+    for sym, res in sorted((csp_scan or {}).items()):
+        c = (res or {}).get("candidate") or {}
+        if not c.get("found"):
+            continue
+        try:
+            otm = 100 * (1 - float(c["strike"]) / float(c["underlying_mid"]))
+        except (KeyError, TypeError, ValueError, ZeroDivisionError):
+            otm = None
+        csp_rows.append(
+            f"<tr><td>{'✓' if res.get('fits_gp_rules') else '✗'}</td><td>{esc(sym)}</td>"
+            f"<td>{esc(c.get('contract_id'))}</td><td>{esc(c.get('dte'))}</td>"
+            f"<td>{esc('—' if otm is None else f'{otm:.1f}%')}</td>"
+            f"<td>{esc(round(100 * float(c.get('return_on_capital') or 0), 2))}%</td>"
+            f"<td>${esc(c.get('collateral_required'))}</td>"
+            f"<td>{esc(', '.join(res.get('eval_reasons') or []) or 'fits GP wheel')}</td></tr>")
+    if csp_rows:
+        wheel = ("<h4 class='chart-caption'>GP wheel — cash-secured puts (target ~30-45 DTE, ~10% OTM, "
+                 "1-2% return on collateral)</h4><div class='dc-wrap'><table><thead><tr>"
+                 "<th scope='col'>Fits</th><th scope='col'>Symbol</th><th scope='col'>Contract</th>"
+                 "<th scope='col'>DTE</th><th scope='col'>OTM</th><th scope='col'>Return on collateral</th>"
+                 "<th scope='col'>Collateral</th><th scope='col'>Reasons</th></tr></thead>"
+                 f"<tbody>{''.join(csp_rows)}</tbody></table></div>")
     return (chart(fig, "premium-candidates",
                   source="Cboe delayed chain + Yahoo EOD realized vol; hedge_desk.premium_score")
-            + table)
-
+            + table + wheel)
 
 def card(title: str, body: str, wide: bool = False) -> str:
     cls = "card wide" if wide else "card"
@@ -968,7 +1014,7 @@ def build() -> None:
         card("Cash-secured puts", csp_scan_chart(r.get("cash_secured_put_scan")), wide=True),
         card("Options premium", premium_yield_chart(r.get("cash_secured_put_scan")), wide=True),
         card("Equity candidates", candidates_chart(r.get("candidates", [])), wide=True),
-        card("Premium-selling candidates", premium_candidates_panel(r.get("chain_income", {})), wide=True),
+        card("Premium-selling candidates", premium_candidates_panel(r.get("chain_income", {}), r.get("cash_secured_put_scan")), wide=True),
         card("Premium chain income", chain_panel(r.get("chain_income", {})), wide=True),
         card("Rates", rates_chart(r.get("rates_environment", {}), series)),
         card("Volatility", vix_chart(series, r.get("vix_regime", {}))),
