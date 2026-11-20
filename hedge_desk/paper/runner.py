@@ -29,6 +29,12 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from hedge_desk.options import OptionQuote, OptionType
+from hedge_desk.options.exit_policy import evaluate_premium_exit
+from hedge_desk.risk.stop_loss import (
+    StopLossPolicy,
+    defined_risk_stop_rule,
+    stop_triggered,
+)
 from hedge_desk.paper.review import load_plan_file
 from hedge_desk.paper.workflow import (
     HumanAuthorizationStatus,
@@ -50,6 +56,15 @@ STATUS_OPEN = "OPEN"
 STATUS_CLOSED = "CLOSED"
 
 _MONITOR_ACTION = "MONITOR"
+
+# The one action the runner takes on its own (GP decision 2026-11-20,
+# ADR-0008): an enforced stop-loss closes the paper position. It only ever
+# reduces risk, it is paper only, and every close is recorded with reasons.
+STOP_LOSS_ACTOR = "STOP_LOSS_ENFORCER"
+STOP_LOSS_REASON = "STOP_LOSS_ENFORCED"
+DEFAULT_EXIT_COMMISSION_PER_CONTRACT = Decimal("0.65")
+
+MarksProvider = Callable[[PaperTradePlan], Tuple[OptionQuote, OptionQuote]]
 
 # Actions that need a human; the runner records them but never acts on them.
 _ESCALATION_ACTIONS = {
@@ -238,8 +253,20 @@ def advance_paper_lifecycle(
     quotes_provider: Optional[QuotesProvider] = None,
     now: Optional[datetime] = None,
     lifecycle_provider: Optional[LifecycleProvider] = None,
+    marks_provider: Optional[MarksProvider] = None,
+    account_equity: Optional[Decimal] = None,
+    stop_policy: StopLossPolicy = StopLossPolicy(),
+    exit_commission_per_contract: Decimal = DEFAULT_EXIT_COMMISSION_PER_CONTRACT,
 ) -> Dict[str, Any]:
     """Advance the paper lifecycle one tick on the 15-minute cadence.
+
+    Enforced stop-loss (ADR-0008): every OPEN plan is marked at executable
+    prices with ``marks_provider(plan)``. When the marked loss reaches the
+    plan's stop (the lower of the policy fraction of max loss and 2% of
+    ``account_equity``), the runner closes the paper position itself and
+    records ``STOP_LOSS_ENFORCED``. This is the only action it takes without
+    a human. If marks are unavailable, the plan is reported under
+    ``stop_unmonitored`` (never silently skipped).
 
     Only APPROVED plans are considered. Each tick:
     - PENDING_OPEN plans are fill-checked with ``quotes_provider(plan)``; a
@@ -249,12 +276,13 @@ def advance_paper_lifecycle(
       reason codes — fail closed.
     - OPEN plans are lifecycle-checked with ``lifecycle_provider(plan)``.
       MONITOR keeps them open; any other action appends an escalation to the
-      plan's escalation list and the human-escalation manifest. The runner
-      never auto-closes and never auto-acts.
+      plan's escalation list and the human-escalation manifest. Apart from
+      the enforced stop-loss below, the runner never auto-closes or auto-acts.
     - CLOSED plans are left alone.
 
     Returns a tick report ``{"opened", "still_pending", "monitoring",
-    "escalated", "skipped", "environment"}``. ``plans_dir`` absent or empty
+    "escalated", "skipped", "stopped_out", "stop_unmonitored",
+    "environment"}``. ``plans_dir`` absent or empty
     is a strict no-op returning an empty report.
     """
     if now is None:
@@ -271,6 +299,8 @@ def advance_paper_lifecycle(
         "monitoring": [],
         "escalated": [],
         "skipped": [],
+        "stopped_out": [],
+        "stop_unmonitored": [],
         "environment": RUNNER_ENVIRONMENT,
     }
     plans_path = Path(plans_dir)
@@ -322,6 +352,11 @@ def advance_paper_lifecycle(
         if status == STATUS_PENDING_OPEN:
             _tick_pending_open(plan, entry, now, quotes_provider, report)
         elif status == STATUS_OPEN:
+            if _enforce_stop_loss(
+                plan, entry, now, marks_provider, account_equity, stop_policy,
+                exit_commission_per_contract, state_path, report,
+            ):
+                continue
             _tick_open(plan, entry, now, lifecycle_provider, report)
         elif status == STATUS_CLOSED:
             continue
@@ -400,6 +435,95 @@ def _tick_pending_open(
             "quantity": opened.quantity,
         }
     )
+
+
+def _enforce_stop_loss(
+    plan: PaperTradePlan,
+    entry: Dict[str, Any],
+    now: datetime,
+    marks_provider: Optional[MarksProvider],
+    account_equity: Optional[Decimal],
+    stop_policy: StopLossPolicy,
+    exit_commission_per_contract: Decimal,
+    state_path: Path,
+    report: Dict[str, Any],
+) -> bool:
+    """Mark an OPEN plan and force-close it in paper when the stop triggers.
+
+    Returns True when the position was closed. Any failure to mark is
+    reported under ``stop_unmonitored`` with a reason code and returns False,
+    so the normal lifecycle monitoring still runs.
+    """
+    rule = defined_risk_stop_rule(plan.spread.maximum_loss, account_equity, stop_policy)
+    entry["stop_rule"] = rule.to_dict()
+
+    def unmonitored(code: str) -> bool:
+        report["stop_unmonitored"].append(
+            {"plan_id": plan.plan_id, "reason_codes": [code], "checked_at": now.isoformat()}
+        )
+        return False
+
+    if marks_provider is None:
+        return unmonitored("STOP_MARKS_PROVIDER_ABSENT")
+    try:
+        opened = _open_from_dict(entry["open"])
+    except (KeyError, TypeError, ValueError):
+        return unmonitored("STOP_OPEN_RECORD_CORRUPT")
+    if opened.plan_hash != plan.plan_hash:
+        return unmonitored("STOP_PLAN_HASH_MISMATCH")
+    try:
+        short_quote, long_quote = marks_provider(plan)
+    except Exception:
+        return unmonitored("STOP_MARK_UNAVAILABLE")
+    try:
+        mark = evaluate_premium_exit(
+            plan.spread, short_quote, long_quote, now, exit_commission_per_contract
+        )
+    except (ValueError, TypeError):
+        # Stale, mismatched, or non-executable quotes: never act on a bad mark.
+        return unmonitored("STOP_MARK_REJECTED")
+    if not stop_triggered(mark.marked_pnl, rule):
+        return False
+    closed = close_paper_trade(
+        opened, plan, short_quote, long_quote, exit_commission_per_contract, now
+    )
+    entry["status"] = STATUS_CLOSED
+    entry["close"] = _close_to_dict(closed)
+    entry["close_decision"] = {
+        "human_id": None,
+        "actor": STOP_LOSS_ACTOR,
+        "decided_at": now.isoformat(),
+        "reason_codes": [STOP_LOSS_REASON],
+        "stop_rule": rule.to_dict(),
+        "marked_pnl_at_trigger": str(mark.marked_pnl),
+        "mark_artifact_sha256": mark.artifact_sha256,
+    }
+    closes = _closes_dir(state_path)
+    closes.mkdir(parents=True, exist_ok=True)
+    (closes / f"{plan.plan_id}.json").write_text(
+        json.dumps(
+            {
+                "schema_version": RUNNER_STATE_SCHEMA_VERSION,
+                "environment": RUNNER_ENVIRONMENT,
+                "decision": entry["close_decision"],
+                "close": entry["close"],
+            },
+            indent=2,
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    report["stopped_out"].append(
+        {
+            "plan_id": plan.plan_id,
+            "reason_codes": [STOP_LOSS_REASON],
+            "trigger_loss": str(rule.trigger_loss),
+            "realized_pnl": str(closed.realized_pnl),
+            "closed_at": closed.closed_at.isoformat(),
+            "flags": list(rule.flags),
+        }
+    )
+    return True
 
 
 def _tick_open(

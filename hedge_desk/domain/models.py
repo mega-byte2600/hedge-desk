@@ -81,8 +81,15 @@ class TradeCandidate:
     average_daily_dollar_volume: Decimal
     thesis: str
     invalidation: str
+    # Explicit dollar loss at the stop. Required for undefined-risk products
+    # (naked options, futures): ADR-0008 decision C5.
+    stop_loss_amount: Optional[Decimal] = None
 
     def __post_init__(self) -> None:
+        if self.stop_loss_amount is not None and (
+            not _finite_decimal(self.stop_loss_amount) or self.stop_loss_amount <= 0
+        ):
+            raise ValueError("stop loss amount must be a positive finite Decimal")
         if not self.candidate_id or not self.symbol:
             raise ValueError("candidate identity is required")
         if type(self.quantity) is not int or self.quantity <= 0:

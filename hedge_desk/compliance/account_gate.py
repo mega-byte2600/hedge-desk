@@ -3,6 +3,11 @@
 from typing import List
 
 from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
+from hedge_desk.risk.stop_loss import stop_defined_rule
+
+# Products whose loss is not capped by the structure itself. ADR-0008 (C5):
+# allowed only with an enforced stop sized to the immutable 2% cap.
+UNDEFINED_RISK_PRODUCTS = {ProductType.UNDEFINED_RISK_OPTION, ProductType.FUTURE}
 
 
 def account_gate(account: Account, candidate: TradeCandidate) -> List[str]:
@@ -10,8 +15,12 @@ def account_gate(account: Account, candidate: TradeCandidate) -> List[str]:
     reasons: List[str] = []
     product = candidate.product_type
 
-    if product is ProductType.UNDEFINED_RISK_OPTION:
-        reasons.append("UNDEFINED_RISK_OPTION_PROHIBITED")
+    if product in UNDEFINED_RISK_PRODUCTS:
+        _rule, stop_reasons = stop_defined_rule(candidate.stop_loss_amount, account.equity)
+        reasons.extend(stop_reasons)
+        if product is ProductType.UNDEFINED_RISK_OPTION and stop_reasons:
+            # Without a valid stop the structure stays prohibited, as before.
+            reasons.append("UNDEFINED_RISK_OPTION_PROHIBITED")
 
     if product in {
         ProductType.DEFINED_RISK_OPTION,

@@ -5,7 +5,7 @@ from datetime import datetime
 from decimal import Decimal, localcontext
 from typing import List, Tuple
 
-from hedge_desk.domain import Account, TradeCandidate
+from hedge_desk.domain import Account, ProductType, TradeCandidate
 # SOUL.md order 7: the 2%-of-equity max-loss rule is immutable. A policy may be
 # stricter, never looser. Defined once in hedge_desk.risk.limits.
 from hedge_desk.risk.limits import SOUL_MAX_LOSS_FRACTION_EQUITY
@@ -121,7 +121,18 @@ def risk_gate(
     reasons: List[str] = []
     age_seconds = (evaluated_at - candidate.quote_timestamp).total_seconds()
 
-    if candidate.max_loss <= 0:
+    # Undefined-risk products are measured at their enforced stop (ADR-0008,
+    # C5). Their stop must exist; the account gate validates it.
+    undefined_risk = candidate.product_type in (
+        ProductType.UNDEFINED_RISK_OPTION, ProductType.FUTURE
+    )
+    if undefined_risk:
+        loss_basis = candidate.stop_loss_amount
+        if loss_basis is None:
+            reasons.append("STOP_LOSS_REQUIRED")
+    else:
+        loss_basis = candidate.max_loss
+    if loss_basis is None or loss_basis <= 0:
         reasons.append("MAX_LOSS_UNDEFINED")
     if age_seconds < 0:
         reasons.append("QUOTE_FROM_FUTURE")
@@ -134,7 +145,7 @@ def risk_gate(
     effective_loss_limit = min(
         policy.maximum_single_trade_loss_fraction, SOUL_MAX_LOSS_FRACTION_EQUITY
     )
-    if candidate.max_loss / account.equity > effective_loss_limit:
+    if loss_basis is not None and loss_basis / account.equity > effective_loss_limit:
         reasons.append("SINGLE_TRADE_LOSS_LIMIT")
 
     if validated_risk_of_ruin_after > policy.maximum_risk_of_ruin:
