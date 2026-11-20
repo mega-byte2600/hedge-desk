@@ -20,6 +20,7 @@ from plotly.subplots import make_subplots
 
 from hedge_desk.candidates import CIK_TO_SYMBOL
 from hedge_desk.desk_call import build_desk_call
+from hedge_desk.premium_score import atm_benchmark_from_report
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "artifacts" / "am-report-latest.json"
@@ -156,7 +157,7 @@ def desk_call_block(r: dict) -> str:
         f"<tr><td>{esc(s['contract_id'])}</td><td>{esc(s['days_to_expiration'])}d</td>"
         f"<td>${esc(s['net_credit'])}</td><td>${esc(s['maximum_loss'])}</td>"
         f"<td><b>{esc(s.get('premium_score') if s.get('premium_score') is not None else '—')}</b></td>"
-        f"<td>{esc(s['probability_of_profit'] or '—')}</td><td>{esc(s['risk_neutral_ev'] or '—')}</td>"
+        f"<td>{'✓ eligible' if s.get('eligible') else '✗ ' + esc(', '.join(s.get('eligibility_reasons') or []) or 'not scored')}</td>"
         f"<td>{esc(s['invalidation_underlying_through'])}</td>"
         f"<td>${esc(s.get('collateral_per_contract'))} / {esc(s.get('example_max_contracts_2pct_demo_equity'))}</td>"
         f"<td>+${esc(s['take_profit_at_credit_captured'])} / −${esc(s['stop_at_loss'])}</td></tr>"
@@ -171,11 +172,16 @@ def desk_call_block(r: dict) -> str:
         "<div class='dc-wrap'><table><caption>Top 3 SPY credit verticals, ranked by "
         f"{esc(call['ranked_by'])}. Exits: take profit at 50% of credit, close by 21 DTE, stop at 50% of max loss.</caption>"
         "<thead><tr><th scope='col'>Structure</th><th scope='col'>DTE</th><th scope='col'>Credit</th>"
-        "<th scope='col'>Max loss</th><th scope='col'>Premium score</th><th scope='col'>P(profit)</th><th scope='col'>RN EV</th>"
+        "<th scope='col'>Max loss</th><th scope='col'>Premium score</th><th scope='col'>GP bands</th>"
         "<th scope='col'>Invalidation</th><th scope='col'>Collateral / max contracts (2% rule, DEMO equity)</th><th scope='col'>Exit +/−</th></tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
-        "<p class='dc-foot'>Paper only. Probabilities are risk-neutral, not forecasts. "
-        "Nothing is trade-authorized; a human approves every paper entry.</p></section>")
+        "<p class='dc-foot'>Paper only. No probability claims on delayed data (SOUL rule 4). "
+        "Nothing is trade-authorized; a human approves every paper entry.</p>"
+        f"<p class='dc-foot' id='dc-age' data-generated='{esc(r.get('generated_at'))}'>Report generated "
+        f"{esc(human_time(r.get('generated_at')))}.</p>"
+        "<script>(function(){var e=document.getElementById('dc-age');if(!e)return;var g=Date.parse(e.dataset.generated);"
+        "if(isNaN(g))return;var h=Math.round((Date.now()-g)/36e5);e.textContent+=' Age: '+h+'h'+(h>24?' — STALE (over 24h)':'');"
+        "if(h>24){e.style.color='#e0a43a';e.style.fontWeight='700';}})();</script></section>")
 
 
 def _human_status(mode: str) -> str:
@@ -718,21 +724,24 @@ def chain_panel(chain_income: dict) -> str:
                 f"<br><span class='muted'>{esc(ch.get('reason', 'no reason given'))}</span></div>")
             continue
         structs = [s for s in (ch.get("gated_income_structures", []) or []) if isinstance(s, dict)]
-        top = sorted(structs, key=lambda s: -_fnum(s.get("return_on_risk")))[:10]
+        def _roc(s):
+            c, m = _fnum(s.get("net_credit")), _fnum(s.get("maximum_loss"))
+            return c / (c + m) if c + m > 0 else 0.0
+        top = sorted(structs, key=lambda s: -_roc(s))[:10]
         trs = "".join(
             f"<tr><td>{esc(s.get('expiration'))}</td><td>{esc(s.get('days_to_expiration'))}</td>"
             f"<td>${esc(s.get('spread_width'))}</td><td>${esc(s.get('net_credit'))}</td>"
             f"<td>${esc(s.get('maximum_loss'))}</td>"
-            f"<td>{_fnum(s.get('return_on_risk')):.1%}</td>"
+            f"<td>{_roc(s):.1%}</td>"
             f"<td class='{'ok' if s.get('gate_decision') == 'APPROVED' else 'warn'}'>"
             f"{esc(s.get('gate_decision'))}</td></tr>"
             for s in top
         )
         parts.append(
-            f"<h4>{esc(sym)} vertical credit spreads — top 10 by return on risk "
+            f"<h4>{esc(sym)} vertical credit spreads — top 10 by return on collateral "
             f"(real Cboe delayed chain, underlying ${esc(ch.get('underlying_bid'))} / ${esc(ch.get('underlying_ask'))})</h4>"
             f"<table class='health'><thead><tr><th>expiry</th><th>DTE</th><th>width</th>"
-            f"<th>credit</th><th>max loss</th><th>RoR</th><th>gate</th></tr></thead>"
+            f"<th>credit</th><th>max loss</th><th>return on collateral</th><th>gate</th></tr></thead>"
             f"<tbody>{trs or '<tr><td colspan=7 class=muted>no admissible structures</td></tr>'}</tbody></table>"
             f"<p class='muted'>{esc(ch.get('gate_note', ''))}</p>")
     return "".join(parts) + src_note("Cboe delayed option chains, nightly batch")
@@ -897,7 +906,8 @@ def paper_panels(paper: dict, yellow: dict) -> str:
 
 # ---------------------------------------------------------------- build
 
-def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None) -> str:
+def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None,
+                             atm_benchmark: Optional[float] = None) -> str:
     """Trader view (GP brief): premium-selling candidates, Wall-Street style.
 
     Structures are re-scored at render time from the report's own real inputs
@@ -913,8 +923,9 @@ def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None
         rk = chain.get("ranking") or {}
         if rk.get("by") == "premium_score":
             chain = rank_chain_income(chain, rk.get("realized_vol_21d_annual"), rk.get("rate") or 0.0,
-                                      rk.get("dividend_yield"))
-        for s in chain.get("gated_income_structures") or chain.get("income_structures") or []:
+                                      rk.get("dividend_yield"), atm_benchmark)
+        for s in ((chain.get("gated_income_structures") or chain.get("income_structures") or [])
+                  + list(chain.get("premium_universe") or [])):
             if (s.get("premium") or {}).get("premium_score") is not None:
                 rows.append(s)
     if not rows:
@@ -958,6 +969,13 @@ def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None
              f"<th scope='col'>Why / warnings</th></tr></thead><tbody>{''.join(_row(s) for s in top)}</tbody></table></div>")
     wheel = ""
     csp_rows = []
+    demo_equity = None
+    for ch in (chain_income or {}).values():
+        try:
+            demo_equity = float((ch or {}).get("gate_demo_account_equity"))
+            break
+        except (TypeError, ValueError):
+            continue
     for sym, res in sorted((csp_scan or {}).items()):
         c = (res or {}).get("candidate") or {}
         if not c.get("found"):
@@ -966,19 +984,30 @@ def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None
             otm = 100 * (1 - float(c["strike"]) / float(c["underlying_mid"]))
         except (KeyError, TypeError, ValueError, ZeroDivisionError):
             otm = None
+        reasons = list(res.get("eval_reasons") or [])
+        roc = float(c.get("return_on_capital") or 0)
+        if roc < 0.01 and "RETURN_BELOW_GP_BAND" not in reasons:
+            reasons.append("RETURN_BELOW_GP_BAND")
+        fits = bool(res.get("fits_gp_rules")) and not reasons
+        try:
+            max_c = int((demo_equity * 0.02) // float(c.get("max_loss") or 0)) if demo_equity else None
+        except (TypeError, ValueError, ZeroDivisionError):
+            max_c = None
         csp_rows.append(
-            f"<tr><td>{'✓' if res.get('fits_gp_rules') else '✗'}</td><td>{esc(sym)}</td>"
+            f"<tr><td>{'✓' if fits else '✗'}</td><td>{esc(sym)}</td>"
             f"<td>{esc(c.get('contract_id'))}</td><td>{esc(c.get('dte'))}</td>"
             f"<td>{esc('—' if otm is None else f'{otm:.1f}%')}</td>"
             f"<td>{esc(round(100 * float(c.get('return_on_capital') or 0), 2))}%</td>"
             f"<td>${esc(c.get('collateral_required'))}</td>"
-            f"<td>{esc(', '.join(res.get('eval_reasons') or []) or 'fits GP wheel')}</td></tr>")
+            f"<td>{esc('—' if max_c is None else max_c)}</td>"
+            f"<td>{esc(', '.join(reasons) or 'fits GP wheel')}</td></tr>")
     if csp_rows:
         wheel = ("<h4 class='chart-caption'>GP wheel — cash-secured puts (target ~30-45 DTE, ~10% OTM, "
                  "1-2% return on collateral)</h4><div class='dc-wrap'><table><thead><tr>"
                  "<th scope='col'>Fits</th><th scope='col'>Symbol</th><th scope='col'>Contract</th>"
                  "<th scope='col'>DTE</th><th scope='col'>OTM</th><th scope='col'>Return on collateral</th>"
-                 "<th scope='col'>Collateral</th><th scope='col'>Reasons</th></tr></thead>"
+                 "<th scope='col'>Collateral</th><th scope='col'>Max contracts (2% rule, DEMO equity)</th>"
+                 "<th scope='col'>Reasons</th></tr></thead>"
                  f"<tbody>{''.join(csp_rows)}</tbody></table></div>")
     return (chart(fig, "premium-candidates",
                   source="Cboe delayed chain + Yahoo EOD realized vol; hedge_desk.premium_score")
@@ -1014,7 +1043,8 @@ def build() -> None:
         card("Cash-secured puts", csp_scan_chart(r.get("cash_secured_put_scan")), wide=True),
         card("Options premium", premium_yield_chart(r.get("cash_secured_put_scan")), wide=True),
         card("Equity candidates", candidates_chart(r.get("candidates", [])), wide=True),
-        card("Premium-selling candidates", premium_candidates_panel(r.get("chain_income", {}), r.get("cash_secured_put_scan")), wide=True),
+        card("Premium-selling candidates", premium_candidates_panel(r.get("chain_income", {}), r.get("cash_secured_put_scan"),
+                                                                        atm_benchmark_from_report(r, "SPY")), wide=True),
         card("Premium chain income", chain_panel(r.get("chain_income", {})), wide=True),
         card("Rates", rates_chart(r.get("rates_environment", {}), series)),
         card("Volatility", vix_chart(series, r.get("vix_regime", {}))),

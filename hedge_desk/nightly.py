@@ -269,7 +269,9 @@ def run_nightly(
                 rate = _m.log1p(float((rates or {}).get("fed_funds_effective_rate")) / 100.0)
             except (TypeError, ValueError):
                 rate = 0.0
-            chain_results[cs] = rank_chain_income(chain, rv_annual, rate)
+            from hedge_desk.premium_score import atm_benchmark_from_report
+            chain_results[cs] = rank_chain_income(
+                chain, rv_annual, rate, None, atm_benchmark_from_report({"vix_regime": vix}, cs))
 
     csp_results = apply_vix_regime_filter(vix, csp_results)
 

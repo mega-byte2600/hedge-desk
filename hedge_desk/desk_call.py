@@ -53,8 +53,12 @@ def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, An
         reasons.append("DATA_NOT_CURRENT")
     if report.get("eod_batch_status") != "READY_FOR_RESEARCH":
         reasons.append("EOD_BATCH_NOT_READY")
-    chain = (report.get("chain_income") or {}).get(symbol) or {}
-    structures = chain.get("gated_income_structures") or chain.get("income_structures") or []
+    # Single source of truth with the trader panel: re-score the report's own
+    # real inputs with the current premium model before ranking.
+    from hedge_desk.premium_score import rescore_report_chains
+    chain = rescore_report_chains(report).get(symbol) or {}
+    structures = (chain.get("gated_income_structures") or chain.get("income_structures") or []) \
+        + list(chain.get("premium_universe") or [])
     equity = _dec(chain.get("gate_demo_account_equity"))
     approved = [s for s in structures if s.get("gate_decision") == "APPROVED"]
     if not structures:
@@ -102,15 +106,25 @@ def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, An
                  "vol edge 30%, return on collateral 25%, 30-45 DTE window 25%, 16-30 delta 20%"
                  if shortlist and shortlist[0].get("premium_score") is not None
                  else "return on risk (premium score absent in this nightly; next run adds it)")
+    scored = [s for s in structures if (s.get("premium") or {}).get("premium_score") is not None]
+    n_elig = sum(1 for s in scored if s["premium"].get("eligible"))
+    band_why = sorted({r for s in shortlist for r in (s.get("eligibility_reasons") or [])})
+    band_text = {"DELTA_OUT_OF_BAND": "short delta outside 16-30", "NO_VOL_EDGE": "no vol edge (ATM IV <= realized)",
+                 "DTE_OUT_OF_WINDOW": "DTE outside 21-60"}
+    elig_line = (f"{n_elig} of {len(scored)} structures meet the GP bands"
+                 + (f" (shortlist fails: {', '.join(band_text.get(r, r) for r in band_why)})" if band_why else "")
+                 + "." if scored else "")
     if action == "NO_TRADE":
         headline = ("No trade today. " + ("Risk gate has not approved any structure; "
-                    "the shortlist is research only." if structures else "Nothing admissible."))
+                    "the shortlist is research only." if structures else "Nothing admissible.")
+                    + (" " + elig_line if elig_line else ""))
     else:
         headline = f"Paper candidate: {shortlist[0]['contract_id']} (human approval required)."
     return {
         "schema_version": SCHEMA_VERSION,
         "as_of": fresh.get("as_of"),
         "action": action,
+        "eligible_count": n_elig,
         "headline": headline,
         "reason_codes": reasons,
         "context": {

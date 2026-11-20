@@ -359,6 +359,25 @@ def real_chain_income(
     # risk-neutral EV are reported per structure as information only.
     structures.sort(key=lambda s: -float(s["return_on_risk"]))
     top = structures[:40]  # present the best defined-risk economics, not all pairs
+    # Premium universe (GP brief, additive): the RoR-sorted top-40 is always
+    # near-the-money, so the 16-30 delta structures the premium-selling desk
+    # targets were discarded before scoring. Keep up to 40 whose short leg sits
+    # in a wide 10-35 delta band, best return on collateral first.
+    from hedge_desk.premium_score import short_leg_delta, unique_by_short_leg
+    universe = []
+    for st in structures:
+        try:
+            short_id = st["contract_id"].split("--")[0]
+            k = int(short_id[-8:]) / 1000.0
+            d = short_leg_delta(float(underlying_mid), k, max(st["days_to_expiration"], 1) / 365.0,
+                                float(st["short_leg_iv"]), short_id[-9] == "C")
+        except (KeyError, TypeError, ValueError):
+            continue
+        if d is not None and 0.10 <= d <= 0.35:
+            credit, max_loss = float(st["net_credit"]), float(st["maximum_loss"])
+            universe.append((credit / (credit + max_loss) if credit + max_loss > 0 else 0.0, st))
+    universe.sort(key=lambda t: (-t[0], t[1]["contract_id"]))
+    premium_universe = unique_by_short_leg([st for _, st in universe])[:40]
     return {
         "schema_version": "hedge-desk-cboe-chain-1.0.0",
         "mode": "REAL_CBOE_CHAIN_INCOME",
@@ -370,6 +389,7 @@ def real_chain_income(
         "pair_count": scan.pair_count,
         "admissible_count": scan.admissible_count,
         "income_structures": top,
+        "premium_universe": premium_universe,
         "data_source": "cboe-delayed-public-http-200",
         "trade_authorized": False,
         "note": (

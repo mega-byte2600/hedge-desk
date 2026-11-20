@@ -156,3 +156,24 @@ class CboePrefilterTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class PremiumUniverseTests(unittest.TestCase):
+    def test_otm_band_structures_survive_the_ror_cutoff(self):
+        """GP brief: 16-30 delta structures must reach the premium score even
+        though near-the-money spreads dominate the return-on-risk top 40."""
+        now = datetime(2026, 9, 19, 12, 0, tzinfo=timezone.utc)
+
+        def opt(c, bid, ask, iv):
+            o = _opt(c, bid, ask)
+            o["iv"] = iv
+            return o
+
+        payload = _cboe_payload(options=[
+            opt("SPY261023P00760000", 14.0, 14.4, 0.18), opt("SPY261023P00755000", 11.8, 12.2, 0.18),
+            opt("SPY261023P00725000", 4.1, 4.3, 0.21), opt("SPY261023P00720000", 3.4, 3.6, 0.22),
+        ])
+        res = real_chain_income("SPY", now, transport=lambda url: (200, payload))
+        universe = [s["contract_id"].split("--")[0] for s in res["premium_universe"]]
+        self.assertIn("SPY261023P00725000", universe)
+        self.assertNotIn("SPY261023P00760000", universe)   # ATM short leg is outside 10-35 delta
+        self.assertTrue(all(s["trade_authorized"] is False for s in res["premium_universe"]))
