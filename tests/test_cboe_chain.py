@@ -177,3 +177,24 @@ class PremiumUniverseTests(unittest.TestCase):
         self.assertIn("SPY261023P00725000", universe)
         self.assertNotIn("SPY261023P00760000", universe)   # ATM short leg is outside 10-35 delta
         self.assertTrue(all(s["trade_authorized"] is False for s in res["premium_universe"]))
+
+
+class NoProbabilityOnDelayedDataTests(unittest.TestCase):
+    def test_chain_artifact_carries_no_probability_or_ev_anywhere(self):
+        """SOUL rule 4, payload-wide: no probability/EV key in any row of the
+        delayed-data chain artifact (income_structures or premium_universe)."""
+        now = datetime(2026, 9, 19, 12, 0, tzinfo=timezone.utc)
+
+        def opt(c, bid, ask, iv):
+            o = _opt(c, bid, ask)
+            o["iv"] = iv
+            return o
+
+        payload = _cboe_payload(options=[
+            opt("SPY261023P00760000", 14.0, 14.4, 0.18), opt("SPY261023P00755000", 11.8, 12.2, 0.18),
+            opt("SPY261023P00725000", 4.1, 4.3, 0.21), opt("SPY261023P00720000", 3.4, 3.6, 0.22),
+        ])
+        res = real_chain_income("SPY", now, transport=lambda url: (200, payload))
+        blob = json.dumps(res).lower()
+        for banned in ("probability_of_profit", "p_max_loss", "risk_neutral_ev", "expected_value"):
+            self.assertNotIn(banned, blob)
