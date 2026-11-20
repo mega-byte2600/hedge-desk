@@ -31,7 +31,11 @@ build/
 *env.env
 
 # Generated nightly AM reports / demos (real market data, regenerated each run).
-/artifacts/
+/artifacts/*
+# Exception: the premium-score Paper Outcome Ledger is append-only history, not
+# a regenerated artifact. It must be committed so the track record survives a
+# machine change (CarpeDATA: provenance is sacred).
+!/artifacts/premium-ledger.jsonl
 
 # Claude Code local state (never commit)
 .claude/state/
