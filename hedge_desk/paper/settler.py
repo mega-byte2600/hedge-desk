@@ -294,7 +294,13 @@ def _settle_closed_plan(
     provenance: Dict[str, Any] = {
         "settler": SETTLER_SCHEMA_VERSION,
         "settled_at": now.isoformat(),
-        "source": "recorded-human-paper-close",
+        # Who closed it: a human, or the enforced stop-loss (ADR-0008).
+        "source": (
+            "enforced-stop-loss-paper-close"
+            if decision.get("actor") == "STOP_LOSS_ENFORCER"
+            else "recorded-human-paper-close"
+        ),
+        "actor": decision.get("actor") or "HUMAN",
         "plan_id": plan_id,
         "plan_hash": entry.get("plan_hash"),
         "close_sha256": close.get("close_sha256"),
