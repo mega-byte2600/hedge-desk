@@ -72,6 +72,7 @@ def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, An
             "net_credit": str(credit),
             "maximum_loss": str(max_loss),
             "probability_of_profit": s.get("probability_of_profit"),
+            "probability_basis": s.get("probability_basis"),
             "risk_neutral_ev": s.get("risk_neutral_ev"),
             "invalidation_underlying_through": s.get("break_even"),
             "take_profit_at_credit_captured": str(

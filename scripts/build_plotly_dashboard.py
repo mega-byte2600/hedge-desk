@@ -169,10 +169,12 @@ def desk_call_block(r: dict) -> str:
         "<div class='dc-wrap'><table><caption>Top 3 SPY credit verticals, ranked by "
         f"{esc(call['ranked_by'])}. Exits: take profit at 50% of credit, close by 21 DTE, stop at 50% of max loss.</caption>"
         "<thead><tr><th scope='col'>Structure</th><th scope='col'>DTE</th><th scope='col'>Credit</th>"
-        "<th scope='col'>Max loss</th><th scope='col'>Premium score</th><th scope='col'>P(profit)</th><th scope='col'>RN EV</th>"
+        "<th scope='col'>Max loss</th><th scope='col'>Premium score</th><th scope='col'>P(profit) (ref, delayed)</th><th scope='col'>RN EV (ref)</th>"
         "<th scope='col'>Invalidation</th><th scope='col'>Exit +/−</th></tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
         "<p class='dc-foot'>Paper only. Probabilities are risk-neutral, not forecasts. "
+        "<span data-hook='dc-prob-delayed-reference'>P(profit) and RN EV are reference only: "
+        "computed from delayed option data, not probability claims.</span> "
         "Nothing is trade-authorized; a human approves every paper entry.</p></section>")
 
 

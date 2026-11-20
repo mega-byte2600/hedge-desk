@@ -1,5 +1,11 @@
 # Executable Project Status
 
+> **Update 2026-11-20:** this file's 2026-08-22 snapshot is historical. The repo now has a
+> read-only Schwab adapter (`hedge_desk/brokers/schwab_readonly.py`), a Schwab market-data
+> adapter (`brokers/schwab_market_data.py`), and many live keyless data feeds. It is still
+> paper-only with no order path. Current state: `docs/research/gap_analysis/inventory.md`;
+> current decisions: `docs/architecture/ADR-0008-gp-risk-and-mode-decisions-2026-11-20.md`.
+
 As of 2026-08-22, the repository is a paper-only research and control system.
 It has no broker adapter, no live market-data adapter, no live order path, and
 no demonstrated real-money profit.
