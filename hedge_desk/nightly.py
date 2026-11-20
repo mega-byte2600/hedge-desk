@@ -114,6 +114,16 @@ def _annotate_chain_with_gates(
     return out
 
 
+def _yellow_sheet_outcomes(vault_path, ledger_path) -> dict:
+    """Read-only join of GP Yellow Sheets to paper ledger outcomes (never raises)."""
+    try:
+        from hedge_desk.premium_ledger import link_yellow_sheets, read_ledger
+        from hedge_desk.yellow_sheet import read_yellow_sheets
+        return link_yellow_sheets(read_yellow_sheets(vault_path), read_ledger(ledger_path))
+    except Exception as exc:  # noqa: BLE001 - context only; never break the nightly
+        return {"status": "UNAVAILABLE", "reason": f"{type(exc).__name__}: {exc}"[:200]}
+
+
 def run_nightly(
     watchlist: Sequence[str] | None = None,
     artifacts_dir: Path | str = "artifacts",
@@ -367,6 +377,7 @@ def run_nightly(
         ),
         "paper_outcome_summary": summarize_paper_log(paper_log_path),
         "premium_ledger": premium_ledger,
+        "yellow_sheet_outcomes": _yellow_sheet_outcomes(yellow_sheet_path, Path(artifacts_dir) / "premium-ledger.jsonl"),
         "yellow_sheets": summarize_yellow_sheets(yellow_sheet_path),
         "rates_environment": rates,
         "vix_regime": vix,

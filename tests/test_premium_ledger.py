@@ -97,3 +97,46 @@ def test_ledger_rebuilds_from_committed_reports_when_jsonl_is_lost(tmp_path):
     rebuilt = rebuild_from_reports(sorted(tmp_path.glob("am-report-*.json")))
     assert rebuilt == read_ledger(led)
     assert summarize(rebuilt)["settled"] == 1
+
+
+def _sheet(vault, strike, dte=36, when="2026-11-18T21:00:00+00:00", strategy="CREDIT_SPREAD"):
+    from datetime import datetime
+    from hedge_desk.yellow_sheet import record_yellow_sheet
+    return record_yellow_sheet(vault, symbol="SPY", strategy=strategy, strike=strike, dte=dte,
+                               thesis="Sell the 700/695 put spread at 20 delta.",
+                               invalidation="SPY closes below 700 before expiry.",
+                               decision="PAPER_OPEN", recorded_at=datetime.fromisoformat(when))
+
+
+def test_yellow_sheets_link_to_ledger_outcomes_read_only(tmp_path):
+    from hedge_desk.premium_ledger import link_yellow_sheets
+    from hedge_desk.yellow_sheet import read_yellow_sheets
+    vault, led = tmp_path / "ys.jsonl", tmp_path / "ledger.jsonl"
+    _sheet(vault, "700")                                  # matches PUT short strike 700, exp 12-24 (36d)
+    _sheet(vault, "760")                                  # matches CALL short strike 760
+    _sheet(vault, "650")                                  # no ledger entry
+    _sheet(vault, "33", strategy="CASH_SECURED_PUT")      # not a spread: ignored
+    before = vault.read_text()
+    update_ledger(led, [_cand(PUT, 75.0), _cand(CALL, 60.0)], {}, date(2026, 11, 18))
+    update_ledger(led, [], {"2026-12-24": "720"}, date(2026, 12, 24))
+    out = link_yellow_sheets(read_yellow_sheets(vault), read_ledger(led))
+    assert vault.read_text() == before                   # vault untouched, hashes still verify
+    by_strike = {r["strike"]: r for r in out["rows"]}
+    assert set(by_strike) == {"700", "760", "650"}
+    assert by_strike["700"]["link"] == "LINKED" and by_strike["700"]["status"] == "SETTLED"
+    assert by_strike["700"]["pnl_usd"] == "120.00" and by_strike["700"]["thesis_held"] is True
+    assert by_strike["760"]["thesis_held"] is True       # 720 close: call spread expires worthless
+    assert by_strike["650"]["link"] == "NO_LEDGER_MATCH"
+    assert out["linked"] == 2 and out["settled"] == 2 and out["thesis_held"] == 2
+    assert out["trade_authorized"] is False
+
+
+def test_yellow_sheet_link_respects_date_and_dte_windows(tmp_path):
+    from hedge_desk.premium_ledger import link_yellow_sheets
+    from hedge_desk.yellow_sheet import read_yellow_sheets
+    vault, led = tmp_path / "ys.jsonl", tmp_path / "ledger.jsonl"
+    _sheet(vault, "700", when="2026-11-30T21:00:00+00:00")   # 12 days after entry: outside window
+    _sheet(vault, "700", dte=90)                              # wrong expiry for the DTE
+    update_ledger(led, [_cand(PUT, 75.0)], {}, date(2026, 11, 18))
+    out = link_yellow_sheets(read_yellow_sheets(vault), read_ledger(led))
+    assert [r["link"] for r in out["rows"]] == ["NO_LEDGER_MATCH", "NO_LEDGER_MATCH"]

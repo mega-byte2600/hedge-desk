@@ -213,5 +213,71 @@ def rebuild_from_reports(report_paths: Iterable[Path | str]) -> List[Dict[str, A
     return rows
 
 
-__all__ = ["update_ledger", "rebuild_from_reports", "summarize", "settle", "due_outcomes", "new_entries", "read_ledger",
+LINK_WINDOW_DAYS = 3
+
+
+def link_yellow_sheets(sheets: Iterable[Mapping[str, Any]], rows: List[Mapping[str, Any]]) -> Dict[str, Any]:
+    """Connect GP Yellow Sheets (decision documents) to ledger outcomes.
+
+    Read-only: Yellow Sheets are hashed, append-only decision records and are
+    never modified. A CREDIT_SPREAD sheet links to the ledger entry with the
+    same underlying and short strike, entered within LINK_WINDOW_DAYS of the
+    sheet; when the sheet records a DTE, the entry's expiration must also be
+    within LINK_WINDOW_DAYS of (recorded date + DTE). Ambiguity is reported,
+    never resolved by guessing.
+    """
+    from datetime import timedelta
+    entries = [r for r in rows if r.get("kind") == "ENTRY"]
+    outcomes = {r["entry_id"]: r for r in rows if r.get("kind") == "OUTCOME"}
+    linked = []
+    for sh in sheets:
+        if sh.get("strategy") != "CREDIT_SPREAD" or sh.get("strike") is None:
+            continue
+        try:
+            rec = date.fromisoformat(str(sh.get("recorded_at"))[:10])
+            strike = _d(sh["strike"])
+        except (ValueError, TypeError, ArithmeticError):
+            continue
+        matches = []
+        for e in entries:
+            if e.get("underlying", "").upper() != str(sh.get("symbol", "")).upper():
+                continue
+            if _d(e["short_strike"]) != strike:
+                continue
+            if abs((date.fromisoformat(e["entry_date"]) - rec).days) > LINK_WINDOW_DAYS:
+                continue
+            if sh.get("dte") is not None:
+                want = rec + timedelta(days=int(sh["dte"]))
+                if abs((date.fromisoformat(e["expiration"]) - want).days) > LINK_WINDOW_DAYS:
+                    continue
+            matches.append(e)
+        row = {"yellow_sheet_seq": sh.get("seq"), "yellow_sheet_sha256": sh.get("entry_sha256"),
+               "symbol": sh.get("symbol"), "strike": str(strike), "decision": sh.get("decision"),
+               "thesis": sh.get("thesis"), "invalidation": sh.get("invalidation")}
+        if len(matches) != 1:
+            row.update({"link": "AMBIGUOUS" if matches else "NO_LEDGER_MATCH",
+                        "candidates": [m["entry_id"] for m in matches]})
+        else:
+            e = matches[0]
+            o = outcomes.get(e["entry_id"])
+            row.update({"link": "LINKED", "entry_id": e["entry_id"], "premium_score": e.get("premium_score"),
+                        "status": "SETTLED" if o else "OPEN"})
+            if o:
+                row.update({"pnl_usd": o["pnl_usd"], "return_on_collateral": o.get("return_on_collateral"),
+                            "expired_worthless": o.get("expired_worthless"),
+                            "thesis_held": _d(o["pnl_usd"]) > 0})
+        linked.append(row)
+    settled = [r for r in linked if r.get("status") == "SETTLED"]
+    return {"schema_version": SCHEMA_VERSION, "basis": BASIS,
+            "sheets_considered": len(linked),
+            "linked": sum(1 for r in linked if r["link"] == "LINKED"),
+            "settled": len(settled),
+            "thesis_held": sum(1 for r in settled if r.get("thesis_held")),
+            "rows": linked,
+            "note": ("Yellow Sheets (GP decisions) joined read-only to paper hold-to-expiry outcomes. "
+                     "Not performance, not advice."),
+            "trade_authorized": False}
+
+
+__all__ = ["update_ledger", "rebuild_from_reports", "link_yellow_sheets", "summarize", "settle", "due_outcomes", "new_entries", "read_ledger",
            "SCHEMA_VERSION", "BASIS"]
