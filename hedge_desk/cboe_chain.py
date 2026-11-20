@@ -237,6 +237,46 @@ def _iv_by_contract(raw: bytes) -> Dict[str, float]:
     return out
 
 
+def _rn_p_itm(spot: float, strike: float, years: float, iv: float, is_call: bool) -> float:
+    """Risk-neutral P(finish ITM) = N(d2) for a call, N(-d2) for a put (r = 0)."""
+    d2 = (math.log(spot / strike) - 0.5 * iv * iv * years) / (iv * math.sqrt(years))
+    z = d2 if is_call else -d2
+    return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
+
+
+# Probabilities in this module are computed from the Cboe *delayed* chain.
+# SOUL.md order 4 forbids probability claims on delayed data, so every
+# probability field ships with this basis label (GP decision C3, 2026-11-20).
+PROBABILITY_BASIS_DELAYED = "REFERENCE_ONLY_DELAYED_DATA"
+PROBABILITY_NOTE_DELAYED = (
+    "Reference only: probabilities are risk-neutral values computed from "
+    "delayed option data. They are not forecasts or claims."
+)
+
+
+def spread_probabilities(spot: float, short_k: float, long_k: float, years: float,
+                         short_iv: float, long_iv: float, is_call: bool,
+                         credit: float, max_loss: float) -> Dict[str, float]:
+    """Probability of profit and risk-neutral expected value of a credit vertical.
+
+    P(short ITM) and P(long ITM) use each leg's own exchange IV (smile-aware).
+    Between strikes the loss is approximated as linear, so the expected loss is
+    P(long ITM) * max_loss + (P(short ITM) - P(long ITM)) * (credit - max_loss) / 2
+    ... expressed in P&L terms below. Under the pricing measure a fairly
+    priced spread has EV ~ 0 before costs, so a negative EV is the measured
+    cost of crossing bid/ask plus commissions -- a hurdle, not a forecast.
+    """
+    p_short = _rn_p_itm(spot, short_k, years, short_iv, is_call)
+    p_long = _rn_p_itm(spot, long_k, years, long_iv, is_call)
+    p_long = min(p_long, p_short)
+    p_between = p_short - p_long
+    # P&L: +credit if OTM; -max_loss beyond the long; linear midpoint between.
+    ev = ((1.0 - p_short) * credit - p_long * max_loss
+          + p_between * (credit - max_loss) / 2.0)
+    return {"probability_of_profit": 1.0 - p_short, "p_max_loss": p_long,
+            "expected_value": ev}
+
+
 def real_chain_income(
     symbol: str,
     cutoff: datetime,
@@ -311,12 +351,22 @@ def real_chain_income(
                 "trade_authorized": False,
             }
         )
-        # SOUL rule 4: no probability or EV claims on delayed data are written
-        # to the artifact. Only the exchange IV of the short leg is carried,
-        # as a pricing input for the premium score's strike placement.
-        s_iv = iv_map.get(short_id)
-        if s_iv:
-            structures[-1]["short_leg_iv"] = f"{s_iv:.4f}"
+        years = max(calc.days_to_expiration, 1) / 365.0
+        s_iv, l_iv = iv_map.get(short_id), iv_map.get(long_id)
+        if s_iv and l_iv:
+            probs = spread_probabilities(
+                float(underlying_mid), float(short_q.strike), float(long_q.strike), years,
+                s_iv, l_iv, short_q.option_type is OptionType.CALL,
+                float(calc.net_credit), float(calc.maximum_loss))
+            structures[-1].update({
+                "probability_of_profit": f"{probs['probability_of_profit']:.4f}",
+                "p_max_loss": f"{probs['p_max_loss']:.4f}",
+                "risk_neutral_ev": f"{probs['expected_value']:.2f}",
+                "short_leg_iv": f"{s_iv:.4f}",
+                # GP decision 2026-11-20 (C3), SOUL.md order 4: probabilities
+                # computed on delayed data are reference only, never a claim.
+                "probability_basis": PROBABILITY_BASIS_DELAYED,
+            })
     # Ranking: return on risk (GP decision 2026-11-19 — EV-first ranking
     # rejected pending the GP's stated objective). Probability of profit and
     # risk-neutral EV are reported per structure as information only.
@@ -359,6 +409,8 @@ def real_chain_income(
         "income_structures": top,
         "premium_universe": premium_universe,
         "data_source": "cboe-delayed-public-http-200",
+        "probability_basis": PROBABILITY_BASIS_DELAYED,
+        "probability_note": PROBABILITY_NOTE_DELAYED,
         "trade_authorized": False,
         "note": (
             "Executable-side net credit from REAL delayed bid/ask. No probability or EV "

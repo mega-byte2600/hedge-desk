@@ -151,3 +151,26 @@ never from UTC or the server's local date. A gate that fails closed for the wron
 reason is a defect, not safety: it withholds good data exactly as surely as a gate
 that passes bad data ships it. Pin the rule with fixed-clock reference cases for
 every run time the schedule actually uses (evening batch, daily run, pre-close).
+
+## 11. Liveness is not data health, and "present" is not "healthy"
+
+**What happened (2026-11-19 nightly).** The EOD batch was `REJECTED` (LYFT and NCLH
+`TRANSPORT_FAILED`) and every Cboe fetch returned 403 (SPY chain and all seven CSP
+scans). The desk failed safe: nothing was fabricated and every entry was `BLOCKED`
+with a reason. The monitoring did not: `/api/health` returned a static `ok`, and data
+quality reported `Options/Cboe present` because it looked for `mode` at the top level
+of a section keyed by symbol (`{"SPY": {"mode": "BLOCKED"}}`). The CSP scan was not
+checked at all. A web test that required at least one CSP candidate turned CI red,
+which made a provider outage look like a code defect.
+
+**Rule.**
+1. Keep process liveness (`/api/health` `status: ok`, the Render probe) separate from
+   data health. Data health is GREEN / AMBER / RED with named sources
+   (`hedge_desk/data_health.py`, `/api/health/data`) and must never take the liveness
+   route down.
+2. A section is healthy only when its entries are healthy. Check nested, per-key shapes
+   entry by entry, and report `k of n BLOCKED` with the reasons.
+3. Tests assert the code, not the market or a provider's availability. An
+   integration test on a committed artifact checks that empty results are *explained*
+   (mode + reason) and runs model checks on a frozen real excerpt
+   (`tests/fixtures/am-report-csp-2026-11-18.json`).

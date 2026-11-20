@@ -16,11 +16,13 @@ from decimal import Decimal
 from typing import Dict
 
 from hedge_desk.options.requirements import cash_secured_put_collateral
+from hedge_desk.risk.limits import SOUL_MAX_LOSS_FRACTION_EQUITY
 
 # Reviewable bounds (small scale, GP standing rules), not scattered magic numbers.
 MAX_RETURN_ON_CAPITAL = Decimal("0.02")     # <=2% per trade on capital deployed
 MAX_CAPITAL_REQUIRED = Decimal("5000")      # <$5k collateral (just getting started)
-MAX_LOSS_FRACTION_EQUITY = Decimal("0.02")  # max loss <=2% of real account equity
+# max loss <=2% of real account equity: the immutable SOUL.md cap, defined once.
+MAX_LOSS_FRACTION_EQUITY = SOUL_MAX_LOSS_FRACTION_EQUITY
 
 
 def evaluate_premium(

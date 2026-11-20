@@ -82,9 +82,49 @@ class RiskAndDecisionTests(unittest.TestCase):
         self.assertIn("STALE_QUOTE", decision.reason_codes)
 
     def test_excessive_trade_loss_blocks_decision(self) -> None:
-        trade = make_candidate(max_loss=Decimal("2000"))
+        # 2001 / 100000 = 2.001% of equity: one dollar over the 2% cap.
+        trade = make_candidate(max_loss=Decimal("2001"))
         decision = evaluate_candidate(self.account, trade, NOW, risk_inputs=risk_inputs(trade))
         self.assertIn("SINGLE_TRADE_LOSS_LIMIT", decision.reason_codes)
+
+    def test_trade_loss_exactly_at_two_percent_is_not_blocked_by_loss_limit(self) -> None:
+        # 2000 / 100000 = exactly 2%: allowed by the per-trade limit (GP decision C2).
+        trade = make_candidate(max_loss=Decimal("2000"))
+        decision = evaluate_candidate(self.account, trade, NOW, risk_inputs=risk_inputs(trade))
+        self.assertNotIn("SINGLE_TRADE_LOSS_LIMIT", decision.reason_codes)
+
+    def test_per_trade_limit_matches_position_sizing_two_percent(self) -> None:
+        # Drift guard: the risk gate and position sizing must never disagree again.
+        from hedge_desk.position_sizing import MAX_LOSS_FRACTION_EQUITY
+        from hedge_desk.risk.ruin import SOUL_MAX_LOSS_FRACTION_EQUITY
+
+        self.assertEqual(RiskPolicy().maximum_single_trade_loss_fraction, Decimal("0.02"))
+        self.assertEqual(MAX_LOSS_FRACTION_EQUITY, Decimal("0.02"))
+        self.assertEqual(SOUL_MAX_LOSS_FRACTION_EQUITY, Decimal("0.02"))
+
+    def test_gate_enforces_cap_even_if_policy_bypasses_validation(self) -> None:
+        # Tampered frozen policy (bypasses __post_init__) must still be capped at 2%.
+        policy = RiskPolicy()
+        object.__setattr__(policy, "maximum_single_trade_loss_fraction", Decimal("0.50"))
+        trade = make_candidate(max_loss=Decimal("2001"))
+        decision = evaluate_candidate(self.account, trade, NOW, policy, risk_inputs=risk_inputs(trade))
+        self.assertIn("SINGLE_TRADE_LOSS_LIMIT", decision.reason_codes)
+
+    def test_sizing_and_gate_share_one_constant(self) -> None:
+        from hedge_desk import position_sizing
+        from hedge_desk.risk import limits, ruin
+
+        self.assertIs(position_sizing.MAX_LOSS_FRACTION_EQUITY, limits.SOUL_MAX_LOSS_FRACTION_EQUITY)
+        self.assertIs(ruin.SOUL_MAX_LOSS_FRACTION_EQUITY, limits.SOUL_MAX_LOSS_FRACTION_EQUITY)
+
+    def test_policy_cannot_loosen_past_immutable_two_percent(self) -> None:
+        with self.assertRaises(ValueError):
+            RiskPolicy(maximum_single_trade_loss_fraction=Decimal("0.0201"))
+        # Stricter is allowed.
+        self.assertEqual(
+            RiskPolicy(maximum_single_trade_loss_fraction=Decimal("0.01")).maximum_single_trade_loss_fraction,
+            Decimal("0.01"),
+        )
 
     def test_valid_candidate_is_approved_for_paper_only(self) -> None:
         trade = make_candidate()

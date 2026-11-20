@@ -123,6 +123,13 @@ class DashboardBuildTests(unittest.TestCase):
             self.assertIn(div, html)
         self.assertIn("Source health", html)
 
+    def test_desk_call_labels_delayed_probabilities_as_reference(self):
+        # GP decision C3 (2026-11-20), SOUL.md order 4: rendered output, not source grep.
+        html = dash.desk_call_block(_report())
+        self.assertIn("data-hook='dc-prob-delayed-reference'", html)
+        self.assertIn("reference only: computed from delayed option data", html)
+        self.assertIn("P(profit) (ref, delayed)", html)
+
     def test_blocked_chain_renders_honest_panel(self):
         html = self._build()
         self.assertIn("pair-count safety limit", html)

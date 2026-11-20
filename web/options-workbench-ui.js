@@ -597,7 +597,7 @@ function harvestSection(seed, st, sa) {
   return box;
 }
 
-function probSection(seed, st, sa) {
+export function probSection(seed, st, sa) {
   const box = $('div', 'wb-card');
   box.appendChild($('h3', '', 'Probability framework'));
   const p = W.probabilityFrame(st);
@@ -611,6 +611,10 @@ function probSection(seed, st, sa) {
   econ.appendChild(econRow('Downside cushion to strike', W.fmtMoney(p.cushion, 2)));
   box.appendChild(econ);
   box.appendChild($('p', 'wb-note', 'Odds are backed out of the option’s own IV — a risk-neutral market quote, not a forecast of where the stock goes.'));
+  // GP decision C3 (2026-11-20), SOUL.md order 4: delayed-data odds are reference only.
+  const refNote = $('p', 'wb-warn', 'Reference only — computed from delayed option data. Not a probability claim.');
+  refNote.setAttribute('data-hook', 'wb-prob-delayed-reference');
+  box.appendChild(refNote);
   if (seed.dailyHistory) {
     const wc = W.windowContingent(seed.dailyHistory);
     const wbox = $('div', 'wb-iv');

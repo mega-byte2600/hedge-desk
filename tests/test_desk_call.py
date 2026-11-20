@@ -30,7 +30,7 @@ def test_ranks_by_return_on_risk_and_prints_exits():
     call = build_desk_call(_report([_s("x", "-9.0", "0.8", ror="0.9"), _s("y", "-2.0", "0.6", ror="0.3"),
                                     _s("z", "-2.0", "0.7", ror="0.5"), _s("w", "-20", "0.9", ror="0.1")]))
     assert [s["contract_id"] for s in call["shortlist"]] == ["x", "z", "y"]
-    assert "risk_neutral_ev" not in call["shortlist"][0]  # SOUL rule 4: never in the payload
+    assert call["shortlist"][0]["risk_neutral_ev"] == "-9.0"  # kept as reference (ADR-0008 C3), never ranked
     top = call["shortlist"][0]
     assert top["take_profit_at_credit_captured"] == "50.00"
     assert top["stop_at_loss"] == "200.00"
@@ -69,8 +69,12 @@ def test_shortlist_dedupes_short_leg_ranks_eligible_first_and_sizes_under_2pct()
     assert top["example_max_contracts_2pct_demo_equity"] == 5  # 2% of 100k / 400
 
 
-def test_no_probability_fields_survive_into_the_delayed_data_payload():
-    """SOUL rule 4: delayed Cboe data must not carry probability/EV claims."""
-    call = build_desk_call(_report([_s("a", "-1.0", "0.8")]))
-    for row in call["shortlist"]:
-        assert "probability_of_profit" not in row and "risk_neutral_ev" not in row
+def test_delayed_probabilities_carry_their_reference_label_through_the_desk_call():
+    """ADR-0008 C3: probabilities on delayed data are reference-only, and the
+    basis label travels with them into the desk-call payload."""
+    s = _s("a", "-1.0", "0.8")
+    s["probability_basis"] = "REFERENCE_ONLY_DELAYED_DATA"
+    call = build_desk_call(_report([s]))
+    row = call["shortlist"][0]
+    assert row["probability_of_profit"] == "0.8"
+    assert row["probability_basis"] == "REFERENCE_ONLY_DELAYED_DATA"

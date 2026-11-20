@@ -168,6 +168,7 @@ def desk_call_block(r: dict) -> str:
         f"<td>${esc(s['net_credit'])}</td><td>${esc(s['maximum_loss'])}</td>"
         f"<td><b>{esc(s.get('premium_score') if s.get('premium_score') is not None else '—')}</b></td>"
         f"<td>{'✓ eligible' if s.get('eligible') else '✗ ' + esc(', '.join(s.get('eligibility_reasons') or []) or 'not scored')}</td>"
+        f"<td>{esc(s.get('probability_of_profit') or '—')}</td><td>{esc(s.get('risk_neutral_ev') or '—')}</td>"
         f"<td>{esc(s['invalidation_underlying_through'])}</td>"
         f"<td>${esc(s.get('collateral_per_contract'))} / {esc(_risk(s))} / {esc(s.get('example_max_contracts_2pct_demo_equity'))}</td>"
         f"<td>+${esc(s['take_profit_at_credit_captured'])} / −${esc(s['stop_at_loss'])}</td></tr>"
@@ -183,9 +184,12 @@ def desk_call_block(r: dict) -> str:
         f"{esc(call['ranked_by'])}. Exits: take profit at 50% of credit, close by 21 DTE, stop at 50% of max loss.</caption>"
         "<thead><tr><th scope='col'>Structure</th><th scope='col'>DTE</th><th scope='col'>Credit</th>"
         "<th scope='col'>Max loss</th><th scope='col'>Premium score</th><th scope='col'>GP bands</th>"
+        "<th scope='col'>P(profit) (ref, delayed)</th><th scope='col'>RN EV (ref)</th>"
         "<th scope='col'>Invalidation</th><th scope='col'>Collateral / risk per contract (% of DEMO equity) / max contracts under 2% rule</th><th scope='col'>Exit +/−</th></tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
-        "<p class='dc-foot'>Paper only. No probability claims on delayed data (SOUL rule 4). "
+        "<p class='dc-foot'>Paper only. Probabilities are risk-neutral, not forecasts. "
+        "<span data-hook='dc-prob-delayed-reference'>P(profit) and RN EV are reference only: "
+        "computed from delayed option data, not probability claims.</span> "
         "Nothing is trade-authorized; a human approves every paper entry.</p>"
         f"<p class='dc-foot' id='dc-age' data-generated='{esc(r.get('generated_at'))}'>Report generated "
         f"{esc(human_time(r.get('generated_at')))}.</p>"
@@ -939,6 +943,14 @@ def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None
             if (s.get("premium") or {}).get("premium_score") is not None:
                 rows.append(s)
     if not rows:
+        blocked = [(sym, (ch or {}).get("reason")) for sym, ch in (chain_income or {}).items()
+                   if (ch or {}).get("mode") == "BLOCKED"]
+        if blocked:
+            # Honest data health (CarpeDATA): say WHY there are no candidates.
+            return ("<div class='blocked'><b>No premium candidates tonight: option chain unavailable.</b> "
+                    + "; ".join(f"{esc(sym)}: {esc(reason or 'no reason given')}" for sym, reason in blocked)
+                    + ". Nothing is scored or ranked from missing data; the last good report is not "
+                    "re-used for candidates.</div>")
         return muted("Premium scores appear after the next nightly run (this report predates the "
                      "premium-selling score).")
     top = unique_by_short_leg(sorted(rows, key=rank_key))[:10]
