@@ -597,7 +597,7 @@ function harvestSection(seed, st, sa) {
   return box;
 }
 
-function probSection(seed, st, sa) {
+export function probSection(seed, st, sa) {
   const box = $('div', 'wb-card');
   box.appendChild($('h3', '', 'Probability framework'));
   const p = W.probabilityFrame(st);

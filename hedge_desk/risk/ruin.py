@@ -6,15 +6,15 @@ from decimal import Decimal, localcontext
 from typing import List, Tuple
 
 from hedge_desk.domain import Account, TradeCandidate
+# SOUL.md order 7: the 2%-of-equity max-loss rule is immutable. A policy may be
+# stricter, never looser. Defined once in hedge_desk.risk.limits.
+from hedge_desk.risk.limits import SOUL_MAX_LOSS_FRACTION_EQUITY
 
 
 RISK_MODEL_ID = "finite-capital-ruin-approximation"
 RISK_MODEL_VERSION = "0.1.0-unvalidated"
 
 
-# SOUL.md order 7: the 2%-of-equity max-loss rule is immutable. A policy may be
-# stricter, never looser.
-SOUL_MAX_LOSS_FRACTION_EQUITY = Decimal("0.02")
 
 
 @dataclass(frozen=True)
@@ -129,7 +129,12 @@ def risk_gate(
         reasons.append("STALE_QUOTE")
     if candidate.average_daily_dollar_volume < policy.minimum_daily_dollar_volume:
         reasons.append("INSUFFICIENT_LIQUIDITY")
-    if candidate.max_loss / account.equity > policy.maximum_single_trade_loss_fraction:
+    # Enforce the immutable cap even if a policy object bypassed __post_init__
+    # (e.g. object.__setattr__ or unpickling): never looser than 2%.
+    effective_loss_limit = min(
+        policy.maximum_single_trade_loss_fraction, SOUL_MAX_LOSS_FRACTION_EQUITY
+    )
+    if candidate.max_loss / account.equity > effective_loss_limit:
         reasons.append("SINGLE_TRADE_LOSS_LIMIT")
 
     if validated_risk_of_ruin_after > policy.maximum_risk_of_ruin:

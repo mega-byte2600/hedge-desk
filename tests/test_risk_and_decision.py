@@ -102,6 +102,21 @@ class RiskAndDecisionTests(unittest.TestCase):
         self.assertEqual(MAX_LOSS_FRACTION_EQUITY, Decimal("0.02"))
         self.assertEqual(SOUL_MAX_LOSS_FRACTION_EQUITY, Decimal("0.02"))
 
+    def test_gate_enforces_cap_even_if_policy_bypasses_validation(self) -> None:
+        # Tampered frozen policy (bypasses __post_init__) must still be capped at 2%.
+        policy = RiskPolicy()
+        object.__setattr__(policy, "maximum_single_trade_loss_fraction", Decimal("0.50"))
+        trade = make_candidate(max_loss=Decimal("2001"))
+        decision = evaluate_candidate(self.account, trade, NOW, policy, risk_inputs=risk_inputs(trade))
+        self.assertIn("SINGLE_TRADE_LOSS_LIMIT", decision.reason_codes)
+
+    def test_sizing_and_gate_share_one_constant(self) -> None:
+        from hedge_desk import position_sizing
+        from hedge_desk.risk import limits, ruin
+
+        self.assertIs(position_sizing.MAX_LOSS_FRACTION_EQUITY, limits.SOUL_MAX_LOSS_FRACTION_EQUITY)
+        self.assertIs(ruin.SOUL_MAX_LOSS_FRACTION_EQUITY, limits.SOUL_MAX_LOSS_FRACTION_EQUITY)
+
     def test_policy_cannot_loosen_past_immutable_two_percent(self) -> None:
         with self.assertRaises(ValueError):
             RiskPolicy(maximum_single_trade_loss_fraction=Decimal("0.0201"))
