@@ -1,12 +1,17 @@
-# HANDOFF — Saturday polish 2026-10-31, rebased 2026-11-14 (toby/sat-polish-2026-10-31)
+# HANDOFF — Saturday polish 2026-10-31, rebased 2026-11-20 (toby/sat-polish-2026-10-31)
 
-Base: origin/main `6fa909b` (Batch refresh — 2026-11-13), rebased 2026-11-14
-from `279c4d4`. Rebase was clean: the two polish commits replayed with no
-conflicts. Branch is now 2 ahead / 0 behind main.
+Base: origin/main `be1a24c` (Ticker feed refresh — 2026-11-20 10:54 ET),
+rebased 2026-11-20 from `528a499`. Branch is now 3 ahead / 0 behind main.
+Rebase replayed all 3 commits; one conflict in `web/app.js`, resolved by
+keeping main's new Desk 5/6/7 `desks()` implementation (landed as `4dbde8a`,
+the Desk 5/6 + `market_context.py` content from PR #169's branches) and
+keeping this branch's "afternoon research run" fallback copy. `HANDOFF.md` /
+`PR_BODY.md` add/add conflicts resolved by keeping this branch's versions
+(main carries the Desk 5/6 handoff in the same single-slot files; the
+reviewer reads this file for this branch). No PR opened from this
+environment (no push path here); push lane = user's other model.
 Supersedes: `toby/sat-polish-2026-10-24` (commit `366246a`, same fix, built on
 a local-only base and never pushed/merged — main still carried the stale copy).
-Push this branch; the Oct 24 branch can be dropped by the push lane once this
-one is up. No PR opened from this environment (no push path here).
 
 ## What changed (no new features)
 
@@ -48,6 +53,36 @@ one is up. No PR opened from this environment (no push path here).
   with `LOADING` and `trade_authorized: false`. No behaviour change to the
   payload shape; cold start now honestly reports LOADING instead of hanging.
 
+## What was verified (2026-11-20, after rebase onto be1a24c)
+
+- Rebase: 3 commits replayed, 3 ahead / 0 behind `be1a24c`; all three
+  commits author + committer `Toby <toby@muse.ai>`. Diff vs main unchanged
+  in shape: `hedge_desk/web_app.py` (9 lines, route only),
+  `tests/test_brief_copy.py` (new), `tests/test_live_data_plane_web.py`
+  (regression test), `web/app.js` (brief copy only — main's Desk 5/6/7
+  `desks()` preserved), `web/index.html` (cache-bust only), plus this
+  handoff and `PR_BODY.md`.
+- `pytest tests/test_live_data_plane_web.py tests/test_brief_copy.py
+  tests/test_market_context.py` — **9 passed**.
+- `pytest tests/test_execution_gate.py tests/test_risk_and_decision.py
+  tests/test_account_gate.py tests/test_portfolio_gate.py
+  tests/test_data_integrations.py` — **129 passed, 7 subtests passed**.
+- `node --check` on `web/app.js` (.mjs copy method) — OK.
+- Local WSGI timing re-measured on the rebased tree: `/api/market-context`
+  answers **0.00s, 200 OK, status LOADING** on a cold start
+  (`trade_authorized: false`) — the synchronous builder is never invoked
+  (regression test proves it by patching the builder to raise).
+- Live probe 2026-11-20 ~11:00 PT: production `/api/market-context` still
+  hangs — curl exit 28, 0 bytes in 35s. Control probe
+  `/market-ticker.json` answered 200 in 0.99s, so the service is up and
+  the hang is specific to the market-context route. The fix is still NOT
+  live; it lands only when this branch is pushed, reviewed, and merged.
+- PR #169 reconciliation: its Desk 5/6 + `market_context.py` changes are
+  on main as `4dbde8a` (Nov 16); the rebase replayed over them with no code
+  conflict in `web_app.py` (different regions) and no changes on main to
+  the branch's test files. PR #169's own API state was not verifiable from
+  this shell (private repo, no authed `gh` here) — not asserted.
+
 ## What was verified (2026-11-14, after rebase onto 6fa909b)
 
 - Rebase: clean, 2 ahead / 0 behind `6fa909b`.
@@ -69,10 +104,14 @@ one is up. No PR opened from this environment (no push path here).
 - Desk 7 teardown hygiene: no remaining references to a rates dashboard in
   `web/`, `docs/`, or `README*` — the Nov 13 teardown left no dangling
   links or copy.
-- In-flight check: no main commit since Nov 7 touched
-  `hedge_desk/web_app.py` or `tests/test_live_data_plane_web.py`; recent
-  main commits are brief/batch refreshes plus the Desk 7 teardown. The
-  rebase replayed cleanly over the teardown. No collision.
+- In-flight check (2026-11-20): main has moved 96 commits past the old
+  base. The one main commit touching the branch's files is `4dbde8a`
+  (Desk 5/6 + SEC + Carpe DATA, Nov 16 — the PR #169 content); its
+  `web_app.py` changes are in different regions from this branch's route
+  change and replayed with no code conflict. The `web/app.js` conflict was
+  the new `desks()` implementation, kept in full. No other main commit
+  touched `hedge_desk/web_app.py`, `tests/test_live_data_plane_web.py`,
+  or `tests/test_brief_copy.py` since the old base.
 - Served-state check (2026-11-14): pending — browser task dispatched to
   read the served `/api/report` freshness (main `6fa909b` is the Nov 13
   batch); see run log `2026-11-14-sat-polish.md` for the result.
