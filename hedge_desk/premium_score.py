@@ -12,15 +12,16 @@ can see WHY a structure ranks where it does.
    options (Carr & Wu 2009, "Variance Risk Premiums", RFS 22(3); Bollerslev,
    Tauchen & Zhou 2009); selling when the spread is wide is the core edge.
    No RV available -> 0 (no unearned credit) and a ``RV_UNAVAILABLE`` flag.
-2. Time-value efficiency (25%) — credit / max loss, scaled to a 30-day month:
-   monthly return on risk, saturating at 50%/month.
+2. Time-value efficiency (25%) — return on COLLATERAL (credit / spread
+   width), scaled to 30 days, full marks at 30%/30 days (SOUL rule 8).
 3. Entry window (25%) — days to expiration. Full score 30-45 DTE, linear to
    zero at 14 and 60 DTE: theta accelerates inside ~45 DTE while gamma risk
    becomes dominant inside ~21 DTE (CBOE PUT/BXM index methodology rolls
    monthly; widely used practitioner management: enter 30-45 DTE, exit at
    50% of max profit or 21 DTE, whichever comes first).
 4. Short-strike placement (20%) — |delta| of the short leg. Full score
-   0.16-0.30 (about 70-84% risk-neutral probability of expiring OTM), linear
+   0.10-0.30 (covers the GP wheel's ~10% OTM put and standard 16-30 delta
+   credit spreads; a placement band, not a probability claim), linear
    to zero at 0.05 and 0.45.
 
 Deterministic and pure: no network, no randomness, no order, no RoR.
@@ -77,6 +78,38 @@ def annualized_rv(daily_log_return_sd: Optional[float]) -> Optional[float]:
     return None if daily_log_return_sd is None else float(daily_log_return_sd) * math.sqrt(252.0)
 
 
+# GP brief bands (hard eligibility) and time-value scale.
+DELTA_BAND = (0.10, 0.30)        # GP wheel (~10% OTM ≈ 0.10-0.15) through 30 delta
+DTE_BAND = (21.0, 60.0)          # managed-exit floor (21) to longest useful window
+# Defined-risk verticals post only the spread width as collateral, so their
+# return on collateral runs far above the cash-secured wheel's 1-2% per trade
+# (SOUL rule 8); the scale is per structure type and disclosed on the page.
+ROC_30D_FULL = 0.30              # verticals: 30% on width per 30 days = full marks
+
+
+def rank_key(row: Dict[str, Any]):
+    """Eligible first, then premium score, then return on collateral."""
+    p = row.get("premium") or {}
+    return (not p.get("eligible", False), -float(p.get("premium_score") or 0),
+            -float((p.get("inputs") or {}).get("return_on_collateral") or 0), row.get("contract_id", ""))
+
+
+def short_leg_id(row: Dict[str, Any]) -> str:
+    return str(row.get("contract_id", "")).split("--")[0]
+
+
+def unique_by_short_leg(rows):
+    """One row per short strike/expiry: several long wings on the same short
+    leg are the same trade decision, so a shortlist shows only the best."""
+    seen, out = set(), []
+    for r in rows:
+        k = short_leg_id(r)
+        if k not in seen:
+            seen.add(k)
+            out.append(r)
+    return out
+
+
 # SPY trailing 12-month distribution yield (approx. 1.2%); an explicit,
 # overridable assumption until a dividend feed is wired.
 DEFAULT_DIVIDEND_YIELD = {"SPY": 0.012}
@@ -84,7 +117,8 @@ DEFAULT_DIVIDEND_YIELD = {"SPY": 0.012}
 
 def score_structure(structure: Dict[str, Any], spot: float,
                     realized_vol_annual: Optional[float],
-                    rate: float = 0.0, dividend_yield: float = 0.0) -> Dict[str, Any]:
+                    rate: float = 0.0, dividend_yield: float = 0.0,
+                    atm_iv_benchmark: Optional[float] = None) -> Dict[str, Any]:
     """Return the premium score block for one credit vertical."""
     flags = []
     dte = float(structure.get("days_to_expiration") or 0)
@@ -96,8 +130,13 @@ def score_structure(structure: Dict[str, Any], spot: float,
 
     if iv is None:
         flags.append("IV_UNAVAILABLE")
-    if realized_vol_annual and iv:
-        vrp = (iv - realized_vol_annual) / iv
+    # Variance risk premium is defined on at-the-money implied vol (Carr & Wu
+    # 2009 use VIX). An OTM short leg's own IV is distorted by skew (OTM calls
+    # trade below ATM vol), which made every call spread read "no edge". Use
+    # the ATM benchmark when available (VIX for SPY), else the short-leg IV.
+    edge_iv = atm_iv_benchmark if atm_iv_benchmark else iv
+    if realized_vol_annual and edge_iv:
+        vrp = (edge_iv - realized_vol_annual) / edge_iv
         vol_edge = min(1.0, max(0.0, vrp / 0.5))
     else:
         # Conservative: no measured edge -> no credit (was a neutral 0.5,
@@ -105,22 +144,43 @@ def score_structure(structure: Dict[str, Any], spot: float,
         vrp, vol_edge = None, 0.0
         flags.append("RV_UNAVAILABLE")
     monthly_ror = (credit / max_loss) * (30.0 / dte) if max_loss > 0 and dte > 0 else 0.0
-    time_value = min(1.0, max(0.0, monthly_ror / 0.5))
+    # SOUL rule 8: return on COLLATERAL. For a defined-risk vertical the
+    # collateral is the full width (credit + max loss), not the max loss.
+    collateral = credit + max_loss
+    roc = credit / collateral if collateral > 0 else 0.0
+    roc_30d = roc * (30.0 / dte) if dte > 0 else 0.0
+    time_value = min(1.0, max(0.0, roc_30d / ROC_30D_FULL))
     entry_window = _ramp(dte, 14, 30, 45, 60)
     delta = (short_leg_delta(spot, occ["strike"], dte / 365.0, iv, occ["type"] == "C", rate, dividend_yield)
              if occ and iv else None)
     if delta is None:
         flags.append("DELTA_UNAVAILABLE")
-    strike_placement = _ramp(delta, 0.05, 0.16, 0.30, 0.45) if delta is not None else 0.0
+    strike_placement = _ramp(delta, 0.05, DELTA_BAND[0], DELTA_BAND[1], 0.45) if delta is not None else 0.0
     parts = {"vol_edge": vol_edge, "time_value": time_value,
              "entry_window": entry_window, "strike_placement": strike_placement}
     score = 100.0 * sum(WEIGHTS[k] * v for k, v in parts.items())
+    # Eligibility = the GP brief as hard constraints. Ineligible structures
+    # stay visible (with reasons) but can never outrank an eligible one.
+    reasons = []
+    if delta is None or not (DELTA_BAND[0] <= delta <= DELTA_BAND[1]):
+        reasons.append("DELTA_OUT_OF_BAND")
+    if vrp is None or vrp <= 0:
+        reasons.append("NO_VOL_EDGE")
+    if not (DTE_BAND[0] <= dte <= DTE_BAND[1]):
+        reasons.append("DTE_OUT_OF_WINDOW")
     return {
         "premium_score": round(score, 1),
+        "eligible": not reasons,
+        "eligibility_reasons": reasons,
         "components": {k: round(v, 3) for k, v in parts.items()},
         "inputs": {"short_leg_iv": iv, "realized_vol_21d_annual": realized_vol_annual,
+                   "vol_edge_benchmark_iv": edge_iv,
+                   "vol_edge_benchmark": "ATM (VIX)" if atm_iv_benchmark else "short-leg IV",
                    "variance_risk_premium": None if vrp is None else round(vrp, 4),
                    "monthly_return_on_risk": round(monthly_ror, 4),
+                   "collateral_usd": round(collateral, 2),
+                   "return_on_collateral": round(roc, 4),
+                   "return_on_collateral_30d": round(roc_30d, 4),
                    "annualized_return_on_risk": round(monthly_ror * 365.0 / 30.0, 4),
                    "rate": rate, "dividend_yield": dividend_yield,
                    "short_leg_abs_delta": None if delta is None else round(delta, 4),
@@ -135,7 +195,8 @@ def score_structure(structure: Dict[str, Any], spot: float,
 
 
 def rank_chain_income(chain: Dict[str, Any], realized_vol_annual: Optional[float],
-                      rate: float = 0.0, dividend_yield: Optional[float] = None) -> Dict[str, Any]:
+                      rate: float = 0.0, dividend_yield: Optional[float] = None,
+                      atm_iv_benchmark: Optional[float] = None) -> Dict[str, Any]:
     """Annotate and re-rank a real_chain_income payload by premium score."""
     try:
         spot = (float(chain["underlying_bid"]) + float(chain["underlying_ask"])) / 2
@@ -144,21 +205,46 @@ def rank_chain_income(chain: Dict[str, Any], realized_vol_annual: Optional[float
     if dividend_yield is None:
         dividend_yield = DEFAULT_DIVIDEND_YIELD.get(str(chain.get("symbol", "")).upper(), 0.0)
     out = dict(chain)
-    for key in ("income_structures", "gated_income_structures"):
+    for key in ("income_structures", "gated_income_structures", "premium_universe"):
         rows = []
         for s in chain.get(key) or []:
             r = dict(s)
-            r["premium"] = score_structure(r, spot, realized_vol_annual, rate, dividend_yield)
+            r["premium"] = score_structure(r, spot, realized_vol_annual, rate, dividend_yield, atm_iv_benchmark)
             rows.append(r)
-        rows.sort(key=lambda r: (-r["premium"]["premium_score"], -float(r.get("return_on_risk") or 0),
-                                 r.get("contract_id", "")))
+        rows.sort(key=rank_key)
         if key in chain:
             out[key] = rows
     out["ranking"] = {"by": "premium_score", "schema_version": SCHEMA_VERSION,
                       "realized_vol_21d_annual": realized_vol_annual, "weights": WEIGHTS,
-                      "rate": rate, "dividend_yield": dividend_yield}
+                      "rate": rate, "dividend_yield": dividend_yield,
+                      "atm_iv_benchmark": atm_iv_benchmark}
     return out
 
 
-__all__ = ["score_structure", "rank_chain_income", "parse_occ", "short_leg_delta",
+def atm_benchmark_from_report(report: Dict[str, Any], symbol: str) -> Optional[float]:
+    """ATM implied-vol benchmark for the vol edge: VIX close / 100 for SPY
+    (VIX is the 30-day S&P 500 implied vol). None for other underlyings."""
+    if str(symbol).upper() != "SPY":
+        return None
+    try:
+        v = float((report.get("vix_regime") or {}).get("last_close"))
+    except (TypeError, ValueError):
+        return None
+    return v / 100.0 if 5.0 <= v <= 150.0 else None
+
+
+def rescore_report_chains(report: Dict[str, Any]) -> Dict[str, Any]:
+    """Return {symbol: chain} re-scored with the current model from the
+    report's own real inputs (single source for Desk call and trader panel)."""
+    out = {}
+    for sym, chain in (report.get("chain_income") or {}).items():
+        rk = (chain or {}).get("ranking") or {}
+        if rk.get("by") == "premium_score":
+            chain = rank_chain_income(chain, rk.get("realized_vol_21d_annual"), rk.get("rate") or 0.0,
+                                      rk.get("dividend_yield"), atm_benchmark_from_report(report, sym))
+        out[sym] = chain
+    return out
+
+
+__all__ = ["score_structure", "rescore_report_chains", "atm_benchmark_from_report", "rank_chain_income", "rank_key", "unique_by_short_leg", "DELTA_BAND", "parse_occ", "short_leg_delta",
            "annualized_rv", "WEIGHTS", "SCHEMA_VERSION"]

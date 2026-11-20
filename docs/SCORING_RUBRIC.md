@@ -36,7 +36,7 @@ GP's stated expectations. A 9 requires every item to hold.
 
 ## Insight
 - VERIFIED: premium score with four sourced components (variance risk
-  premium, time value, 30–45 DTE window, 16–30 delta).
+  premium, return on collateral, 30–45 DTE window, 10–30 delta placement covering the GP wheel).
 - VALIDATED: matches the GP's wheel (30–45 DTE; return on collateral, not a
   misleading return on risk).
 

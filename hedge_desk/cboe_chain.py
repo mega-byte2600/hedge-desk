@@ -372,6 +372,30 @@ def real_chain_income(
     # risk-neutral EV are reported per structure as information only.
     structures.sort(key=lambda s: -float(s["return_on_risk"]))
     top = structures[:40]  # present the best defined-risk economics, not all pairs
+    # Premium universe (GP brief, additive): the RoR-sorted top-40 is always
+    # near-the-money, so the 10-30 delta structures the premium-selling desk
+    # targets were discarded before scoring. Keep up to 40 whose short leg sits
+    # in a wide 10-35 delta band, best return on collateral first.
+    from hedge_desk.premium_score import short_leg_delta, unique_by_short_leg
+    universe = []
+    for st in structures:
+        try:
+            short_id = st["contract_id"].split("--")[0]
+            k = int(short_id[-8:]) / 1000.0
+            d = short_leg_delta(float(underlying_mid), k, max(st["days_to_expiration"], 1) / 365.0,
+                                float(st["short_leg_iv"]), short_id[-9] == "C")
+        except (KeyError, TypeError, ValueError):
+            continue
+        # Widened 0.08-0.38 so the r=q=0 delta here can never drop a structure
+        # that the scorer (with r and q) would place inside 0.10-0.30.
+        if d is not None and 0.08 <= d <= 0.38:
+            credit, max_loss = float(st["net_credit"]), float(st["maximum_loss"])
+            roc = credit / (credit + max_loss) if credit + max_loss > 0 else 0.0
+            # Per-30-day return on collateral, so long-dated or wide structures
+            # cannot crowd 30-45 DTE candidates out of the 40-row cap.
+            universe.append((roc * 30.0 / max(st["days_to_expiration"], 1), st))
+    universe.sort(key=lambda t: (-t[0], t[1]["contract_id"]))
+    premium_universe = unique_by_short_leg([st for _, st in universe])[:40]
     return {
         "schema_version": "hedge-desk-cboe-chain-1.0.0",
         "mode": "REAL_CBOE_CHAIN_INCOME",
@@ -383,15 +407,15 @@ def real_chain_income(
         "pair_count": scan.pair_count,
         "admissible_count": scan.admissible_count,
         "income_structures": top,
+        "premium_universe": premium_universe,
         "data_source": "cboe-delayed-public-http-200",
         "probability_basis": PROBABILITY_BASIS_DELAYED,
         "probability_note": PROBABILITY_NOTE_DELAYED,
         "trade_authorized": False,
         "note": (
-            "Executable-side net credit from REAL delayed bid/ask. Probability of profit "
-            "and EV are risk-neutral (Black-Scholes N(d2) on each leg's exchange IV), "
-            "not real-world forecasts; EV < 0 measures the bid/ask + commission hurdle. "
-            "No order placed. Max-loss economics per defined-risk vertical."
+            "Executable-side net credit from REAL delayed bid/ask. No probability or EV "
+            "is stated on delayed data (SOUL rule 4); exchange IV is carried only as a "
+            "pricing input. No order placed. Max-loss economics per defined-risk vertical."
         ),
     }
 
