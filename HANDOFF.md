@@ -29,3 +29,19 @@ Branch: `toby/desk6-all-desk-coverage`
 6. Confirm Desk 6 remains blocked from candidate ranking until all matched futures and cost inputs are supplied.
 
 No production deployment or merge is performed from this branch.
+
+---
+## Batch refresh: commit the Paper Outcome Ledger (2026-11-20)
+From PR #178 on, the nightly writes `artifacts/premium-ledger.jsonl`, the
+append-only paper track record of the premium score. It is **not** ignored by
+git. `scripts/run_nightly_batch.sh` stages it after each run.
+
+**Batch committers (Toby lane):** add it to every "Batch refresh" commit
+alongside `am-demo.html`, `am-report-latest.json` and the dated report:
+
+    git add artifacts/premium-ledger.jsonl
+
+Safety net: each dated `am-report-YYYY-MM-DD.json` also carries that night's
+appended ledger rows (`premium_ledger.appended_rows`), so
+`hedge_desk.premium_ledger.rebuild_from_reports` can rebuild the full ledger
+from committed reports if the `.jsonl` is ever lost.

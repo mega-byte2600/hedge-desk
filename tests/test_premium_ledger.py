@@ -84,3 +84,16 @@ def test_dashboard_ledger_panel_renders_bands_and_empty_state():
     html = bpd.premium_ledger_panel(summarize(rows))
     assert "score &gt;= 70" in html or "score >= 70" in html
     assert "1.000" in html and "$120.00" in html
+
+
+def test_ledger_rebuilds_from_committed_reports_when_jsonl_is_lost(tmp_path):
+    """Durability: tonight's rows ride in the dated report the batch always commits."""
+    from hedge_desk.premium_ledger import rebuild_from_reports
+    led = tmp_path / "ledger.jsonl"
+    r1 = update_ledger(led, [_cand(PUT, 75.0)], {}, date(2026, 11, 18))
+    r2 = update_ledger(led, [_cand(PUT, 75.0)], {"2026-12-24": "720"}, date(2026, 12, 24))
+    (tmp_path / "am-report-2026-11-18.json").write_text(json.dumps({"premium_ledger": r1}))
+    (tmp_path / "am-report-2026-12-24.json").write_text(json.dumps({"premium_ledger": r2}))
+    rebuilt = rebuild_from_reports(sorted(tmp_path.glob("am-report-*.json")))
+    assert rebuilt == read_ledger(led)
+    assert summarize(rebuilt)["settled"] == 1

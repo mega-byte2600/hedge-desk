@@ -181,13 +181,37 @@ def update_ledger(path: Path | str, eligible: Iterable[Mapping[str, Any]], close
                   as_of: date, context: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
     """Nightly step: append new entries and due outcomes; return the summary."""
     rows = read_ledger(path)
-    added = _append(path, new_entries(eligible, rows, as_of, context or {}))
+    entries = new_entries(eligible, rows, as_of, context or {})
+    added = _append(path, entries)
     rows = read_ledger(path)
-    settled = _append(path, due_outcomes(rows, closes, as_of))
+    outcomes = due_outcomes(rows, closes, as_of)
+    settled = _append(path, outcomes)
     summary = summarize(read_ledger(path))
-    summary.update({"entries_added_tonight": added, "outcomes_settled_tonight": settled})
+    summary.update({"entries_added_tonight": added, "outcomes_settled_tonight": settled,
+                    # Tonight's appended rows ride inside the dated nightly report,
+                    # which the batch commit always includes. The full ledger can
+                    # be rebuilt from committed reports (rebuild_from_reports) even
+                    # if the .jsonl itself is never committed.
+                    "appended_rows": entries + outcomes})
     return summary
 
 
-__all__ = ["update_ledger", "summarize", "settle", "due_outcomes", "new_entries", "read_ledger",
+def rebuild_from_reports(report_paths: Iterable[Path | str]) -> List[Dict[str, Any]]:
+    """Reconstruct the ledger from committed dated reports (oldest first),
+    de-duplicating by (kind, entry_id)."""
+    seen, rows = set(), []
+    for rp in sorted(Path(x) for x in report_paths):
+        try:
+            led = json.loads(Path(rp).read_text(encoding="utf-8")).get("premium_ledger") or {}
+        except (OSError, ValueError):
+            continue
+        for r in led.get("appended_rows") or []:
+            key = (r.get("kind"), r.get("entry_id"))
+            if key not in seen:
+                seen.add(key)
+                rows.append(r)
+    return rows
+
+
+__all__ = ["update_ledger", "rebuild_from_reports", "summarize", "settle", "due_outcomes", "new_entries", "read_ledger",
            "SCHEMA_VERSION", "BASIS"]
