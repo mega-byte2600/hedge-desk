@@ -275,3 +275,12 @@ def test_options_seed_modules_reference_no_risk_of_ruin_value(rel):
     assert "risk_of_ruin" not in code.lower()  # no such symbol in code
     assert re.search(r"\bror\b", code, re.IGNORECASE) is None
     assert re.search(r"\bruin\b", code, re.IGNORECASE) is None
+
+
+def test_delayed_probability_reference_note_is_locked():
+    # Locked copy (ENGINEERING_LESSONS.md rule 1): GP decision C3, SOUL.md order 4.
+    # Selected by an explicit hook, and the original risk-neutral sentence is kept.
+    src = (Path(__file__).resolve().parents[1] / "web" / "options-workbench-ui.js").read_text(encoding="utf-8")
+    assert "'wb-prob-delayed-reference'" in src
+    assert "Reference only — computed from delayed option data. Not a probability claim." in src
+    assert "a risk-neutral market quote, not a forecast of where the stock goes." in src

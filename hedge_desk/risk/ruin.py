@@ -12,12 +12,19 @@ RISK_MODEL_ID = "finite-capital-ruin-approximation"
 RISK_MODEL_VERSION = "0.1.0-unvalidated"
 
 
+# SOUL.md order 7: the 2%-of-equity max-loss rule is immutable. A policy may be
+# stricter, never looser.
+SOUL_MAX_LOSS_FRACTION_EQUITY = Decimal("0.02")
+
+
 @dataclass(frozen=True)
 class RiskPolicy:
     maximum_risk_of_ruin: Decimal = Decimal("0.04")
     maximum_quote_age_seconds: int = 900
     minimum_daily_dollar_volume: Decimal = Decimal("1000000")
-    maximum_single_trade_loss_fraction: Decimal = Decimal("0.01")
+    # GP decision 2026-11-20 (C2): one per-trade limit everywhere, equal to the
+    # immutable SOUL.md order 7 cap and position_sizing.MAX_LOSS_FRACTION_EQUITY.
+    maximum_single_trade_loss_fraction: Decimal = Decimal("0.02")
     assumed_loss_sequence: int = 20
     required_risk_model_id: str = RISK_MODEL_ID
     required_risk_model_version: str = RISK_MODEL_VERSION
@@ -43,6 +50,10 @@ class RiskPolicy:
             raise ValueError("minimum liquidity cannot be negative")
         if not Decimal("0") < self.maximum_single_trade_loss_fraction <= Decimal("1"):
             raise ValueError("single-trade loss fraction must be in (0, 1]")
+        if self.maximum_single_trade_loss_fraction > SOUL_MAX_LOSS_FRACTION_EQUITY:
+            raise ValueError(
+                "single-trade loss fraction cannot exceed the immutable 2% of equity cap"
+            )
         if (
             type(self.maximum_quote_age_seconds) is not int
             or self.maximum_quote_age_seconds < 0

@@ -244,6 +244,16 @@ def _rn_p_itm(spot: float, strike: float, years: float, iv: float, is_call: bool
     return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
 
 
+# Probabilities in this module are computed from the Cboe *delayed* chain.
+# SOUL.md order 4 forbids probability claims on delayed data, so every
+# probability field ships with this basis label (GP decision C3, 2026-11-20).
+PROBABILITY_BASIS_DELAYED = "REFERENCE_ONLY_DELAYED_DATA"
+PROBABILITY_NOTE_DELAYED = (
+    "Reference only: probabilities are risk-neutral values computed from "
+    "delayed option data. They are not forecasts or claims."
+)
+
+
 def spread_probabilities(spot: float, short_k: float, long_k: float, years: float,
                          short_iv: float, long_iv: float, is_call: bool,
                          credit: float, max_loss: float) -> Dict[str, float]:
@@ -353,6 +363,9 @@ def real_chain_income(
                 "p_max_loss": f"{probs['p_max_loss']:.4f}",
                 "risk_neutral_ev": f"{probs['expected_value']:.2f}",
                 "short_leg_iv": f"{s_iv:.4f}",
+                # GP decision 2026-11-20 (C3), SOUL.md order 4: probabilities
+                # computed on delayed data are reference only, never a claim.
+                "probability_basis": PROBABILITY_BASIS_DELAYED,
             })
     # Ranking: return on risk (GP decision 2026-11-19 — EV-first ranking
     # rejected pending the GP's stated objective). Probability of profit and
@@ -371,6 +384,8 @@ def real_chain_income(
         "admissible_count": scan.admissible_count,
         "income_structures": top,
         "data_source": "cboe-delayed-public-http-200",
+        "probability_basis": PROBABILITY_BASIS_DELAYED,
+        "probability_note": PROBABILITY_NOTE_DELAYED,
         "trade_authorized": False,
         "note": (
             "Executable-side net credit from REAL delayed bid/ask. Probability of profit "

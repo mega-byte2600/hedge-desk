@@ -153,6 +153,28 @@ class CboePrefilterTests(unittest.TestCase):
         self.assertEqual(result["mode"], "REAL_CBOE_CHAIN_INCOME")
         self.assertLessEqual(result["pair_count"], policy.maximum_pair_count)
 
+    def test_delayed_probabilities_are_labeled_reference_only(self):
+        # GP decision C3 (2026-11-20), SOUL.md order 4: every probability
+        # computed from the delayed chain carries the reference-only basis.
+        from hedge_desk.cboe_chain import PROBABILITY_BASIS_DELAYED
+        now = datetime(2026, 9, 19, 12, 0, tzinfo=timezone.utc)
+        # OTM puts with prices rising toward the money and an exchange IV, so
+        # the scanner admits credit verticals and the probability path runs.
+        opts = []
+        for s in range(740, 760):
+            bid = round(0.50 + 0.30 * (s - 740), 2)
+            leg = _opt(f"SPY261023P{s * 1000:08d}", bid, round(bid + 0.05, 2))
+            leg["iv"] = 0.18
+            opts.append(leg)
+        payload = _cboe_payload(options=opts)
+        result = real_chain_income("SPY", now, transport=lambda url: (200, payload))
+        self.assertEqual(result["probability_basis"], "REFERENCE_ONLY_DELAYED_DATA")
+        self.assertIn("Reference only", result["probability_note"])
+        with_probs = [s for s in result["income_structures"] if "probability_of_profit" in s]
+        self.assertTrue(with_probs, "fixture must exercise the probability path")
+        for s in with_probs:
+            self.assertEqual(s["probability_basis"], PROBABILITY_BASIS_DELAYED)
+
 
 if __name__ == "__main__":
     unittest.main()
