@@ -153,13 +153,23 @@ def freshness_strip(r: dict) -> str:
 def desk_call_block(r: dict) -> str:
     """Three-line decision header (hedge_desk.desk_call): action, shortlist, exits."""
     call = build_desk_call(r)
+    spy = (r.get("chain_income") or {}).get("SPY") or {}
+    banner = ("" if "premium_universe" in spy or not spy else
+              "<p class='dc-banner'>This nightly predates the banded premium universe: the "
+              "structures below are the near-the-money return-on-risk set, so none can meet the "
+              "10-30 delta band. The next nightly run adds 10-30 delta candidates.</p>")
+    def _risk(s):
+        pct = s.get("max_loss_pct_demo_equity")
+        if pct is None:
+            return "—"
+        return f"{pct}%" + (" ⚠ over 2%" if float(pct) > 2 else "")
     rows = "".join(
-        f"<tr><td>{esc(s['contract_id'])}</td><td>{esc(s['days_to_expiration'])}d</td>"
+        f"<tr class='{'' if s.get('eligible') else 'dc-inelig'}'><td>{esc(s['contract_id'])}</td><td>{esc(s['days_to_expiration'])}d</td>"
         f"<td>${esc(s['net_credit'])}</td><td>${esc(s['maximum_loss'])}</td>"
         f"<td><b>{esc(s.get('premium_score') if s.get('premium_score') is not None else '—')}</b></td>"
         f"<td>{'✓ eligible' if s.get('eligible') else '✗ ' + esc(', '.join(s.get('eligibility_reasons') or []) or 'not scored')}</td>"
         f"<td>{esc(s['invalidation_underlying_through'])}</td>"
-        f"<td>${esc(s.get('collateral_per_contract'))} / {esc(s.get('example_max_contracts_2pct_demo_equity'))}</td>"
+        f"<td>${esc(s.get('collateral_per_contract'))} / {esc(_risk(s))} / {esc(s.get('example_max_contracts_2pct_demo_equity'))}</td>"
         f"<td>+${esc(s['take_profit_at_credit_captured'])} / −${esc(s['stop_at_loss'])}</td></tr>"
         for s in call["shortlist"])
     ctx = call["context"]
@@ -167,13 +177,13 @@ def desk_call_block(r: dict) -> str:
     return (
         f"<section class='deskcall {cls}' aria-labelledby='dc-h'>"
         f"<h2 id='dc-h'>Desk call · {esc(call['as_of'])}: {esc(call['action'].replace('_', ' '))}</h2>"
-        f"<p class='dc-head'>{esc(call['headline'])} VIX {esc(ctx['vix_close'])} "
+        f"{banner}<p class='dc-head'>{esc(call['headline'])} VIX {esc(ctx['vix_close'])} "
         f"({esc(ctx['vix_regime'])}). Reasons: {esc('; '.join(call['reason_codes']) or 'none')}.</p>"
         "<div class='dc-wrap'><table><caption>Top 3 SPY credit verticals, ranked by "
         f"{esc(call['ranked_by'])}. Exits: take profit at 50% of credit, close by 21 DTE, stop at 50% of max loss.</caption>"
         "<thead><tr><th scope='col'>Structure</th><th scope='col'>DTE</th><th scope='col'>Credit</th>"
         "<th scope='col'>Max loss</th><th scope='col'>Premium score</th><th scope='col'>GP bands</th>"
-        "<th scope='col'>Invalidation</th><th scope='col'>Collateral / max contracts (2% rule, DEMO equity)</th><th scope='col'>Exit +/−</th></tr></thead>"
+        "<th scope='col'>Invalidation</th><th scope='col'>Collateral / risk per contract (% of DEMO equity) / max contracts under 2% rule</th><th scope='col'>Exit +/−</th></tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
         "<p class='dc-foot'>Paper only. No probability claims on delayed data (SOUL rule 4). "
         "Nothing is trade-authorized; a human approves every paper entry.</p>"
@@ -912,7 +922,7 @@ def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None
 
     Structures are re-scored at render time from the report's own real inputs
     (IV, RV, rate, DTE, credit) with the current premium model, so the page
-    reflects the model even between nightly runs. Eligible structures (16-30
+    reflects the model even between nightly runs. Eligible structures (10-30
     delta, 21-60 DTE, positive vol edge) always rank first; one row per short
     leg; every row shows why it is or is not eligible. The GP's wheel (cash-
     secured puts) is shown alongside with return on collateral."""
@@ -936,7 +946,7 @@ def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None
     labels = [f"{'✓ ' if s['premium'].get('eligible') else '✗ '}{s.get('contract_id', '')[:18]}… "
               f"{s.get('days_to_expiration')}d" for s in top][::-1]
     names = {"vol_edge": "Vol edge (30%)", "time_value": "Return on collateral (25%)",
-             "entry_window": "30-45 DTE window (25%)", "strike_placement": "16-30 delta (20%)"}
+             "entry_window": "30-45 DTE window (25%)", "strike_placement": "10-30 delta (20%)"}
     colors = {"vol_edge": "#c9a227", "time_value": "#8a6d3b", "entry_window": "#5b8db8", "strike_placement": "#7fa37a"}
     fig = go.Figure()
     for k, label in names.items():
@@ -945,7 +955,7 @@ def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None
                     name=label, orientation="h", marker_color=colors[k])
     fig.update_layout(**base_layout("Premium score by component (0-100); ✓ eligible, ✗ outside GP bands", height=440),
                       barmode="stack")
-    reason_text = {"DELTA_OUT_OF_BAND": "delta outside 16-30", "NO_VOL_EDGE": "IV ≤ realized vol (no edge)",
+    reason_text = {"DELTA_OUT_OF_BAND": "delta outside 10-30", "NO_VOL_EDGE": "IV ≤ realized vol (no edge)",
                    "DTE_OUT_OF_WINDOW": "DTE outside 21-60"}
 
     def _row(s):
@@ -962,7 +972,8 @@ def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None
                 f"{esc(p['management']['days_until_time_exit'])}d</td><td>{esc(why)}</td></tr>")
     table = ("<div class='dc-wrap'><table><caption>"
              f"{n_eligible} of {len(top)} shortlisted structures meet the GP bands. Ineligible rows are shown "
-             "for context and always rank below eligible ones.</caption><thead><tr>"
+             "for context and always rank below eligible ones. Return on collateral for spreads is on the "
+             "spread width, so it runs far above the cash-secured wheel's 1-2% per trade.</caption><thead><tr>"
              "<th scope='col'>OK</th><th scope='col'>Structure</th><th scope='col'>Score</th>"
              "<th scope='col'>DTE</th><th scope='col'>|Δ| short</th><th scope='col'>Vol edge (IV vs RV)</th>"
              "<th scope='col'>Return on collateral / 30d</th><th scope='col'>Take profit / days to 21-DTE exit</th>"
@@ -1104,7 +1115,7 @@ td.ok{{color:#27ae60}} td.warn{{color:#f39c12}}
  .card{{min-width:0}}
  .js-plotly-plot{{max-width:100%}}
 }}
-.deskcall{{overflow-wrap:anywhere;min-width:0;max-width:100%;box-sizing:border-box;margin:16px 28px;padding:14px 18px;border:1px solid #232329;border-left:4px solid #8a6d3b;border-radius:8px;background:#121215}}.deskcall h2{{margin:0 0 6px;font-size:18px}}.dc-head{{margin:0 0 10px;color:#f4f1e8}}.dc-wrap{{overflow-x:auto}}.deskcall table{{border-collapse:collapse;width:100%;font-size:13px}}.deskcall caption{{text-align:left;color:#a39e93;font-size:12px;padding-bottom:6px}}.deskcall th,.deskcall td{{padding:6px 8px;border-bottom:1px solid #232329;text-align:left;white-space:nowrap}}.dc-foot{{margin:8px 0 0;font-size:12px;color:#a39e93}}.dc-no{{border-left-color:#a39e93}}@media(max-width:900px){{.deskcall{{margin:12px}}}}
+.deskcall{{overflow-wrap:anywhere;min-width:0;max-width:100%;box-sizing:border-box;margin:16px 28px;padding:14px 18px;border:1px solid #232329;border-left:4px solid #8a6d3b;border-radius:8px;background:#121215}}.deskcall h2{{margin:0 0 6px;font-size:18px}}.dc-head{{margin:0 0 10px;color:#f4f1e8}}.dc-wrap{{overflow-x:auto}}.deskcall table{{border-collapse:collapse;width:100%;font-size:13px}}.deskcall caption{{text-align:left;color:#a39e93;font-size:12px;padding-bottom:6px}}.deskcall th,.deskcall td{{padding:6px 8px;border-bottom:1px solid #232329;text-align:left;white-space:nowrap}}.dc-foot{{margin:8px 0 0;font-size:12px;color:#a39e93}}.dc-inelig td{{color:#8b867c}}.dc-banner{{margin:0 0 8px;padding:6px 10px;border-left:3px solid #e0a43a;background:#1a1712;font-size:13px}}.dc-no{{border-left-color:#a39e93}}@media(max-width:900px){{.deskcall{{margin:12px}}}}
 </style></head><body>
 <header><img class="brand-logo" src="/brand/emporion-logo-hermes-transparent.png?v=20261004-power" alt="Emporion" onerror="this.onerror=null;this.src='../web/brand/emporion-logo-hermes-transparent.png'"><div><h1>Emporion Overnight Desk</h1>
 <div class="tag">Markets · Intelligence · Discipline</div></div>

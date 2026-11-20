@@ -102,14 +102,14 @@ def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, An
     action = "PAPER_CANDIDATE" if approved and not reasons else "NO_TRADE"
     vix = report.get("vix_regime") or {}
     vix_close = _dec(vix.get("last_close"))
-    ranked_by = ("eligible first (16-30 delta, 21-60 DTE, positive vol edge), then premium score: "
-                 "vol edge 30%, return on collateral 25%, 30-45 DTE window 25%, 16-30 delta 20%"
+    ranked_by = ("eligible first (10-30 delta, 21-60 DTE, positive vol edge), then premium score: "
+                 "vol edge 30%, return on collateral 25%, 30-45 DTE window 25%, 10-30 delta placement 20%"
                  if shortlist and shortlist[0].get("premium_score") is not None
                  else "return on risk (premium score absent in this nightly; next run adds it)")
     scored = [s for s in structures if (s.get("premium") or {}).get("premium_score") is not None]
     n_elig = sum(1 for s in scored if s["premium"].get("eligible"))
     band_why = sorted({r for s in shortlist for r in (s.get("eligibility_reasons") or [])})
-    band_text = {"DELTA_OUT_OF_BAND": "short delta outside 16-30", "NO_VOL_EDGE": "no vol edge (ATM IV <= realized)",
+    band_text = {"DELTA_OUT_OF_BAND": "short delta outside 10-30", "NO_VOL_EDGE": "no vol edge (ATM IV <= realized)",
                  "DTE_OUT_OF_WINDOW": "DTE outside 21-60"}
     elig_line = (f"{n_elig} of {len(scored)} structures meet the GP bands"
                  + (f" (shortlist fails: {', '.join(band_text.get(r, r) for r in band_why)})" if band_why else "")

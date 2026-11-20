@@ -20,7 +20,8 @@ can see WHY a structure ranks where it does.
    monthly; widely used practitioner management: enter 30-45 DTE, exit at
    50% of max profit or 21 DTE, whichever comes first).
 4. Short-strike placement (20%) — |delta| of the short leg. Full score
-   0.16-0.30 (about 70-84% risk-neutral probability of expiring OTM), linear
+   0.10-0.30 (covers the GP wheel's ~10% OTM put and standard 16-30 delta
+   credit spreads; a placement band, not a probability claim), linear
    to zero at 0.05 and 0.45.
 
 Deterministic and pure: no network, no randomness, no order, no RoR.
@@ -78,9 +79,12 @@ def annualized_rv(daily_log_return_sd: Optional[float]) -> Optional[float]:
 
 
 # GP brief bands (hard eligibility) and time-value scale.
-DELTA_BAND = (0.16, 0.30)        # ~70-84% risk-neutral OTM probability
+DELTA_BAND = (0.10, 0.30)        # GP wheel (~10% OTM ≈ 0.10-0.15) through 30 delta
 DTE_BAND = (21.0, 60.0)          # managed-exit floor (21) to longest useful window
-ROC_30D_FULL = 0.30              # 30% return on collateral per 30 days = full marks
+# Defined-risk verticals post only the spread width as collateral, so their
+# return on collateral runs far above the cash-secured wheel's 1-2% per trade
+# (SOUL rule 8); the scale is per structure type and disclosed on the page.
+ROC_30D_FULL = 0.30              # verticals: 30% on width per 30 days = full marks
 
 
 def rank_key(row: Dict[str, Any]):
@@ -151,7 +155,7 @@ def score_structure(structure: Dict[str, Any], spot: float,
              if occ and iv else None)
     if delta is None:
         flags.append("DELTA_UNAVAILABLE")
-    strike_placement = _ramp(delta, 0.05, 0.16, 0.30, 0.45) if delta is not None else 0.0
+    strike_placement = _ramp(delta, 0.05, DELTA_BAND[0], DELTA_BAND[1], 0.45) if delta is not None else 0.0
     parts = {"vol_edge": vol_edge, "time_value": time_value,
              "entry_window": entry_window, "strike_placement": strike_placement}
     score = 100.0 * sum(WEIGHTS[k] * v for k, v in parts.items())

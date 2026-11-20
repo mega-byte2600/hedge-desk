@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
 class PremiumUniverseTests(unittest.TestCase):
     def test_otm_band_structures_survive_the_ror_cutoff(self):
-        """GP brief: 16-30 delta structures must reach the premium score even
+        """GP brief: 10-30 delta structures must reach the premium score even
         though near-the-money spreads dominate the return-on-risk top 40."""
         now = datetime(2026, 9, 19, 12, 0, tzinfo=timezone.utc)
 

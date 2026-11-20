@@ -62,7 +62,7 @@ def checks(full: bool) -> list[dict]:
     add("UI/UX", "desk call header above fold", 0 <= demo.find("class='deskcall") < demo.find("class='ts'"))
     add("UI/UX", "premium panel shows real scored rows + eligibility + wheel",
         "meet the GP bands" in demo and "Why / warnings" in demo and "GP wheel" in demo
-        and "next nightly run" not in demo)
+        and "Premium scores appear after the next nightly run" not in demo)
 
     ps = _read("hedge_desk/premium_score.py")
     add("Insight", "premium score: 4 sourced components", all(k in ps for k in (

@@ -360,7 +360,7 @@ def real_chain_income(
     structures.sort(key=lambda s: -float(s["return_on_risk"]))
     top = structures[:40]  # present the best defined-risk economics, not all pairs
     # Premium universe (GP brief, additive): the RoR-sorted top-40 is always
-    # near-the-money, so the 16-30 delta structures the premium-selling desk
+    # near-the-money, so the 10-30 delta structures the premium-selling desk
     # targets were discarded before scoring. Keep up to 40 whose short leg sits
     # in a wide 10-35 delta band, best return on collateral first.
     from hedge_desk.premium_score import short_leg_delta, unique_by_short_leg
@@ -373,7 +373,9 @@ def real_chain_income(
                                 float(st["short_leg_iv"]), short_id[-9] == "C")
         except (KeyError, TypeError, ValueError):
             continue
-        if d is not None and 0.10 <= d <= 0.35:
+        # Widened 0.08-0.38 so the r=q=0 delta here can never drop a structure
+        # that the scorer (with r and q) would place inside 0.10-0.30.
+        if d is not None and 0.08 <= d <= 0.38:
             credit, max_loss = float(st["net_credit"]), float(st["maximum_loss"])
             universe.append((credit / (credit + max_loss) if credit + max_loss > 0 else 0.0, st))
     universe.sort(key=lambda t: (-t[0], t[1]["contract_id"]))
