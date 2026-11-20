@@ -22,7 +22,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Dict, List
 
-QUALITY_VERSION = "hedge-desk-data-quality-1.0.0"
+QUALITY_VERSION = "hedge-desk-data-quality-1.1.0"
 
 # Severity levels, ordered by urgency.
 SEV_OK = "OK"
@@ -95,10 +95,16 @@ def _check_eod(report: Dict) -> Dict[str, str]:
         pass
 
     if batch_status and "READY" not in batch_status:
+        failed = sorted(
+            f"{sr.get('symbol')}({','.join(sr.get('reason_codes') or []) or sr.get('status')})"
+            for sr in report.get("eod_source_results", [])
+            if isinstance(sr, dict) and sr.get("status") not in (None, "PASS")
+        )
+        failed_note = f" Failed: {', '.join(failed)}." if failed else ""
         return _alert(
             "EOD", SEV_DOWN,
             f"EOD batch not ready: {batch_status}",
-            f"As of {as_of}, expected {expected}.",
+            f"As of {as_of}, expected {expected}.{failed_note}",
         )
     if not is_current:
         return _alert(
@@ -132,6 +138,22 @@ def _check_section_present(
                 f"{label} BLOCKED",
                 section.get("reason", "") or section.get("note", ""),
             )
+        if "mode" not in section:
+            # Per-key shape, e.g. {"SPY": {"mode": "BLOCKED", "reason": ...}}.
+            # A section is only OK when its entries are OK: a present-but-all-
+            # BLOCKED section reported "present" before (ENGINEERING_LESSONS
+            # rule 2: a check that passes for the wrong reason).
+            entries = {k: v for k, v in section.items() if isinstance(v, dict) and "mode" in v}
+            blocked = sorted(k for k, v in entries.items() if v.get("mode") == "BLOCKED")
+            if blocked:
+                reasons = sorted({str(entries[k].get("reason") or "unspecified") for k in blocked})
+                return _alert(
+                    label, SEV_DOWN,
+                    f"{label} BLOCKED for {len(blocked)} of {len(entries)}",
+                    f"Blocked: {', '.join(blocked)}. Reasons: {'; '.join(reasons)}.",
+                )
+            if section and not entries:
+                return _alert(label, SEV_MISSING, f"{label} has no evaluable entries", "")
     return _alert(label, SEV_OK, f"{label} present", "")
 
 
@@ -168,6 +190,10 @@ def quality_report(report: Dict, as_of: date | None = None) -> Dict[str, object]
     alerts.append(_check_section_present(report, "oil_market", "Oil/WTI"))
     alerts.append(_check_section_present(report, "earnings_actuals", "Earnings/SEC"))
     alerts.append(_check_section_present(report, "chain_income", "Options/Cboe"))
+    if "cash_secured_put_scan" in report:
+        alerts.append(
+            _check_section_present(report, "cash_secured_put_scan", "Options/CSP scan")
+        )
 
     # Overall status: worst severity wins.
     severity_rank = {SEV_OK: 0, SEV_STALE: 1, SEV_DOWN: 2, SEV_MISSING: 3}

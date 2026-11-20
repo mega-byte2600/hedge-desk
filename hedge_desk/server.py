@@ -354,6 +354,28 @@ def _nightly_outcomes_or_503(start_response):
         )
 
 
+def _data_health():
+    """Data health from the latest nightly artifact. Never raises: the Render
+    liveness probe shares this route, so a health-scoring bug must report RED,
+    not take the endpoint down."""
+    from datetime import datetime, timezone
+
+    from hedge_desk.data_health import RED, build_data_health
+
+    try:
+        path = ARTIFACTS / "am-report-latest.json"
+        report = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+        return build_data_health(report, datetime.now(timezone.utc))
+    except Exception as exc:  # covered by tests/test_data_health.py (monkeypatched failure)
+        return {
+            "status": RED,
+            "reasons": ["HEALTH_EVALUATION_FAILED"],
+            "summary": f"Data health could not be evaluated ({type(exc).__name__}).",
+            "components": [],
+            "trade_authorized": False,
+        }
+
+
 def _dispatch(environ, start_response):
     path = environ.get("PATH_INFO", "/")
     # Retired sign-in, membership, tier, and brokerage surfaces. Return an
@@ -374,7 +396,15 @@ def _dispatch(environ, start_response):
             "live_orders_enabled": False,
             "schwab_core": _cached("schwab-core-status", schwab_core_status),
             "deploy_sha": os.environ.get("RENDER_GIT_COMMIT", "unknown")[:8],
+            # `status` above is process liveness (Render probe). Data health is
+            # reported separately and honestly: GREEN / AMBER / RED.
+            "data_health": {
+                k: v for k, v in _cached("data-health", _data_health).items()
+                if k in ("status", "summary", "reasons", "artifact_age_hours")
+            },
         })
+    if path == "/api/health/data":
+        return _json(start_response, _cached("data-health", _data_health))
     if path == "/api/candidates":
         return _json(start_response, _cached("candidates", build_candidate_feed))
     if path == "/api/eod-candidates":
