@@ -79,8 +79,7 @@ def build_desk_call(report: Dict[str, Any], symbol: str = "SPY") -> Dict[str, An
             "days_to_expiration": s.get("days_to_expiration"),
             "net_credit": str(credit),
             "maximum_loss": str(max_loss),
-            "probability_of_profit": s.get("probability_of_profit"),
-            "risk_neutral_ev": s.get("risk_neutral_ev"),
+            # SOUL rule 4: no probability or EV claims from delayed data in the payload.
             "invalidation_underlying_through": s.get("break_even"),
             "take_profit_at_credit_captured": str(
                 (credit * policy.profit_capture_fraction).quantize(Decimal("0.01"))),

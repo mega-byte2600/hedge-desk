@@ -377,7 +377,10 @@ def real_chain_income(
         # that the scorer (with r and q) would place inside 0.10-0.30.
         if d is not None and 0.08 <= d <= 0.38:
             credit, max_loss = float(st["net_credit"]), float(st["maximum_loss"])
-            universe.append((credit / (credit + max_loss) if credit + max_loss > 0 else 0.0, st))
+            roc = credit / (credit + max_loss) if credit + max_loss > 0 else 0.0
+            # Per-30-day return on collateral, so long-dated or wide structures
+            # cannot crowd 30-45 DTE candidates out of the 40-row cap.
+            universe.append((roc * 30.0 / max(st["days_to_expiration"], 1), st))
     universe.sort(key=lambda t: (-t[0], t[1]["contract_id"]))
     premium_universe = unique_by_short_leg([st for _, st in universe])[:40]
     return {
