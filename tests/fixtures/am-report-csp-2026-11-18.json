@@ -1,0 +1,451 @@
+{
+ "_note": "Frozen excerpt of the real nightly artifact from 2026-11-18 (commit d76a37a): vix_regime and cash_secured_put_scan only. Used so the Graham filter integration test exercises real candidates even on nights when no candidate is found or the provider is blocked.",
+ "cash_secured_put_scan": {
+  "AAL": {
+   "candidate": {
+    "collateral_required": "1169.00",
+    "contract_id": "AAL261224P00012000",
+    "dte": 35,
+    "expiration": "2026-12-24",
+    "found": true,
+    "max_loss": "1169.00",
+    "net_credit_per_share": "0.31",
+    "return_on_capital": "0.0265",
+    "strike": "12",
+    "underlying_mid": "13.07"
+   },
+   "data_source": "cboe-delayed-public-http-200",
+   "eval_reasons": [
+    "RETURN_NOT_IN_GP_BAND",
+    "VIX_ELEVATED_REGIME"
+   ],
+   "fits_gp_rules": false,
+   "mode": "CASH_SECURED_PUT",
+   "survivability": "INDETERMINATE",
+   "symbol": "AAL",
+   "trade_authorized": false
+  },
+  "CCL": {
+   "candidate": {
+    "collateral_required": "2548.00",
+    "contract_id": "CCL261224P00026000",
+    "dte": 35,
+    "expiration": "2026-12-24",
+    "found": true,
+    "max_loss": "2548.00",
+    "net_credit_per_share": "0.52",
+    "return_on_capital": "0.0204",
+    "strike": "26",
+    "underlying_mid": "29.095"
+   },
+   "data_source": "cboe-delayed-public-http-200",
+   "eval_reasons": [
+    "RETURN_NOT_IN_GP_BAND",
+    "VIX_ELEVATED_REGIME"
+   ],
+   "fits_gp_rules": false,
+   "mode": "CASH_SECURED_PUT",
+   "survivability": "INDETERMINATE",
+   "symbol": "CCL",
+   "trade_authorized": false
+  },
+  "DVN": {
+   "candidate": {
+    "collateral_required": "3756.00",
+    "contract_id": "DVN261224P00038000",
+    "dte": 35,
+    "expiration": "2026-12-24",
+    "found": true,
+    "max_loss": "3756.00",
+    "net_credit_per_share": "0.44",
+    "return_on_capital": "0.0117",
+    "strike": "38",
+    "underlying_mid": "42.105"
+   },
+   "data_source": "cboe-delayed-public-http-200",
+   "eval_reasons": [
+    "VIX_ELEVATED_REGIME"
+   ],
+   "fits_gp_rules": true,
+   "mode": "CASH_SECURED_PUT",
+   "survivability": "INDETERMINATE",
+   "symbol": "DVN",
+   "trade_authorized": false
+  },
+  "F": {
+   "candidate": {
+    "collateral_required": "993.00",
+    "contract_id": "F261224P00010000",
+    "dte": 35,
+    "expiration": "2026-12-24",
+    "found": true,
+    "max_loss": "993.00",
+    "net_credit_per_share": "0.07",
+    "return_on_capital": "0.0070",
+    "strike": "10",
+    "underlying_mid": "11.285"
+   },
+   "data_source": "cboe-delayed-public-http-200",
+   "eval_reasons": [
+    "VIX_ELEVATED_REGIME"
+   ],
+   "fits_gp_rules": true,
+   "mode": "CASH_SECURED_PUT",
+   "survivability": "INDETERMINATE",
+   "symbol": "F",
+   "trade_authorized": false
+  },
+  "LYFT": {
+   "candidate": {
+    "collateral_required": "1528.00",
+    "contract_id": "LYFT261224P00015500",
+    "dte": 35,
+    "expiration": "2026-12-24",
+    "found": true,
+    "max_loss": "1528.00",
+    "net_credit_per_share": "0.22",
+    "return_on_capital": "0.0144",
+    "strike": "15.5",
+    "underlying_mid": "17.64"
+   },
+   "data_source": "cboe-delayed-public-http-200",
+   "eval_reasons": [
+    "VIX_ELEVATED_REGIME"
+   ],
+   "fits_gp_rules": true,
+   "mode": "CASH_SECURED_PUT",
+   "survivability": "INDETERMINATE",
+   "symbol": "LYFT",
+   "trade_authorized": false
+  },
+  "NCLH": {
+   "candidate": {
+    "collateral_required": "1611.00",
+    "contract_id": "NCLH261224P00016500",
+    "dte": 35,
+    "expiration": "2026-12-24",
+    "found": true,
+    "max_loss": "1611.00",
+    "net_credit_per_share": "0.39",
+    "return_on_capital": "0.0242",
+    "strike": "16.5",
+    "underlying_mid": "18.08"
+   },
+   "data_source": "cboe-delayed-public-http-200",
+   "eval_reasons": [
+    "RETURN_NOT_IN_GP_BAND",
+    "VIX_ELEVATED_REGIME"
+   ],
+   "fits_gp_rules": false,
+   "mode": "CASH_SECURED_PUT",
+   "survivability": "INDETERMINATE",
+   "symbol": "NCLH",
+   "trade_authorized": false
+  },
+  "NKE": {
+   "candidate": {
+    "collateral_required": "3227.00",
+    "contract_id": "NKE261224P00033000",
+    "dte": 35,
+    "expiration": "2026-12-24",
+    "found": true,
+    "max_loss": "3227.00",
+    "net_credit_per_share": "0.73",
+    "return_on_capital": "0.0226",
+    "strike": "33",
+    "underlying_mid": "36.28"
+   },
+   "data_source": "cboe-delayed-public-http-200",
+   "eval_reasons": [
+    "RETURN_NOT_IN_GP_BAND",
+    "VIX_ELEVATED_REGIME"
+   ],
+   "fits_gp_rules": false,
+   "mode": "CASH_SECURED_PUT",
+   "survivability": "INDETERMINATE",
+   "symbol": "NKE",
+   "trade_authorized": false
+  }
+ },
+ "generated_at": "2026-11-19T04:55:16.968938+00:00",
+ "vix_regime": {
+  "data_source": "yahoo-public-chart-http-200",
+  "history": [
+   [
+    "2026-08-18",
+    "15.84000015258789"
+   ],
+   [
+    "2026-08-19",
+    "14.890000343322754"
+   ],
+   [
+    "2026-08-20",
+    "16.010000228881836"
+   ],
+   [
+    "2026-08-21",
+    "15.130000114440918"
+   ],
+   [
+    "2026-08-24",
+    "15.850000381469727"
+   ],
+   [
+    "2026-08-25",
+    "15.449999809265137"
+   ],
+   [
+    "2026-08-26",
+    "15.210000038146973"
+   ],
+   [
+    "2026-08-27",
+    "14.510000228881836"
+   ],
+   [
+    "2026-08-28",
+    "14.430000305175781"
+   ],
+   [
+    "2026-08-31",
+    "14.920000076293945"
+   ],
+   [
+    "2026-09-01",
+    "16.34000015258789"
+   ],
+   [
+    "2026-09-02",
+    "15.199999809265137"
+   ],
+   [
+    "2026-09-03",
+    "14.319999694824219"
+   ],
+   [
+    "2026-09-04",
+    "14.529999732971191"
+   ],
+   [
+    "2026-09-07",
+    "15.300000190734863"
+   ],
+   [
+    "2026-09-08",
+    "15.720000267028809"
+   ],
+   [
+    "2026-09-09",
+    "16.459999084472656"
+   ],
+   [
+    "2026-09-10",
+    "17.84000015258789"
+   ],
+   [
+    "2026-09-11",
+    "15.84000015258789"
+   ],
+   [
+    "2026-09-14",
+    "17.100000381469727"
+   ],
+   [
+    "2026-09-15",
+    "17.200000762939453"
+   ],
+   [
+    "2026-09-16",
+    "17.709999084472656"
+   ],
+   [
+    "2026-09-17",
+    "15.4399995803833"
+   ],
+   [
+    "2026-09-18",
+    "14.8100004196167"
+   ],
+   [
+    "2026-09-21",
+    "14.869999885559082"
+   ],
+   [
+    "2026-09-22",
+    "14.210000038146973"
+   ],
+   [
+    "2026-09-23",
+    "15.180000305175781"
+   ],
+   [
+    "2026-09-24",
+    "15.670000076293945"
+   ],
+   [
+    "2026-09-25",
+    "14.869999885559082"
+   ],
+   [
+    "2026-09-28",
+    "16.06999969482422"
+   ],
+   [
+    "2026-09-29",
+    "16.040000915527344"
+   ],
+   [
+    "2026-09-30",
+    "16.34000015258789"
+   ],
+   [
+    "2026-10-01",
+    "16.389999389648438"
+   ],
+   [
+    "2026-10-02",
+    "15.3100004196167"
+   ],
+   [
+    "2026-10-05",
+    "15.520000457763672"
+   ],
+   [
+    "2026-10-06",
+    "15.010000228881836"
+   ],
+   [
+    "2026-10-07",
+    "15.079999923706055"
+   ],
+   [
+    "2026-10-08",
+    "15.40999984741211"
+   ],
+   [
+    "2026-10-09",
+    "14.84000015258789"
+   ],
+   [
+    "2026-10-12",
+    "15.210000038146973"
+   ],
+   [
+    "2026-10-13",
+    "15.270000457763672"
+   ],
+   [
+    "2026-10-14",
+    "16.8700008392334"
+   ],
+   [
+    "2026-10-15",
+    "16.459999084472656"
+   ],
+   [
+    "2026-10-16",
+    "19.989999771118164"
+   ],
+   [
+    "2026-10-19",
+    "18.440000534057617"
+   ],
+   [
+    "2026-10-20",
+    "17.309999465942383"
+   ],
+   [
+    "2026-10-21",
+    "16.68000030517578"
+   ],
+   [
+    "2026-10-22",
+    "19.030000686645508"
+   ],
+   [
+    "2026-10-23",
+    "19.450000762939453"
+   ],
+   [
+    "2026-10-26",
+    "18.389999389648438"
+   ],
+   [
+    "2026-10-27",
+    "17.520000457763672"
+   ],
+   [
+    "2026-10-28",
+    "16.90999984741211"
+   ],
+   [
+    "2026-10-29",
+    "17.200000762939453"
+   ],
+   [
+    "2026-10-30",
+    "19.420000076293945"
+   ],
+   [
+    "2026-11-02",
+    "21.149999618530273"
+   ],
+   [
+    "2026-11-03",
+    "20.829999923706055"
+   ],
+   [
+    "2026-11-04",
+    "16.610000610351562"
+   ],
+   [
+    "2026-11-05",
+    "28.18000030517578"
+   ],
+   [
+    "2026-11-06",
+    "25.639999389648438"
+   ],
+   [
+    "2026-11-09",
+    "19.920000076293945"
+   ],
+   [
+    "2026-11-10",
+    "19.459999084472656"
+   ],
+   [
+    "2026-11-11",
+    "17.489999771118164"
+   ],
+   [
+    "2026-11-12",
+    "18.700000762939453"
+   ],
+   [
+    "2026-11-13",
+    "19.299999237060547"
+   ],
+   [
+    "2026-11-16",
+    "22.90999984741211"
+   ],
+   [
+    "2026-11-17",
+    "25.459999084472656"
+   ],
+   [
+    "2026-11-18",
+    "24.559999465942383"
+   ]
+  ],
+  "last_close": "24.559999465942383",
+  "last_day": "2026-11-18",
+  "mode": "REAL_VIX",
+  "note": "Real delayed VIX close. Regime is a descriptive band (LOW/NORMAL/ELEVATED/HIGH), context for when to sell premium, not a signal and not advice. No order placed.",
+  "regime": "ELEVATED",
+  "schema_version": "hedge-desk-vix-regime-1.0.0",
+  "symbol": "^VIX"
+ }
+}
