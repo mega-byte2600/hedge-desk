@@ -1,7 +1,7 @@
 {
   "schema_version": "hedge-desk-nightly-2.2.0",
   "mode": "REAL_EOD_NIGHTLY",
-  "generated_at": "2026-11-20T04:54:44.683145+00:00",
+  "generated_at": "2026-11-21T04:55:18.764244+00:00",
   "watchlist": [
     "NKE",
     "CCL",
@@ -11,25 +11,25 @@
     "F",
     "DVN"
   ],
-  "eod_batch_status": "REJECTED",
-  "eod_manifest_sha256": "061532c9b535e5d3d58b3fb2bdc35ba3140138e0342e07dead85538c8becc4d2",
+  "eod_batch_status": "READY_FOR_RESEARCH",
+  "eod_manifest_sha256": "412f68737dd524d9508b7de92ad997797932f4a6536f885c1971024fa84dbb92",
   "data_freshness": {
     "schema_version": "hedge-desk-data-freshness-1.0.0",
-    "expected_trading_day": "2026-11-19",
-    "as_of": "2026-11-19",
+    "expected_trading_day": "2026-11-20",
+    "as_of": "2026-11-20",
     "is_current": true,
-    "note": "Running on 2026-11-19 close (current trading day)."
+    "note": "Running on 2026-11-20 close (current trading day)."
   },
-  "candidate_count": 15,
-  "symbol_count": 5,
+  "candidate_count": 21,
+  "symbol_count": 7,
   "candidates": [
     {
       "symbol": "AAL",
-      "close": "12.72",
+      "close": "11.9",
       "strategy": "CASH_SECURED_PUT",
-      "strike": "11.45",
-      "requirement": "1145.00",
-      "requirement_basis": "strike 11.45 x 100 x 1 - credit offset 0.00",
+      "strike": "10.71",
+      "requirement": "1071.00",
+      "requirement_basis": "strike 10.71 x 100 x 1 - credit offset 0.00",
       "reason_codes": [
         "COLLATERAL_CASH_SECURED",
         "ASSIGNMENT_MUST_BE_FUNDABLE"
@@ -39,11 +39,11 @@
     },
     {
       "symbol": "AAL",
-      "close": "12.72",
+      "close": "11.9",
       "strategy": "COVERED_CALL",
-      "strike": "13.99",
-      "requirement": "1272.00",
-      "requirement_basis": "1 contract(s) x 100 shares x 12.72",
+      "strike": "13.09",
+      "requirement": "1190.00",
+      "requirement_basis": "1 contract(s) x 100 shares x 11.9",
       "reason_codes": [
         "SHARES_ARE_COLLATERAL",
         "UPSIDE_CAPPED_AT_STRIKE"
@@ -53,7 +53,7 @@
     },
     {
       "symbol": "AAL",
-      "close": "12.72",
+      "close": "11.9",
       "strategy": "CREDIT_SPREAD",
       "strike": "5.00 wide",
       "requirement": "500.00",
@@ -67,11 +67,11 @@
     },
     {
       "symbol": "CCL",
-      "close": "27.57",
+      "close": "26.59",
       "strategy": "CASH_SECURED_PUT",
-      "strike": "24.81",
-      "requirement": "2481.00",
-      "requirement_basis": "strike 24.81 x 100 x 1 - credit offset 0.00",
+      "strike": "23.93",
+      "requirement": "2393.00",
+      "requirement_basis": "strike 23.93 x 100 x 1 - credit offset 0.00",
       "reason_codes": [
         "COLLATERAL_CASH_SECURED",
         "ASSIGNMENT_MUST_BE_FUNDABLE"
@@ -81,11 +81,11 @@
     },
     {
       "symbol": "CCL",
-      "close": "27.57",
+      "close": "26.59",
       "strategy": "COVERED_CALL",
-      "strike": "30.33",
-      "requirement": "2757.00",
-      "requirement_basis": "1 contract(s) x 100 shares x 27.57",
+      "strike": "29.25",
+      "requirement": "2659.00",
+      "requirement_basis": "1 contract(s) x 100 shares x 26.59",
       "reason_codes": [
         "SHARES_ARE_COLLATERAL",
         "UPSIDE_CAPPED_AT_STRIKE"
@@ -95,7 +95,7 @@
     },
     {
       "symbol": "CCL",
-      "close": "27.57",
+      "close": "26.59",
       "strategy": "CREDIT_SPREAD",
       "strike": "5.00 wide",
       "requirement": "500.00",
@@ -109,11 +109,11 @@
     },
     {
       "symbol": "DVN",
-      "close": "42.05",
+      "close": "41.54",
       "strategy": "CASH_SECURED_PUT",
-      "strike": "37.84",
-      "requirement": "3784.00",
-      "requirement_basis": "strike 37.84 x 100 x 1 - credit offset 0.00",
+      "strike": "37.39",
+      "requirement": "3739.00",
+      "requirement_basis": "strike 37.39 x 100 x 1 - credit offset 0.00",
       "reason_codes": [
         "COLLATERAL_CASH_SECURED",
         "ASSIGNMENT_MUST_BE_FUNDABLE"
@@ -123,11 +123,11 @@
     },
     {
       "symbol": "DVN",
-      "close": "42.05",
+      "close": "41.54",
       "strategy": "COVERED_CALL",
-      "strike": "46.26",
-      "requirement": "4205.00",
-      "requirement_basis": "1 contract(s) x 100 shares x 42.05",
+      "strike": "45.69",
+      "requirement": "4154.00",
+      "requirement_basis": "1 contract(s) x 100 shares x 41.54",
       "reason_codes": [
         "SHARES_ARE_COLLATERAL",
         "UPSIDE_CAPPED_AT_STRIKE"
@@ -137,7 +137,7 @@
     },
     {
       "symbol": "DVN",
-      "close": "42.05",
+      "close": "41.54",
       "strategy": "CREDIT_SPREAD",
       "strike": "5.00 wide",
       "requirement": "500.00",
@@ -151,11 +151,11 @@
     },
     {
       "symbol": "F",
-      "close": "11.24",
+      "close": "11.17",
       "strategy": "CASH_SECURED_PUT",
-      "strike": "10.12",
-      "requirement": "1012.00",
-      "requirement_basis": "strike 10.12 x 100 x 1 - credit offset 0.00",
+      "strike": "10.05",
+      "requirement": "1005.00",
+      "requirement_basis": "strike 10.05 x 100 x 1 - credit offset 0.00",
       "reason_codes": [
         "COLLATERAL_CASH_SECURED",
         "ASSIGNMENT_MUST_BE_FUNDABLE"
@@ -165,11 +165,11 @@
     },
     {
       "symbol": "F",
-      "close": "11.24",
+      "close": "11.17",
       "strategy": "COVERED_CALL",
-      "strike": "12.36",
-      "requirement": "1124.00",
-      "requirement_basis": "1 contract(s) x 100 shares x 11.24",
+      "strike": "12.29",
+      "requirement": "1117.00",
+      "requirement_basis": "1 contract(s) x 100 shares x 11.17",
       "reason_codes": [
         "SHARES_ARE_COLLATERAL",
         "UPSIDE_CAPPED_AT_STRIKE"
@@ -179,7 +179,91 @@
     },
     {
       "symbol": "F",
-      "close": "11.24",
+      "close": "11.17",
+      "strategy": "CREDIT_SPREAD",
+      "strike": "5.00 wide",
+      "requirement": "500.00",
+      "requirement_basis": "(width 5.00 - credit 0) x 100 x 1 x maintenance 1.00",
+      "reason_codes": [
+        "DEFINED_RISK",
+        "MARGIN_EQUALS_MAX_LOSS"
+      ],
+      "policy_version": "regt-baseline-1",
+      "trade_authorized": false
+    },
+    {
+      "symbol": "LYFT",
+      "close": "16.48",
+      "strategy": "CASH_SECURED_PUT",
+      "strike": "14.83",
+      "requirement": "1483.00",
+      "requirement_basis": "strike 14.83 x 100 x 1 - credit offset 0.00",
+      "reason_codes": [
+        "COLLATERAL_CASH_SECURED",
+        "ASSIGNMENT_MUST_BE_FUNDABLE"
+      ],
+      "policy_version": "regt-baseline-1",
+      "trade_authorized": false
+    },
+    {
+      "symbol": "LYFT",
+      "close": "16.48",
+      "strategy": "COVERED_CALL",
+      "strike": "18.13",
+      "requirement": "1648.00",
+      "requirement_basis": "1 contract(s) x 100 shares x 16.48",
+      "reason_codes": [
+        "SHARES_ARE_COLLATERAL",
+        "UPSIDE_CAPPED_AT_STRIKE"
+      ],
+      "policy_version": "regt-baseline-1",
+      "trade_authorized": false
+    },
+    {
+      "symbol": "LYFT",
+      "close": "16.48",
+      "strategy": "CREDIT_SPREAD",
+      "strike": "5.00 wide",
+      "requirement": "500.00",
+      "requirement_basis": "(width 5.00 - credit 0) x 100 x 1 x maintenance 1.00",
+      "reason_codes": [
+        "DEFINED_RISK",
+        "MARGIN_EQUALS_MAX_LOSS"
+      ],
+      "policy_version": "regt-baseline-1",
+      "trade_authorized": false
+    },
+    {
+      "symbol": "NCLH",
+      "close": "15.99",
+      "strategy": "CASH_SECURED_PUT",
+      "strike": "14.39",
+      "requirement": "1439.00",
+      "requirement_basis": "strike 14.39 x 100 x 1 - credit offset 0.00",
+      "reason_codes": [
+        "COLLATERAL_CASH_SECURED",
+        "ASSIGNMENT_MUST_BE_FUNDABLE"
+      ],
+      "policy_version": "regt-baseline-1",
+      "trade_authorized": false
+    },
+    {
+      "symbol": "NCLH",
+      "close": "15.99",
+      "strategy": "COVERED_CALL",
+      "strike": "17.59",
+      "requirement": "1599.00",
+      "requirement_basis": "1 contract(s) x 100 shares x 15.99",
+      "reason_codes": [
+        "SHARES_ARE_COLLATERAL",
+        "UPSIDE_CAPPED_AT_STRIKE"
+      ],
+      "policy_version": "regt-baseline-1",
+      "trade_authorized": false
+    },
+    {
+      "symbol": "NCLH",
+      "close": "15.99",
       "strategy": "CREDIT_SPREAD",
       "strike": "5.00 wide",
       "requirement": "500.00",
@@ -193,11 +277,11 @@
     },
     {
       "symbol": "NKE",
-      "close": "34.33",
+      "close": "32.92",
       "strategy": "CASH_SECURED_PUT",
-      "strike": "30.90",
-      "requirement": "3090.00",
-      "requirement_basis": "strike 30.90 x 100 x 1 - credit offset 0.00",
+      "strike": "29.63",
+      "requirement": "2963.00",
+      "requirement_basis": "strike 29.63 x 100 x 1 - credit offset 0.00",
       "reason_codes": [
         "COLLATERAL_CASH_SECURED",
         "ASSIGNMENT_MUST_BE_FUNDABLE"
@@ -207,11 +291,11 @@
     },
     {
       "symbol": "NKE",
-      "close": "34.33",
+      "close": "32.92",
       "strategy": "COVERED_CALL",
-      "strike": "37.76",
-      "requirement": "3433.00",
-      "requirement_basis": "1 contract(s) x 100 shares x 34.33",
+      "strike": "36.21",
+      "requirement": "3292.00",
+      "requirement_basis": "1 contract(s) x 100 shares x 32.92",
       "reason_codes": [
         "SHARES_ARE_COLLATERAL",
         "UPSIDE_CAPPED_AT_STRIKE"
@@ -221,7 +305,7 @@
     },
     {
       "symbol": "NKE",
-      "close": "34.33",
+      "close": "32.92",
       "strategy": "CREDIT_SPREAD",
       "strike": "5.00 wide",
       "requirement": "500.00",
@@ -235,13 +319,9 @@
     }
   ],
   "series": {
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "symbols": {
       "AAL": [
-        [
-          "2026-08-20",
-          "13.52"
-        ],
         [
           "2026-08-21",
           "13.82"
@@ -367,8 +447,8 @@
           "12.83"
         ],
         [
-          "2026-10-07",
-          "12.85"
+          "2026-10-06",
+          "13.0"
         ],
         [
           "2026-10-08",
@@ -489,13 +569,13 @@
         [
           "2026-11-18",
           "13.01"
+        ],
+        [
+          "2026-11-19",
+          "12.72"
         ]
       ],
       "CCL": [
-        [
-          "2026-08-20",
-          "25.37"
-        ],
         [
           "2026-08-21",
           "25.73"
@@ -621,8 +701,8 @@
           "25.56"
         ],
         [
-          "2026-10-07",
-          "26.15"
+          "2026-10-06",
+          "26.58"
         ],
         [
           "2026-10-08",
@@ -743,13 +823,13 @@
         [
           "2026-11-18",
           "28.97"
+        ],
+        [
+          "2026-11-19",
+          "27.57"
         ]
       ],
       "DVN": [
-        [
-          "2026-08-20",
-          "49.3"
-        ],
         [
           "2026-08-21",
           "49.1"
@@ -875,8 +955,8 @@
           "47.98"
         ],
         [
-          "2026-10-07",
-          "47.88"
+          "2026-10-06",
+          "48.02"
         ],
         [
           "2026-10-08",
@@ -997,13 +1077,13 @@
         [
           "2026-11-18",
           "41.96"
+        ],
+        [
+          "2026-11-19",
+          "42.05"
         ]
       ],
       "F": [
-        [
-          "2026-08-20",
-          "13.99"
-        ],
         [
           "2026-08-21",
           "14.41"
@@ -1129,8 +1209,8 @@
           "12.15"
         ],
         [
-          "2026-10-07",
-          "12.12"
+          "2026-10-06",
+          "12.28"
         ],
         [
           "2026-10-08",
@@ -1251,13 +1331,521 @@
         [
           "2026-11-18",
           "11.28"
+        ],
+        [
+          "2026-11-19",
+          "11.24"
+        ]
+      ],
+      "LYFT": [
+        [
+          "2026-08-21",
+          "17.47"
+        ],
+        [
+          "2026-08-24",
+          "17.68"
+        ],
+        [
+          "2026-08-25",
+          "17.65"
+        ],
+        [
+          "2026-08-26",
+          "17.39"
+        ],
+        [
+          "2026-08-27",
+          "17.35"
+        ],
+        [
+          "2026-08-28",
+          "17.7"
+        ],
+        [
+          "2026-08-31",
+          "16.9"
+        ],
+        [
+          "2026-09-01",
+          "16.77"
+        ],
+        [
+          "2026-09-02",
+          "17.35"
+        ],
+        [
+          "2026-09-03",
+          "17.28"
+        ],
+        [
+          "2026-09-04",
+          "16.72"
+        ],
+        [
+          "2026-09-08",
+          "16.24"
+        ],
+        [
+          "2026-09-09",
+          "14.9"
+        ],
+        [
+          "2026-09-10",
+          "15.02"
+        ],
+        [
+          "2026-09-11",
+          "15.32"
+        ],
+        [
+          "2026-09-14",
+          "15.9"
+        ],
+        [
+          "2026-09-15",
+          "15.69"
+        ],
+        [
+          "2026-09-16",
+          "15.69"
+        ],
+        [
+          "2026-09-17",
+          "15.5"
+        ],
+        [
+          "2026-09-18",
+          "15.1"
+        ],
+        [
+          "2026-09-21",
+          "15.27"
+        ],
+        [
+          "2026-09-22",
+          "14.9"
+        ],
+        [
+          "2026-09-23",
+          "14.77"
+        ],
+        [
+          "2026-09-24",
+          "14.75"
+        ],
+        [
+          "2026-09-25",
+          "14.865"
+        ],
+        [
+          "2026-09-28",
+          "14.88"
+        ],
+        [
+          "2026-09-29",
+          "15.07"
+        ],
+        [
+          "2026-09-30",
+          "15.01"
+        ],
+        [
+          "2026-10-01",
+          "15.21"
+        ],
+        [
+          "2026-10-02",
+          "15.46"
+        ],
+        [
+          "2026-10-05",
+          "15.73"
+        ],
+        [
+          "2026-10-06",
+          "15.76"
+        ],
+        [
+          "2026-10-08",
+          "16.13"
+        ],
+        [
+          "2026-10-09",
+          "16.22"
+        ],
+        [
+          "2026-10-12",
+          "16.11"
+        ],
+        [
+          "2026-10-13",
+          "16.38"
+        ],
+        [
+          "2026-10-14",
+          "16.48"
+        ],
+        [
+          "2026-10-15",
+          "17.16"
+        ],
+        [
+          "2026-10-16",
+          "16.82"
+        ],
+        [
+          "2026-10-19",
+          "16.99"
+        ],
+        [
+          "2026-10-20",
+          "17.25"
+        ],
+        [
+          "2026-10-21",
+          "16.79"
+        ],
+        [
+          "2026-10-22",
+          "17.43"
+        ],
+        [
+          "2026-10-23",
+          "16.94"
+        ],
+        [
+          "2026-10-26",
+          "17.06"
+        ],
+        [
+          "2026-10-27",
+          "16.79"
+        ],
+        [
+          "2026-10-28",
+          "16.34"
+        ],
+        [
+          "2026-10-29",
+          "16.41"
+        ],
+        [
+          "2026-10-30",
+          "16.16"
+        ],
+        [
+          "2026-11-02",
+          "16.62"
+        ],
+        [
+          "2026-11-03",
+          "16.67"
+        ],
+        [
+          "2026-11-04",
+          "18.74"
+        ],
+        [
+          "2026-11-05",
+          "17.84"
+        ],
+        [
+          "2026-11-06",
+          "17.09"
+        ],
+        [
+          "2026-11-09",
+          "16.76"
+        ],
+        [
+          "2026-11-10",
+          "17.02"
+        ],
+        [
+          "2026-11-11",
+          "17.29"
+        ],
+        [
+          "2026-11-12",
+          "16.61"
+        ],
+        [
+          "2026-11-13",
+          "16.98"
+        ],
+        [
+          "2026-11-16",
+          "16.84"
+        ],
+        [
+          "2026-11-17",
+          "16.71"
+        ],
+        [
+          "2026-11-18",
+          "17.6"
+        ],
+        [
+          "2026-11-19",
+          "16.91"
+        ]
+      ],
+      "NCLH": [
+        [
+          "2026-08-21",
+          "17.24"
+        ],
+        [
+          "2026-08-24",
+          "17.22"
+        ],
+        [
+          "2026-08-25",
+          "17.26"
+        ],
+        [
+          "2026-08-26",
+          "17.09"
+        ],
+        [
+          "2026-08-27",
+          "16.65"
+        ],
+        [
+          "2026-08-28",
+          "16.65"
+        ],
+        [
+          "2026-08-31",
+          "16.14"
+        ],
+        [
+          "2026-09-01",
+          "15.43"
+        ],
+        [
+          "2026-09-02",
+          "15.57"
+        ],
+        [
+          "2026-09-03",
+          "15.59"
+        ],
+        [
+          "2026-09-04",
+          "15.57"
+        ],
+        [
+          "2026-09-08",
+          "15.39"
+        ],
+        [
+          "2026-09-09",
+          "14.85"
+        ],
+        [
+          "2026-09-10",
+          "14.57"
+        ],
+        [
+          "2026-09-11",
+          "14.82"
+        ],
+        [
+          "2026-09-14",
+          "14.72"
+        ],
+        [
+          "2026-09-15",
+          "14.28"
+        ],
+        [
+          "2026-09-16",
+          "14.53"
+        ],
+        [
+          "2026-09-17",
+          "14.39"
+        ],
+        [
+          "2026-09-18",
+          "14.12"
+        ],
+        [
+          "2026-09-21",
+          "14.24"
+        ],
+        [
+          "2026-09-22",
+          "14.22"
+        ],
+        [
+          "2026-09-23",
+          "14.18"
+        ],
+        [
+          "2026-09-24",
+          "14.19"
+        ],
+        [
+          "2026-09-25",
+          "14.61"
+        ],
+        [
+          "2026-09-28",
+          "14.31"
+        ],
+        [
+          "2026-09-29",
+          "14.8"
+        ],
+        [
+          "2026-09-30",
+          "14.66"
+        ],
+        [
+          "2026-10-01",
+          "14.64"
+        ],
+        [
+          "2026-10-02",
+          "15.14"
+        ],
+        [
+          "2026-10-05",
+          "14.87"
+        ],
+        [
+          "2026-10-06",
+          "15.51"
+        ],
+        [
+          "2026-10-08",
+          "15.49"
+        ],
+        [
+          "2026-10-09",
+          "15.57"
+        ],
+        [
+          "2026-10-12",
+          "15.35"
+        ],
+        [
+          "2026-10-13",
+          "15.32"
+        ],
+        [
+          "2026-10-14",
+          "14.87"
+        ],
+        [
+          "2026-10-15",
+          "15.39"
+        ],
+        [
+          "2026-10-16",
+          "15.05"
+        ],
+        [
+          "2026-10-19",
+          "15.24"
+        ],
+        [
+          "2026-10-20",
+          "15.65"
+        ],
+        [
+          "2026-10-21",
+          "15.59"
+        ],
+        [
+          "2026-10-22",
+          "15.54"
+        ],
+        [
+          "2026-10-23",
+          "15.1"
+        ],
+        [
+          "2026-10-26",
+          "15.25"
+        ],
+        [
+          "2026-10-27",
+          "15.75"
+        ],
+        [
+          "2026-10-28",
+          "16.06"
+        ],
+        [
+          "2026-10-29",
+          "18.22"
+        ],
+        [
+          "2026-10-30",
+          "17.57"
+        ],
+        [
+          "2026-11-02",
+          "17.94"
+        ],
+        [
+          "2026-11-03",
+          "17.42"
+        ],
+        [
+          "2026-11-04",
+          "18.6"
+        ],
+        [
+          "2026-11-05",
+          "17.76"
+        ],
+        [
+          "2026-11-06",
+          "17.92"
+        ],
+        [
+          "2026-11-09",
+          "18.43"
+        ],
+        [
+          "2026-11-10",
+          "18.51"
+        ],
+        [
+          "2026-11-11",
+          "18.82"
+        ],
+        [
+          "2026-11-12",
+          "18.06"
+        ],
+        [
+          "2026-11-13",
+          "17.96"
+        ],
+        [
+          "2026-11-16",
+          "17.9"
+        ],
+        [
+          "2026-11-17",
+          "17.61"
+        ],
+        [
+          "2026-11-18",
+          "17.99"
+        ],
+        [
+          "2026-11-19",
+          "17.07"
         ]
       ],
       "NKE": [
-        [
-          "2026-08-20",
-          "40.21"
-        ],
         [
           "2026-08-21",
           "40.76"
@@ -1383,8 +1971,8 @@
           "33.96"
         ],
         [
-          "2026-10-07",
-          "34.36"
+          "2026-10-06",
+          "34.61"
         ],
         [
           "2026-10-08",
@@ -1505,14 +2093,14 @@
         [
           "2026-11-18",
           "36.31"
+        ],
+        [
+          "2026-11-19",
+          "34.33"
         ]
       ]
     },
     "vix": [
-      [
-        "2026-08-19",
-        "14.890000343322754"
-      ],
       [
         "2026-08-20",
         "16.010000228881836"
@@ -1776,13 +2364,13 @@
       [
         "2026-11-19",
         "28.440000534057617"
+      ],
+      [
+        "2026-11-20",
+        "35.88999938964844"
       ]
     ],
     "treasury_10y": [
-      [
-        "2026-09-21",
-        "4.96"
-      ],
       [
         "2026-09-22",
         "4.96"
@@ -1942,13 +2530,13 @@
       [
         "2026-11-18",
         "5.07"
+      ],
+      [
+        "2026-11-19",
+        "5.04"
       ]
     ],
     "treasury_2y": [
-      [
-        "2026-09-21",
-        "4.76"
-      ],
       [
         "2026-09-22",
         "4.71"
@@ -2108,6 +2696,10 @@
       [
         "2026-11-18",
         "4.8"
+      ],
+      [
+        "2026-11-19",
+        "4.76"
       ]
     ],
     "wti": [
@@ -2129,7 +2721,7 @@
       ],
       [
         "2026-11-20",
-        "83.0"
+        "83.62000274658203"
       ]
     ]
   },
@@ -2138,19 +2730,11 @@
       "symbol": "AAL",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "cc0a5ad5dc6941600af876a33015a3deb7cda2b59abb56a450d53d69b61862c9",
+      "artifact_sha256": "78ace8380a443e14f674b0bf7bec4e58aaf48ba283a54afd1fed34451a4f0f71",
       "days_count": 65,
-      "last_day_close": "12.72",
-      "last_day": "2026-11-19",
+      "last_day_close": "11.9",
+      "last_day": "2026-11-20",
       "days": [
-        {
-          "date": "2026-08-20",
-          "close": "13.52",
-          "open": "13.59",
-          "high": "13.71",
-          "low": "13.43",
-          "volume": 62537700
-        },
         {
           "date": "2026-08-21",
           "close": "13.82",
@@ -2661,7 +3245,15 @@
           "open": "12.95",
           "high": "12.98",
           "low": "12.65",
-          "volume": 57553300
+          "volume": 57604800
+        },
+        {
+          "date": "2026-11-20",
+          "close": "11.9",
+          "open": "12.76",
+          "high": "12.84",
+          "low": "11.85",
+          "volume": 71033400
         }
       ]
     },
@@ -2669,19 +3261,11 @@
       "symbol": "CCL",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "9de6e7ec478167955b770646e84cd1da770f8c8e01c8be0b37e77172313a4704",
+      "artifact_sha256": "c4dcd13c2eacb81c8cd120e9126e6b418c95ead0b020416758d654caff7e06b8",
       "days_count": 65,
-      "last_day_close": "27.57",
-      "last_day": "2026-11-19",
+      "last_day_close": "26.59",
+      "last_day": "2026-11-20",
       "days": [
-        {
-          "date": "2026-08-20",
-          "close": "25.37",
-          "open": "26.2",
-          "high": "26.28",
-          "low": "25.19",
-          "volume": 26822600
-        },
         {
           "date": "2026-08-21",
           "close": "25.73",
@@ -3193,6 +3777,14 @@
           "high": "28.9",
           "low": "27.53",
           "volume": 15922000
+        },
+        {
+          "date": "2026-11-20",
+          "close": "26.59",
+          "open": "27.66",
+          "high": "27.92",
+          "low": "26.49",
+          "volume": 17394600
         }
       ]
     },
@@ -3200,19 +3792,11 @@
       "symbol": "DVN",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "4f4b6ed6c4d64e691a7d05154eea99df6bbddfa9577e7bc292ea1243ea7cb025",
+      "artifact_sha256": "d0de55c9ef85cd828159b3864c2e510bb2dfbf6b477886248bb0f0c2a40ed614",
       "days_count": 65,
-      "last_day_close": "42.05",
-      "last_day": "2026-11-19",
+      "last_day_close": "41.54",
+      "last_day": "2026-11-20",
       "days": [
-        {
-          "date": "2026-08-20",
-          "close": "49.3",
-          "open": "49.02",
-          "high": "49.72",
-          "low": "48.93",
-          "volume": 10357900
-        },
         {
           "date": "2026-08-21",
           "close": "49.1",
@@ -3724,6 +4308,14 @@
           "high": "42.84",
           "low": "41.72",
           "volume": 14001600
+        },
+        {
+          "date": "2026-11-20",
+          "close": "41.54",
+          "open": "41.77",
+          "high": "42.58",
+          "low": "41.39",
+          "volume": 14412200
         }
       ]
     },
@@ -3731,19 +4323,11 @@
       "symbol": "F",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "2cbd9ae7ab3f2329d278ee62b9ed38dbf8fbff5c6d3219ea238606f5fd54d498",
+      "artifact_sha256": "ff3154c3695701ca8047802121f1ff47abce1da503ff395a8b7f23daa292e220",
       "days_count": 65,
-      "last_day_close": "11.24",
-      "last_day": "2026-11-19",
+      "last_day_close": "11.17",
+      "last_day": "2026-11-20",
       "days": [
-        {
-          "date": "2026-08-20",
-          "close": "13.99",
-          "open": "14.29",
-          "high": "14.3",
-          "low": "13.82",
-          "volume": 41185900
-        },
         {
           "date": "2026-08-21",
           "close": "14.41",
@@ -4254,51 +4838,1089 @@
           "open": "11.36",
           "high": "11.39",
           "low": "11.05",
-          "volume": 44068400
+          "volume": 44142100
+        },
+        {
+          "date": "2026-11-20",
+          "close": "11.17",
+          "open": "11.27",
+          "high": "11.67",
+          "low": "11.13",
+          "volume": 57453200
         }
       ]
     },
     {
       "symbol": "LYFT",
-      "status": "QUARANTINE",
-      "reason_codes": [
-        "TRANSPORT_FAILED"
-      ],
-      "artifact_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-      "days_count": 0,
-      "last_day_close": null,
-      "last_day": null,
-      "days": []
+      "status": "PASS",
+      "reason_codes": [],
+      "artifact_sha256": "8fea2c10e277f6af8a291ee9fba26d91c0cafe500a733bb07b1490c5f1d089ed",
+      "days_count": 65,
+      "last_day_close": "16.48",
+      "last_day": "2026-11-20",
+      "days": [
+        {
+          "date": "2026-08-21",
+          "close": "17.47",
+          "open": "17.45",
+          "high": "17.66",
+          "low": "17.17",
+          "volume": 8605100
+        },
+        {
+          "date": "2026-08-24",
+          "close": "17.68",
+          "open": "17.47",
+          "high": "17.87",
+          "low": "17.35",
+          "volume": 9504700
+        },
+        {
+          "date": "2026-08-25",
+          "close": "17.65",
+          "open": "17.68",
+          "high": "17.97",
+          "low": "17.36",
+          "volume": 10384500
+        },
+        {
+          "date": "2026-08-26",
+          "close": "17.39",
+          "open": "17.68",
+          "high": "17.8",
+          "low": "17.065",
+          "volume": 14066700
+        },
+        {
+          "date": "2026-08-27",
+          "close": "17.35",
+          "open": "17.34",
+          "high": "17.525",
+          "low": "17.02",
+          "volume": 6763800
+        },
+        {
+          "date": "2026-08-28",
+          "close": "17.7",
+          "open": "17.38",
+          "high": "17.875",
+          "low": "17.38",
+          "volume": 8949400
+        },
+        {
+          "date": "2026-08-31",
+          "close": "16.9",
+          "open": "17.49",
+          "high": "17.72",
+          "low": "16.85",
+          "volume": 9883300
+        },
+        {
+          "date": "2026-09-01",
+          "close": "16.77",
+          "open": "16.574",
+          "high": "17.035",
+          "low": "16.54",
+          "volume": 10264300
+        },
+        {
+          "date": "2026-09-02",
+          "close": "17.35",
+          "open": "16.82",
+          "high": "17.44",
+          "low": "16.71",
+          "volume": 8982600
+        },
+        {
+          "date": "2026-09-03",
+          "close": "17.28",
+          "open": "17.54",
+          "high": "17.98",
+          "low": "17.195",
+          "volume": 8794900
+        },
+        {
+          "date": "2026-09-04",
+          "close": "16.72",
+          "open": "17.32",
+          "high": "17.47",
+          "low": "16.69",
+          "volume": 9083600
+        },
+        {
+          "date": "2026-09-08",
+          "close": "16.24",
+          "open": "16.6",
+          "high": "16.64",
+          "low": "15.95",
+          "volume": 15625800
+        },
+        {
+          "date": "2026-09-09",
+          "close": "14.9",
+          "open": "15.77",
+          "high": "15.815",
+          "low": "14.875",
+          "volume": 17392500
+        },
+        {
+          "date": "2026-09-10",
+          "close": "15.02",
+          "open": "14.71",
+          "high": "15.177",
+          "low": "14.535",
+          "volume": 9143400
+        },
+        {
+          "date": "2026-09-11",
+          "close": "15.32",
+          "open": "15.14",
+          "high": "15.34",
+          "low": "14.94",
+          "volume": 8852000
+        },
+        {
+          "date": "2026-09-14",
+          "close": "15.9",
+          "open": "15.46",
+          "high": "15.92",
+          "low": "15.421",
+          "volume": 9767300
+        },
+        {
+          "date": "2026-09-15",
+          "close": "15.69",
+          "open": "15.68",
+          "high": "15.965",
+          "low": "15.5",
+          "volume": 10879700
+        },
+        {
+          "date": "2026-09-16",
+          "close": "15.69",
+          "open": "15.66",
+          "high": "15.88",
+          "low": "15.43",
+          "volume": 8183900
+        },
+        {
+          "date": "2026-09-17",
+          "close": "15.5",
+          "open": "15.43",
+          "high": "15.545",
+          "low": "15.074",
+          "volume": 8965400
+        },
+        {
+          "date": "2026-09-18",
+          "close": "15.1",
+          "open": "15.4",
+          "high": "15.5",
+          "low": "15.075",
+          "volume": 15098300
+        },
+        {
+          "date": "2026-09-21",
+          "close": "15.27",
+          "open": "15.2",
+          "high": "15.42",
+          "low": "15.07",
+          "volume": 7734300
+        },
+        {
+          "date": "2026-09-22",
+          "close": "14.9",
+          "open": "15.56",
+          "high": "15.6",
+          "low": "14.84",
+          "volume": 10231500
+        },
+        {
+          "date": "2026-09-23",
+          "close": "14.77",
+          "open": "14.92",
+          "high": "14.985",
+          "low": "14.57",
+          "volume": 8912900
+        },
+        {
+          "date": "2026-09-24",
+          "close": "14.75",
+          "open": "14.77",
+          "high": "14.93",
+          "low": "14.46",
+          "volume": 7780700
+        },
+        {
+          "date": "2026-09-25",
+          "close": "14.865",
+          "open": "14.84",
+          "high": "15.04",
+          "low": "14.73",
+          "volume": 5132000
+        },
+        {
+          "date": "2026-09-28",
+          "close": "14.88",
+          "open": "14.73",
+          "high": "14.91",
+          "low": "14.445",
+          "volume": 6825400
+        },
+        {
+          "date": "2026-09-29",
+          "close": "15.07",
+          "open": "15.0",
+          "high": "15.335",
+          "low": "14.895",
+          "volume": 8589100
+        },
+        {
+          "date": "2026-09-30",
+          "close": "15.01",
+          "open": "15.21",
+          "high": "15.325",
+          "low": "14.92",
+          "volume": 7965800
+        },
+        {
+          "date": "2026-10-01",
+          "close": "15.21",
+          "open": "15.01",
+          "high": "15.22",
+          "low": "14.77",
+          "volume": 7711500
+        },
+        {
+          "date": "2026-10-02",
+          "close": "15.46",
+          "open": "15.32",
+          "high": "15.52",
+          "low": "15.148",
+          "volume": 8248500
+        },
+        {
+          "date": "2026-10-05",
+          "close": "15.73",
+          "open": "15.45",
+          "high": "15.8",
+          "low": "15.44",
+          "volume": 11471500
+        },
+        {
+          "date": "2026-10-06",
+          "close": "15.76",
+          "open": "15.845",
+          "high": "15.93",
+          "low": "15.53",
+          "volume": 7756800
+        },
+        {
+          "date": "2026-10-07",
+          "close": "15.6",
+          "open": "15.55",
+          "high": "15.76",
+          "low": "15.4",
+          "volume": 9741500
+        },
+        {
+          "date": "2026-10-08",
+          "close": "16.13",
+          "open": "15.51",
+          "high": "16.188",
+          "low": "15.49",
+          "volume": 13505000
+        },
+        {
+          "date": "2026-10-09",
+          "close": "16.22",
+          "open": "16.08",
+          "high": "16.46",
+          "low": "16.03",
+          "volume": 7954600
+        },
+        {
+          "date": "2026-10-12",
+          "close": "16.11",
+          "open": "16.3",
+          "high": "16.34",
+          "low": "15.745",
+          "volume": 10630700
+        },
+        {
+          "date": "2026-10-13",
+          "close": "16.38",
+          "open": "16.03",
+          "high": "16.515",
+          "low": "15.985",
+          "volume": 12307400
+        },
+        {
+          "date": "2026-10-14",
+          "close": "16.48",
+          "open": "16.23",
+          "high": "16.595",
+          "low": "15.93",
+          "volume": 12742100
+        },
+        {
+          "date": "2026-10-15",
+          "close": "17.16",
+          "open": "16.4",
+          "high": "17.188",
+          "low": "16.4",
+          "volume": 11265600
+        },
+        {
+          "date": "2026-10-16",
+          "close": "16.82",
+          "open": "17.17",
+          "high": "17.27",
+          "low": "16.485",
+          "volume": 9402900
+        },
+        {
+          "date": "2026-10-19",
+          "close": "16.99",
+          "open": "16.705",
+          "high": "17.098",
+          "low": "16.54",
+          "volume": 10023300
+        },
+        {
+          "date": "2026-10-20",
+          "close": "17.25",
+          "open": "16.9",
+          "high": "17.475",
+          "low": "16.87",
+          "volume": 9215800
+        },
+        {
+          "date": "2026-10-21",
+          "close": "16.79",
+          "open": "17.23",
+          "high": "17.35",
+          "low": "16.79",
+          "volume": 10952500
+        },
+        {
+          "date": "2026-10-22",
+          "close": "17.43",
+          "open": "16.69",
+          "high": "17.54",
+          "low": "16.65",
+          "volume": 10735200
+        },
+        {
+          "date": "2026-10-23",
+          "close": "16.94",
+          "open": "17.23",
+          "high": "17.375",
+          "low": "16.81",
+          "volume": 6637200
+        },
+        {
+          "date": "2026-10-26",
+          "close": "17.06",
+          "open": "16.915",
+          "high": "17.22",
+          "low": "16.68",
+          "volume": 11954900
+        },
+        {
+          "date": "2026-10-27",
+          "close": "16.79",
+          "open": "17.06",
+          "high": "17.07",
+          "low": "16.73",
+          "volume": 7218000
+        },
+        {
+          "date": "2026-10-28",
+          "close": "16.34",
+          "open": "16.71",
+          "high": "16.8",
+          "low": "16.125",
+          "volume": 8736700
+        },
+        {
+          "date": "2026-10-29",
+          "close": "16.41",
+          "open": "16.4",
+          "high": "16.455",
+          "low": "15.81",
+          "volume": 6316200
+        },
+        {
+          "date": "2026-10-30",
+          "close": "16.16",
+          "open": "16.335",
+          "high": "16.364",
+          "low": "15.84",
+          "volume": 8110400
+        },
+        {
+          "date": "2026-11-02",
+          "close": "16.62",
+          "open": "16.35",
+          "high": "16.99",
+          "low": "16.21",
+          "volume": 10644800
+        },
+        {
+          "date": "2026-11-03",
+          "close": "16.67",
+          "open": "16.52",
+          "high": "16.795",
+          "low": "16.31",
+          "volume": 9460400
+        },
+        {
+          "date": "2026-11-04",
+          "close": "18.74",
+          "open": "17.16",
+          "high": "18.84",
+          "low": "17.09",
+          "volume": 24268500
+        },
+        {
+          "date": "2026-11-05",
+          "close": "17.84",
+          "open": "18.76",
+          "high": "18.83",
+          "low": "17.685",
+          "volume": 19125600
+        },
+        {
+          "date": "2026-11-06",
+          "close": "17.09",
+          "open": "16.63",
+          "high": "17.14",
+          "low": "16.335",
+          "volume": 23907600
+        },
+        {
+          "date": "2026-11-09",
+          "close": "16.76",
+          "open": "17.0",
+          "high": "17.39",
+          "low": "16.615",
+          "volume": 16479500
+        },
+        {
+          "date": "2026-11-10",
+          "close": "17.02",
+          "open": "16.65",
+          "high": "17.06",
+          "low": "16.38",
+          "volume": 9742600
+        },
+        {
+          "date": "2026-11-11",
+          "close": "17.29",
+          "open": "16.8",
+          "high": "17.45",
+          "low": "16.63",
+          "volume": 6505500
+        },
+        {
+          "date": "2026-11-12",
+          "close": "16.61",
+          "open": "17.25",
+          "high": "17.375",
+          "low": "16.55",
+          "volume": 9113000
+        },
+        {
+          "date": "2026-11-13",
+          "close": "16.98",
+          "open": "16.65",
+          "high": "17.13",
+          "low": "16.57",
+          "volume": 6407400
+        },
+        {
+          "date": "2026-11-16",
+          "close": "16.84",
+          "open": "17.11",
+          "high": "17.65",
+          "low": "16.82",
+          "volume": 11256200
+        },
+        {
+          "date": "2026-11-17",
+          "close": "16.71",
+          "open": "16.81",
+          "high": "16.87",
+          "low": "16.395",
+          "volume": 12475900
+        },
+        {
+          "date": "2026-11-18",
+          "close": "17.6",
+          "open": "16.71",
+          "high": "18.25",
+          "low": "16.65",
+          "volume": 15306200
+        },
+        {
+          "date": "2026-11-19",
+          "close": "16.91",
+          "open": "17.63",
+          "high": "17.74",
+          "low": "16.88",
+          "volume": 10626100
+        },
+        {
+          "date": "2026-11-20",
+          "close": "16.48",
+          "open": "16.74",
+          "high": "17.515",
+          "low": "16.41",
+          "volume": 12561000
+        }
+      ]
     },
     {
       "symbol": "NCLH",
-      "status": "QUARANTINE",
-      "reason_codes": [
-        "TRANSPORT_FAILED"
-      ],
-      "artifact_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-      "days_count": 0,
-      "last_day_close": null,
-      "last_day": null,
-      "days": []
+      "status": "PASS",
+      "reason_codes": [],
+      "artifact_sha256": "04fd6a21c997b5f95a55fb00a08404827e0b924fd13f13a89972513f08848095",
+      "days_count": 65,
+      "last_day_close": "15.99",
+      "last_day": "2026-11-20",
+      "days": [
+        {
+          "date": "2026-08-21",
+          "close": "17.24",
+          "open": "16.88",
+          "high": "17.46",
+          "low": "16.86",
+          "volume": 14073300
+        },
+        {
+          "date": "2026-08-24",
+          "close": "17.22",
+          "open": "17.48",
+          "high": "17.72",
+          "low": "17.03",
+          "volume": 14641700
+        },
+        {
+          "date": "2026-08-25",
+          "close": "17.26",
+          "open": "17.45",
+          "high": "17.53",
+          "low": "17.08",
+          "volume": 11167400
+        },
+        {
+          "date": "2026-08-26",
+          "close": "17.09",
+          "open": "17.4",
+          "high": "17.67",
+          "low": "16.98",
+          "volume": 8931600
+        },
+        {
+          "date": "2026-08-27",
+          "close": "16.65",
+          "open": "16.98",
+          "high": "17.08",
+          "low": "16.6",
+          "volume": 13432500
+        },
+        {
+          "date": "2026-08-28",
+          "close": "16.65",
+          "open": "16.79",
+          "high": "16.94",
+          "low": "16.65",
+          "volume": 14046800
+        },
+        {
+          "date": "2026-08-31",
+          "close": "16.14",
+          "open": "16.43",
+          "high": "16.45",
+          "low": "16.09",
+          "volume": 14576900
+        },
+        {
+          "date": "2026-09-01",
+          "close": "15.43",
+          "open": "15.97",
+          "high": "16.1",
+          "low": "15.31",
+          "volume": 22599400
+        },
+        {
+          "date": "2026-09-02",
+          "close": "15.57",
+          "open": "15.63",
+          "high": "15.92",
+          "low": "15.48",
+          "volume": 13619800
+        },
+        {
+          "date": "2026-09-03",
+          "close": "15.59",
+          "open": "15.69",
+          "high": "15.78",
+          "low": "15.31",
+          "volume": 13370600
+        },
+        {
+          "date": "2026-09-04",
+          "close": "15.57",
+          "open": "15.63",
+          "high": "15.72",
+          "low": "15.42",
+          "volume": 11727500
+        },
+        {
+          "date": "2026-09-08",
+          "close": "15.39",
+          "open": "15.43",
+          "high": "15.79",
+          "low": "15.37",
+          "volume": 14584000
+        },
+        {
+          "date": "2026-09-09",
+          "close": "14.85",
+          "open": "15.2",
+          "high": "15.27",
+          "low": "14.74",
+          "volume": 20413200
+        },
+        {
+          "date": "2026-09-10",
+          "close": "14.57",
+          "open": "14.58",
+          "high": "14.83",
+          "low": "14.45",
+          "volume": 19155200
+        },
+        {
+          "date": "2026-09-11",
+          "close": "14.82",
+          "open": "14.89",
+          "high": "15.03",
+          "low": "14.7",
+          "volume": 15583000
+        },
+        {
+          "date": "2026-09-14",
+          "close": "14.72",
+          "open": "14.51",
+          "high": "14.99",
+          "low": "14.42",
+          "volume": 16341000
+        },
+        {
+          "date": "2026-09-15",
+          "close": "14.28",
+          "open": "14.77",
+          "high": "14.85",
+          "low": "14.19",
+          "volume": 18402800
+        },
+        {
+          "date": "2026-09-16",
+          "close": "14.53",
+          "open": "14.5",
+          "high": "14.7",
+          "low": "14.2",
+          "volume": 16302500
+        },
+        {
+          "date": "2026-09-17",
+          "close": "14.39",
+          "open": "14.93",
+          "high": "15.03",
+          "low": "14.39",
+          "volume": 16438400
+        },
+        {
+          "date": "2026-09-18",
+          "close": "14.12",
+          "open": "14.35",
+          "high": "14.47",
+          "low": "14.07",
+          "volume": 22810200
+        },
+        {
+          "date": "2026-09-21",
+          "close": "14.24",
+          "open": "14.35",
+          "high": "14.6",
+          "low": "14.2",
+          "volume": 16684500
+        },
+        {
+          "date": "2026-09-22",
+          "close": "14.22",
+          "open": "14.75",
+          "high": "14.98",
+          "low": "14.17",
+          "volume": 25194200
+        },
+        {
+          "date": "2026-09-23",
+          "close": "14.18",
+          "open": "14.14",
+          "high": "14.28",
+          "low": "13.63",
+          "volume": 23145000
+        },
+        {
+          "date": "2026-09-24",
+          "close": "14.19",
+          "open": "14.01",
+          "high": "14.55",
+          "low": "13.97",
+          "volume": 20755000
+        },
+        {
+          "date": "2026-09-25",
+          "close": "14.61",
+          "open": "14.43",
+          "high": "14.87",
+          "low": "14.12",
+          "volume": 18789300
+        },
+        {
+          "date": "2026-09-28",
+          "close": "14.31",
+          "open": "14.45",
+          "high": "14.62",
+          "low": "14.17",
+          "volume": 23498200
+        },
+        {
+          "date": "2026-09-29",
+          "close": "14.8",
+          "open": "15.11",
+          "high": "15.28",
+          "low": "14.71",
+          "volume": 27712800
+        },
+        {
+          "date": "2026-09-30",
+          "close": "14.66",
+          "open": "14.98",
+          "high": "15.15",
+          "low": "14.63",
+          "volume": 24060000
+        },
+        {
+          "date": "2026-10-01",
+          "close": "14.64",
+          "open": "14.6",
+          "high": "14.78",
+          "low": "14.34",
+          "volume": 26292800
+        },
+        {
+          "date": "2026-10-02",
+          "close": "15.14",
+          "open": "14.98",
+          "high": "15.17",
+          "low": "14.58",
+          "volume": 31250000
+        },
+        {
+          "date": "2026-10-05",
+          "close": "14.87",
+          "open": "15.13",
+          "high": "15.26",
+          "low": "14.83",
+          "volume": 21601500
+        },
+        {
+          "date": "2026-10-06",
+          "close": "15.51",
+          "open": "15.05",
+          "high": "15.74",
+          "low": "15.05",
+          "volume": 25178300
+        },
+        {
+          "date": "2026-10-07",
+          "close": "15.05",
+          "open": "15.15",
+          "high": "15.34",
+          "low": "14.84",
+          "volume": 25733600
+        },
+        {
+          "date": "2026-10-08",
+          "close": "15.49",
+          "open": "14.86",
+          "high": "15.53",
+          "low": "14.8",
+          "volume": 22909700
+        },
+        {
+          "date": "2026-10-09",
+          "close": "15.57",
+          "open": "15.42",
+          "high": "15.66",
+          "low": "15.34",
+          "volume": 16437700
+        },
+        {
+          "date": "2026-10-12",
+          "close": "15.35",
+          "open": "15.38",
+          "high": "15.6",
+          "low": "15.06",
+          "volume": 16088600
+        },
+        {
+          "date": "2026-10-13",
+          "close": "15.32",
+          "open": "15.48",
+          "high": "15.63",
+          "low": "15.21",
+          "volume": 12697800
+        },
+        {
+          "date": "2026-10-14",
+          "close": "14.87",
+          "open": "15.25",
+          "high": "15.29",
+          "low": "14.76",
+          "volume": 16572500
+        },
+        {
+          "date": "2026-10-15",
+          "close": "15.39",
+          "open": "14.93",
+          "high": "15.5",
+          "low": "14.67",
+          "volume": 19144200
+        },
+        {
+          "date": "2026-10-16",
+          "close": "15.05",
+          "open": "15.47",
+          "high": "15.74",
+          "low": "14.97",
+          "volume": 18488400
+        },
+        {
+          "date": "2026-10-19",
+          "close": "15.24",
+          "open": "15.15",
+          "high": "15.35",
+          "low": "14.86",
+          "volume": 14050200
+        },
+        {
+          "date": "2026-10-20",
+          "close": "15.65",
+          "open": "15.18",
+          "high": "16.14",
+          "low": "15.01",
+          "volume": 19089900
+        },
+        {
+          "date": "2026-10-21",
+          "close": "15.59",
+          "open": "15.72",
+          "high": "15.94",
+          "low": "15.32",
+          "volume": 14372300
+        },
+        {
+          "date": "2026-10-22",
+          "close": "15.54",
+          "open": "15.31",
+          "high": "15.8",
+          "low": "15.23",
+          "volume": 15031100
+        },
+        {
+          "date": "2026-10-23",
+          "close": "15.1",
+          "open": "14.93",
+          "high": "15.11",
+          "low": "14.54",
+          "volume": 22444500
+        },
+        {
+          "date": "2026-10-26",
+          "close": "15.25",
+          "open": "15.15",
+          "high": "15.53",
+          "low": "15.1",
+          "volume": 16308600
+        },
+        {
+          "date": "2026-10-27",
+          "close": "15.75",
+          "open": "15.71",
+          "high": "15.97",
+          "low": "15.48",
+          "volume": 21729900
+        },
+        {
+          "date": "2026-10-28",
+          "close": "16.06",
+          "open": "15.79",
+          "high": "16.15",
+          "low": "15.67",
+          "volume": 19053000
+        },
+        {
+          "date": "2026-10-29",
+          "close": "18.22",
+          "open": "17.56",
+          "high": "18.47",
+          "low": "17.4",
+          "volume": 68000200
+        },
+        {
+          "date": "2026-10-30",
+          "close": "17.57",
+          "open": "17.91",
+          "high": "17.99",
+          "low": "17.31",
+          "volume": 28322700
+        },
+        {
+          "date": "2026-11-02",
+          "close": "17.94",
+          "open": "18.2",
+          "high": "18.42",
+          "low": "17.8",
+          "volume": 27096500
+        },
+        {
+          "date": "2026-11-03",
+          "close": "17.42",
+          "open": "17.89",
+          "high": "17.91",
+          "low": "17.27",
+          "volume": 17916600
+        },
+        {
+          "date": "2026-11-04",
+          "close": "18.6",
+          "open": "17.81",
+          "high": "18.63",
+          "low": "17.61",
+          "volume": 30740200
+        },
+        {
+          "date": "2026-11-05",
+          "close": "17.76",
+          "open": "18.5",
+          "high": "18.83",
+          "low": "17.4",
+          "volume": 27793900
+        },
+        {
+          "date": "2026-11-06",
+          "close": "17.92",
+          "open": "17.56",
+          "high": "18.04",
+          "low": "17.52",
+          "volume": 16495900
+        },
+        {
+          "date": "2026-11-09",
+          "close": "18.43",
+          "open": "18.38",
+          "high": "18.74",
+          "low": "18.27",
+          "volume": 16328800
+        },
+        {
+          "date": "2026-11-10",
+          "close": "18.51",
+          "open": "18.48",
+          "high": "18.58",
+          "low": "18.16",
+          "volume": 11342600
+        },
+        {
+          "date": "2026-11-11",
+          "close": "18.82",
+          "open": "18.37",
+          "high": "19.09",
+          "low": "18.33",
+          "volume": 15861000
+        },
+        {
+          "date": "2026-11-12",
+          "close": "18.06",
+          "open": "18.62",
+          "high": "18.65",
+          "low": "18.05",
+          "volume": 18254900
+        },
+        {
+          "date": "2026-11-13",
+          "close": "17.96",
+          "open": "18.1",
+          "high": "18.21",
+          "low": "17.78",
+          "volume": 12720300
+        },
+        {
+          "date": "2026-11-16",
+          "close": "17.9",
+          "open": "17.9",
+          "high": "18.07",
+          "low": "17.55",
+          "volume": 16365100
+        },
+        {
+          "date": "2026-11-17",
+          "close": "17.61",
+          "open": "17.68",
+          "high": "18.0",
+          "low": "17.58",
+          "volume": 17417100
+        },
+        {
+          "date": "2026-11-18",
+          "close": "17.99",
+          "open": "17.72",
+          "high": "18.5",
+          "low": "17.56",
+          "volume": 15184800
+        },
+        {
+          "date": "2026-11-19",
+          "close": "17.07",
+          "open": "17.87",
+          "high": "17.97",
+          "low": "17.05",
+          "volume": 22391500
+        },
+        {
+          "date": "2026-11-20",
+          "close": "15.99",
+          "open": "17.23",
+          "high": "17.39",
+          "low": "15.94",
+          "volume": 17348800
+        }
+      ]
     },
     {
       "symbol": "NKE",
       "status": "PASS",
       "reason_codes": [],
-      "artifact_sha256": "a98101444febb924864b8b6bdcf2d0635ab505c142347b4901c93d9d02197430",
+      "artifact_sha256": "3cf87367e5cc1f8cccb4979c6c66f951fd9f96d13d7607e238b012d8fcb71841",
       "days_count": 65,
-      "last_day_close": "34.33",
-      "last_day": "2026-11-19",
+      "last_day_close": "32.92",
+      "last_day": "2026-11-20",
       "days": [
-        {
-          "date": "2026-08-20",
-          "close": "40.21",
-          "open": "40.49",
-          "high": "40.64",
-          "low": "39.81",
-          "volume": 16662100
-        },
         {
           "date": "2026-08-21",
           "close": "40.76",
@@ -4809,7 +6431,15 @@
           "open": "35.75",
           "high": "36.0",
           "low": "34.06",
-          "volume": 29339200
+          "volume": 29385400
+        },
+        {
+          "date": "2026-11-20",
+          "close": "32.92",
+          "open": "34.14",
+          "high": "34.53",
+          "low": "32.89",
+          "volume": 32001800
         }
       ]
     }
@@ -4833,96 +6463,107 @@
       "CCL",
       "DVN",
       "F",
+      "LYFT",
+      "NCLH",
       "NKE"
     ],
     "features": {
       "AAL": {
-        "as_of": "2026-11-19",
-        "return_1d": "-0.02254273",
-        "return_5d": "-0.04534007",
-        "return_21d": "0.03846628",
-        "realized_vol_21d": "0.03375550",
-        "range_position_21d": "0.3820",
+        "as_of": "2026-11-20",
+        "return_1d": "-0.06663716",
+        "return_5d": "-0.10140312",
+        "return_21d": "-0.05715841",
+        "realized_vol_21d": "0.03591335",
+        "range_position_21d": "0.0352",
         "candle_bias": -1,
         "source_days": 65,
         "reason_codes": [],
-        "feature_sha256": "998792d387ccbefe0894f35b6de694414baf0d323623ee762fe7cec6d10cbec4"
+        "feature_sha256": "7cd98d3ba9b51bd3cebf45f0050c7095174d9aca0b5e9227cac0a92e4c0d8d5d"
       },
       "CCL": {
-        "as_of": "2026-11-19",
-        "return_1d": "-0.04953259",
-        "return_5d": "-0.06222355",
-        "return_21d": "0.00984152",
-        "realized_vol_21d": "0.03451111",
-        "range_position_21d": "0.2995",
+        "as_of": "2026-11-20",
+        "return_1d": "-0.03619302",
+        "return_5d": "-0.09466037",
+        "return_21d": "-0.01826024",
+        "realized_vol_21d": "0.03449497",
+        "range_position_21d": "0.1278",
         "candle_bias": -1,
         "source_days": 65,
         "reason_codes": [],
-        "feature_sha256": "9dbdcd9d465781b764b216ebb43750f2cf4ba0818d288ae3b4bdfb98abcadfbb"
+        "feature_sha256": "826787cd7722abf3f067d81fbe961a9ca1f77d779656ebd1a8ba2f77e4f85e4c"
       },
       "DVN": {
-        "as_of": "2026-11-19",
-        "return_1d": "0.00214260",
-        "return_5d": "-0.09476955",
-        "return_21d": "-0.17056023",
-        "realized_vol_21d": "0.03258268",
-        "range_position_21d": "0.1241",
+        "as_of": "2026-11-20",
+        "return_1d": "-0.01220257",
+        "return_5d": "-0.11451445",
+        "return_21d": "-0.16883022",
+        "realized_vol_21d": "0.03021886",
+        "range_position_21d": "0.0805",
         "candle_bias": -1,
         "source_days": 65,
         "reason_codes": [],
-        "feature_sha256": "c913be97afb3d26850b3ceb31511b9473e552f0ea1678b302dc732a1aa5b2a7a"
+        "feature_sha256": "d977f8c448ee4c341f8449b268f6afc4a28ff61a72c53a86613be1180c94dfa7"
       },
       "F": {
-        "as_of": "2026-11-19",
-        "return_1d": "-0.00355240",
-        "return_5d": "-0.05705956",
-        "return_21d": "-0.05705956",
-        "realized_vol_21d": "0.01959694",
-        "range_position_21d": "0.1050",
+        "as_of": "2026-11-20",
+        "return_1d": "-0.00624723",
+        "return_5d": "-0.06414677",
+        "return_21d": "-0.06666249",
+        "realized_vol_21d": "0.01865529",
+        "range_position_21d": "0.0663",
         "candle_bias": -1,
         "source_days": 65,
         "reason_codes": [],
-        "feature_sha256": "759b9fa2c750c0167b2cb4eddac5744ca4e80dfc154ae7e97e0f67428208be0a"
+        "feature_sha256": "0fcc01572e27acc2c4637cef38ba4ef32de31ff81179007263d030580619503b"
+      },
+      "LYFT": {
+        "as_of": "2026-11-20",
+        "return_1d": "-0.02575764",
+        "return_5d": "-0.02988866",
+        "return_21d": "-0.05604534",
+        "realized_vol_21d": "0.03843471",
+        "range_position_21d": "0.2211",
+        "candle_bias": -1,
+        "source_days": 65,
+        "reason_codes": [],
+        "feature_sha256": "b8971f4e3b1c1d5ea41cb915afe09d221edcc66af9a798464b910d26ade42ea4"
+      },
+      "NCLH": {
+        "as_of": "2026-11-20",
+        "return_1d": "-0.06535901",
+        "return_5d": "-0.11618354",
+        "return_21d": "0.02854618",
+        "realized_vol_21d": "0.04411833",
+        "range_position_21d": "0.3187",
+        "candle_bias": -1,
+        "source_days": 65,
+        "reason_codes": [],
+        "feature_sha256": "73c0246cc7aa30248d778733f72f0bfedc28700b897dd3d4338599b20f70dbc9"
       },
       "NKE": {
-        "as_of": "2026-11-19",
-        "return_1d": "-0.05607358",
-        "return_5d": "-0.09523073",
-        "return_21d": "-0.08912101",
-        "realized_vol_21d": "0.02890675",
-        "range_position_21d": "0.0384",
+        "as_of": "2026-11-20",
+        "return_1d": "-0.04193923",
+        "return_5d": "-0.14324259",
+        "return_21d": "-0.15189158",
+        "realized_vol_21d": "0.02967523",
+        "range_position_21d": "0.0037",
         "candle_bias": -1,
         "source_days": 65,
         "reason_codes": [],
-        "feature_sha256": "36f2d44499b769452036f69ac563419f449e984f2d5be6f25fb7675973c826f0"
+        "feature_sha256": "cf5e363b0e0cc0a83aad53934db4d12579f24ef3bceb51a41fcfb437d5c8dc98"
       }
     },
     "note": "Deterministic technical context from the real overnight batch. No probability, no RoR, no forecast, no order."
   },
   "cash_secured_put_scan": {
-    "LYFT": {
-      "mode": "BLOCKED",
-      "symbol": "LYFT",
-      "reason": "cboe_fetch_403"
-    },
-    "CCL": {
-      "mode": "BLOCKED",
-      "symbol": "CCL",
-      "reason": "cboe_fetch_403"
-    },
-    "DVN": {
-      "mode": "BLOCKED",
-      "symbol": "DVN",
-      "reason": "cboe_fetch_403"
-    },
     "AAL": {
       "mode": "BLOCKED",
       "symbol": "AAL",
       "reason": "cboe_fetch_403"
     },
-    "F": {
+    "LYFT": {
       "mode": "BLOCKED",
-      "symbol": "F",
+      "symbol": "LYFT",
       "reason": "cboe_fetch_403"
     },
     "NKE": {
@@ -4930,9 +6571,24 @@
       "symbol": "NKE",
       "reason": "cboe_fetch_403"
     },
+    "CCL": {
+      "mode": "BLOCKED",
+      "symbol": "CCL",
+      "reason": "cboe_fetch_403"
+    },
+    "F": {
+      "mode": "BLOCKED",
+      "symbol": "F",
+      "reason": "cboe_fetch_403"
+    },
     "NCLH": {
       "mode": "BLOCKED",
       "symbol": "NCLH",
+      "reason": "cboe_fetch_403"
+    },
+    "DVN": {
+      "mode": "BLOCKED",
+      "symbol": "DVN",
       "reason": "cboe_fetch_403"
     }
   },
@@ -4950,6 +6606,55 @@
     "outcome_counts": {},
     "note": "Observed outcomes tally; NOT performance. No P&L claimed."
   },
+  "premium_ledger": {
+    "schema_version": "hedge-desk-premium-ledger-1.0.0",
+    "basis": "PAPER_HOLD_TO_EXPIRY",
+    "entries": 0,
+    "open": 0,
+    "settled": 0,
+    "overall": {
+      "n": 0,
+      "win_rate": null,
+      "avg_pnl_usd": null,
+      "avg_return_on_collateral": null
+    },
+    "by_score_band": {
+      "score >= 70": {
+        "n": 0,
+        "win_rate": null,
+        "avg_pnl_usd": null,
+        "avg_return_on_collateral": null
+      },
+      "55-70": {
+        "n": 0,
+        "win_rate": null,
+        "avg_pnl_usd": null,
+        "avg_return_on_collateral": null
+      },
+      "< 55": {
+        "n": 0,
+        "win_rate": null,
+        "avg_pnl_usd": null,
+        "avg_return_on_collateral": null
+      }
+    },
+    "note": "Paper, hold-to-expiry outcomes of eligible premium-score candidates, settled on the underlying's real expiry close. Not performance, not advice, not an order. Sample sizes are small until several expirations have passed.",
+    "trade_authorized": false,
+    "entries_added_tonight": 0,
+    "outcomes_settled_tonight": 0,
+    "appended_rows": []
+  },
+  "yellow_sheet_outcomes": {
+    "schema_version": "hedge-desk-premium-ledger-1.0.0",
+    "basis": "PAPER_HOLD_TO_EXPIRY",
+    "sheets_considered": 0,
+    "linked": 0,
+    "settled": 0,
+    "thesis_held": 0,
+    "rows": [],
+    "note": "Yellow Sheets (GP decisions) joined read-only to paper hold-to-expiry outcomes. Not performance, not advice.",
+    "trade_authorized": false
+  },
   "yellow_sheets": {
     "schema_version": "hedge-desk-yellow-sheet-1.0.0",
     "mode": "YELLOW_SHEET_SUMMARY",
@@ -4961,23 +6666,19 @@
   "rates_environment": {
     "schema_version": "hedge-desk-rates-desk-1.0.0",
     "mode": "REAL_FRED_RATES",
-    "as_of": "2026-11-20",
+    "as_of": "2026-11-21",
     "fed_funds_effective_rate": "3.88",
-    "fed_funds_latest_date": "2026-11-18",
+    "fed_funds_latest_date": "2026-11-19",
     "fed_funds_change_over_window": "0.00",
-    "treasury_2y": "4.8",
-    "treasury_2y_date": "2026-11-18",
-    "treasury_10y": "5.07",
-    "treasury_10y_date": "2026-11-18",
-    "spread_10y_2y_points": "27.00",
-    "curve_slope": "0.033750",
+    "treasury_2y": "4.76",
+    "treasury_2y_date": "2026-11-19",
+    "treasury_10y": "5.04",
+    "treasury_10y_date": "2026-11-19",
+    "spread_10y_2y_points": "28.00",
+    "curve_slope": "0.035000",
     "curve_shape": "UPWARD_SLOPING",
     "lookback_days": 60,
     "treasury_2y_history": [
-      [
-        "2026-09-21",
-        "4.76"
-      ],
       [
         "2026-09-22",
         "4.71"
@@ -5137,13 +6838,13 @@
       [
         "2026-11-18",
         "4.8"
+      ],
+      [
+        "2026-11-19",
+        "4.76"
       ]
     ],
     "treasury_10y_history": [
-      [
-        "2026-09-21",
-        "4.96"
-      ],
       [
         "2026-09-22",
         "4.96"
@@ -5303,14 +7004,18 @@
       [
         "2026-11-18",
         "5.07"
+      ],
+      [
+        "2026-11-19",
+        "5.04"
       ]
     ],
-    "sofr": "3.9",
-    "sofr_date": "2026-11-18",
+    "sofr": "3.91",
+    "sofr_date": "2026-11-19",
     "effr": "3.88",
-    "effr_date": "2026-11-18",
+    "effr_date": "2026-11-19",
     "obfr": "3.88",
-    "obfr_date": "2026-11-18",
+    "obfr_date": "2026-11-19",
     "data_source": "fred-public-csv-http-200",
     "trade_authorized": false,
     "note": "Observations of official FRED daily series. Fed funds/src curve change is a measured fact, not a forecast and not advice. No order placed."
@@ -5320,10 +7025,6 @@
     "mode": "REAL_VIX",
     "symbol": "^VIX",
     "history": [
-      [
-        "2026-08-19",
-        "14.890000343322754"
-      ],
       [
         "2026-08-20",
         "16.010000228881836"
@@ -5587,18 +7288,22 @@
       [
         "2026-11-19",
         "28.440000534057617"
+      ],
+      [
+        "2026-11-20",
+        "35.88999938964844"
       ]
     ],
-    "last_close": "28.440000534057617",
-    "last_day": "2026-11-19",
-    "regime": "ELEVATED",
+    "last_close": "35.88999938964844",
+    "last_day": "2026-11-20",
+    "regime": "HIGH",
     "data_source": "yahoo-public-chart-http-200",
     "note": "Real delayed VIX close. Regime is a descriptive band (LOW/NORMAL/ELEVATED/HIGH), context for when to sell premium, not a signal and not advice. No order placed."
   },
   "macro_environment": {
     "schema_version": "hedge-desk-macro-desk-1.0.0",
     "mode": "REAL_FRED_MACRO",
-    "as_of": "2026-11-20",
+    "as_of": "2026-11-21",
     "data_source": "fred-public-csv-http-200",
     "trade_authorized": false,
     "blocked": [],
@@ -5607,10 +7312,10 @@
     "cpi_index": "337.476",
     "unemployment_rate_pct": "4.1",
     "unemployment_date": "2026-10-01",
-    "treasury_5y": "4.89",
-    "treasury_5y_date": "2026-11-18",
-    "treasury_30y": "5.41",
-    "treasury_30y_date": "2026-11-18",
+    "treasury_5y": "4.86",
+    "treasury_5y_date": "2026-11-19",
+    "treasury_30y": "5.4",
+    "treasury_30y_date": "2026-11-19",
     "note": "Official FRED observations (CPI YoY, unemployment, 5y/30y curve). Measured facts, not a forecast and not advice. No order placed."
   },
   "oil_market": {
@@ -5618,10 +7323,10 @@
     "mode": "REAL_YAHOO_WTI",
     "symbol": "CL=F",
     "as_of": "2026-11-20",
-    "last_close": "83.0",
+    "last_close": "83.62000274658203",
     "window_first_date": "2026-11-16",
     "window_first_close": "85.72000122070312",
-    "net_change_over_window": "-2.72000122070312",
+    "net_change_over_window": "-2.09999847412109",
     "observation_count": 5,
     "window_closes": [
       [
@@ -5642,7 +7347,7 @@
       ],
       [
         "2026-11-20",
-        "83.0"
+        "83.62000274658203"
       ]
     ],
     "lookback_days": 5,
@@ -5674,8 +7379,8 @@
   "market_context": {
     "schema_version": "hedge-desk-market-context-1.0.0",
     "status": "DEGRADED",
-    "live_sources": 20,
-    "blocked_sources": 2,
+    "live_sources": 21,
+    "blocked_sources": 1,
     "unconfigured_sources": 4,
     "sources": {
       "fred": {
@@ -5684,10 +7389,6 @@
         "status": "LIVE",
         "observation_count": 13,
         "observations": [
-          {
-            "date": "2026-11-14",
-            "value": "3.88"
-          },
           {
             "date": "2026-11-15",
             "value": "3.88"
@@ -5703,6 +7404,10 @@
           {
             "date": "2026-11-18",
             "value": "3.88"
+          },
+          {
+            "date": "2026-11-19",
+            "value": "3.88"
           }
         ]
       },
@@ -5714,28 +7419,28 @@
         "observations": {
           "EFFR": {
             "percentRate": 3.88,
-            "effectiveDate": "2026-11-18",
-            "volumeInBillions": 88
+            "effectiveDate": "2026-11-19",
+            "volumeInBillions": 100
           },
           "OBFR": {
             "percentRate": 3.88,
-            "effectiveDate": "2026-11-18",
-            "volumeInBillions": 180
+            "effectiveDate": "2026-11-19",
+            "volumeInBillions": 186
           },
           "TGCR": {
             "percentRate": 3.88,
-            "effectiveDate": "2026-11-18",
-            "volumeInBillions": 1248
+            "effectiveDate": "2026-11-19",
+            "volumeInBillions": 1245
           },
           "BGCR": {
             "percentRate": 3.88,
-            "effectiveDate": "2026-11-18",
+            "effectiveDate": "2026-11-19",
             "volumeInBillions": 1285
           },
           "SOFR": {
-            "percentRate": 3.9,
-            "effectiveDate": "2026-11-18",
-            "volumeInBillions": 3134
+            "percentRate": 3.91,
+            "effectiveDate": "2026-11-19",
+            "volumeInBillions": 3161
           }
         }
       },
@@ -5810,58 +7515,58 @@
         "observations": [
           {
             "tenor": "DGS1",
-            "date": "2026-11-18",
+            "date": "2026-11-19",
             "value": "4.62"
           },
           {
             "tenor": "DGS10",
-            "date": "2026-11-18",
-            "value": "5.07"
+            "date": "2026-11-19",
+            "value": "5.04"
           },
           {
             "tenor": "DGS1MO",
-            "date": "2026-11-18",
-            "value": "4.10"
+            "date": "2026-11-19",
+            "value": "4.20"
           },
           {
             "tenor": "DGS2",
-            "date": "2026-11-18",
-            "value": "4.80"
+            "date": "2026-11-19",
+            "value": "4.76"
           },
           {
             "tenor": "DGS20",
-            "date": "2026-11-18",
-            "value": "5.44"
+            "date": "2026-11-19",
+            "value": "5.43"
           },
           {
             "tenor": "DGS3",
-            "date": "2026-11-18",
-            "value": "4.84"
+            "date": "2026-11-19",
+            "value": "4.81"
           },
           {
             "tenor": "DGS30",
-            "date": "2026-11-18",
-            "value": "5.41"
+            "date": "2026-11-19",
+            "value": "5.40"
           },
           {
             "tenor": "DGS3MO",
-            "date": "2026-11-18",
+            "date": "2026-11-19",
             "value": "4.34"
           },
           {
             "tenor": "DGS5",
-            "date": "2026-11-18",
-            "value": "4.89"
+            "date": "2026-11-19",
+            "value": "4.86"
           },
           {
             "tenor": "DGS6MO",
-            "date": "2026-11-18",
-            "value": "4.43"
+            "date": "2026-11-19",
+            "value": "4.42"
           },
           {
             "tenor": "DGS7",
-            "date": "2026-11-18",
-            "value": "4.96"
+            "date": "2026-11-19",
+            "value": "4.94"
           }
         ]
       },
@@ -6132,26 +7837,26 @@
         "observations": [
           {
             "currency": "USD",
-            "rate": "1.0992",
-            "date": "2026-11-19",
+            "rate": "1.0990",
+            "date": "2026-11-20",
             "base": "EUR"
           },
           {
             "currency": "JPY",
-            "rate": "175.84",
-            "date": "2026-11-19",
+            "rate": "174.35",
+            "date": "2026-11-20",
             "base": "EUR"
           },
           {
             "currency": "GBP",
-            "rate": "0.83581",
-            "date": "2026-11-19",
+            "rate": "0.83735",
+            "date": "2026-11-20",
             "base": "EUR"
           },
           {
             "currency": "CHF",
-            "rate": "0.9262",
-            "date": "2026-11-19",
+            "rate": "0.9223",
+            "date": "2026-11-20",
             "base": "EUR"
           }
         ]
@@ -6386,6 +8091,149 @@
         "observation_count": 25,
         "observations": [
           {
+            "event_id": "us6000ucf0",
+            "magnitude": 4.9,
+            "time": 1795214079096,
+            "place": "113 km ESE of Pangai, Tonga",
+            "longitude": -173.4099,
+            "latitude": -20.3204,
+            "depth_km": 10,
+            "title": "M 4.9 - 113 km ESE of Pangai, Tonga",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000ucf0"
+          },
+          {
+            "event_id": "us6000ucd6",
+            "magnitude": 5.1,
+            "time": 1795197195442,
+            "place": "32 km NE of Port-Olry, Vanuatu",
+            "longitude": 167.29,
+            "latitude": -14.835,
+            "depth_km": 94.53,
+            "title": "M 5.1 - 32 km NE of Port-Olry, Vanuatu",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000ucd6"
+          },
+          {
+            "event_id": "us6000uc9c",
+            "magnitude": 4.7,
+            "time": 1795184175225,
+            "place": "94 km W of Illapel, Chile",
+            "longitude": -72.1485,
+            "latitude": -31.7842,
+            "depth_km": 10,
+            "title": "M 4.7 - 94 km W of Illapel, Chile",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000uc9c"
+          },
+          {
+            "event_id": "us6000uc96",
+            "magnitude": 5.1,
+            "time": 1795180144057,
+            "place": "15 km SSW of Balangonan, Philippines",
+            "longitude": 125.2986,
+            "latitude": 5.4441,
+            "depth_km": 73.392,
+            "title": "M 5.1 - 15 km SSW of Balangonan, Philippines",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000uc96"
+          },
+          {
+            "event_id": "us6000uc8k",
+            "magnitude": 4.7,
+            "time": 1795171724362,
+            "place": "southeast of the Loyalty Islands",
+            "longitude": 171.1906,
+            "latitude": -24.6606,
+            "depth_km": 10,
+            "title": "M 4.7 - southeast of the Loyalty Islands",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000uc8k"
+          },
+          {
+            "event_id": "us6000uc8g",
+            "magnitude": 5,
+            "time": 1795170601069,
+            "place": "southeast of the Loyalty Islands",
+            "longitude": 171.4327,
+            "latitude": -24.7463,
+            "depth_km": 10,
+            "title": "M 5.0 - southeast of the Loyalty Islands",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000uc8g"
+          },
+          {
+            "event_id": "us6000uc8d",
+            "magnitude": 4.6,
+            "time": 1795169774294,
+            "place": "40 km SSE of Kor\u00f3ni, Greece",
+            "longitude": 22.082,
+            "latitude": 36.4406,
+            "depth_km": 41.976,
+            "title": "M 4.6 - 40 km SSE of Kor\u00f3ni, Greece",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000uc8d"
+          },
+          {
+            "event_id": "us6000uc82",
+            "magnitude": 5.4,
+            "time": 1795164251644,
+            "place": "Carlsberg Ridge",
+            "longitude": 57.7485,
+            "latitude": 9.7949,
+            "depth_km": 10,
+            "title": "M 5.4 - Carlsberg Ridge",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000uc82"
+          },
+          {
+            "event_id": "us6000uc81",
+            "magnitude": 4.7,
+            "time": 1795164174187,
+            "place": "Carlsberg Ridge",
+            "longitude": 57.8408,
+            "latitude": 9.7529,
+            "depth_km": 10,
+            "title": "M 4.7 - Carlsberg Ridge",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000uc81"
+          },
+          {
+            "event_id": "nc75468702",
+            "magnitude": 4.98,
+            "time": 1795157356530,
+            "place": "10 km NW of Pinnacles, CA",
+            "longitude": -121.220664978027,
+            "latitude": 36.5934982299805,
+            "depth_km": 6.69999980926514,
+            "title": "M 5.0 - 10 km NW of Pinnacles, CA",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/nc75468702"
+          },
+          {
+            "event_id": "us6000uc6c",
+            "magnitude": 4.9,
+            "time": 1795151865106,
+            "place": "54 km W of Madang, Papua New Guinea",
+            "longitude": 145.2974,
+            "latitude": -5.219,
+            "depth_km": 97.583,
+            "title": "M 4.9 - 54 km W of Madang, Papua New Guinea",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000uc6c"
+          },
+          {
+            "event_id": "us6000uc5s",
+            "magnitude": 4.8,
+            "time": 1795143438070,
+            "place": "24 km ESE of Calingasta, Argentina",
+            "longitude": -69.1883,
+            "latitude": -31.4302,
+            "depth_km": 113.86,
+            "title": "M 4.8 - 24 km ESE of Calingasta, Argentina",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000uc5s"
+          },
+          {
+            "event_id": "us6000uc4v",
+            "magnitude": 5.6,
+            "time": 1795135754102,
+            "place": "southeast of the Loyalty Islands",
+            "longitude": 171.2326,
+            "latitude": -24.6996,
+            "depth_km": 10,
+            "title": "M 5.6 - southeast of the Loyalty Islands",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000uc4v"
+          },
+          {
             "event_id": "us6000uc3v",
             "magnitude": 4.5,
             "time": 1795124973219,
@@ -6452,6 +8300,17 @@
             "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000ubzm"
           },
           {
+            "event_id": "us6000ubzn",
+            "magnitude": 4.7,
+            "time": 1795093473345,
+            "place": "South Sandwich Islands region",
+            "longitude": -28.3028,
+            "latitude": -55.596,
+            "depth_km": 35,
+            "title": "M 4.7 - South Sandwich Islands region",
+            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000ubzn"
+          },
+          {
             "event_id": "us6000ubz1",
             "magnitude": 5,
             "time": 1795085587767,
@@ -6505,160 +8364,6 @@
             "depth_km": 10,
             "title": "M 5.2 - 130 km W of Teluk Dalam, Indonesia",
             "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000ubxb"
-          },
-          {
-            "event_id": "us6000ubxa",
-            "magnitude": 4.8,
-            "time": 1795051773145,
-            "place": "40 km NNE of Kilimatinde, Tanzania",
-            "longitude": 35.0903,
-            "latitude": -5.5109,
-            "depth_km": 10,
-            "title": "M 4.8 - 40 km NNE of Kilimatinde, Tanzania",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000ubxa"
-          },
-          {
-            "event_id": "us6000ubwa",
-            "magnitude": 4.8,
-            "time": 1795039612958,
-            "place": "11 km SSW of Santa Gertrudis Miramar, Mexico",
-            "longitude": -95.4267,
-            "latitude": 15.9616,
-            "depth_km": 35,
-            "title": "M 4.8 - 11 km SSW of Santa Gertrudis Miramar, Mexico",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000ubwa"
-          },
-          {
-            "event_id": "us6000ubw3",
-            "magnitude": 5.2,
-            "time": 1795037327088,
-            "place": "169 km S of Attu Station, Alaska",
-            "longitude": 172.8596,
-            "latitude": 51.3379,
-            "depth_km": 10,
-            "title": "M 5.2 - 169 km S of Attu Station, Alaska",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000ubw3"
-          },
-          {
-            "event_id": "us6000ubvu",
-            "magnitude": 4.7,
-            "time": 1795034319129,
-            "place": "134 km SW of Lorengau, Papua New Guinea",
-            "longitude": 146.4693,
-            "latitude": -2.9421,
-            "depth_km": 16.856,
-            "title": "M 4.7 - 134 km SW of Lorengau, Papua New Guinea",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000ubvu"
-          },
-          {
-            "event_id": "us6000uc01",
-            "magnitude": 5.2,
-            "time": 1795029675136,
-            "place": "Pacific-Antarctic Ridge",
-            "longitude": -146.5262,
-            "latitude": -57.9547,
-            "depth_km": 10,
-            "title": "M 5.2 - Pacific-Antarctic Ridge",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us6000uc01"
-          },
-          {
-            "event_id": "us7000tz37",
-            "magnitude": 6,
-            "time": 1795029263203,
-            "place": "Pacific-Antarctic Ridge",
-            "longitude": -146.8744,
-            "latitude": -57.5192,
-            "depth_km": 10,
-            "title": "M 6.0 - Pacific-Antarctic Ridge",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tz37"
-          },
-          {
-            "event_id": "us7000tz33",
-            "magnitude": 4.5,
-            "time": 1795027613085,
-            "place": "20 km SSW of Ollag\u00fce, Chile",
-            "longitude": -68.2976,
-            "latitude": -21.41,
-            "depth_km": 129.419,
-            "title": "M 4.5 - 20 km SSW of Ollag\u00fce, Chile",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tz33"
-          },
-          {
-            "event_id": "us7000tz2w",
-            "magnitude": 4.8,
-            "time": 1795025281097,
-            "place": "46 km SE of Ikungi, Tanzania",
-            "longitude": 35.082,
-            "latitude": -5.4134,
-            "depth_km": 10,
-            "title": "M 4.8 - 46 km SE of Ikungi, Tanzania",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tz2w"
-          },
-          {
-            "event_id": "us7000tz1n",
-            "magnitude": 5.3,
-            "time": 1795022543552,
-            "place": "7 km N of Tsunagi, Japan",
-            "longitude": 130.4701,
-            "latitude": 32.3069,
-            "depth_km": 10,
-            "title": "M 5.3 - 7 km N of Tsunagi, Japan",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tz1n"
-          },
-          {
-            "event_id": "us7000tz1a",
-            "magnitude": 5.3,
-            "time": 1795018011220,
-            "place": "149 km SSW of Merizo Village, Guam",
-            "longitude": 143.9927,
-            "latitude": 12.0918,
-            "depth_km": 10,
-            "title": "M 5.3 - 149 km SSW of Merizo Village, Guam",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tz1a"
-          },
-          {
-            "event_id": "us7000tyza",
-            "magnitude": 4.9,
-            "time": 1795000257037,
-            "place": "West Chile Rise",
-            "longitude": -91.5033,
-            "latitude": -39.6909,
-            "depth_km": 10,
-            "title": "M 4.9 - West Chile Rise",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tyza"
-          },
-          {
-            "event_id": "us7000tyyw",
-            "magnitude": 5.2,
-            "time": 1794994620617,
-            "place": "86 km NW of Ry\u014dtsu-minato, Japan",
-            "longitude": 137.8725,
-            "latitude": 38.7192,
-            "depth_km": 10,
-            "title": "M 5.2 - 86 km NW of Ry\u014dtsu-minato, Japan",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tyyw"
-          },
-          {
-            "event_id": "us7000tyy8",
-            "magnitude": 5.9,
-            "time": 1794982062780,
-            "place": "85 km WNW of San Juan, Peru",
-            "longitude": -75.9238,
-            "latitude": -15.1438,
-            "depth_km": 21.895,
-            "title": "M 5.9 - 85 km WNW of San Juan, Peru",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tyy8"
-          },
-          {
-            "event_id": "us7000tyxz",
-            "magnitude": 5.2,
-            "time": 1794979543280,
-            "place": "Galapagos Triple Junction region",
-            "longitude": -103.0838,
-            "latitude": 0.4346,
-            "depth_km": 10,
-            "title": "M 5.2 - Galapagos Triple Junction region",
-            "url": "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tyxz"
           }
         ]
       },
@@ -6668,6 +8373,70 @@
         "status": "LIVE",
         "observation_count": 25,
         "observations": [
+          {
+            "event_id": "EONET_26568",
+            "title": "Wildfire Greene - Caney Creek Lane, Greene, Tennessee",
+            "categories": [
+              "wildfires"
+            ],
+            "sources": [
+              "IRWIN"
+            ],
+            "date": "2026-11-18T14:11:00Z",
+            "geometry_type": "Point",
+            "coordinates": [
+              -82.7985,
+              36.36301667
+            ]
+          },
+          {
+            "event_id": "EONET_26569",
+            "title": "Prescribed Fire 2027 TXTMR HFR RX, Matagorda, Texas",
+            "categories": [
+              "wildfires"
+            ],
+            "sources": [
+              "IRWIN"
+            ],
+            "date": "2026-11-18T09:44:00Z",
+            "geometry_type": "Point",
+            "coordinates": [
+              -95.80795,
+              28.762433
+            ]
+          },
+          {
+            "event_id": "EONET_26571",
+            "title": "Prescribed Fire OAK Compartment 29 RX, Bibb, Alabama",
+            "categories": [
+              "wildfires"
+            ],
+            "sources": [
+              "IRWIN"
+            ],
+            "date": "2026-11-18T09:18:00Z",
+            "geometry_type": "Point",
+            "coordinates": [
+              -87.347136,
+              32.945935
+            ]
+          },
+          {
+            "event_id": "EONET_26572",
+            "title": "Prescribed Fire rx-Lapham Good Oak 2026, Waukesha, Wisconsin",
+            "categories": [
+              "wildfires"
+            ],
+            "sources": [
+              "IRWIN"
+            ],
+            "date": "2026-11-18T08:47:00Z",
+            "geometry_type": "Point",
+            "coordinates": [
+              -88.3992015,
+              43.0403647
+            ]
+          },
           {
             "event_id": "EONET_26494",
             "title": "Tropical Cyclone Akvan",
@@ -6685,6 +8454,38 @@
             ]
           },
           {
+            "event_id": "EONET_26573",
+            "title": "Prescribed Fire STEELY MILL RX, El Dorado, California",
+            "categories": [
+              "wildfires"
+            ],
+            "sources": [
+              "IRWIN"
+            ],
+            "date": "2026-11-16T11:32:00Z",
+            "geometry_type": "Point",
+            "coordinates": [
+              -120.50025,
+              38.619383
+            ]
+          },
+          {
+            "event_id": "EONET_26575",
+            "title": "Prescribed Fire Elk/Clark Piles RX, Coconino, Arizona",
+            "categories": [
+              "wildfires"
+            ],
+            "sources": [
+              "IRWIN"
+            ],
+            "date": "2026-11-16T09:06:00Z",
+            "geometry_type": "Point",
+            "coordinates": [
+              -111.578139,
+              35.050444
+            ]
+          },
+          {
             "event_id": "EONET_26463",
             "title": "Tropical Cyclone Xavier",
             "categories": [
@@ -6693,11 +8494,11 @@
             "sources": [
               "JTWC"
             ],
-            "date": "2026-11-19T18:00:00Z",
+            "date": "2026-11-20T18:00:00Z",
             "geometry_type": "Point",
             "coordinates": [
-              -162.8,
-              -10.7
+              -163.9,
+              -11.3
             ]
           },
           {
@@ -6810,6 +8611,38 @@
             "coordinates": [
               -89.5974,
               32.425
+            ]
+          },
+          {
+            "event_id": "EONET_26576",
+            "title": "Prescribed Fire TSK Compartment 6 RX, Macon, Alabama",
+            "categories": [
+              "wildfires"
+            ],
+            "sources": [
+              "IRWIN"
+            ],
+            "date": "2026-11-11T08:18:00Z",
+            "geometry_type": "Point",
+            "coordinates": [
+              -85.653222,
+              32.446972
+            ]
+          },
+          {
+            "event_id": "EONET_26577",
+            "title": "Prescribed Fire Strawberry RX, Wasatch, Utah",
+            "categories": [
+              "wildfires"
+            ],
+            "sources": [
+              "IRWIN"
+            ],
+            "date": "2026-11-10T17:06:00Z",
+            "geometry_type": "Point",
+            "coordinates": [
+              -111.2668,
+              40.31
             ]
           },
           {
@@ -6940,135 +8773,6 @@
               55.55,
               -65.58
             ]
-          },
-          {
-            "event_id": "EONET_6320",
-            "title": "Iceberg A81",
-            "categories": [
-              "seaLakeIce"
-            ],
-            "sources": [
-              "NATICE"
-            ],
-            "date": "2026-11-13T00:00:00Z",
-            "geometry_type": "Point",
-            "coordinates": [
-              -34.36,
-              -55.48
-            ]
-          },
-          {
-            "event_id": "EONET_6523",
-            "title": "Iceberg A83",
-            "categories": [
-              "seaLakeIce"
-            ],
-            "sources": [
-              "EO",
-              "NATICE"
-            ],
-            "date": "2026-11-13T00:00:00Z",
-            "geometry_type": "Point",
-            "coordinates": [
-              -48.45,
-              -58.98
-            ]
-          },
-          {
-            "event_id": "EONET_12618",
-            "title": "Iceberg A84",
-            "categories": [
-              "seaLakeIce"
-            ],
-            "sources": [
-              "NATICE"
-            ],
-            "date": "2026-11-13T00:00:00Z",
-            "geometry_type": "Point",
-            "coordinates": [
-              -90.01,
-              -68.39
-            ]
-          },
-          {
-            "event_id": "EONET_25990",
-            "title": "Iceberg B22K",
-            "categories": [
-              "seaLakeIce"
-            ],
-            "sources": [
-              "NATICE"
-            ],
-            "date": "2026-10-30T00:00:00Z",
-            "geometry_type": "Point",
-            "coordinates": [
-              163.35,
-              -69.76
-            ]
-          },
-          {
-            "event_id": "EONET_25986",
-            "title": "Prescribed Fire McCarty Piles RX, Coconino, Arizona",
-            "categories": [
-              "wildfires"
-            ],
-            "sources": [
-              "IRWIN"
-            ],
-            "date": "2026-10-29T12:16:00Z",
-            "geometry_type": "Point",
-            "coordinates": [
-              -111.262694,
-              34.513944
-            ]
-          },
-          {
-            "event_id": "EONET_25985",
-            "title": "Prescribed Fire Freidland-Chimney Piles RX, Coconino, Arizona",
-            "categories": [
-              "wildfires"
-            ],
-            "sources": [
-              "IRWIN"
-            ],
-            "date": "2026-10-29T11:37:00Z",
-            "geometry_type": "Point",
-            "coordinates": [
-              -111.666667,
-              35.283333
-            ]
-          },
-          {
-            "event_id": "EONET_26056",
-            "title": "Prescribed Fire TON RX - BAILEY LOST HP, Okanogan, Washington",
-            "categories": [
-              "wildfires"
-            ],
-            "sources": [
-              "IRWIN"
-            ],
-            "date": "2026-10-29T11:08:00Z",
-            "geometry_type": "Point",
-            "coordinates": [
-              -119.055205,
-              48.532726
-            ]
-          },
-          {
-            "event_id": "EONET_25827",
-            "title": "Wildfire South Tank Trail, Perry, Mississippi",
-            "categories": [
-              "wildfires"
-            ],
-            "sources": [
-              "IRWIN"
-            ],
-            "date": "2026-10-28T18:02:00Z",
-            "geometry_type": "Point",
-            "coordinates": [
-              -89.097783,
-              31.085833
-            ]
           }
         ]
       },
@@ -7076,13 +8780,8 @@
         "provider_id": "bank-of-canada",
         "dataset": "FXUSDCAD",
         "status": "LIVE",
-        "observation_count": 2465,
+        "observation_count": 2466,
         "observations": [
-          {
-            "date": "2026-11-05",
-            "series": "FXUSDCAD",
-            "value": "1.3989"
-          },
           {
             "date": "2026-11-06",
             "series": "FXUSDCAD",
@@ -7127,6 +8826,11 @@
             "date": "2026-11-19",
             "series": "FXUSDCAD",
             "value": "1.4317"
+          },
+          {
+            "date": "2026-11-20",
+            "series": "FXUSDCAD",
+            "value": "1.4325"
           }
         ]
       },
@@ -7139,32 +8843,32 @@
           {
             "base": "USD",
             "quote": "EUR",
-            "rate": "0.90975",
-            "date": "2026-11-19"
+            "rate": "0.90992",
+            "date": "2026-11-20"
           },
           {
             "base": "USD",
             "quote": "GBP",
-            "rate": "0.76038",
-            "date": "2026-11-19"
+            "rate": "0.76192",
+            "date": "2026-11-20"
           },
           {
             "base": "USD",
             "quote": "JPY",
-            "rate": "159.97",
-            "date": "2026-11-19"
+            "rate": "158.64",
+            "date": "2026-11-20"
           },
           {
             "base": "USD",
             "quote": "CAD",
-            "rate": "1.43",
-            "date": "2026-11-19"
+            "rate": "1.4307",
+            "date": "2026-11-20"
           },
           {
             "base": "USD",
             "quote": "CHF",
-            "rate": "0.84261",
-            "date": "2026-11-19"
+            "rate": "0.83922",
+            "date": "2026-11-20"
           }
         ]
       },
@@ -7175,304 +8879,304 @@
         "observation_count": 25,
         "observations": [
           {
-            "id": "urn:oid:2.49.0.1.840.0.26681cc34fcf4fd2b87bbdd691654ebed96c3e1e.001.1",
-            "event": "Small Craft Advisory",
-            "severity": "Minor",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 20 at 2:44PM ChST until November 21 at 3:00PM ChST by NWS Tiyan GU",
-            "areaDesc": "Pohnpei Coastal Waters",
-            "sent": "2026-11-20T14:44:00+10:00",
-            "effective": "2026-11-20T14:44:00+10:00",
-            "expires": "2026-11-21T04:45:00+10:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.bebde12955ad8a4120912141ae91304ee8c10ac4.001.1",
+            "id": "urn:oid:2.49.0.1.840.0.03c9128d7d672f94a041463f04984dc669719022.002.1",
             "event": "High Surf Advisory",
             "severity": "Minor",
             "certainty": "Likely",
             "urgency": "Expected",
-            "headline": "High Surf Advisory issued November 20 at 2:44PM ChST until November 23 at 3:00PM ChST by NWS Tiyan GU",
-            "areaDesc": "Kosrae",
-            "sent": "2026-11-20T14:44:00+10:00",
-            "effective": "2026-11-20T14:44:00+10:00",
-            "expires": "2026-11-21T04:45:00+10:00"
+            "headline": "High Surf Advisory issued November 20 at 11:42PM EST until November 23 at 1:00AM EST by NWS Newport/Morehead City NC",
+            "areaDesc": "Hatteras Island",
+            "sent": "2026-11-20T23:42:00-05:00",
+            "effective": "2026-11-20T23:42:00-05:00",
+            "expires": "2026-11-21T11:45:00-05:00"
           },
           {
-            "id": "urn:oid:2.49.0.1.840.0.6c319c85a4b388ae0c56baa5ceb7407b68b5cef5.002.1",
-            "event": "Small Craft Advisory",
+            "id": "urn:oid:2.49.0.1.840.0.03c9128d7d672f94a041463f04984dc669719022.001.1",
+            "event": "High Surf Advisory",
             "severity": "Minor",
             "certainty": "Likely",
             "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 19 at 10:38PM CST until November 21 at 3:00PM CST by NWS Green Bay WI",
-            "areaDesc": "Green Bay south of line from  Cedar River to Rock Island Passage and north of a line from Oconto WI to Little Sturgeon Bay WI; Green Bay south of line from  Oconto WI to Little Sturgeon Bay WI",
-            "sent": "2026-11-19T22:38:00-06:00",
-            "effective": "2026-11-19T22:38:00-06:00",
-            "expires": "2026-11-20T06:45:00-06:00"
+            "headline": "High Surf Advisory issued November 20 at 11:42PM EST until November 23 at 1:00AM EST by NWS Newport/Morehead City NC",
+            "areaDesc": "East Carteret; Ocracoke Island",
+            "sent": "2026-11-20T23:42:00-05:00",
+            "effective": "2026-11-20T23:42:00-05:00",
+            "expires": "2026-11-21T11:45:00-05:00"
           },
           {
-            "id": "urn:oid:2.49.0.1.840.0.6c319c85a4b388ae0c56baa5ceb7407b68b5cef5.001.1",
-            "event": "Small Craft Advisory",
+            "id": "urn:oid:2.49.0.1.840.0.5e2f569fb94c12181d220656cbb7760e7157fa18.002.1",
+            "event": "Coastal Flood Watch",
+            "severity": "Moderate",
+            "certainty": "Possible",
+            "urgency": "Future",
+            "headline": "Coastal Flood Watch issued November 20 at 8:34PM PST until November 26 at 2:00PM PST by NWS Eureka CA",
+            "areaDesc": "Coastal Del Norte; Southwestern Humboldt; Coastal Mendocino",
+            "sent": "2026-11-20T20:34:00-08:00",
+            "effective": "2026-11-20T20:34:00-08:00",
+            "expires": "2026-11-21T11:00:00-08:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.5e2f569fb94c12181d220656cbb7760e7157fa18.001.2",
+            "event": "Coastal Flood Watch",
+            "severity": "Moderate",
+            "certainty": "Possible",
+            "urgency": "Future",
+            "headline": "Coastal Flood Watch issued November 20 at 8:34PM PST until November 26 at 2:00PM PST by NWS Eureka CA",
+            "areaDesc": "Northern Coastal Humboldt",
+            "sent": "2026-11-20T20:34:00-08:00",
+            "effective": "2026-11-20T20:34:00-08:00",
+            "expires": "2026-11-21T11:00:00-08:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.5e2f569fb94c12181d220656cbb7760e7157fa18.001.1",
+            "event": "Coastal Flood Advisory",
             "severity": "Minor",
             "certainty": "Likely",
             "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 19 at 10:38PM CST until November 22 at 6:00AM CST by NWS Green Bay WI",
-            "areaDesc": "Rock Island Passage to Sturgeon Bay WI; Sturgeon Bay to Two Rivers WI; Two Rivers to Sheboygan WI",
-            "sent": "2026-11-19T22:38:00-06:00",
-            "effective": "2026-11-19T22:38:00-06:00",
-            "expires": "2026-11-20T06:45:00-06:00"
+            "headline": "Coastal Flood Advisory issued November 20 at 8:34PM PST until November 21 at 10:00AM PST by NWS Eureka CA",
+            "areaDesc": "Northern Coastal Humboldt",
+            "sent": "2026-11-20T20:34:00-08:00",
+            "effective": "2026-11-20T20:34:00-08:00",
+            "expires": "2026-11-21T11:00:00-08:00"
           },
           {
-            "id": "urn:oid:2.49.0.1.840.0.87596b5a351df7353d1f1033e18f99065d0336f9.001.1",
+            "id": "urn:oid:2.49.0.1.840.0.16b95075b6ab3579bc269a6ed0e72e84e60137aa.001.1",
+            "event": "Flood Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Flood Advisory issued November 20 at 10:58PM EST until November 21 at 2:00AM EST by NWS Tallahassee FL",
+            "areaDesc": "Lafayette, FL",
+            "sent": "2026-11-20T22:58:00-05:00",
+            "effective": "2026-11-20T22:58:00-05:00",
+            "expires": "2026-11-21T02:00:00-05:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.a920f67b07a448b397fcf1d9e687335f0158c675.001.1",
             "event": "Dense Fog Advisory",
             "severity": "Moderate",
             "certainty": "Likely",
             "urgency": "Expected",
-            "headline": "Dense Fog Advisory issued November 19 at 9:36PM MST until November 20 at 9:00AM MST by NWS Albuquerque NM",
-            "areaDesc": "Curry County; Roosevelt County; De Baca County; Chaves County Plains; Eastern Lincoln County",
-            "sent": "2026-11-19T21:36:00-07:00",
-            "effective": "2026-11-19T21:36:00-07:00",
-            "expires": "2026-11-20T09:00:00-07:00"
+            "headline": "Dense Fog Advisory issued November 20 at 8:54PM MST until November 21 at 9:00AM MST by NWS Midland/Odessa TX",
+            "areaDesc": "Eddy County Plains; Northern Lea County; Central Lea County",
+            "sent": "2026-11-20T20:54:00-07:00",
+            "effective": "2026-11-20T20:54:00-07:00",
+            "expires": "2026-11-21T09:00:00-07:00"
           },
           {
-            "id": "urn:oid:2.49.0.1.840.0.c9c8369d194a1f392f557ca9c68376be06da5b10.001.1",
-            "event": "Winter Weather Advisory",
-            "severity": "Moderate",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Winter Weather Advisory issued November 19 at 7:33PM AKST until November 20 at 3:00AM AKST by NWS Anchorage AK",
-            "areaDesc": "Sutton / Upper Matanuska Valley",
-            "sent": "2026-11-19T19:33:00-09:00",
-            "effective": "2026-11-19T19:33:00-09:00",
-            "expires": "2026-11-20T03:00:00-09:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.09fe92214ca7828142ee3989c86e3ce046a6c95c.002.1",
-            "event": "Small Craft Advisory",
-            "severity": "Minor",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 19 at 10:16PM CST until November 21 at 6:00PM CST by NWS Milwaukee/Sullivan WI",
-            "areaDesc": "Port Washington to North Point Light WI",
-            "sent": "2026-11-19T22:16:00-06:00",
-            "effective": "2026-11-19T22:16:00-06:00",
-            "expires": "2026-11-20T09:00:00-06:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.09fe92214ca7828142ee3989c86e3ce046a6c95c.001.1",
-            "event": "Small Craft Advisory",
-            "severity": "Minor",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 19 at 10:16PM CST until November 22 at 6:00AM CST by NWS Milwaukee/Sullivan WI",
-            "areaDesc": "Sheboygan to Port Washington WI",
-            "sent": "2026-11-19T22:16:00-06:00",
-            "effective": "2026-11-19T22:16:00-06:00",
-            "expires": "2026-11-20T09:00:00-06:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.369139833096a1180fb60f90166b02f64eeee8c9.006.1",
-            "event": "Small Craft Advisory",
-            "severity": "Minor",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 19 at 7:13PM AKST until November 20 at 5:00PM AKST by NWS Juneau AK",
-            "areaDesc": "Cross Sound",
-            "sent": "2026-11-19T19:13:00-09:00",
-            "effective": "2026-11-19T19:13:00-09:00",
-            "expires": "2026-11-20T06:15:00-09:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.b2855b152edf9bc358708e39fbfb226167639cef.001.1",
-            "event": "Flood Warning",
+            "id": "urn:oid:2.49.0.1.840.0.8fba1aa07d20b9d851a54266e79c6dd5e5736e64.001.1",
+            "event": "Flash Flood Warning",
             "severity": "Severe",
             "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Flood Warning issued November 19 at 11:09PM EST until November 20 at 2:15AM EST by NWS Melbourne FL",
-            "areaDesc": "Indian River, FL",
-            "sent": "2026-11-19T23:09:00-05:00",
-            "effective": "2026-11-19T23:09:00-05:00",
-            "expires": "2026-11-20T02:15:00-05:00"
+            "urgency": "Immediate",
+            "headline": "Flash Flood Warning issued November 20 at 10:26PM EST until November 21 at 12:30AM EST by NWS Jacksonville FL",
+            "areaDesc": "Gilchrist, FL",
+            "sent": "2026-11-20T22:26:00-05:00",
+            "effective": "2026-11-20T22:26:00-05:00",
+            "expires": "2026-11-21T00:30:00-05:00"
           },
           {
-            "id": "urn:oid:2.49.0.1.840.0.80cecc39771ea9702a8e0d122e0fcf422c438fec.002.2",
-            "event": "Gale Warning",
-            "severity": "Moderate",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Gale Warning issued November 19 at 11:05PM EST until November 20 at 7:00PM EST by NWS Melbourne FL",
-            "areaDesc": "Volusia-Brevard County Line to Sebastian Inlet 0-20 nm; Volusia-Brevard County Line to Sebastian Inlet 20-60 nm",
-            "sent": "2026-11-19T23:05:00-05:00",
-            "effective": "2026-11-19T23:05:00-05:00",
-            "expires": "2026-11-22T07:00:00-05:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.80cecc39771ea9702a8e0d122e0fcf422c438fec.001.2",
-            "event": "Gale Warning",
-            "severity": "Moderate",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Gale Warning issued November 19 at 11:05PM EST until November 21 at 4:00AM EST by NWS Melbourne FL",
-            "areaDesc": "Flagler Beach to Volusia-Brevard County Line 0-20 nm; Flagler Beach to Volusia-Brevard County Line 20-60 nm",
-            "sent": "2026-11-19T23:05:00-05:00",
-            "effective": "2026-11-19T23:05:00-05:00",
-            "expires": "2026-11-22T07:00:00-05:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.80cecc39771ea9702a8e0d122e0fcf422c438fec.002.3",
-            "event": "Small Craft Advisory",
+            "id": "urn:oid:2.49.0.1.840.0.c05020705d5663127ced9775a7c991b0a52929cc.001.1",
+            "event": "Frost Advisory",
             "severity": "Minor",
             "certainty": "Likely",
             "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 19 at 11:05PM EST until November 22 at 7:00AM EST by NWS Melbourne FL",
-            "areaDesc": "Volusia-Brevard County Line to Sebastian Inlet 0-20 nm; Volusia-Brevard County Line to Sebastian Inlet 20-60 nm",
-            "sent": "2026-11-19T23:05:00-05:00",
-            "effective": "2026-11-19T23:05:00-05:00",
-            "expires": "2026-11-22T07:00:00-05:00"
+            "headline": "Frost Advisory issued November 20 at 7:26PM PST until November 21 at 9:00AM PST by NWS Los Angeles/Oxnard CA",
+            "areaDesc": "Cuyama Valley; San Luis Obispo County Interior Valleys; Antelope Valley",
+            "sent": "2026-11-20T19:26:00-08:00",
+            "effective": "2026-11-20T19:26:00-08:00",
+            "expires": "2026-11-21T09:00:00-08:00"
           },
           {
-            "id": "urn:oid:2.49.0.1.840.0.80cecc39771ea9702a8e0d122e0fcf422c438fec.001.3",
-            "event": "Small Craft Advisory",
-            "severity": "Minor",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 19 at 11:05PM EST until November 22 at 7:00AM EST by NWS Melbourne FL",
-            "areaDesc": "Flagler Beach to Volusia-Brevard County Line 0-20 nm; Flagler Beach to Volusia-Brevard County Line 20-60 nm",
-            "sent": "2026-11-19T23:05:00-05:00",
-            "effective": "2026-11-19T23:05:00-05:00",
-            "expires": "2026-11-22T07:00:00-05:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.af56db7796db80fd99b187f35fdf673a62903eaf.001.1",
-            "event": "Wind Advisory",
-            "severity": "Moderate",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Wind Advisory issued November 19 at 9:55PM CST until November 20 at 4:00PM CST by NWS Omaha/Valley NE",
-            "areaDesc": "Monona; Harrison; Shelby; Pottawattamie; Knox; Cedar; Thurston; Antelope; Pierce; Wayne; Boone; Madison; Stanton; Cuming; Burt; Platte; Colfax; Dodge; Washington; Butler; Saunders; Douglas; Sarpy; Seward; Lancaster; Cass; Otoe; Saline; Jefferson; Gage; Johnson",
-            "sent": "2026-11-19T21:55:00-06:00",
-            "effective": "2026-11-19T21:55:00-06:00",
-            "expires": "2026-11-20T15:00:00-06:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.44744685d97236e042b958c9b5d635828243181d.001.1",
-            "event": "Dense Fog Advisory",
-            "severity": "Moderate",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Dense Fog Advisory issued November 19 at 8:46PM MST until November 20 at 8:00AM MST by NWS Midland/Odessa TX",
-            "areaDesc": "Eddy County Plains; Northern Lea County; Central Lea County; Southern Lea County; Gaines; Dawson; Loving; Pecos; Terrell; Eastern Culberson County; Reeves County Plains; Davis Mountains Foothills; Central Brewster County; Lower Brewster County",
-            "sent": "2026-11-19T20:46:00-07:00",
-            "effective": "2026-11-19T20:46:00-07:00",
-            "expires": "2026-11-20T08:00:00-07:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.fecfc43641a6bd0f8304ac9f1c68003ab3b09181.001.1",
-            "event": "Dense Fog Advisory",
-            "severity": "Moderate",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Dense Fog Advisory issued November 19 at 9:02PM CST until November 20 at 10:00AM CST by NWS Lubbock TX",
-            "areaDesc": "Parmer; Castro; Swisher; Bailey; Lamb; Hale; Cochran; Hockley; Lubbock; Yoakum; Terry; Lynn",
-            "sent": "2026-11-19T21:02:00-06:00",
-            "effective": "2026-11-19T21:02:00-06:00",
-            "expires": "2026-11-20T10:00:00-06:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.949c1da3912fee4f7d7a29107e0bf2f6bb9148d2.001.1",
+            "id": "urn:oid:2.49.0.1.840.0.4ac73e13d227408f9a09dbd385f0a427c5543a26.001.1",
             "event": "Special Weather Statement",
             "severity": "Moderate",
             "certainty": "Observed",
             "urgency": "Expected",
-            "headline": "Special Weather Statement issued November 19 at 7:54PM MST by NWS Great Falls MT",
-            "areaDesc": "Northern High Plains; Eastern Glacier, Western Toole, and Central Pondera; Eastern Toole and Liberty; Hill County; Northern Blaine County; Southern High Plains; Eastern Pondera and Eastern Teton; Western and Central Chouteau County; Cascade County below 5000ft; Judith Basin County and Judith Gap",
-            "sent": "2026-11-19T19:54:00-07:00",
-            "effective": "2026-11-19T19:54:00-07:00",
-            "expires": "2026-11-19T23:00:00-07:00"
+            "headline": "Special Weather Statement issued November 20 at 8:27PM EST by NWS Buffalo NY",
+            "areaDesc": "Niagara; Northern Erie",
+            "sent": "2026-11-20T20:27:00-05:00",
+            "effective": "2026-11-20T20:27:00-05:00",
+            "expires": "2026-11-21T00:00:00-05:00"
           },
           {
-            "id": "urn:oid:2.49.0.1.840.0.81da315e67b9d68ff224fd91cee1d86aad5f33da.001.1",
-            "event": "Small Craft Advisory",
-            "severity": "Minor",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 20 at 12:51PM ChST until November 22 at 5:00PM ChST by NWS Tiyan GU",
-            "areaDesc": "Guam Coastal Waters; Rota Coastal Waters; Tinian Coastal Waters; Saipan Coastal Waters",
-            "sent": "2026-11-20T12:51:00+10:00",
-            "effective": "2026-11-20T12:51:00+10:00",
-            "expires": "2026-11-21T03:00:00+10:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.f04f04e8d6f44043fea1221d10941f47277b565a.001.1",
+            "id": "urn:oid:2.49.0.1.840.0.8ae0579deb2fbae9ef6f998178043524441c5c67.001.1",
             "event": "Winter Weather Advisory",
             "severity": "Moderate",
             "certainty": "Likely",
             "urgency": "Expected",
-            "headline": "Winter Weather Advisory issued November 19 at 7:51PM MST until November 20 at 11:00AM MST by NWS Boise ID",
-            "areaDesc": "Southwest Highlands; Owyhee Mountains; Malheur County",
-            "sent": "2026-11-19T19:51:00-07:00",
-            "effective": "2026-11-19T19:51:00-07:00",
-            "expires": "2026-11-20T07:00:00-07:00"
+            "headline": "Winter Weather Advisory issued November 20 at 5:54PM MST until November 21 at 8:00AM MST by NWS Great Falls MT",
+            "areaDesc": "Eastern Pondera and Eastern Teton; Western and Central Chouteau County; Judith Basin County and Judith Gap",
+            "sent": "2026-11-20T17:54:00-07:00",
+            "effective": "2026-11-20T17:54:00-07:00",
+            "expires": "2026-11-21T05:00:00-07:00"
           },
           {
-            "id": "urn:oid:2.49.0.1.840.0.c2dfd15323e692a51a1cb5352eb0f12b57266a4a.001.1",
-            "event": "Dense Fog Advisory",
-            "severity": "Moderate",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Dense Fog Advisory issued November 19 at 6:43PM PST until November 19 at 10:00PM PST by NWS Pendleton OR",
-            "areaDesc": "North Central Oregon",
-            "sent": "2026-11-19T18:43:00-08:00",
-            "effective": "2026-11-19T18:43:00-08:00",
-            "expires": "2026-11-19T22:00:00-08:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.94dfc2e2efa497f8078780fe9297bb4a54333cf4.001.1",
-            "event": "Flood Warning",
-            "severity": "Severe",
-            "certainty": "Likely",
-            "urgency": "Expected",
-            "headline": "Flood Warning issued November 19 at 8:46PM EST until November 20 at 6:00AM EST by NWS Melbourne FL",
-            "areaDesc": "Orange, FL",
-            "sent": "2026-11-19T20:46:00-05:00",
-            "effective": "2026-11-19T20:46:00-05:00",
-            "expires": "2026-11-20T06:00:00-05:00"
-          },
-          {
-            "id": "urn:oid:2.49.0.1.840.0.22d18c4bf1fb961f90424a4c96fad9538db9b0a2.001.1",
+            "id": "urn:oid:2.49.0.1.840.0.fededd7fa28c8e8b9999b9803fa298c123e37a14.014.1",
             "event": "Small Craft Advisory",
             "severity": "Minor",
             "certainty": "Likely",
             "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 19 at 3:38PM HST until November 20 at 6:00PM HST by NWS Honolulu HI",
-            "areaDesc": "Kauai Windward Waters; Maui County Windward Waters; Big Island Windward Waters",
-            "sent": "2026-11-19T15:38:00-10:00",
-            "effective": "2026-11-19T15:38:00-10:00",
-            "expires": "2026-11-20T04:45:00-10:00"
+            "headline": "Small Craft Advisory issued November 20 at 3:49PM AKST until November 21 at 5:00AM AKST by NWS Fairbanks AK",
+            "areaDesc": "Southwest of Saint Lawrence Island from 15 to 100 NM",
+            "sent": "2026-11-20T15:49:00-09:00",
+            "effective": "2026-11-20T15:49:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
           },
           {
-            "id": "urn:oid:2.49.0.1.840.0.ad7391816dfa901d064dfff2c7b9d5f6c36e245b.004.1",
+            "id": "urn:oid:2.49.0.1.840.0.fededd7fa28c8e8b9999b9803fa298c123e37a14.011.1",
             "event": "Small Craft Advisory",
             "severity": "Minor",
             "certainty": "Likely",
             "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 19 at 3:49PM AKST until November 20 at 5:00PM AKST by NWS Fairbanks AK",
-            "areaDesc": "Cape Stephens to Moses Point out to 15 NM",
-            "sent": "2026-11-19T15:49:00-09:00",
-            "effective": "2026-11-19T15:49:00-09:00",
-            "expires": "2026-11-20T06:00:00-09:00"
+            "headline": "Small Craft Advisory issued November 20 at 3:49PM AKST until November 21 at 5:00AM AKST by NWS Fairbanks AK",
+            "areaDesc": "South Side of Saint Lawrence Island out to 15 NM",
+            "sent": "2026-11-20T15:49:00-09:00",
+            "effective": "2026-11-20T15:49:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
           },
           {
-            "id": "urn:oid:2.49.0.1.840.0.ad7391816dfa901d064dfff2c7b9d5f6c36e245b.013.1",
+            "id": "urn:oid:2.49.0.1.840.0.fededd7fa28c8e8b9999b9803fa298c123e37a14.012.1",
             "event": "Small Craft Advisory",
             "severity": "Minor",
             "certainty": "Likely",
             "urgency": "Expected",
-            "headline": "Small Craft Advisory issued November 19 at 3:49PM AKST until November 20 at 5:00PM AKST by NWS Fairbanks AK",
+            "headline": "Small Craft Advisory issued November 20 at 3:49PM AKST until November 21 at 5:00AM AKST by NWS Fairbanks AK",
+            "areaDesc": "North Side of Saint Lawrence Island out to 15 NM",
+            "sent": "2026-11-20T15:49:00-09:00",
+            "effective": "2026-11-20T15:49:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.fededd7fa28c8e8b9999b9803fa298c123e37a14.017.1",
+            "event": "Small Craft Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Small Craft Advisory issued November 20 at 3:49PM AKST until November 21 at 5:00AM AKST by NWS Fairbanks AK",
+            "areaDesc": "Sledge Island to Wales greater than 15 NM",
+            "sent": "2026-11-20T15:49:00-09:00",
+            "effective": "2026-11-20T15:49:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.fededd7fa28c8e8b9999b9803fa298c123e37a14.013.1",
+            "event": "Small Craft Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Small Craft Advisory issued November 20 at 3:49PM AKST until November 21 at 5:00AM AKST by NWS Fairbanks AK",
             "areaDesc": "Etolin Strait to Kwemeluk Pass from 15 to 90 NM",
-            "sent": "2026-11-19T15:49:00-09:00",
-            "effective": "2026-11-19T15:49:00-09:00",
-            "expires": "2026-11-20T06:00:00-09:00"
+            "sent": "2026-11-20T15:49:00-09:00",
+            "effective": "2026-11-20T15:49:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.fededd7fa28c8e8b9999b9803fa298c123e37a14.006.1",
+            "event": "Small Craft Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Small Craft Advisory issued November 20 at 3:49PM AKST until November 21 at 5:00PM AKST by NWS Fairbanks AK",
+            "areaDesc": "Sledge Island to Wales out to 15 NM",
+            "sent": "2026-11-20T15:49:00-09:00",
+            "effective": "2026-11-20T15:49:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.fededd7fa28c8e8b9999b9803fa298c123e37a14.005.1",
+            "event": "Small Craft Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Small Craft Advisory issued November 20 at 3:49PM AKST until November 21 at 5:00PM AKST by NWS Fairbanks AK",
+            "areaDesc": "Moses Point to Sledge Island out to 15 NM",
+            "sent": "2026-11-20T15:49:00-09:00",
+            "effective": "2026-11-20T15:49:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.fededd7fa28c8e8b9999b9803fa298c123e37a14.019.1",
+            "event": "Small Craft Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Small Craft Advisory issued November 20 at 3:49PM AKST until November 21 at 5:00PM AKST by NWS Fairbanks AK",
+            "areaDesc": "Wales to Cape Thompson greater than 15 NM",
+            "sent": "2026-11-20T15:49:00-09:00",
+            "effective": "2026-11-20T15:49:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.fededd7fa28c8e8b9999b9803fa298c123e37a14.016.1",
+            "event": "Small Craft Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Small Craft Advisory issued November 20 at 3:49PM AKST until November 21 at 5:00PM AKST by NWS Fairbanks AK",
+            "areaDesc": "Kwemeluk Pass to Kwikpak Pass from 15 to 90 NM",
+            "sent": "2026-11-20T15:49:00-09:00",
+            "effective": "2026-11-20T15:49:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.fededd7fa28c8e8b9999b9803fa298c123e37a14.015.1",
+            "event": "Small Craft Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Small Craft Advisory issued November 20 at 3:49PM AKST until November 21 at 5:00PM AKST by NWS Fairbanks AK",
+            "areaDesc": "Norton Sound greater than 15 NM",
+            "sent": "2026-11-20T15:49:00-09:00",
+            "effective": "2026-11-20T15:49:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.5795d1eceedf86822187ae08ec80b6c021274c36.010.1",
+            "event": "Small Craft Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Small Craft Advisory issued November 20 at 3:48PM AKST until November 21 at 5:00AM AKST by NWS Fairbanks AK",
+            "areaDesc": "Flaxman Island to Demarcation Point from 15 to 75 NM",
+            "sent": "2026-11-20T15:48:00-09:00",
+            "effective": "2026-11-20T15:48:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.5795d1eceedf86822187ae08ec80b6c021274c36.005.1",
+            "event": "Small Craft Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Small Craft Advisory issued November 20 at 3:48PM AKST until November 21 at 5:00AM AKST by NWS Fairbanks AK",
+            "areaDesc": "Flaxman Island to Demarcation Point out to 15 NM",
+            "sent": "2026-11-20T15:48:00-09:00",
+            "effective": "2026-11-20T15:48:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.5795d1eceedf86822187ae08ec80b6c021274c36.009.1",
+            "event": "Brisk Wind Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Brisk Wind Advisory issued November 20 at 3:48PM AKST until November 21 at 5:00AM AKST by NWS Fairbanks AK",
+            "areaDesc": "Cape Halkett to Flaxman Island from 15 to 80 NM",
+            "sent": "2026-11-20T15:48:00-09:00",
+            "effective": "2026-11-20T15:48:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
+          },
+          {
+            "id": "urn:oid:2.49.0.1.840.0.5795d1eceedf86822187ae08ec80b6c021274c36.004.1",
+            "event": "Brisk Wind Advisory",
+            "severity": "Minor",
+            "certainty": "Likely",
+            "urgency": "Expected",
+            "headline": "Brisk Wind Advisory issued November 20 at 3:48PM AKST until November 21 at 5:00AM AKST by NWS Fairbanks AK",
+            "areaDesc": "Cape Halkett to Flaxman Island out to 15 NM",
+            "sent": "2026-11-20T15:48:00-09:00",
+            "effective": "2026-11-20T15:48:00-09:00",
+            "expires": "2026-11-21T06:00:00-09:00"
           }
         ]
       },
@@ -7489,15 +9193,6 @@
             "domain": "dw.com",
             "language": "Indonesian",
             "sourcecountry": "Germany",
-            "signal_type": "MEDIA_LEAD_UNCORROBORATED"
-          },
-          {
-            "title": "Iran Beri Syarat Buka Selat Hormuz : AS Harus Cabut Sanksi dan Bayar Ganti Rugi",
-            "url": "https://jambi.tribunnews.com/news/1203943/iran-beri-syarat-buka-selat-hormuz-as-harus-cabut-sanksi-dan-bayar-ganti-rugi",
-            "seendate": "20260828T090000Z",
-            "domain": "jambi.tribunnews.com",
-            "language": "Indonesian",
-            "sourcecountry": "Indonesia",
             "signal_type": "MEDIA_LEAD_UNCORROBORATED"
           },
           {
@@ -7570,15 +9265,6 @@
             "domain": "cyprus-mail.com",
             "language": "English",
             "sourcecountry": "Cyprus",
-            "signal_type": "MEDIA_LEAD_UNCORROBORATED"
-          },
-          {
-            "title": "Selat Hormuz Jadi Senjata Iran ! Teheran Siapkan Syarat untuk Buka Jalur Energi Dunia",
-            "url": "https://www.tribunnews.com/internasional/7874731/selat-hormuz-jadi-senjata-iran-teheran-siapkan-syarat-untuk-buka-jalur-energi-dunia",
-            "seendate": "20260828T054500Z",
-            "domain": "tribunnews.com",
-            "language": "Indonesian",
-            "sourcecountry": "Indonesia",
             "signal_type": "MEDIA_LEAD_UNCORROBORATED"
           },
           {
@@ -7706,6 +9392,24 @@
             "language": "English",
             "sourcecountry": "Egypt",
             "signal_type": "MEDIA_LEAD_UNCORROBORATED"
+          },
+          {
+            "title": "Iran Siap Buka Selat Hormuz , Tapi Tunggu AS Penuhi Syarat Kesepakatan",
+            "url": "https://kaltim.tribunnews.com/news/1163533/iran-siap-buka-selat-hormuz-tapi-tunggu-as-penuhi-syarat-kesepakatan",
+            "seendate": "20260829T074500Z",
+            "domain": "kaltim.tribunnews.com",
+            "language": "Indonesian",
+            "sourcecountry": "Indonesia",
+            "signal_type": "MEDIA_LEAD_UNCORROBORATED"
+          },
+          {
+            "title": "US forces strike two Iranian launchers in first attack in weeks",
+            "url": "https://asia.nikkei.com/spotlight/iran-tensions/iran-war/us-forces-strike-two-iranian-launchers-in-first-attack-in-weeks",
+            "seendate": "20260831T023000Z",
+            "domain": "asia.nikkei.com",
+            "language": "English",
+            "sourcecountry": "Japan",
+            "signal_type": "MEDIA_LEAD_UNCORROBORATED"
           }
         ]
       },
@@ -7717,113 +9421,113 @@
         "observations": [
           {
             "market_and_exchange_names": "7 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
-            "report_date_as_yyyy_mm_dd": "2026-11-10T00:00:00.000",
-            "open_interest_all": "51276",
-            "dealer_positions_long_all": "2825",
-            "dealer_positions_short_all": "9212",
-            "asset_mgr_positions_long": "34500",
-            "asset_mgr_positions_short": "4816",
+            "report_date_as_yyyy_mm_dd": "2026-11-17T00:00:00.000",
+            "open_interest_all": "46247",
+            "dealer_positions_long_all": "3254",
+            "dealer_positions_short_all": "4617",
+            "asset_mgr_positions_long": "29500",
+            "asset_mgr_positions_short": "4905",
             "lev_money_positions_long": "0",
-            "lev_money_positions_short": "16271"
+            "lev_money_positions_short": "16910"
           },
           {
             "market_and_exchange_names": "3 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
-            "report_date_as_yyyy_mm_dd": "2026-11-10T00:00:00.000",
-            "open_interest_all": "90642",
-            "dealer_positions_long_all": "21385",
+            "report_date_as_yyyy_mm_dd": "2026-11-17T00:00:00.000",
+            "open_interest_all": "90353",
+            "dealer_positions_long_all": "38885",
             "dealer_positions_short_all": "37827",
-            "asset_mgr_positions_long": "11750",
-            "asset_mgr_positions_short": "6852",
-            "lev_money_positions_long": "24288",
-            "lev_money_positions_short": "4183"
+            "asset_mgr_positions_long": "0",
+            "asset_mgr_positions_short": "12602",
+            "lev_money_positions_long": "24177",
+            "lev_money_positions_short": "4098"
           },
           {
             "market_and_exchange_names": "5 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
-            "report_date_as_yyyy_mm_dd": "2026-11-10T00:00:00.000",
-            "open_interest_all": "232939",
-            "dealer_positions_long_all": "30948",
-            "dealer_positions_short_all": "24016",
-            "asset_mgr_positions_long": "44440",
-            "asset_mgr_positions_short": "45385",
-            "lev_money_positions_long": "53813",
-            "lev_money_positions_short": "28048"
+            "report_date_as_yyyy_mm_dd": "2026-11-17T00:00:00.000",
+            "open_interest_all": "239011",
+            "dealer_positions_long_all": "43499",
+            "dealer_positions_short_all": "26896",
+            "asset_mgr_positions_long": "38440",
+            "asset_mgr_positions_short": "46090",
+            "lev_money_positions_long": "47601",
+            "lev_money_positions_short": "28864"
           },
           {
             "market_and_exchange_names": "10 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
-            "report_date_as_yyyy_mm_dd": "2026-11-10T00:00:00.000",
-            "open_interest_all": "275384",
-            "dealer_positions_long_all": "25291",
-            "dealer_positions_short_all": "30835",
+            "report_date_as_yyyy_mm_dd": "2026-11-17T00:00:00.000",
+            "open_interest_all": "249510",
+            "dealer_positions_long_all": "26582",
+            "dealer_positions_short_all": "27133",
             "asset_mgr_positions_long": "27558",
             "asset_mgr_positions_short": "11554",
-            "lev_money_positions_long": "8670",
-            "lev_money_positions_short": "137870"
+            "lev_money_positions_long": "8470",
+            "lev_money_positions_short": "115041"
           },
           {
             "market_and_exchange_names": "2 YEAR ERIS SOFR SWAP - CHICAGO BOARD OF TRADE",
-            "report_date_as_yyyy_mm_dd": "2026-11-10T00:00:00.000",
-            "open_interest_all": "213637",
-            "dealer_positions_long_all": "42996",
-            "dealer_positions_short_all": "28861",
+            "report_date_as_yyyy_mm_dd": "2026-11-17T00:00:00.000",
+            "open_interest_all": "250110",
+            "dealer_positions_long_all": "39085",
+            "dealer_positions_short_all": "27247",
             "asset_mgr_positions_long": "0",
-            "asset_mgr_positions_short": "76243",
-            "lev_money_positions_long": "142756",
-            "lev_money_positions_short": "22304"
+            "asset_mgr_positions_short": "100204",
+            "lev_money_positions_long": "174134",
+            "lev_money_positions_short": "25895"
           },
           {
             "market_and_exchange_names": "MSCI EM INDEX - ICE FUTURES U.S.",
-            "report_date_as_yyyy_mm_dd": "2026-11-10T00:00:00.000",
-            "open_interest_all": "1072382",
-            "dealer_positions_long_all": "82500",
-            "dealer_positions_short_all": "641748",
-            "asset_mgr_positions_long": "713857",
-            "asset_mgr_positions_short": "174876",
-            "lev_money_positions_long": "138210",
-            "lev_money_positions_short": "115415"
+            "report_date_as_yyyy_mm_dd": "2026-11-17T00:00:00.000",
+            "open_interest_all": "1102805",
+            "dealer_positions_long_all": "81759",
+            "dealer_positions_short_all": "650362",
+            "asset_mgr_positions_long": "730430",
+            "asset_mgr_positions_short": "173056",
+            "lev_money_positions_long": "149514",
+            "lev_money_positions_short": "149849"
           },
           {
             "market_and_exchange_names": "MSCI EAFE  - ICE FUTURES U.S.",
-            "report_date_as_yyyy_mm_dd": "2026-11-10T00:00:00.000",
-            "open_interest_all": "506737",
-            "dealer_positions_long_all": "31039",
-            "dealer_positions_short_all": "310760",
-            "asset_mgr_positions_long": "326355",
-            "asset_mgr_positions_short": "65204",
-            "lev_money_positions_long": "47012",
-            "lev_money_positions_short": "33057"
+            "report_date_as_yyyy_mm_dd": "2026-11-17T00:00:00.000",
+            "open_interest_all": "512671",
+            "dealer_positions_long_all": "30621",
+            "dealer_positions_short_all": "319146",
+            "asset_mgr_positions_long": "334958",
+            "asset_mgr_positions_short": "71670",
+            "lev_money_positions_long": "49183",
+            "lev_money_positions_short": "26932"
           },
           {
             "market_and_exchange_names": "NIKKEI STOCK AVERAGE YEN DENOM - CHICAGO MERCANTILE EXCHANGE",
-            "report_date_as_yyyy_mm_dd": "2026-11-10T00:00:00.000",
-            "open_interest_all": "27258",
-            "dealer_positions_long_all": "9654",
-            "dealer_positions_short_all": "7115",
-            "asset_mgr_positions_long": "7091",
-            "asset_mgr_positions_short": "952",
-            "lev_money_positions_long": "4228",
-            "lev_money_positions_short": "3632"
+            "report_date_as_yyyy_mm_dd": "2026-11-17T00:00:00.000",
+            "open_interest_all": "28271",
+            "dealer_positions_long_all": "9433",
+            "dealer_positions_short_all": "8493",
+            "asset_mgr_positions_long": "7235",
+            "asset_mgr_positions_short": "748",
+            "lev_money_positions_long": "4078",
+            "lev_money_positions_short": "3060"
           },
           {
             "market_and_exchange_names": "RUSSELL 2000 ANNUAL DIVIDEND  - CHICAGO MERCANTILE EXCHANGE",
-            "report_date_as_yyyy_mm_dd": "2026-11-10T00:00:00.000",
-            "open_interest_all": "44956",
-            "dealer_positions_long_all": "979",
-            "dealer_positions_short_all": "33837",
+            "report_date_as_yyyy_mm_dd": "2026-11-17T00:00:00.000",
+            "open_interest_all": "45263",
+            "dealer_positions_long_all": "350",
+            "dealer_positions_short_all": "34848",
             "asset_mgr_positions_long": "720",
             "asset_mgr_positions_short": "0",
-            "lev_money_positions_long": "40673",
-            "lev_money_positions_short": "8645"
+            "lev_money_positions_long": "41323",
+            "lev_money_positions_short": "7655"
           },
           {
             "market_and_exchange_names": "MICRO E-MINI RUSSELL 2000 INDX - CHICAGO MERCANTILE EXCHANGE",
-            "report_date_as_yyyy_mm_dd": "2026-11-10T00:00:00.000",
-            "open_interest_all": "76041",
-            "dealer_positions_long_all": "4312",
-            "dealer_positions_short_all": "7055",
-            "asset_mgr_positions_long": "2190",
-            "asset_mgr_positions_short": "0",
-            "lev_money_positions_long": "59405",
-            "lev_money_positions_short": "5001"
+            "report_date_as_yyyy_mm_dd": "2026-11-17T00:00:00.000",
+            "open_interest_all": "88303",
+            "dealer_positions_long_all": "4741",
+            "dealer_positions_short_all": "13647",
+            "asset_mgr_positions_long": "2161",
+            "asset_mgr_positions_short": "651",
+            "lev_money_positions_long": "69874",
+            "lev_money_positions_short": "7882"
           }
         ]
       },
@@ -7860,10 +9564,10 @@
           {
             "symbol": "SPY",
             "assetClass": "etf",
-            "lastSalePrice": "$730.25",
-            "netChange": "-2.19",
-            "percentageChange": "-0.30%",
-            "lastTradeTimestamp": "Nov 18, 2026",
+            "lastSalePrice": "$715.84",
+            "netChange": "-14.36",
+            "percentageChange": "-1.97%",
+            "lastTradeTimestamp": "Nov 19, 2026",
             "isRealTime": false,
             "bidPrice": "N/A",
             "askPrice": "N/A"
@@ -7871,10 +9575,10 @@
           {
             "symbol": "QQQ",
             "assetClass": "etf",
-            "lastSalePrice": "$659.51",
-            "netChange": "+2.56",
-            "percentageChange": "+0.39%",
-            "lastTradeTimestamp": "Nov 18, 2026",
+            "lastSalePrice": "$645.04",
+            "netChange": "-14.47",
+            "percentageChange": "-2.19%",
+            "lastTradeTimestamp": "Nov 19, 2026",
             "isRealTime": false,
             "bidPrice": "N/A",
             "askPrice": "N/A"
@@ -7882,10 +9586,10 @@
           {
             "symbol": "AAPL",
             "assetClass": "stocks",
-            "lastSalePrice": "$352.45",
-            "netChange": "+0.54",
-            "percentageChange": "+0.15%",
-            "lastTradeTimestamp": "Nov 18, 2026",
+            "lastSalePrice": "$349.21",
+            "netChange": "-3.24",
+            "percentageChange": "-0.92%",
+            "lastTradeTimestamp": "Nov 19, 2026",
             "isRealTime": false,
             "bidPrice": "N/A",
             "askPrice": "N/A"
@@ -7893,10 +9597,10 @@
           {
             "symbol": "MSFT",
             "assetClass": "stocks",
-            "lastSalePrice": "$508.29",
-            "netChange": "+2.05",
-            "percentageChange": "+0.40%",
-            "lastTradeTimestamp": "Nov 18, 2026",
+            "lastSalePrice": "$484.52",
+            "netChange": "-13.78",
+            "percentageChange": "-2.77%",
+            "lastTradeTimestamp": "Nov 20, 2026",
             "isRealTime": false,
             "bidPrice": "N/A",
             "askPrice": "N/A"
@@ -7904,10 +9608,10 @@
           {
             "symbol": "NVDA",
             "assetClass": "stocks",
-            "lastSalePrice": "$150.96",
-            "netChange": "-4.50",
-            "percentageChange": "-2.89%",
-            "lastTradeTimestamp": "Nov 18, 2026",
+            "lastSalePrice": "$128.3744",
+            "netChange": "-17.6056",
+            "percentageChange": "-12.06%",
+            "lastTradeTimestamp": "Nov 20, 2026",
             "isRealTime": false,
             "bidPrice": "N/A",
             "askPrice": "N/A"
@@ -7915,10 +9619,10 @@
           {
             "symbol": "TSLA",
             "assetClass": "stocks",
-            "lastSalePrice": "$383.72",
-            "netChange": "+3.61",
-            "percentageChange": "+0.95%",
-            "lastTradeTimestamp": "Nov 18, 2026",
+            "lastSalePrice": "$374.41",
+            "netChange": "-9.31",
+            "percentageChange": "-2.43%",
+            "lastTradeTimestamp": "Nov 19, 2026",
             "isRealTime": false,
             "bidPrice": "N/A",
             "askPrice": "N/A"
@@ -7926,11 +9630,20 @@
         ]
       },
       "nasdaq-earnings": {
-        "provider_id": "nasdaq-earnings",
-        "status": "BLOCKED",
-        "observation_count": 0,
-        "reason_code": "UPSTREAM_OR_RATE_LIMIT",
-        "detail": "nasdaq earnings-calendar payload has no rows"
+        "provider_id": "nasdaq",
+        "dataset": "earnings-calendar",
+        "status": "LIVE",
+        "observation_count": 1,
+        "observations": [
+          {
+            "symbol": "ZEPP",
+            "name": "Zepp Health Corporation",
+            "marketCap": "$36,955,752",
+            "time": "time-pre-market",
+            "noOfEsts": "N/A",
+            "calendarDate": "2026-11-22"
+          }
+        ]
       },
       "coinbase-exchange": {
         "provider_id": "coinbase-exchange",
@@ -7939,803 +9652,803 @@
         "observation_count": 100,
         "observations": [
           {
-            "time": "2026-11-20T04:56:15.534891Z",
-            "trade_id": 1138455401,
+            "time": "2026-11-21T04:56:48.914931Z",
+            "trade_id": 1140959358,
             "product_id": "BTC-USD",
-            "price": "61491.92000000",
-            "size": "0.00012670",
+            "price": "56210.07000000",
+            "size": "0.00000003",
             "side": "buy"
           },
           {
-            "time": "2026-11-20T04:56:15.534578Z",
-            "trade_id": 1138455400,
+            "time": "2026-11-21T04:56:48.878887Z",
+            "trade_id": 1140959357,
             "product_id": "BTC-USD",
-            "price": "61491.92000000",
-            "size": "0.00003665",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:15.534578Z",
-            "trade_id": 1138455399,
-            "product_id": "BTC-USD",
-            "price": "61491.92000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:15.531081Z",
-            "trade_id": 1138455398,
-            "product_id": "BTC-USD",
-            "price": "61492.46000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:15.531081Z",
-            "trade_id": 1138455397,
-            "product_id": "BTC-USD",
-            "price": "61492.85000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:15.531081Z",
-            "trade_id": 1138455396,
-            "product_id": "BTC-USD",
-            "price": "61493.15000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:15.531081Z",
-            "trade_id": 1138455395,
-            "product_id": "BTC-USD",
-            "price": "61493.16000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:15.509471Z",
-            "trade_id": 1138455394,
-            "product_id": "BTC-USD",
-            "price": "61493.17000000",
-            "size": "0.00770986",
+            "price": "56210.08000000",
+            "size": "0.00017922",
             "side": "sell"
           },
           {
-            "time": "2026-11-20T04:56:15.397157Z",
-            "trade_id": 1138455393,
-            "product_id": "BTC-USD",
-            "price": "61493.47000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:15.397157Z",
-            "trade_id": 1138455392,
-            "product_id": "BTC-USD",
-            "price": "61493.78000000",
-            "size": "0.00010830",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:15.397157Z",
-            "trade_id": 1138455391,
-            "product_id": "BTC-USD",
-            "price": "61493.78000000",
-            "size": "0.00001671",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:15.032593Z",
-            "trade_id": 1138455390,
-            "product_id": "BTC-USD",
-            "price": "61493.78000000",
-            "size": "0.00000002",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.594157Z",
-            "trade_id": 1138455389,
-            "product_id": "BTC-USD",
-            "price": "61493.78000000",
-            "size": "0.00000002",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.228996Z",
-            "trade_id": 1138455388,
-            "product_id": "BTC-USD",
-            "price": "61494.60000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.226776Z",
-            "trade_id": 1138455387,
-            "product_id": "BTC-USD",
-            "price": "61493.78000000",
-            "size": "0.00014660",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.226776Z",
-            "trade_id": 1138455386,
-            "product_id": "BTC-USD",
-            "price": "61494.17000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.226776Z",
-            "trade_id": 1138455385,
-            "product_id": "BTC-USD",
-            "price": "61494.38000000",
-            "size": "0.00009005",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.225420Z",
-            "trade_id": 1138455384,
-            "product_id": "BTC-USD",
-            "price": "61494.38000000",
-            "size": "0.00007330",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.225420Z",
-            "trade_id": 1138455383,
-            "product_id": "BTC-USD",
-            "price": "61494.60000000",
-            "size": "0.00012670",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.225013Z",
-            "trade_id": 1138455382,
-            "product_id": "BTC-USD",
-            "price": "61494.60000000",
-            "size": "0.00003665",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.225013Z",
-            "trade_id": 1138455381,
-            "product_id": "BTC-USD",
-            "price": "61494.98000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.224913Z",
-            "trade_id": 1138455380,
-            "product_id": "BTC-USD",
-            "price": "61495.53000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.224913Z",
-            "trade_id": 1138455379,
-            "product_id": "BTC-USD",
-            "price": "61495.84000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.224913Z",
-            "trade_id": 1138455378,
-            "product_id": "BTC-USD",
-            "price": "61496.04000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.224913Z",
-            "trade_id": 1138455377,
-            "product_id": "BTC-USD",
-            "price": "61496.15000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.224913Z",
-            "trade_id": 1138455376,
-            "product_id": "BTC-USD",
-            "price": "61496.46000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.224913Z",
-            "trade_id": 1138455375,
-            "product_id": "BTC-USD",
-            "price": "61496.77000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.224913Z",
-            "trade_id": 1138455374,
-            "product_id": "BTC-USD",
-            "price": "61497.27000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.224913Z",
-            "trade_id": 1138455373,
-            "product_id": "BTC-USD",
-            "price": "61497.33000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:14.223731Z",
-            "trade_id": 1138455372,
-            "product_id": "BTC-USD",
-            "price": "61497.64000000",
-            "size": "0.00016333",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.960244Z",
-            "trade_id": 1138455371,
-            "product_id": "BTC-USD",
-            "price": "61497.64000000",
-            "size": "0.00000002",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.769707Z",
-            "trade_id": 1138455370,
-            "product_id": "BTC-USD",
-            "price": "61497.95000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.769020Z",
-            "trade_id": 1138455369,
-            "product_id": "BTC-USD",
-            "price": "61498.26000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.769020Z",
-            "trade_id": 1138455368,
-            "product_id": "BTC-USD",
-            "price": "61498.50000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.763376Z",
-            "trade_id": 1138455367,
-            "product_id": "BTC-USD",
-            "price": "61498.75000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.763376Z",
-            "trade_id": 1138455366,
-            "product_id": "BTC-USD",
-            "price": "61499.06000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.763376Z",
-            "trade_id": 1138455365,
-            "product_id": "BTC-USD",
-            "price": "61499.37000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.763376Z",
-            "trade_id": 1138455364,
-            "product_id": "BTC-USD",
-            "price": "61499.73000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.763376Z",
-            "trade_id": 1138455363,
-            "product_id": "BTC-USD",
-            "price": "61499.74000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.754487Z",
-            "trade_id": 1138455362,
-            "product_id": "BTC-USD",
-            "price": "61500.05000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.754487Z",
-            "trade_id": 1138455361,
-            "product_id": "BTC-USD",
-            "price": "61500.36000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.754188Z",
-            "trade_id": 1138455360,
-            "product_id": "BTC-USD",
-            "price": "61500.95000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.754188Z",
-            "trade_id": 1138455359,
-            "product_id": "BTC-USD",
-            "price": "61500.96000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455358,
-            "product_id": "BTC-USD",
-            "price": "61495.26000000",
-            "size": "0.00764826",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455357,
-            "product_id": "BTC-USD",
-            "price": "61495.44000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455356,
-            "product_id": "BTC-USD",
-            "price": "61495.71000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455355,
-            "product_id": "BTC-USD",
-            "price": "61495.75000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455354,
-            "product_id": "BTC-USD",
-            "price": "61496.15000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455353,
-            "product_id": "BTC-USD",
-            "price": "61496.46000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455352,
-            "product_id": "BTC-USD",
-            "price": "61496.77000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455351,
-            "product_id": "BTC-USD",
-            "price": "61497.00000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455350,
-            "product_id": "BTC-USD",
-            "price": "61497.08000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455349,
-            "product_id": "BTC-USD",
-            "price": "61497.36000000",
-            "size": "0.00812995",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455348,
-            "product_id": "BTC-USD",
-            "price": "61497.64000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455347,
-            "product_id": "BTC-USD",
-            "price": "61497.95000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455346,
-            "product_id": "BTC-USD",
-            "price": "61498.23000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455345,
-            "product_id": "BTC-USD",
-            "price": "61498.26000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455344,
-            "product_id": "BTC-USD",
-            "price": "61498.57000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455343,
-            "product_id": "BTC-USD",
-            "price": "61498.99000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455342,
-            "product_id": "BTC-USD",
-            "price": "61499.37000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455341,
-            "product_id": "BTC-USD",
-            "price": "61499.44000000",
-            "size": "0.00650396",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455340,
-            "product_id": "BTC-USD",
-            "price": "61499.46000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455339,
-            "product_id": "BTC-USD",
-            "price": "61499.68000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455338,
-            "product_id": "BTC-USD",
-            "price": "61499.99000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455337,
-            "product_id": "BTC-USD",
-            "price": "61500.36000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455336,
-            "product_id": "BTC-USD",
-            "price": "61500.67000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455335,
-            "product_id": "BTC-USD",
-            "price": "61500.69000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455334,
-            "product_id": "BTC-USD",
-            "price": "61500.98000000",
-            "size": "0.00002371",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455333,
-            "product_id": "BTC-USD",
-            "price": "61500.98000000",
-            "size": "0.00650396",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.529255Z",
-            "trade_id": 1138455332,
-            "product_id": "BTC-USD",
-            "price": "61500.98000000",
-            "size": "0.00016329",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.506784Z",
-            "trade_id": 1138455331,
-            "product_id": "BTC-USD",
-            "price": "61500.98000000",
-            "size": "0.00000002",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:13.308713Z",
-            "trade_id": 1138455330,
-            "product_id": "BTC-USD",
-            "price": "61500.99000000",
-            "size": "0.00046262",
+            "time": "2026-11-21T04:56:48.878887Z",
+            "trade_id": 1140959356,
+            "product_id": "BTC-USD",
+            "price": "56210.08000000",
+            "size": "0.03113378",
             "side": "sell"
           },
           {
-            "time": "2026-11-20T04:56:12.872141Z",
-            "trade_id": 1138455329,
+            "time": "2026-11-21T04:56:48.753207Z",
+            "trade_id": 1140959355,
             "product_id": "BTC-USD",
-            "price": "61500.98000000",
+            "price": "56211.91000000",
+            "size": "0.00018000",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.739372Z",
+            "trade_id": 1140959354,
+            "product_id": "BTC-USD",
+            "price": "56214.49000000",
+            "size": "0.01304852",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.739372Z",
+            "trade_id": 1140959353,
+            "product_id": "BTC-USD",
+            "price": "56213.42000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.739372Z",
+            "trade_id": 1140959352,
+            "product_id": "BTC-USD",
+            "price": "56213.39000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.739372Z",
+            "trade_id": 1140959351,
+            "product_id": "BTC-USD",
+            "price": "56212.29000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.739372Z",
+            "trade_id": 1140959350,
+            "product_id": "BTC-USD",
+            "price": "56211.33000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.739372Z",
+            "trade_id": 1140959349,
+            "product_id": "BTC-USD",
+            "price": "56211.16000000",
+            "size": "0.00000018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.555140Z",
+            "trade_id": 1140959348,
+            "product_id": "BTC-USD",
+            "price": "56211.16000000",
+            "size": "0.00018000",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.544111Z",
+            "trade_id": 1140959347,
+            "product_id": "BTC-USD",
+            "price": "56214.79000000",
+            "size": "0.00177947",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.544111Z",
+            "trade_id": 1140959346,
+            "product_id": "BTC-USD",
+            "price": "56214.50000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.544111Z",
+            "trade_id": 1140959345,
+            "product_id": "BTC-USD",
+            "price": "56213.85000000",
+            "size": "0.00002000",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.544111Z",
+            "trade_id": 1140959344,
+            "product_id": "BTC-USD",
+            "price": "56213.54000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.544111Z",
+            "trade_id": 1140959343,
+            "product_id": "BTC-USD",
+            "price": "56213.19000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.544111Z",
+            "trade_id": 1140959342,
+            "product_id": "BTC-USD",
+            "price": "56212.26000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.544111Z",
+            "trade_id": 1140959341,
+            "product_id": "BTC-USD",
+            "price": "56212.06000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.544111Z",
+            "trade_id": 1140959340,
+            "product_id": "BTC-USD",
+            "price": "56210.38000000",
+            "size": "0.00000049",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.457559Z",
+            "trade_id": 1140959339,
+            "product_id": "BTC-USD",
+            "price": "56210.38000000",
+            "size": "0.00007400",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.449223Z",
+            "trade_id": 1140959338,
+            "product_id": "BTC-USD",
+            "price": "56210.38000000",
+            "size": "0.00010569",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.449223Z",
+            "trade_id": 1140959337,
+            "product_id": "BTC-USD",
+            "price": "56210.21000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.449223Z",
+            "trade_id": 1140959336,
+            "product_id": "BTC-USD",
+            "price": "56209.08000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.449223Z",
+            "trade_id": 1140959335,
+            "product_id": "BTC-USD",
+            "price": "56208.87000000",
+            "size": "0.00000018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.155100Z",
+            "trade_id": 1140959334,
+            "product_id": "BTC-USD",
+            "price": "56208.87000000",
+            "size": "0.00018000",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.111223Z",
+            "trade_id": 1140959333,
+            "product_id": "BTC-USD",
+            "price": "56207.95000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.059048Z",
+            "trade_id": 1140959332,
+            "product_id": "BTC-USD",
+            "price": "56209.56000000",
+            "size": "0.00309591",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.059048Z",
+            "trade_id": 1140959331,
+            "product_id": "BTC-USD",
+            "price": "56209.08000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.059048Z",
+            "trade_id": 1140959330,
+            "product_id": "BTC-USD",
+            "price": "56209.03000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.059048Z",
+            "trade_id": 1140959329,
+            "product_id": "BTC-USD",
+            "price": "56207.95000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.059048Z",
+            "trade_id": 1140959328,
+            "product_id": "BTC-USD",
+            "price": "56207.90000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.059048Z",
+            "trade_id": 1140959327,
+            "product_id": "BTC-USD",
+            "price": "56206.82000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.059048Z",
+            "trade_id": 1140959326,
+            "product_id": "BTC-USD",
+            "price": "56206.77000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.059048Z",
+            "trade_id": 1140959325,
+            "product_id": "BTC-USD",
+            "price": "56206.73000000",
+            "size": "0.00007440",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.059048Z",
+            "trade_id": 1140959324,
+            "product_id": "BTC-USD",
+            "price": "56206.73000000",
+            "size": "0.00455859",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:48.031347Z",
+            "trade_id": 1140959323,
+            "product_id": "BTC-USD",
+            "price": "56206.73000000",
+            "size": "0.00088081",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:47.866699Z",
+            "trade_id": 1140959322,
+            "product_id": "BTC-USD",
+            "price": "56206.30000000",
             "size": "0.00000002",
             "side": "buy"
           },
           {
-            "time": "2026-11-20T04:56:12.331215Z",
-            "trade_id": 1138455328,
+            "time": "2026-11-21T04:56:47.853195Z",
+            "trade_id": 1140959321,
             "product_id": "BTC-USD",
-            "price": "61500.98000000",
+            "price": "56206.29000000",
+            "size": "0.00000009",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.704107Z",
+            "trade_id": 1140959320,
+            "product_id": "BTC-USD",
+            "price": "56205.36000000",
+            "size": "0.00001629",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.704107Z",
+            "trade_id": 1140959319,
+            "product_id": "BTC-USD",
+            "price": "56205.96000000",
+            "size": "0.00018018",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.704107Z",
+            "trade_id": 1140959318,
+            "product_id": "BTC-USD",
+            "price": "56206.07000000",
+            "size": "0.00006814",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.704107Z",
+            "trade_id": 1140959317,
+            "product_id": "BTC-USD",
+            "price": "56206.07000000",
+            "size": "0.00018018",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.415711Z",
+            "trade_id": 1140959316,
+            "product_id": "BTC-USD",
+            "price": "56205.35000000",
+            "size": "0.00354890",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.415711Z",
+            "trade_id": 1140959315,
+            "product_id": "BTC-USD",
+            "price": "56205.52000000",
+            "size": "0.00018018",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.415711Z",
+            "trade_id": 1140959314,
+            "product_id": "BTC-USD",
+            "price": "56205.71000000",
+            "size": "0.00018018",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959313,
+            "product_id": "BTC-USD",
+            "price": "56202.76000000",
+            "size": "0.05825224",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959312,
+            "product_id": "BTC-USD",
+            "price": "56203.26000000",
+            "size": "0.00018018",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959311,
+            "product_id": "BTC-USD",
+            "price": "56204.10000000",
+            "size": "0.00711673",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959310,
+            "product_id": "BTC-USD",
+            "price": "56204.49000000",
+            "size": "0.00018018",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959309,
+            "product_id": "BTC-USD",
+            "price": "56204.49000000",
+            "size": "0.00018018",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959308,
+            "product_id": "BTC-USD",
+            "price": "56205.39000000",
+            "size": "0.03500000",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959307,
+            "product_id": "BTC-USD",
+            "price": "56205.58000000",
+            "size": "0.03000000",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959306,
+            "product_id": "BTC-USD",
+            "price": "56205.59000000",
+            "size": "0.03113520",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959305,
+            "product_id": "BTC-USD",
+            "price": "56205.60000000",
+            "size": "0.02990152",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959304,
+            "product_id": "BTC-USD",
+            "price": "56205.60000000",
+            "size": "0.03000000",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959303,
+            "product_id": "BTC-USD",
+            "price": "56205.60000000",
+            "size": "0.01206884",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959302,
+            "product_id": "BTC-USD",
+            "price": "56205.68000000",
+            "size": "0.00018018",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.202709Z",
+            "trade_id": 1140959301,
+            "product_id": "BTC-USD",
+            "price": "56206.72000000",
+            "size": "0.00089000",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:47.194129Z",
+            "trade_id": 1140959300,
+            "product_id": "BTC-USD",
+            "price": "56206.73000000",
+            "size": "0.00421237",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:47.194129Z",
+            "trade_id": 1140959299,
+            "product_id": "BTC-USD",
+            "price": "56205.60000000",
+            "size": "0.00011125",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:47.053170Z",
+            "trade_id": 1140959298,
+            "product_id": "BTC-USD",
+            "price": "56205.60000000",
+            "size": "0.00006893",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:47.053170Z",
+            "trade_id": 1140959297,
+            "product_id": "BTC-USD",
+            "price": "56205.52000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:46.869192Z",
+            "trade_id": 1140959296,
+            "product_id": "BTC-USD",
+            "price": "56205.51000000",
             "size": "0.00000002",
             "side": "buy"
           },
           {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455327,
+            "time": "2026-11-21T04:56:46.868381Z",
+            "trade_id": 1140959295,
             "product_id": "BTC-USD",
-            "price": "61495.94000000",
-            "size": "0.00027149",
+            "price": "56205.51000000",
+            "size": "0.00000009",
             "side": "buy"
           },
           {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455326,
+            "time": "2026-11-21T04:56:46.240750Z",
+            "trade_id": 1140959294,
             "product_id": "BTC-USD",
-            "price": "61496.11000000",
-            "size": "0.00016335",
+            "price": "56205.51000000",
+            "size": "0.00126590",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:46.221447Z",
+            "trade_id": 1140959293,
+            "product_id": "BTC-USD",
+            "price": "56205.51000000",
+            "size": "0.00168787",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:46.094810Z",
+            "trade_id": 1140959292,
+            "product_id": "BTC-USD",
+            "price": "56205.50000000",
+            "size": "0.00594928",
             "side": "buy"
           },
           {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455325,
+            "time": "2026-11-21T04:56:46.094810Z",
+            "trade_id": 1140959291,
             "product_id": "BTC-USD",
-            "price": "61496.42000000",
-            "size": "0.00016335",
+            "price": "56205.50000000",
+            "size": "0.03000000",
             "side": "buy"
           },
           {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455324,
+            "time": "2026-11-21T04:56:45.970110Z",
+            "trade_id": 1140959290,
             "product_id": "BTC-USD",
-            "price": "61496.77000000",
-            "size": "0.00016335",
-            "side": "buy"
+            "price": "56205.51000000",
+            "size": "0.03113482",
+            "side": "sell"
           },
           {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455323,
+            "time": "2026-11-21T04:56:45.970110Z",
+            "trade_id": 1140959289,
             "product_id": "BTC-USD",
-            "price": "61497.02000000",
-            "size": "0.00016335",
-            "side": "buy"
+            "price": "56205.51000000",
+            "size": "0.00000018",
+            "side": "sell"
           },
           {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455322,
+            "time": "2026-11-21T04:56:45.886476Z",
+            "trade_id": 1140959288,
             "product_id": "BTC-USD",
-            "price": "61497.08000000",
-            "size": "0.00016335",
-            "side": "buy"
+            "price": "56205.51000000",
+            "size": "0.00018000",
+            "side": "sell"
           },
           {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455321,
+            "time": "2026-11-21T04:56:45.878788Z",
+            "trade_id": 1140959287,
             "product_id": "BTC-USD",
-            "price": "61497.39000000",
-            "size": "0.00016335",
-            "side": "buy"
+            "price": "56206.73000000",
+            "size": "0.00034823",
+            "side": "sell"
           },
           {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455320,
+            "time": "2026-11-21T04:56:45.878788Z",
+            "trade_id": 1140959286,
             "product_id": "BTC-USD",
-            "price": "61497.70000000",
-            "size": "0.00016335",
-            "side": "buy"
+            "price": "56205.63000000",
+            "size": "0.00018018",
+            "side": "sell"
           },
           {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455319,
+            "time": "2026-11-21T04:56:45.878788Z",
+            "trade_id": 1140959285,
             "product_id": "BTC-USD",
-            "price": "61498.11000000",
-            "size": "0.00016335",
-            "side": "buy"
+            "price": "56205.51000000",
+            "size": "0.00000018",
+            "side": "sell"
           },
           {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455318,
+            "time": "2026-11-21T04:56:45.845021Z",
+            "trade_id": 1140959284,
             "product_id": "BTC-USD",
-            "price": "61498.33000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455317,
-            "product_id": "BTC-USD",
-            "price": "61498.49000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455316,
-            "product_id": "BTC-USD",
-            "price": "61498.88000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455315,
-            "product_id": "BTC-USD",
-            "price": "61499.30000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455314,
-            "product_id": "BTC-USD",
-            "price": "61499.64000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455313,
-            "product_id": "BTC-USD",
-            "price": "61499.99000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455312,
-            "product_id": "BTC-USD",
-            "price": "61500.00000000",
-            "size": "0.00016115",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455311,
-            "product_id": "BTC-USD",
-            "price": "61500.00000000",
-            "size": "0.00016115",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455310,
-            "product_id": "BTC-USD",
-            "price": "61500.30000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455309,
-            "product_id": "BTC-USD",
-            "price": "61500.66000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455308,
-            "product_id": "BTC-USD",
-            "price": "61500.71000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455307,
-            "product_id": "BTC-USD",
-            "price": "61501.29000000",
-            "size": "0.00016312",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455306,
-            "product_id": "BTC-USD",
-            "price": "61501.61000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455305,
-            "product_id": "BTC-USD",
-            "price": "61501.90000000",
-            "size": "0.00016335",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:12.095116Z",
-            "trade_id": 1138455304,
-            "product_id": "BTC-USD",
-            "price": "61501.92000000",
-            "size": "0.00016313",
-            "side": "buy"
-          },
-          {
-            "time": "2026-11-20T04:56:11.850992Z",
-            "trade_id": 1138455303,
-            "product_id": "BTC-USD",
-            "price": "61501.92000000",
+            "price": "56205.50000000",
             "size": "0.00000002",
             "side": "buy"
           },
           {
-            "time": "2026-11-20T04:56:11.264968Z",
-            "trade_id": 1138455302,
+            "time": "2026-11-21T04:56:45.509681Z",
+            "trade_id": 1140959283,
             "product_id": "BTC-USD",
-            "price": "61501.92000000",
-            "size": "0.00000002",
+            "price": "56205.50000000",
+            "size": "0.00000006",
+            "side": "buy"
+          },
+          {
+            "time": "2026-11-21T04:56:45.480176Z",
+            "trade_id": 1140959282,
+            "product_id": "BTC-USD",
+            "price": "56205.51000000",
+            "size": "0.00018000",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:45.470429Z",
+            "trade_id": 1140959281,
+            "product_id": "BTC-USD",
+            "price": "56204.50000000",
+            "size": "0.00000026",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.946939Z",
+            "trade_id": 1140959280,
+            "product_id": "BTC-USD",
+            "price": "56204.50000000",
+            "size": "0.00016100",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.897825Z",
+            "trade_id": 1140959279,
+            "product_id": "BTC-USD",
+            "price": "56204.50000000",
+            "size": "0.00001892",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.897825Z",
+            "trade_id": 1140959278,
+            "product_id": "BTC-USD",
+            "price": "56204.38000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.897825Z",
+            "trade_id": 1140959277,
+            "product_id": "BTC-USD",
+            "price": "56203.27000000",
+            "size": "0.00000090",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.895789Z",
+            "trade_id": 1140959276,
+            "product_id": "BTC-USD",
+            "price": "56203.27000000",
+            "size": "0.00016000",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.886338Z",
+            "trade_id": 1140959275,
+            "product_id": "BTC-USD",
+            "price": "56203.27000000",
+            "size": "0.00001928",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.886338Z",
+            "trade_id": 1140959274,
+            "product_id": "BTC-USD",
+            "price": "56203.15000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.886338Z",
+            "trade_id": 1140959273,
+            "product_id": "BTC-USD",
+            "price": "56202.30000000",
+            "size": "0.00000054",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.880558Z",
+            "trade_id": 1140959272,
+            "product_id": "BTC-USD",
+            "price": "56202.30000000",
+            "size": "0.00001946",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.880558Z",
+            "trade_id": 1140959271,
+            "product_id": "BTC-USD",
+            "price": "56202.11000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.880558Z",
+            "trade_id": 1140959270,
+            "product_id": "BTC-USD",
+            "price": "56201.17000000",
+            "size": "0.00000036",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.837085Z",
+            "trade_id": 1140959269,
+            "product_id": "BTC-USD",
+            "price": "56201.17000000",
+            "size": "0.00016000",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.815867Z",
+            "trade_id": 1140959268,
+            "product_id": "BTC-USD",
+            "price": "56201.17000000",
+            "size": "0.00001982",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.815867Z",
+            "trade_id": 1140959267,
+            "product_id": "BTC-USD",
+            "price": "56200.97000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.806886Z",
+            "trade_id": 1140959266,
+            "product_id": "BTC-USD",
+            "price": "56199.56000000",
+            "size": "0.00013717",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.806594Z",
+            "trade_id": 1140959265,
+            "product_id": "BTC-USD",
+            "price": "56199.35000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.803136Z",
+            "trade_id": 1140959264,
+            "product_id": "BTC-USD",
+            "price": "56198.43000000",
+            "size": "0.06101336",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.802722Z",
+            "trade_id": 1140959263,
+            "product_id": "BTC-USD",
+            "price": "56198.43000000",
+            "size": "0.07925013",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.798864Z",
+            "trade_id": 1140959262,
+            "product_id": "BTC-USD",
+            "price": "56198.43000000",
+            "size": "0.57973651",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.798864Z",
+            "trade_id": 1140959261,
+            "product_id": "BTC-USD",
+            "price": "56197.50000000",
+            "size": "0.00018018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.798864Z",
+            "trade_id": 1140959260,
+            "product_id": "BTC-USD",
+            "price": "56197.27000000",
+            "size": "0.00000018",
+            "side": "sell"
+          },
+          {
+            "time": "2026-11-21T04:56:44.767961Z",
+            "trade_id": 1140959259,
+            "product_id": "BTC-USD",
+            "price": "56197.26000000",
+            "size": "0.00000003",
             "side": "buy"
           }
         ]
@@ -8745,28 +10458,28 @@
   },
   "note": "Equity candidates use real EOD closes; options use real delayed Cboe chains. Nasdaq's public API supplies real-time watchlist quotes and the earnings calendar. WTI market price context remains sourced from the existing oil desk, while EIA supplies official energy fundamentals when its key is configured. Rates/macro retain FRED with authoritative cross-checks from the New York Fed and the U.S. Treasury par yield curve via FRED DGS. ECB supplies euro reference FX. CFTC supplies futures positioning and FINRA supplies public fixed-income breadth when credentials are configured. Yahoo Finance and SEC EDGAR are currently unreachable from this network and are reported BLOCKED, never backfilled. No provider failure is replaced with fabricated data. No order placed; trade_authorized=False.",
   "data_quality": {
-    "schema_version": "hedge-desk-data-quality-1.0.0",
-    "as_of": "2026-11-20",
+    "schema_version": "hedge-desk-data-quality-1.1.0",
+    "as_of": "2026-11-21",
     "overall": "DOWN",
-    "alert_count": 1,
+    "alert_count": 2,
     "alerts": [
       {
         "source": "Macro/FRED",
         "severity": "OK",
-        "message": "Macro/FRED current as of 2026-11-20",
+        "message": "Macro/FRED current as of 2026-11-21",
         "detail": ""
       },
       {
         "source": "Rates/FRED",
         "severity": "OK",
-        "message": "Rates/FRED current as of 2026-11-20",
+        "message": "Rates/FRED current as of 2026-11-21",
         "detail": ""
       },
       {
         "source": "EOD",
-        "severity": "DOWN",
-        "message": "EOD batch not ready: REJECTED",
-        "detail": "As of 2026-11-19, expected 2026-11-19."
+        "severity": "OK",
+        "message": "EOD current: 2026-11-20 close",
+        "detail": ""
       },
       {
         "source": "Oil/WTI",
@@ -8782,20 +10495,32 @@
       },
       {
         "source": "Options/Cboe",
-        "severity": "OK",
-        "message": "Options/Cboe present",
-        "detail": ""
+        "severity": "DOWN",
+        "message": "Options/Cboe BLOCKED for 1 of 1",
+        "detail": "Blocked: SPY. Reasons: cboe fetch failed (status 403)."
+      },
+      {
+        "source": "Options/CSP scan",
+        "severity": "DOWN",
+        "message": "Options/CSP scan BLOCKED for 7 of 7",
+        "detail": "Blocked: AAL, CCL, DVN, F, LYFT, NCLH, NKE. Reasons: cboe_fetch_403."
       }
     ],
     "loud_alerts": [
       {
-        "source": "EOD",
+        "source": "Options/Cboe",
         "severity": "DOWN",
-        "message": "EOD batch not ready: REJECTED",
-        "detail": "As of 2026-11-19, expected 2026-11-19."
+        "message": "Options/Cboe BLOCKED for 1 of 1",
+        "detail": "Blocked: SPY. Reasons: cboe fetch failed (status 403)."
+      },
+      {
+        "source": "Options/CSP scan",
+        "severity": "DOWN",
+        "message": "Options/CSP scan BLOCKED for 7 of 7",
+        "detail": "Blocked: AAL, CCL, DVN, F, LYFT, NCLH, NKE. Reasons: cboe_fetch_403."
       }
     ],
-    "summary": "1 data-quality alert(s): EOD=DOWN"
+    "summary": "2 data-quality alert(s): Options/Cboe=DOWN, Options/CSP scan=DOWN"
   },
-  "report_sha256": "4350a7ebf7b01a8a5b6ccc61d79490f72e2df30b9607e82a0d75fcb76c7d75d2"
+  "report_sha256": "d192787659a0e8f241cb219debc43528f8851a7d12fcdf7dbca17113e09c02c0"
 }
