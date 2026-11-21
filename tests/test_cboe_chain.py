@@ -153,6 +153,28 @@ class CboePrefilterTests(unittest.TestCase):
         self.assertEqual(result["mode"], "REAL_CBOE_CHAIN_INCOME")
         self.assertLessEqual(result["pair_count"], policy.maximum_pair_count)
 
+    def test_delayed_probabilities_are_labeled_reference_only(self):
+        # GP decision C3 (2026-11-20), SOUL.md order 4: every probability
+        # computed from the delayed chain carries the reference-only basis.
+        from hedge_desk.cboe_chain import PROBABILITY_BASIS_DELAYED
+        now = datetime(2026, 9, 19, 12, 0, tzinfo=timezone.utc)
+        # OTM puts with prices rising toward the money and an exchange IV, so
+        # the scanner admits credit verticals and the probability path runs.
+        opts = []
+        for s in range(740, 760):
+            bid = round(0.50 + 0.30 * (s - 740), 2)
+            leg = _opt(f"SPY261023P{s * 1000:08d}", bid, round(bid + 0.05, 2))
+            leg["iv"] = 0.18
+            opts.append(leg)
+        payload = _cboe_payload(options=opts)
+        result = real_chain_income("SPY", now, transport=lambda url: (200, payload))
+        self.assertEqual(result["probability_basis"], "REFERENCE_ONLY_DELAYED_DATA")
+        self.assertIn("Reference only", result["probability_note"])
+        with_probs = [s for s in result["income_structures"] if "probability_of_profit" in s]
+        self.assertTrue(with_probs, "fixture must exercise the probability path")
+        for s in with_probs:
+            self.assertEqual(s["probability_basis"], PROBABILITY_BASIS_DELAYED)
+
 
 if __name__ == "__main__":
     unittest.main()
@@ -179,10 +201,11 @@ class PremiumUniverseTests(unittest.TestCase):
         self.assertTrue(all(s["trade_authorized"] is False for s in res["premium_universe"]))
 
 
-class NoProbabilityOnDelayedDataTests(unittest.TestCase):
-    def test_chain_artifact_carries_no_probability_or_ev_anywhere(self):
-        """SOUL rule 4, payload-wide: no probability/EV key in any row of the
-        delayed-data chain artifact (income_structures or premium_universe)."""
+class DelayedProbabilityLabelTests(unittest.TestCase):
+    def test_every_probability_on_delayed_data_is_labelled_reference_only(self):
+        """GP decision C3 (ADR-0008): probabilities from the delayed chain are
+        kept but every row carrying one must be labelled reference-only,
+        payload-wide (income_structures and premium_universe)."""
         now = datetime(2026, 9, 19, 12, 0, tzinfo=timezone.utc)
 
         def opt(c, bid, ask, iv):
@@ -195,6 +218,8 @@ class NoProbabilityOnDelayedDataTests(unittest.TestCase):
             opt("SPY261023P00725000", 4.1, 4.3, 0.21), opt("SPY261023P00720000", 3.4, 3.6, 0.22),
         ])
         res = real_chain_income("SPY", now, transport=lambda url: (200, payload))
-        blob = json.dumps(res).lower()
-        for banned in ("probability_of_profit", "p_max_loss", "risk_neutral_ev", "expected_value"):
-            self.assertNotIn(banned, blob)
+        rows = list(res["income_structures"]) + list(res.get("premium_universe") or [])
+        self.assertTrue(rows)
+        for row in rows:
+            if any(k in row for k in ("probability_of_profit", "p_max_loss", "risk_neutral_ev")):
+                self.assertEqual(row.get("probability_basis"), "REFERENCE_ONLY_DELAYED_DATA")

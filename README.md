@@ -182,7 +182,11 @@ CLI tests are not attributed to the parent coverage process.
 
 ## Safety boundary
 
-- No broker adapter exists.
+- No broker order path exists. Broker integration is read-only (Schwab balances/positions GET
+  and market data); order APIs are blocked by tests and CI.
+- Every paper trade is paper only. Per-trade max loss is capped at 2% of equity in both the
+  risk gate and position sizing (ADR-0008).
+- Probabilities computed from delayed option data are labeled reference only.
 - Undefined-loss, stale-price, and insufficient-liquidity candidates are
   blocked.
 - Risk estimates are model outputs requiring independent validation; they are

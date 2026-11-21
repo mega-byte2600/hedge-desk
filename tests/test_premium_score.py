@@ -129,3 +129,10 @@ def test_rendered_desk_call_shows_an_eligible_row_when_the_universe_exists():
     assert "predates the banded premium universe" not in html
     old = bpd.desk_call_block(_fixture_report(False))
     assert "predates the banded premium universe" in old and "✓ eligible" not in old
+
+
+def test_panel_states_blocked_chain_reason_instead_of_a_placeholder():
+    bpd = _load_dashboard_module()
+    html = bpd.premium_candidates_panel({"SPY": {"mode": "BLOCKED", "reason": "cboe fetch failed (status 403)"}})
+    assert "option chain unavailable" in html and "status 403" in html
+    assert "predates" not in html

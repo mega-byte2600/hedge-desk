@@ -23,7 +23,9 @@ Equities = screen. Premiums = the money-maker.
   premium desk on that universe.
 - AM out: ranked, risk-vetted candidates for defined-risk premium sells
   (cash-secured put / covered call / vertical credit spread).
-- Schwab: risk-gated AUTO execution (GP's explicit choice). The deterministic
+- Schwab: risk-gated AUTO execution (GP's explicit choice). **Superseded 2026-11-20 by
+  ADR-0008:** paper only, with two paper modes (HUMAN_GATED and AUTO_PAPER); no broker
+  order path. The deterministic
   risk gate plus aggregate max-loss / drawdown veto plus a kill switch stay
   authoritative. His order overrides AGENTS.md's paper-only default; the risk
   gate does NOT get skipped.

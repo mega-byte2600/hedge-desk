@@ -6,10 +6,15 @@ from decimal import Decimal, localcontext
 from typing import List, Tuple
 
 from hedge_desk.domain import Account, TradeCandidate
+# SOUL.md order 7: the 2%-of-equity max-loss rule is immutable. A policy may be
+# stricter, never looser. Defined once in hedge_desk.risk.limits.
+from hedge_desk.risk.limits import SOUL_MAX_LOSS_FRACTION_EQUITY
 
 
 RISK_MODEL_ID = "finite-capital-ruin-approximation"
 RISK_MODEL_VERSION = "0.1.0-unvalidated"
+
+
 
 
 @dataclass(frozen=True)
@@ -17,7 +22,9 @@ class RiskPolicy:
     maximum_risk_of_ruin: Decimal = Decimal("0.04")
     maximum_quote_age_seconds: int = 900
     minimum_daily_dollar_volume: Decimal = Decimal("1000000")
-    maximum_single_trade_loss_fraction: Decimal = Decimal("0.01")
+    # GP decision 2026-11-20 (C2): one per-trade limit everywhere, equal to the
+    # immutable SOUL.md order 7 cap and position_sizing.MAX_LOSS_FRACTION_EQUITY.
+    maximum_single_trade_loss_fraction: Decimal = Decimal("0.02")
     assumed_loss_sequence: int = 20
     required_risk_model_id: str = RISK_MODEL_ID
     required_risk_model_version: str = RISK_MODEL_VERSION
@@ -43,6 +50,10 @@ class RiskPolicy:
             raise ValueError("minimum liquidity cannot be negative")
         if not Decimal("0") < self.maximum_single_trade_loss_fraction <= Decimal("1"):
             raise ValueError("single-trade loss fraction must be in (0, 1]")
+        if self.maximum_single_trade_loss_fraction > SOUL_MAX_LOSS_FRACTION_EQUITY:
+            raise ValueError(
+                "single-trade loss fraction cannot exceed the immutable 2% of equity cap"
+            )
         if (
             type(self.maximum_quote_age_seconds) is not int
             or self.maximum_quote_age_seconds < 0
@@ -118,7 +129,12 @@ def risk_gate(
         reasons.append("STALE_QUOTE")
     if candidate.average_daily_dollar_volume < policy.minimum_daily_dollar_volume:
         reasons.append("INSUFFICIENT_LIQUIDITY")
-    if candidate.max_loss / account.equity > policy.maximum_single_trade_loss_fraction:
+    # Enforce the immutable cap even if a policy object bypassed __post_init__
+    # (e.g. object.__setattr__ or unpickling): never looser than 2%.
+    effective_loss_limit = min(
+        policy.maximum_single_trade_loss_fraction, SOUL_MAX_LOSS_FRACTION_EQUITY
+    )
+    if candidate.max_loss / account.equity > effective_loss_limit:
         reasons.append("SINGLE_TRADE_LOSS_LIMIT")
 
     if validated_risk_of_ruin_after > policy.maximum_risk_of_ruin:
