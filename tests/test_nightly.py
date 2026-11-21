@@ -176,6 +176,10 @@ class NightlyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             report = self._run(tmp)
             self.assertEqual(report["schema_version"], NIGHTLY_VERSION)
+            # Paper Outcome Ledger is summarized and written inside the run's artifacts dir.
+            self.assertIn("premium_ledger", report)
+            self.assertNotEqual(report["premium_ledger"].get("status"), "LEDGER_UNAVAILABLE")
+            self.assertFalse(report["premium_ledger"].get("trade_authorized", False))
             self.assertEqual(report["mode"], "REAL_EOD_NIGHTLY")
             self.assertEqual(len(report["report_sha256"]), 64)
             self.assertIn("report_path", report)

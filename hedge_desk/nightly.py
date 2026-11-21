@@ -114,6 +114,16 @@ def _annotate_chain_with_gates(
     return out
 
 
+def _yellow_sheet_outcomes(vault_path, ledger_path) -> dict:
+    """Read-only join of GP Yellow Sheets to paper ledger outcomes (never raises)."""
+    try:
+        from hedge_desk.premium_ledger import link_yellow_sheets, read_ledger
+        from hedge_desk.yellow_sheet import read_yellow_sheets
+        return link_yellow_sheets(read_yellow_sheets(vault_path), read_ledger(ledger_path))
+    except Exception as exc:  # noqa: BLE001 - context only; never break the nightly
+        return {"status": "UNAVAILABLE", "reason": f"{type(exc).__name__}: {exc}"[:200]}
+
+
 def run_nightly(
     watchlist: Sequence[str] | None = None,
     artifacts_dir: Path | str = "artifacts",
@@ -246,6 +256,7 @@ def run_nightly(
     # vol edge (IV vs the underlying's realized vol), time value, entry window
     # and short-strike placement. RV comes from the same EOD source as the
     # watchlist; on failure the score marks RV_UNAVAILABLE (never invented).
+    underlying_closes: Dict[str, Dict[str, str]] = {}
     for cs, chain in list(chain_results.items()):
         rv_annual = None
         try:
@@ -257,6 +268,7 @@ def run_nightly(
                         if r.get("symbol") == cs and r.get("status") == "PASS" and r.get("days")), None)
             days = [EodDay(d["date"], d["close"], d["open"], d["high"], d["low"], d["volume"])
                     for d in row["days"]] if row else []
+            underlying_closes[cs] = {d.date: d.close for d in days}
             rv = build_symbol_features(cs, days).realized_vol_21d if days else None
             rv_annual = annualized_rv(float(rv)) if rv is not None else None
         except Exception:  # noqa: BLE001 - RV is optional context; the score flags it
@@ -272,6 +284,21 @@ def run_nightly(
             from hedge_desk.premium_score import atm_benchmark_from_report
             chain_results[cs] = rank_chain_income(
                 chain, rv_annual, rate, None, atm_benchmark_from_report({"vix_regime": vix}, cs))
+
+    # Paper Outcome Ledger (GP brief 2026-11-20): record eligible candidates,
+    # settle expired ones on the REAL expiry close. No new API calls; paper only.
+    premium_ledger: dict = {}
+    try:
+        from hedge_desk.premium_ledger import update_ledger
+        spy = chain_results.get("SPY") or {}
+        rows = list(spy.get("premium_universe") or []) + list(spy.get("gated_income_structures") or [])
+        eligible = [r for r in rows if (r.get("premium") or {}).get("eligible")]
+        premium_ledger = update_ledger(
+            Path(artifacts_dir) / "premium-ledger.jsonl", eligible, underlying_closes.get("SPY", {}),
+            cutoff.date(), {"vix_close": (vix or {}).get("last_close"),
+                            "realized_vol_21d_annual": (spy.get("ranking") or {}).get("realized_vol_21d_annual")})
+    except Exception as exc:  # noqa: BLE001 - the ledger must never break the nightly
+        premium_ledger = {"status": "LEDGER_UNAVAILABLE", "reason": f"{type(exc).__name__}: {exc}"[:200]}
 
     csp_results = apply_vix_regime_filter(vix, csp_results)
 
@@ -349,6 +376,8 @@ def run_nightly(
                   "explanation": "Account equity not configured; survivability is INDETERMINATE."}
         ),
         "paper_outcome_summary": summarize_paper_log(paper_log_path),
+        "premium_ledger": premium_ledger,
+        "yellow_sheet_outcomes": _yellow_sheet_outcomes(yellow_sheet_path, Path(artifacts_dir) / "premium-ledger.jsonl"),
         "yellow_sheets": summarize_yellow_sheets(yellow_sheet_path),
         "rates_environment": rates,
         "vix_regime": vix,

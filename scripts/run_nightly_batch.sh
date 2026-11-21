@@ -20,6 +20,11 @@ echo "[$STAMP] nightly batch start" | tee "$LOG"
 python3 -m hedge_desk.am_demo >>"$LOG" 2>&1
 # Build the interactive Plotly dashboard from the real report (served at /am-demo).
 python3 scripts/build_plotly_dashboard.py >>"$LOG" 2>&1
+# Premium-score Paper Outcome Ledger is append-only history: stage it so the
+# batch commit carries it (CarpeDATA). Staging only; this script never commits.
+if [ -f artifacts/premium-ledger.jsonl ] && git rev-parse --git-dir >/dev/null 2>&1; then
+  git add artifacts/premium-ledger.jsonl >>"$LOG" 2>&1 || true
+fi
 echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] nightly batch done" | tee -a "$LOG"
 
 # Keep only the last 30 batch logs so the log dir does not grow unbounded.

@@ -1036,6 +1036,49 @@ def premium_candidates_panel(chain_income: dict, csp_scan: Optional[dict] = None
                   source="Cboe delayed chain + Yahoo EOD realized vol; hedge_desk.premium_score")
             + table + wheel)
 
+def yellow_sheet_outcomes_table(ys: Optional[dict]) -> str:
+    """Each GP Yellow Sheet next to the paper outcome of the trade it describes."""
+    rows = [r for r in (ys or {}).get("rows") or []]
+    if not rows:
+        return muted("No credit-spread Yellow Sheets to connect yet. Record one with "
+                     "scripts/record_yellow_sheet.py; it links to its ledger trade automatically.")
+    def _out(r):
+        if r.get("link") != "LINKED":
+            return esc(r.get("link", "").replace("_", " ").lower())
+        if r.get("status") == "OPEN":
+            return "open"
+        return (f"{'✓ thesis held' if r.get('thesis_held') else '✗ thesis failed'} · ${esc(r.get('pnl_usd'))}"
+                f" · RoC {esc(r.get('return_on_collateral'))}")
+    trs = "".join(
+        f"<tr><td>#{esc(r.get('yellow_sheet_seq'))}</td><td>{esc(r.get('symbol'))} {esc(r.get('strike'))}</td>"
+        f"<td>{esc(r.get('decision'))}</td><td>{esc((r.get('thesis') or '')[:90])}</td><td>{_out(r)}</td></tr>"
+        for r in rows)
+    return ("<h4 class='chart-caption'>Yellow Sheets → paper outcome</h4><div class='dc-wrap'><table><thead><tr>"
+            "<th scope='col'>Sheet</th><th scope='col'>Structure</th><th scope='col'>Decision</th>"
+            "<th scope='col'>Thesis</th><th scope='col'>Outcome</th></tr></thead>"
+            f"<tbody>{trs}</tbody></table></div>")
+
+
+def premium_ledger_panel(summary: Optional[dict], yellow_sheets: Optional[dict] = None) -> str:
+    """Paper track record of the premium score (hedge_desk.premium_ledger):
+    hold-to-expiry outcomes by score band — the evidence for the weights."""
+    if not summary or summary.get("status") == "LEDGER_UNAVAILABLE" or "entries" not in summary:
+        return muted("Paper track record starts with the first nightly that records eligible candidates; "
+                     "outcomes settle on each expiration's real close.")
+    rows = "".join(
+        f"<tr><td>{esc(name)}</td><td>{esc(st['n'])}</td><td>{esc(st['win_rate'] or '—')}</td>"
+        f"<td>{esc(('$' + st['avg_pnl_usd']) if st['avg_pnl_usd'] else '—')}</td>"
+        f"<td>{esc(st['avg_return_on_collateral'] or '—')}</td></tr>"
+        for name, st in [("All settled", summary["overall"])] + list(summary["by_score_band"].items()))
+    return (f"<p class='muted'>{esc(summary['entries'])} recorded · {esc(summary['open'])} open · "
+            f"{esc(summary['settled'])} settled.</p>"
+            "<div class='dc-wrap'><table><thead><tr><th scope='col'>Score band</th><th scope='col'>Settled</th>"
+            "<th scope='col'>Win rate</th><th scope='col'>Avg P&amp;L</th><th scope='col'>Avg return on collateral</th>"
+            f"</tr></thead><tbody>{rows}</tbody></table></div><p class='muted'>{esc(summary['note'])}</p>"
+            + yellow_sheet_outcomes_table(yellow_sheets)
+            + src_note("artifacts/premium-ledger.jsonl (append-only); settled on Yahoo EOD expiry closes"))
+
+
 def card(title: str, body: str, wide: bool = False) -> str:
     cls = "card wide" if wide else "card"
     return f"<div class='{cls}'><h3>{esc(title)}</h3>{body}</div>"
@@ -1068,6 +1111,7 @@ def build() -> None:
         card("Equity candidates", candidates_chart(r.get("candidates", [])), wide=True),
         card("Premium-selling candidates", premium_candidates_panel(r.get("chain_income", {}), r.get("cash_secured_put_scan"),
                                                                         atm_benchmark_from_report(r, "SPY")), wide=True),
+        card("Premium score — paper track record", premium_ledger_panel(r.get("premium_ledger"), r.get("yellow_sheet_outcomes")), wide=True),
         card("Premium chain income", chain_panel(r.get("chain_income", {})), wide=True),
         card("Rates", rates_chart(r.get("rates_environment", {}), series)),
         card("Volatility", vix_chart(series, r.get("vix_regime", {}))),
