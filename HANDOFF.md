@@ -1,15 +1,13 @@
-# HANDOFF — Saturday polish 2026-10-31, rebased 2026-11-20 (toby/sat-polish-2026-10-31)
+# HANDOFF — Saturday polish 2026-10-31, rebased 2026-11-21 (toby/sat-polish-2026-10-31)
 
-Base: origin/main `be1a24c` (Ticker feed refresh — 2026-11-20 10:54 ET),
-rebased 2026-11-20 from `528a499`. Branch is now 3 ahead / 0 behind main.
-Rebase replayed all 3 commits; one conflict in `web/app.js`, resolved by
-keeping main's new Desk 5/6/7 `desks()` implementation (landed as `4dbde8a`,
-the Desk 5/6 + `market_context.py` content from PR #169's branches) and
-keeping this branch's "afternoon research run" fallback copy. `HANDOFF.md` /
-`PR_BODY.md` add/add conflicts resolved by keeping this branch's versions
-(main carries the Desk 5/6 handoff in the same single-slot files; the
-reviewer reads this file for this branch). No PR opened from this
-environment (no push path here); push lane = user's other model.
+Base: origin/main `1743c27` (Batch refresh — 2026-11-20),
+rebased 2026-11-21 from `9e67271`. Branch is now 4 ahead / 0 behind main.
+Rebase replayed all 4 commits; one conflict in `HANDOFF.md` only, resolved
+by keeping this branch's version and carrying main's Paper Outcome Ledger
+batch note forward verbatim (see "Carried forward from main" below, so the
+rebase does not silently drop a live batch-committer instruction).
+No PR opened from this environment (no push path here); push lane = user's
+other model.
 Supersedes: `toby/sat-polish-2026-10-24` (commit `366246a`, same fix, built on
 a local-only base and never pushed/merged — main still carried the stale copy).
 
@@ -52,6 +50,54 @@ a local-only base and never pushed/merged — main still carried the stale copy)
   synchronous builder to raise and asserts the endpoint still answers 200
   with `LOADING` and `trade_authorized: false`. No behaviour change to the
   payload shape; cold start now honestly reports LOADING instead of hanging.
+
+### 3. About page source copy now matches the served copy (2026-11-21)
+
+- `web/app.js` — the About paragraph was dead copy at runtime:
+  `web/ui-polish.js` rewrites the About card's first paragraph on every
+  render (MutationObserver), so what `about()` returned was never read —
+  and it had drifted stale, still calling Bonds & Rates "in development"
+  after main shipped the Desk 7 indicator board (PR #169: `desk7()` route,
+  "Indicator board · dated research snapshot", no "Coming soon" anywhere
+  in `web/` anymore). Aligned to the served wording: "Emporion is an
+  independent market research platform built around six specialized
+  research workflows, explicit evidence requirements, deterministic
+  controls, and human judgment." No user-visible change — the served copy
+  is unchanged; the source now tells the truth.
+- `tests/test_copy_quality.py` — new `AboutCopyConsistencyTests` pins the
+  served wording in `app.js` and fails on any return of "in development"
+  in `app.js`, so source and served copy cannot drift again.
+
+## What was verified (2026-11-21, after rebase onto 1743c27)
+
+- Rebase: 4 commits replayed, 4 ahead / 0 behind `1743c27`; one conflict
+  (`HANDOFF.md` only), resolved by keeping this branch's version and
+  carrying main's Paper Outcome Ledger note forward verbatim. Diff vs main
+  unchanged in shape plus the About fix: `hedge_desk/web_app.py` (9 lines,
+  route only), `tests/test_brief_copy.py` (new),
+  `tests/test_live_data_plane_web.py` (regression test),
+  `tests/test_copy_quality.py` (About consistency test), `web/app.js`
+  (brief copy + About paragraph), `web/index.html` (cache-bust only),
+  plus this handoff and `PR_BODY.md`.
+- Full suite: `pytest tests/` — **1,368 passed, 0 failed** (exit 0;
+  1,368 collected = 1,368 progress dots, 0 F/E; pytest's `-q` summary
+  line is not printed in this environment, cross-checked the same way as
+  2026-11-20). `node --test web/*.test.mjs` — **60 passed, 0 failed**.
+- `python3 scripts/lint_copy.py` — copy-quality gate passed.
+- `cp web/app.js /tmp/syntax-check.mjs && node --check` — OK.
+- Local WSGI timing re-measured on the rebased tree
+  (`/tmp/mc_timing_20261121.py`, real provider fan-out):
+  `/api/market-context` answers **0.00s, 200 OK, status LOADING** on a
+  cold start (`trade_authorized: false`).
+- Dead-code re-check: all 23 first-party `web/*.js` / `web/*.mjs` files
+  (excl. `*.test.mjs`, excl. `web/vendor/`) referenced by an HTML page or
+  imported by a referenced module — nothing to remove. No TODO / FIXME /
+  XXX / HACK in first-party web or `hedge_desk/*.py` files.
+- Served-state check: NOT re-probed today — production
+  `/api/market-context` was still hanging at the 2026-11-20 probe and this
+  branch is still unpushed/unmerged, so a re-probe would only re-confirm
+  the known state. The fix lands only when this branch is pushed,
+  reviewed, and merged.
 
 ## What was verified (2026-11-20, after rebase onto be1a24c)
 
@@ -120,16 +166,18 @@ a local-only base and never pushed/merged — main still carried the stale copy)
 
 - `README_PUBLIC.md` "Six desks" — the public console's desk list (six
   evaluated workflows); a different, defensible count. Same for the
-  Candidates page "six desk methods" copy.
-- `web/professional.js` / `web/desk-architecture.js` "Coming soon" for Bonds
-  & Rates — that tag describes the public desk card, which still says
-  research is in progress; the research pipeline's seventh desk is a separate
-  surface. Changing it would assert a product state not verified here.
-  Re-checked 2026-11-07: the Nov 6 daily package runs Bonds & Rates as
-  desk 7 with real content, but the public console's "six evaluated
-  workflows" framing (professional.js, desk-architecture.js subtitle,
-  ui-polish.js:29, app.js:63, README_PUBLIC "Six desks") is internally
-  consistent and was deliberately left alone for the third week.
+  Candidates page "six desk methods" copy. Desk 7 is an indicator board,
+  not an evaluated engine output (`desks()` gives it "Dedicated indicator
+  board" where the other six get "Latest evaluation"), so the six-workflow
+  framing still holds.
+- CORRECTION to the entry below as written in earlier rebases: the Bonds &
+  Rates "Coming soon" tag no longer exists anywhere in `web/` — main's
+  PR #169 shipped the Desk 7 board. The stale claim that remained was the
+  About paragraph calling Desk 7 "in development"; that is what the
+  2026-11-21 fix corrects (section 3 above). The "six evaluated workflows"
+  framing (professional.js, desk-architecture.js subtitle, ui-polish.js:29,
+  app.js:63, README_PUBLIC "Six desks") is internally consistent and was
+  deliberately left alone for the fifth week.
 - The Nov 13 daily brief's stale NVDA item (board investigation, superseded
   by Huang's resignation effective Nov 12) is published research content,
   not code polish; the republish question stays with the user. Not touched.

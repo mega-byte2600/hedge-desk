@@ -19,19 +19,34 @@ cold start, last-good after, refresh in a background thread. Measured
 before/after on the real provider fan-out: 56.25s → 0.00s. Regression test
 added proving the synchronous builder is never invoked on the request path.
 
-Verified (2026-11-20, after rebase onto main be1a24c): pytest market-context
-+ brief-copy 9 passed; gate + data-integration suites 129 passed, 7 subtests
-passed; `node --check` on web/app.js OK; local WSGI timing re-measured 0.00s
-(LOADING, cold start). Live probe 2026-11-20: production /api/market-context
-still hangs (curl timeout, 0 bytes in 35s) while /market-ticker.json answers
-in 0.99s — the fix is still not live. Earlier verification (2026-11-14, after
-rebase onto main 6fa909b): pytest market-context + brief-copy + copy-quality
-15 passed; `scripts/lint_copy.py` passed; node test set 58 passed, 0 failed;
-dead-code scan clean (all 29 first-party web files referenced); no Desk 7
-dashboard references left after the Nov 13 teardown. Deliberately untouched:
-README_PUBLIC "Six desks" (public console's six evaluated workflows — a
-different count) and the Bonds & Rates "Coming soon" desk card (public-page
-state, not the research pipeline).
+3. About page source copy now matches the served copy (2026-11-21):
+`web/ui-polish.js` rewrites the About card's first paragraph on every
+render, so the paragraph in `web/app.js` was dead copy at runtime — and
+stale, still calling Bonds & Rates "in development" after the Desk 7
+indicator board shipped. Aligned to the served wording ("six specialized
+research workflows…"); no user-visible change. `tests/test_copy_quality.py`
+pins it so source and served copy cannot drift again.
+
+Verified (2026-11-21, after rebase onto main 1743c27): full suite pytest
+1,368 passed, 0 failed; node test set 60 passed, 0 failed;
+`scripts/lint_copy.py` passed; `node --check` on web/app.js OK; local WSGI
+timing re-measured 0.00s (LOADING, cold start). Live probe 2026-11-20:
+production /api/market-context still hangs (curl timeout, 0 bytes in 35s)
+while /market-ticker.json answers in 0.99s — the fix is still not live.
+Earlier verification (2026-11-20, after rebase onto main be1a24c): pytest
+market-context + brief-copy 9 passed; gate + data-integration suites 129
+passed, 7 subtests passed; node --check on web/app.js OK; local WSGI timing
+re-measured 0.00s (LOADING, cold start). Earlier verification (2026-11-14,
+after rebase onto main 6fa909b): pytest market-context + brief-copy +
+copy-quality 15 passed; `scripts/lint_copy.py` passed; node test set 58
+passed, 0 failed; dead-code scan clean (all first-party web files
+referenced); no Desk 7 dashboard references left after the Nov 13 teardown.
+Deliberately untouched: README_PUBLIC "Six desks" (public console's six
+evaluated workflows — a different count; Desk 7 is an indicator board, not
+an evaluated engine) and the Candidates "six desk methods" copy. Note: the
+Bonds & Rates "Coming soon" tag cited in earlier versions of this body no
+longer exists — main's PR #169 shipped the Desk 7 board; the About
+"in development" line fixed here was the stale remnant.
 
 Reviewer check: confirm the deployed brief subtitle reads "seven desks /
 every afternoon", and that /api/market-context answers in well under a second

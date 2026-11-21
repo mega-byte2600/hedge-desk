@@ -23,5 +23,29 @@ class CopyQualityGateTests(unittest.TestCase):
         self.assertEqual(hits, [], "copy-quality gate failed:\n" + "\n".join(hits))
 
 
+class AboutCopyConsistencyTests(unittest.TestCase):
+    """Source copy must match served copy on the About page.
+
+    Found 2026-11-21, Saturday polish: web/ui-polish.js rewrites the About
+    card's first paragraph on every render (MutationObserver), so the
+    paragraph in web/app.js about() is dead copy at runtime — and it had
+    drifted stale, still calling Bonds & Rates "in development" after main
+    shipped the Desk 7 indicator board (PR #169). The served text is the
+    product decision ("six specialized research workflows"); this pins
+    app.js to it so the two cannot drift again.
+    """
+
+    SERVED_ABOUT = (
+        "Emporion is an independent market research platform built around "
+        "six specialized research workflows, explicit evidence requirements, "
+        "deterministic controls, and human judgment."
+    )
+
+    def test_about_source_copy_matches_served_copy(self):
+        app_js = (ROOT / "web" / "app.js").read_text(encoding="utf-8")
+        self.assertIn(self.SERVED_ABOUT, app_js)
+        self.assertNotIn("in development", app_js)
+
+
 if __name__ == "__main__":
     unittest.main()
