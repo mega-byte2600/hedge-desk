@@ -14,10 +14,9 @@ jobs:
       - name: Probe
         run: |
           probe() { echo "===== $1  UA=[$2]"; curl -sS -o body.txt -D h.txt -w "HTTP %{http_code} bytes=%{size_download}\n" -A "$2" --max-time 30 "$1" || true;
-                    grep -iE "^(HTTP|server|content-type|x-cache|x-amz|via|x-served|akamai|cf-ray|x-akamai|x-ms|location|cache-control|last-modified|age):" h.txt; echo "--- body:"; head -c 400 body.txt; echo; }
-          B=https://cdn.cboe.com/api/global/delayed_quotes
+                    grep -iE "^(HTTP|server|content-type|x-cache|x-amz|via|x-served|akamai|cf-ray|cf-mitigated|www-authenticate|x-api|x-akamai|x-ms|location|cache-control|last-modified|age):" h.txt; echo "--- body:"; head -c 400 body.txt; echo; }
+          B=https://cdn-api.cboe.com/api/global/delayed_quotes
           probe "$B/options/SPY.json" "hedge-desk/1.0"
-          probe "$B/options/QQQ.json" "hedge-desk/1.0"
-          probe "$B/options/_SPX.json" "hedge-desk/1.0"
-          probe "$B/quotes/SPY.json" "hedge-desk/1.0"
-          probe "https://cdn.cboe.com/" "hedge-desk/1.0"
+          probe "$B/options/SPY.json" "hedge-desk/1.0 (+https://github.com/mega-byte2600/hedge-desk)"
+          probe "$B/options/SPY.json" "curl/8.5.0"
+          echo "===== robots"; curl -sS --max-time 20 https://cdn-api.cboe.com/robots.txt | head -20 || true
