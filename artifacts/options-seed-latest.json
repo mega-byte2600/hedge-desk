@@ -26,9 +26,10 @@
   "source": "cboe-delayed",
   "data_mode": "batch",
   "refresh": {
-    "status": "ok",
-    "refreshed_at": "2026-11-16T23:47:40.042448+00:00",
-    "reason": null
+    "status": "fetch_failed",
+    "refreshed_at": "2026-11-23T15:36:23.881284+00:00",
+    "reason": "ValueError: cboe fetch failed (status 403)",
+    "previous_as_of": "2026-11-16T23:47:40.042448+00:00"
   },
   "trade_authorized": false,
   "note": "Single-contract derived selection from a real delayed Cboe chain for research. Raw chain payloads are never committed. No probability, no Risk of Ruin. No order placed."
