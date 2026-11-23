@@ -1,0 +1,23 @@
+name: Cboe 403 diagnostic (temporary, read-only)
+# CarpeDATA incident 2026-11-23: one GET per URL to the keyless public Cboe
+# CDN to see WHY it returns 403. No retries, no browser spoofing, nothing
+# committed. Delete this workflow when the incident is closed.
+on:
+  push:
+    branches: [agent/cboe-403-diagnostic]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe
+        run: |
+          probe() { echo "===== $1  UA=[$2]"; curl -sS -o body.txt -D h.txt -w "HTTP %{http_code} bytes=%{size_download}\n" -A "$2" --max-time 30 "$1" || true;
+                    grep -iE "^(HTTP|server|content-type|x-cache|x-amz|via|x-served|akamai|cf-ray|x-akamai|x-ms|location|cache-control|last-modified|age):" h.txt; echo "--- body:"; head -c 400 body.txt; echo; }
+          B=https://cdn.cboe.com/api/global/delayed_quotes
+          probe "$B/options/SPY.json" "hedge-desk/1.0"
+          probe "$B/options/QQQ.json" "hedge-desk/1.0"
+          probe "$B/options/_SPX.json" "hedge-desk/1.0"
+          probe "$B/quotes/SPY.json" "hedge-desk/1.0"
+          probe "https://cdn.cboe.com/" "hedge-desk/1.0"
