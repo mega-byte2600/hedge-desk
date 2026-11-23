@@ -87,6 +87,13 @@ It ships dark until the GP enables it.
 5. Record symptom, cause, fix and prevention in `docs/ENGINEERING_LESSONS.md`.
 
 ## Open items for the GP (CarpeDATA log)
+- OPEN 2026-11-23 (incident): Cboe delayed chains now sit behind Cloudflare
+  bot protection (`cdn.cboe.com` returns 307 to `cdn-api.cboe.com`, which returns 403
+  "Attention Required!" to every automated client). The chain, CSP scans and seed
+  have been `BLOCKED` since the 2026-11-19 nightly. This is not our code; see
+  ENGINEERING_LESSONS section 12. We do not route around the block. GP decision: the
+  replacement source (Schwab `/chains` raises a licence and redistribution question
+  for public artifacts), or keep it `BLOCKED`.
 - RESOLVED 2026-11-19 (harm caught by `guard`): #171 made
   `make_get_transport` add retries. That stacked on `_fetch_json`'s own
   retries (up to 9 calls) and broke the SEC probe's "no retry" contract. It

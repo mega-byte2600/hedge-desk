@@ -174,3 +174,28 @@ which made a provider outage look like a code defect.
    integration test on a committed artifact checks that empty results are *explained*
    (mode + reason) and runs model checks on a frozen real excerpt
    (`tests/fixtures/am-report-csp-2026-11-18.json`).
+
+## 12. A provider can move behind a bot wall; find the cause before "fixing" the code
+
+**What happened (2026-11-19 to 2026-11-23).** From the 2026-11-19 nightly onward,
+every Cboe delayed-chain fetch returned HTTP 403 (SPY chain `BLOCKED`, the CSP scans,
+the weekly options seed). The adapter was unchanged: the same URL, User-Agent,
+timeout and parsing as the last good run (2026-11-18 report, generated 2026-11-19
+04:55 UTC). The diagnosis, read-only and once per URL from GitHub Actions:
+- `cdn.cboe.com/api/global/delayed_quotes/...` now answers `307` (Cloudflare) to
+  `cdn-api.cboe.com/...`, and urllib follows the redirect.
+- `cdn-api.cboe.com` returns `403` with Cloudflare's "Attention Required!" block page
+  for every automated client tested: our User-Agent, an identifying User-Agent with a
+  contact link, and plain curl.
+- The same 403 came from Toby's machine and from GitHub's runners, so the cause is the
+  provider, not our network or code.
+
+**Rule.**
+1. Reproduce from two vantage points and read the response body and headers before
+   touching the adapter. The status code alone (403) does not tell an access block from
+   a missing object or a proxy refusal.
+2. A deliberate bot wall is an access control. Do not spoof a browser, solve
+   challenges, or add a headless browser to get past it. That is routing around a 403.
+3. The fix is a sanctioned source chosen by the GP (licence and redistribution
+   checked), shipped as a new provider. Until then the chain stays honestly `BLOCKED`
+   and the last real seed is served as last-good.
