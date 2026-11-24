@@ -27,7 +27,7 @@
   "data_mode": "batch",
   "refresh": {
     "status": "fetch_failed",
-    "refreshed_at": "2026-11-23T15:36:23.881284+00:00",
+    "refreshed_at": "2026-11-24T02:28:53.398709+00:00",
     "reason": "ValueError: cboe fetch failed (status 403)",
     "previous_as_of": "2026-11-16T23:47:40.042448+00:00"
   },
