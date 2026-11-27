@@ -27,6 +27,12 @@ indicator board shipped. Aligned to the served wording ("six specialized
 research workflows…"); no user-visible change. `tests/test_copy_quality.py`
 pins it so source and served copy cannot drift again.
 
+Verified (2026-11-27, after rebase onto main 1510b12e): full suite pytest
+1,419 tests, 0 failures/errors/skipped; node test set 60 passed, 0 failed;
+`scripts/lint_copy.py` passed; `node --check` on web/app.js OK; local WSGI
+timing re-measured 0.001s cold / 0.000s warm (LOADING, sync builder never
+invoked). Live probe 2026-11-27: production /api/market-context still hangs
+(http 000, 45s timeout) — the fix is still not live.
 Verified (2026-11-21, after rebase onto main 1743c27): full suite pytest
 1,368 passed, 0 failed; node test set 60 passed, 0 failed;
 `scripts/lint_copy.py` passed; `node --check` on web/app.js OK; local WSGI

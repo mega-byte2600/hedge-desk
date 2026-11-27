@@ -1,13 +1,9 @@
-# HANDOFF — Saturday polish 2026-10-31, rebased 2026-11-21 (toby/sat-polish-2026-10-31)
+# HANDOFF — Saturday polish 2026-10-31, rebased 2026-11-27 (toby/sat-polish-2026-10-31)
 
-Base: origin/main `1743c27` (Batch refresh — 2026-11-20),
-rebased 2026-11-21 from `9e67271`. Branch is now 4 ahead / 0 behind main.
-Rebase replayed all 4 commits; one conflict in `HANDOFF.md` only, resolved
-by keeping this branch's version and carrying main's Paper Outcome Ledger
-batch note forward verbatim (see "Carried forward from main" below, so the
-rebase does not silently drop a live batch-committer instruction).
-No PR opened from this environment (no push path here); push lane = user's
-other model.
+Base: origin/main `1510b12e` (Ticker feed refresh — 2026-11-27 10:24 ET),
+rebased 2026-11-27 from `47807cf`. Branch is now 5 ahead / 0 behind main.
+Rebase replayed all 5 commits cleanly, no conflicts. No PR opened from
+this environment (no push path here); push lane = user's other model.
 Supersedes: `toby/sat-polish-2026-10-24` (commit `366246a`, same fix, built on
 a local-only base and never pushed/merged — main still carried the stale copy).
 
@@ -67,6 +63,34 @@ a local-only base and never pushed/merged — main still carried the stale copy)
 - `tests/test_copy_quality.py` — new `AboutCopyConsistencyTests` pins the
   served wording in `app.js` and fails on any return of "in development"
   in `app.js`, so source and served copy cannot drift again.
+
+## What was verified (2026-11-27, after rebase onto 1510b12e)
+
+- Rebase: 5 commits replayed, 5 ahead / 0 behind `1510b12e`; clean, no
+  conflicts. Diff vs main unchanged in shape: `hedge_desk/web_app.py`
+  (9 lines, route only), `tests/test_brief_copy.py` (new),
+  `tests/test_live_data_plane_web.py` (regression test),
+  `tests/test_copy_quality.py` (About consistency test), `web/app.js`
+  (brief copy + About paragraph), `web/index.html` (cache-bust only),
+  plus this handoff and `PR_BODY.md`.
+- Full suite: `pytest tests/` — **1,419 tests, 0 failures, 0 errors,
+  0 skipped** (exit 0; 1,368 collected + 51 subtests, confirmed via
+  `--junitxml`; pytest's `-q` summary line is not printed in this
+  environment, as on 2026-11-20/21). `node --test web/*.test.mjs` —
+  **60 passed, 0 failed**.
+- `python3 scripts/lint_copy.py` — copy-quality gate passed.
+- `node --check web/app.js` — OK.
+- Local WSGI timing re-measured on the rebased tree (fresh process,
+  synchronous builder patched to raise if invoked):
+  `/api/market-context` answers **0.001s cold / 0.000s warm, 200 OK,
+  status LOADING** (`trade_authorized: false`); the synchronous builder
+  is never invoked.
+- Live probe 2026-11-27 ~07:54 PT: production `/api/market-context`
+  still hangs — **http 000, 45.0s timeout**, 0 bytes. The fix is still
+  NOT live; it lands only when this branch is pushed, reviewed, and
+  merged. Success bar (Monday plan): served `/api/market-context`
+  answers in under 2s, verified on the served site — merged alone does
+  not count.
 
 ## What was verified (2026-11-21, after rebase onto 1743c27)
 
