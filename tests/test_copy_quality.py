@@ -23,5 +23,29 @@ class CopyQualityGateTests(unittest.TestCase):
         self.assertEqual(hits, [], "copy-quality gate failed:\n" + "\n".join(hits))
 
 
+class SchwabDisclosureTests(unittest.TestCase):
+    """The Desk 5 'Broker data status' panel is locked compliance copy.
+
+    Desk 5 shows borrow / short-interest data, so the view must say plainly
+    that Schwab / thinkorswim is not connected and no account, locate, or
+    order endpoint is accessed. The panel was dropped in a squash merge
+    (PR #169) and restored by this branch; pin the exact wording in
+    web/app.js so it cannot silently disappear again.
+    """
+
+    LOCKED_FRAGMENTS = (
+        "Broker data status",
+        "Schwab / thinkorswim is not connected to this research view.",
+        "No Schwab account, positions, balances, order history, "
+        "locate request, or order endpoint is accessed here.",
+    )
+
+    def test_broker_data_status_panel_present_in_desk5(self):
+        src = (ROOT / "web" / "app.js").read_text(encoding="utf-8")
+        for fragment in self.LOCKED_FRAGMENTS:
+            self.assertIn(fragment, src,
+                          f"Schwab disclosure missing from web/app.js: {fragment!r}")
+
+
 if __name__ == "__main__":
     unittest.main()
