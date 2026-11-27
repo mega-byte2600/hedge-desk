@@ -114,6 +114,43 @@ def build_reference_market_session_gate():
     return evaluate_market_session(evidence, FIXTURE_AS_OF, 0)
 
 
+def build_demo_risk_inputs(
+    candidate_id: str,
+    maximum_loss: Decimal,
+    expected_win: Decimal,
+    win_probability: Decimal,
+    as_of: datetime,
+    source_artifact_sha256: str,
+    portfolio_snapshot_sha256: str,
+):
+    """Build risk inputs for a demo-only lifecycle walk-through.
+
+    This does NOT estimate Risk of Ruin. Both RoR slots carry an explicit
+    Decimal("0") placeholder standing in for a separately validated engine
+    output, with the unvalidated model/validator labels below — the same
+    posture as the frozen reference fixture. Any decision produced from
+    these inputs exercises the lifecycle mechanics only; it is not a risk
+    approval. Agents must never compute an RoR here: see
+    tests/test_architecture_boundaries.py, which confines
+    estimate_risk_of_ruin to hedge_desk/risk/ruin.py.
+    """
+    return build_validated_risk_inputs(
+        candidate_id,
+        maximum_loss,
+        expected_win,
+        win_probability,
+        as_of,
+        source_artifact_sha256,
+        portfolio_snapshot_sha256,
+        Decimal("0"),
+        Decimal("0"),
+        "finite-capital-ruin-approximation",
+        "0.1.0-unvalidated",
+        "classic-vv-fixture-validator",
+        "1.0.0",
+    )
+
+
 def build_reference_plan() -> Any:
     """Build a human-pending plan entirely from a frozen synthetic fixture.
 
@@ -166,7 +203,7 @@ def build_reference_plan() -> Any:
     )
     if len(handoffs) != 1 or handoffs[0].candidate_id != candidate.candidate_id:
         raise ValueError("reference candidate handoff is incomplete")
-    risk_inputs = build_validated_risk_inputs(
+    risk_inputs = build_demo_risk_inputs(
         candidate.candidate_id,
         candidate.max_loss,
         candidate.expected_win,
@@ -174,12 +211,6 @@ def build_reference_plan() -> Any:
         FIXTURE_AS_OF,
         handoffs[0].calculation_sha256,
         compliance_decision.portfolio_snapshot_sha256,
-        Decimal("0"),
-        Decimal("0"),
-        "finite-capital-ruin-approximation",
-        "0.1.0-unvalidated",
-        "classic-vv-fixture-validator",
-        "1.0.0",
     )
     decision = evaluate_candidate(
         account, candidate, FIXTURE_AS_OF, risk_inputs=risk_inputs

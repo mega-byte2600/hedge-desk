@@ -1,8 +1,11 @@
 """Open a REAL CCL paper trade end-to-end from real Cboe data.
 
 Short 20 put / long 18 put credit spread, 34 DTE, real bid/ask, real IV/delta
-from the live Cboe chain. Win probability = 1 - |real put delta|. RoR from the
-deterministic engine. Plan -> human approve -> open -> monitor -> close -> settle.
+from the live Cboe chain. Win probability = 1 - |real put delta|. Demo-only
+risk inputs: no Risk of Ruin is computed here — the RoR slots carry the
+explicit 0 placeholder from hedge_desk.demo.build_demo_risk_inputs, so the
+decision below exercises the lifecycle mechanics only and is not a risk
+approval. Plan -> human approve -> open -> monitor -> close -> settle.
 Paper-only, no real money.
 """
 import json
@@ -21,13 +24,12 @@ from hedge_desk.options import (
     MarketSessionEvidence, build_candidate_control_handoffs, evaluate_market_session,
     scan_vertical_credit_spreads,
 )
+from hedge_desk.demo import build_demo_risk_inputs
 from hedge_desk.paper import (
     approve_paper_trade, create_paper_trade_plan, write_plan_file,
 )
 from hedge_desk.paper.runner import advance_paper_lifecycle, close_paper_position
 from hedge_desk.paper.settler import settle_paper_outcomes
-from hedge_desk.risk import build_validated_risk_inputs
-from hedge_desk.risk.ruin import estimate_risk_of_ruin
 
 NOW = datetime(2026, 9, 26, 14, 47, tzinfo=timezone.utc)
 EQUITY = Decimal("100000")
@@ -93,16 +95,17 @@ evidence = MarketSessionEvidence("OPRA-REAL", NOW - timedelta(hours=6, minutes=3
 gate = evaluate_market_session(evidence, NOW, 0)
 handoffs = build_candidate_control_handoffs(scan, gate)
 assert len(handoffs) == 1 and handoffs[0].candidate_id == candidate.candidate_id
-ror = estimate_risk_of_ruin(EQUITY, candidate.max_loss, win_prob, candidate.expected_win)
-risk_inputs = build_validated_risk_inputs(
+# Demo-only risk inputs: no Risk of Ruin is computed here. The RoR slots
+# carry the explicit 0 placeholder from build_demo_risk_inputs (same as the
+# frozen reference demo); the decision below exercises the lifecycle
+# mechanics only and is not a risk approval.
+risk_inputs = build_demo_risk_inputs(
     candidate.candidate_id, candidate.max_loss, candidate.expected_win, win_prob,
     NOW, handoffs[0].calculation_sha256, compliance.portfolio_snapshot_sha256,
-    Decimal("0"), ror, "finite-capital-ruin-approximation", "0.1.0-unvalidated",
-    "classic-vv-fixture-validator", "1.0.0",
 )
 decision = evaluate_candidate(account, candidate, NOW, risk_inputs=risk_inputs)
 print("   risk decision:", decision.status.value, "| reasons:", decision.reason_codes)
-print("   risk_of_ruin:", ror)
+print("   risk_of_ruin: demo placeholder 0 (not computed)")
 
 # --- 6. Event calendar + plan + approve ---
 ecg = evaluate_event_calendar("CCL", NOW, short_q.expiration, (), spread,

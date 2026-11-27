@@ -7,13 +7,29 @@ import unittest
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = REPOSITORY_ROOT / "hedge_desk"
+SCRIPTS_ROOT = REPOSITORY_ROOT / "scripts"
 
 
 def python_sources():
-    return tuple(sorted(PACKAGE_ROOT.rglob("*.py")))
+    # The boundary covers the package AND the scripts: the RoR-substitution
+    # escape lived in scripts/real_nke_paper_trade.py (Sentry-era GAP 1,
+    # 2026-11-26), which called estimate_risk_of_ruin and fed the result
+    # into build_validated_risk_inputs while this test scanned hedge_desk/
+    # only. A script is not a safer place to calculate RoR than the package.
+    return tuple(sorted(PACKAGE_ROOT.rglob("*.py"))) + tuple(
+        sorted(SCRIPTS_ROOT.rglob("*.py"))
+    )
 
 
 class ArchitectureBoundaryTests(unittest.TestCase):
+    def test_boundary_scan_covers_scripts(self) -> None:
+        # Pin the coverage itself: if scripts/ ever drops out of
+        # python_sources(), the two tests below pass for the wrong reason
+        # (no offenders found because nothing was scanned).
+        scanned = {str(p.relative_to(REPOSITORY_ROOT)) for p in python_sources()}
+        self.assertIn("scripts/real_nke_paper_trade.py", scanned)
+        self.assertIn("scripts/real_ccl_paper_trade.py", scanned)
+
     def test_risk_of_ruin_calculation_is_confined_to_conventional_boundary(self) -> None:
         allowed = {
             PACKAGE_ROOT / "risk" / "ruin.py",

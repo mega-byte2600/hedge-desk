@@ -1,37 +1,98 @@
-# Toby handoff — Desk coverage, SEC, Carpe DATA
+# HANDOFF — Close the RoR-substitution escape in scripts/ (toby/ror-boundary-scripts-2026-11-27)
 
-Branch: `toby/desk6-all-desk-coverage`
+Base: origin/main `1510b12e` (Ticker feed refresh — 2026-11-27 10:24 ET).
+Branch is 1 ahead / 0 behind main. No PR opened from this environment
+(Toby's token cannot open PRs); push lane = user's other model, Sol owns
+PR → review → merge.
 
-## Changes
+Risk-control change: per repo AGENTS.md, an agent may implement and test a
+risk-control change but may NOT approve its own risk-control change for
+release. This branch needs independent authorized review before merge.
+No Risk of Ruin was calculated, estimated, inferred, modified, or
+substituted by this run: the fix REMOVES the only RoR calculation outside
+the conventional boundary.
 
-- Desk 5 now has a read-only, cached SEC EDGAR submissions path for approved watchlist issuers, issuer filing links, honest loading/blocked/unmapped states, and a filing-backed one-cohort depreciation sensitivity using `Decimal`.
-- The scenario records the exact SEC filing URL and note, distinguishes reported useful-life from a user-entered shorter-life sensitivity, and explicitly avoids claiming an accounting error, a universal Burry formula, cumulative cohorts, replacement capex, DCF, or a short signal.
-- The existing 48-hour Desk 5 task now prioritizes Burry's official Cassandra Unchained posts. Reddit is a lead channel only; claims require authentication and primary-source corroboration.
-- Desk 6 Carpe DATA now includes paced GDELT conflict/shipping media leads, labeled uncorroborated, alongside the existing official weather, hazard, commodity, and positioning feeds. Its board shows live provider states and blocks futures rankings until curve, basis, roll, fees, and contract-spec inputs exist.
-- The mobile Research Desk view now names and routes Desks 5–7 accurately. Removed false generic “Active” and stale “Coming soon” claims. Desk 7 identifies a dated indicator snapshot and warns after two days that it may be stale.
-- Added a seven-desk coverage audit, route/copy/freshness regression checks, and included the new CSS file in the deployment asset allowlist.
+## The gap (Thursday risk audit, 2026-11-26, GAP 1)
 
-## Verification performed
+`tests/test_architecture_boundaries.py` scanned only `hedge_desk/` for
+`estimate_risk_of_ruin` calls. `scripts/real_nke_paper_trade.py:103` and
+`scripts/real_ccl_paper_trade.py:96` called it, wrapped the result in
+`build_validated_risk_inputs` (model "0.1.0-unvalidated", validator
+"classic-vv-fixture-validator"), and approved a paper-trade plan from it —
+the forbidden pattern end to end, untested because `scripts/` was outside
+the scan. Both scripts' docstrings claimed "RoR from the deterministic
+engine". Not on any schedule (demo scripts only), but the escape was real:
+any future script could do the same and the boundary test would stay green.
 
-- Passed: `test_burry_sensitivity.py` (3), `test_short_research_board.py` (6), `test_market_context.py` (3), `test_public_signal_feeds.py` (7), `test_data_integrations.py` (103), `test_desk_coverage_copy.py` (3), `test_desk7_indicators.py` (9), `test_copy_quality.py` (1), `test_public_web_surface.py` (24), `test_web_page_guards.py` (24), and `test_iphone_preview_surface.py` (1).
-- Passed: browser JavaScript syntax check (`node --check` on an `.mjs` copy), Python compile check, `git diff --check`.
-- The complete legacy suite cannot be imported in this environment because `plotly` is not installed (`tests/test_dashboard_build.py`). Do not represent the whole suite as passing.
-- SEC handling is implemented and unit-tested, but a live watchlist fetch and the production `/api/short-research` response have not been verified from this branch. The prior Desk 5 handoff recorded a direct EDGAR timeout from this workspace. After merge/deploy, confirm that the per-symbol statuses move from `LOADING` to `LIVE` in Render logs/board; until then, do not tell the GP that production SEC is fixed.
-- No live browser visual inspection was completed in this environment. `test_iphone_preview_surface.py` checks the packaged mobile preview contract; the narrow-screen visual check remains for the independent reviewer.
+## What changed
 
-## Independent review checks before merge
+- `hedge_desk/demo.py` — new `build_demo_risk_inputs(...)` helper: the
+  single demo-only construction path for validated risk inputs. It does
+  NOT estimate RoR; both RoR slots carry an explicit `Decimal("0")`
+  placeholder standing in for a separately validated engine output, with
+  the unvalidated model/validator labels. `build_reference_plan` now uses
+  it (identical args, no behavior change to the frozen fixture).
+- `scripts/real_nke_paper_trade.py`, `scripts/real_ccl_paper_trade.py` —
+  removed the `estimate_risk_of_ruin` import + call and the direct
+  `build_validated_risk_inputs` construction; both now use
+  `build_demo_risk_inputs`. Docstrings corrected ("RoR from the
+  deterministic engine" removed); the printed RoR line now reads
+  "demo placeholder 0 (not computed)".
+- `tests/test_architecture_boundaries.py` — `python_sources()` now scans
+  `hedge_desk/` AND `scripts/`; new `test_boundary_scan_covers_scripts`
+  pins that coverage (both real_* scripts in the scanned set) so the scan
+  cannot silently narrow again.
 
-1. Confirm current production environment provides `MARKET_DATA_USER_AGENT` with an identifiable contact as expected by SEC access policy; check Render logs and actual SEC per-symbol status after deployment.
-2. Review SEC response latency, CIK mapping, and whether all configured symbols receive filings; unsupported mappings must remain explicit.
-3. Review the depreciation formula, assumptions, and UI language independently. It is a sensitivity, not Burry's private model and not accounting advice.
-4. Verify GDELT pacing and fail-closed behavior under 429s; headlines must remain uncorroborated leads.
-5. Inspect Desk 5/6 responsive layouts and the Desk 7 stale snapshot warning on a narrow iPhone viewport.
-6. Confirm Desk 6 remains blocked from candidate ranking until all matched futures and cost inputs are supplied.
+## Behavior change to state plainly
 
-No production deployment or merge is performed from this branch.
+The scripts' decisions no longer depend on a computed RoR. With the
+placeholder 0, `risk_gate`'s `RISK_OF_RUIN_LIMIT` check passes and the
+decision reflects only the other gates (quote age, liquidity, loss
+limit) — the same posture as the frozen reference demo. The scripts
+demonstrate the paper lifecycle with real Cboe quotes; their decisions
+are mechanics demos, not risk approvals. No production path changes:
+no scheduled job runs these scripts.
+
+## What was verified (2026-11-27, after rebase onto 1510b12e)
+
+- Full suite: `pytest tests/` — **1,416 tests, 0 failures, 0 errors,
+  0 skipped** (exit 0; 1,365 collected + 51 subtests, confirmed via
+  `--junitxml`). Focused risk suites (`test_architecture_boundaries`,
+  `test_risk_and_decision`, `test_ror_vv_vectors`, `test_execution_gate`,
+  paper workflow/settler/runner, `test_account_gate`,
+  `test_compliance_traceability`) — **102 passed**.
+- Negative control: with the old scripts temporarily restored, the two
+  extended boundary tests FAIL (RoR calculation confined +
+  validated-inputs construction); with the fix, all 6 boundary tests
+  pass. The guard is real, not vacuous.
+- `node --test web/*.test.mjs` — **60 passed, 0 failed**.
+- `python3 -m py_compile` on both scripts + `demo.py` + the test file —
+  OK. `grep estimate_risk_of_ruin scripts/` — zero hits.
+- Not run end-to-end: the scripts fetch live Cboe data at import and
+  their contracts expired Oct 23, 2026, so a live run is not meaningful
+  in this environment; verification is static (boundary tests + compile)
+  plus the full suite.
+
+## Deliberately NOT changed
+
+- `hedge_desk/risk/ruin.py` (the estimator) and `hedge_desk/risk/inputs.py`
+  untouched — the conventional boundary itself is unchanged, only its
+  enforcement scope widened.
+- `rates_desk.py` Sentry W48 F1–F9: still open, not this branch (separate
+  fix, separate review).
+- No Risk of Ruin value touched anywhere. No schedule changes.
+
+## Reviewer must check before merge
+
+- Confirm the demo-only RoR posture is acceptable: scripts pass an
+  explicit 0 placeholder, labeled unvalidated, and print it as such.
+- Confirm no other script in `scripts/` constructs validated risk inputs
+  outside `demo.py` (the extended test now enforces this).
+- Independent authorized approval required (risk-control change).
 
 ---
-## Batch refresh: commit the Paper Outcome Ledger (2026-11-20)
+## Carried forward from main (2026-11-20)
+
 From PR #178 on, the nightly writes `artifacts/premium-ledger.jsonl`, the
 append-only paper track record of the premium score. It is **not** ignored by
 git. `scripts/run_nightly_batch.sh` stages it after each run.

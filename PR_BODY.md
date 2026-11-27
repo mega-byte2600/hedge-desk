@@ -1,19 +1,22 @@
-# Desk 5 SEC/Burry research and Desk 6 Carpe DATA coverage
+[fix] Close the RoR-substitution escape in scripts/
 
-## What changed
+Thursday's risk audit (GAP 1): the architecture-boundary test scanned only
+hedge_desk/ for estimate_risk_of_ruin calls, so scripts/real_nke_paper_trade.py
+and scripts/real_ccl_paper_trade.py called it, wrapped the result in
+build_validated_risk_inputs, and approved a paper-trade plan — the forbidden
+pattern end to end, untested. Both scripts even claimed "RoR from the
+deterministic engine" in their docstrings.
 
-- Connect Desk 5 to the official SEC EDGAR submissions API for the approved watchlist and link the most recent relevant primary filings.
-- Add an exact-input, `Decimal` based one-cohort depreciation sensitivity grounded in a specific SEC filing, with transparent tax/EPS/constant-multiple assumptions and no invented Burry score.
-- Keep the 48-hour Desk 5 research workflow anchored to Burry's official publication; treat Reddit as an unverified lead source.
-- Connect paced GDELT headlines to Desk 6 Carpe DATA as uncorroborated conflict/shipping leads, alongside official event and commodity feeds.
-- Show Desk 6's missing contract curves, basis, roll, costs, and specs as explicit gates; no futures candidate is ranked without them.
-- Correct mobile desk copy/routes and remove stale generic status claims. Flag Desk 7's dated snapshot as stale when older than two days.
-- Add seven-desk coverage audit and regression coverage; package the new stylesheet.
+This branch: the boundary test now scans scripts/ too (with a test pinning
+that coverage); both scripts use a new demo-only helper
+(hedge_desk.demo.build_demo_risk_inputs) that passes an explicit 0
+placeholder in the RoR slots, labeled unvalidated — the same posture as the
+frozen reference demo. No RoR is computed anywhere outside
+hedge_desk/risk/ruin.py anymore. The scripts' decisions now reflect only the
+non-RoR gates; they remain lifecycle mechanics demos, not risk approvals.
 
-## Validation
-
-Targeted SEC, depreciation, market-context, GDELT, public-signal, Desk 7, public-surface, copy-quality, iPhone-preview, and page-guard checks pass. JavaScript syntax, Python compilation, and whitespace checks pass. Full legacy test discovery remains blocked by the missing `plotly` dependency in `tests/test_dashboard_build.py`.
-
-## Review focus
-
-See `HANDOFF.md` for independent review details, particularly SEC contact/production feed status, financial-sensitivity math, GDELT corroboration labels, narrow-screen review, and Desk 6 futures readiness gates.
+Verified (2026-11-27): full suite pytest 1,416 tests, 0 failures; focused
+risk suites 102 passed; node test set 60 passed, 0 failed; negative control
+— the two extended boundary tests FAIL on the old scripts and pass with the
+fix. No RoR value was calculated or modified by this change. Risk-control
+change: independent authorized approval required before merge.

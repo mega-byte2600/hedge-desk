@@ -2,7 +2,10 @@
 
 Short 33 put / long 32 put credit spread, 34 DTE, real bid/ask, real IV/delta
 from the live Cboe chain, both legs OI>=100 and bid-ask<=25%. Win probability =
-1 - |real put delta|. RoR from the deterministic engine. Plan -> approve -> open
+1 - |real put delta|. Demo-only risk inputs: no Risk of Ruin is computed here
+— the RoR slots carry the explicit 0 placeholder from
+hedge_desk.demo.build_demo_risk_inputs, so the decision below exercises the
+lifecycle mechanics only and is not a risk approval. Plan -> approve -> open
 -> monitor -> close -> settle. Paper-only, no real money.
 """
 import json
@@ -15,7 +18,7 @@ from hedge_desk.cboe_chain import _default_transport, CBOE_URL
 from hedge_desk.core.decision import evaluate_candidate
 from hedge_desk.backoffice import evaluate_paper_compliance
 from hedge_desk.domain import Account, AccountType, ProductType, TradeCandidate
-from hedge_desk.demo import build_reference_market_session_gate
+from hedge_desk.demo import build_demo_risk_inputs, build_reference_market_session_gate
 from hedge_desk.options import (
     OptionQuote, OptionType, UnderlyingQuote, OptionSnapshot,
     evaluate_event_calendar, VerticalCreditSpread, calculate_vertical_credit_spread,
@@ -26,8 +29,6 @@ from hedge_desk.paper import (
 )
 from hedge_desk.paper.runner import advance_paper_lifecycle, close_paper_position
 from hedge_desk.paper.settler import settle_paper_outcomes
-from hedge_desk.risk import build_validated_risk_inputs
-from hedge_desk.risk.ruin import estimate_risk_of_ruin
 
 NOW = datetime(2026, 9, 26, 14, 47, tzinfo=timezone.utc)
 EQUITY = Decimal("100000")
@@ -100,15 +101,16 @@ handoffs = build_candidate_control_handoffs(scan, gate)
 match = next((h for h in handoffs if h.candidate_id == candidate.candidate_id), None)
 assert match is not None, f"no handoff for {candidate.candidate_id}; got {[h.candidate_id for h in handoffs]}"
 handoff = match
-ror = estimate_risk_of_ruin(EQUITY, candidate.max_loss, win_prob, candidate.expected_win)
-risk_inputs = build_validated_risk_inputs(
+# Demo-only risk inputs: no Risk of Ruin is computed here. The RoR slots
+# carry the explicit 0 placeholder from build_demo_risk_inputs (same as the
+# frozen reference demo); the decision below exercises the lifecycle
+# mechanics only and is not a risk approval.
+risk_inputs = build_demo_risk_inputs(
     candidate.candidate_id, candidate.max_loss, candidate.expected_win, win_prob,
     NOW, handoff.calculation_sha256, compliance.portfolio_snapshot_sha256,
-    Decimal("0"), ror, "finite-capital-ruin-approximation", "0.1.0-unvalidated",
-    "classic-vv-fixture-validator", "1.0.0",
 )
 decision = evaluate_candidate(account, candidate, NOW, risk_inputs=risk_inputs)
-print("   risk decision:", decision.status.value, "| reasons:", decision.reason_codes, "| RoR:", ror)
+print("   risk decision:", decision.status.value, "| reasons:", decision.reason_codes, "| RoR: demo placeholder 0 (not computed)")
 
 ecg = evaluate_event_calendar(SYMBOL, NOW, short_q.expiration, (), spread,
                               OptionType.PUT, short_q.strike)
